@@ -2,7 +2,8 @@
 name: fixing-a-diagnostics-wording-by-changing-its-data-hides-the-defect
 description: When a reviewer flags a diagnostic's WORDING as misleading, fix the message, never the data feeding it — collapsing the data so the message reads cleanly (deduping the repeated path that made "multiple files: p, p" look wrong) can erase the very condition the diagnostic existed to report, and the change ships green because the only test that touched the case is reshaped to pin the new, holed behaviour
 type: gotcha
-origin: requirement-identity-hybrid arc, whole-branch review round 1 → 2 (2026-08-18) — a 🟢 nit ("same-file duplicate REQ reports 'declared in multiple files: p, p'") was fixed by deduping paths per file in `load_req_paths`; round 2 found the same-file duplicate now passed the CI structural lane silently (rc=0, `--next-req-id` moved on to REQ-6) — exactly the merge-boundary collision the arc's BI-3 exists to catch; fixed by keeping the repeats and emitting "declared N times in <path>"
+sources:
+  - resource: requirement-identity-hybrid arc, whole-branch review round 1 → 2 (2026-08-18) — a 🟢 nit ("same-file duplicate REQ reports 'declared in multiple files: p, p'") was fixed by deduping paths per file in `load_req_paths`; round 2 found the same-file duplicate now passed the CI structural lane silently (rc=0, `--next-req-id` moved on to REQ-6) — exactly the merge-boundary collision the arc's BI-3 exists to catch; fixed by keeping the repeats and emitting "declared N times in <path>"
 ---
 
 A round-1 whole-branch nit said the duplicate-declaration violation read

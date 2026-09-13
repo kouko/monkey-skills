@@ -2,7 +2,8 @@
 name: a-new-reviewer-check-row-is-a-five-surface-bump
 description: Appending a check row to plan-document-reviewer-prompt.md moves five surfaces in one commit — the row itself, the prompt's own output-contract counts (denominator + two check-id ranges), the obligation-sweep max-row constant, two sibling <N> literals, and the tracked-byte fingerprint — grep the pin tests for the old count before shipping the row
 type: gotcha
-origin: direction-surfacing branch, Check 22 addition (2026-08-29)
+sources:
+  - resource: direction-surfacing branch, Check 22 addition (2026-08-29)
 ---
 
 The plan-document-reviewer's checks table is pinned from four

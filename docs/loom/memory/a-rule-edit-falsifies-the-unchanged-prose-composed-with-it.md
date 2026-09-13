@@ -2,7 +2,8 @@
 name: a-rule-edit-falsifies-the-unchanged-prose-composed-with-it
 description: A pinned edit that changes a rule can falsify the UNCHANGED prose that composes with it — enumerating vocabulary in an untouched clause tail, a file preamble describing what its sections are, a distant heading stating the old policy — and string sweeps cannot see this class because the stale text contains no copy of the edited claim; before committing a rule change, re-read what the changed passage composes with (same paragraph's tail, the file's self-description, sibling headings) as a deliberate pass
 type: gotcha
-origin: whole-branch docs arms on two consecutive arcs (2026-08-04): 0.51.0 arc round 1 (checks-table heading "first failure determines verdict" vs the new full-sweep sentence; a backlog entry left prescribing shipped work) and 0.52.0 arc round 1 (fail-closed clause tail "in applying either check" after the two-part rule became three-part; dispatch-hygiene preamble claiming every section is a pointer-referenced illustration after a normative section landed)
+sources:
+  - resource: whole-branch docs arms on two consecutive arcs (2026-08-04): 0.51.0 arc round 1 (checks-table heading "first failure determines verdict" vs the new full-sweep sentence; a backlog entry left prescribing shipped work) and 0.52.0 arc round 1 (fail-closed clause tail "in applying either check" after the two-part rule became three-part; dispatch-hygiene preamble claiming every section is a pointer-referenced illustration after a normative section landed)
 ---
 
 Two consecutive arcs shipped a correct pinned edit and left adjacent,

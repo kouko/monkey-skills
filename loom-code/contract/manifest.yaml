@@ -2,13 +2,12 @@
 # Consumers: loom-design and loom-workflow read this file; only loom-code writes it.
 # Recomputed by check_mechanisms.py: every station / tool / action / artifact
 # field below is a mechanism and must be listed in docs/loom/evidence/mechanisms.yaml.
-version: 2.0.0
+version: 2.2.0
 
 # Paths matched here are publication metadata. They do not change the
 # functional content identity that executions and reviews attest to.
 publication_only_paths:
   - docs/loom/<change-id>/attestation.json
-  - docs/loom/memory/**
 
 stations:            # produce one per-change artifact each (§3)
   - {name: capture-intent, owner: loom-design, produces: intent,  decision_point: 1}
@@ -37,7 +36,7 @@ tools:               # user-invoked, or raised by a station on a mechanical cond
 actions:             # executable steps inside a station; not skills (§3)
   - name: restate-and-confirm
     owner: write-plan          # also executed by capture-intent when loom-design is installed
-    summary: "decision point ① — restate Problem/Acceptance in plain words; merge one-way doors, the once-per-change second-vendor suggestion and a missing-PRINCIPLES interview into the same dialogue; write `status: confirmed <date>`."
+    summary: "decision point ① — restate Problem/Acceptance in plain words; merge one-way doors, any `second-vendor: ask` question and a missing-PRINCIPLES interview into the same dialogue; write `status: confirmed <date>`."
   - name: one-way-door
     owner: write-plan
     summary: "classes (a)–(e) — (e) irreversible actions on existing user data, asked even without a fork — and four gates (check / measure / threshold 20% / merge); asked in consequence form inside decision point ① or ②; answers marked user-decided in spec Design decision."
@@ -58,7 +57,7 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "parallel implementers may use isolated git worktrees; the branch integrates before closing review."
   - name: read
     owner: review
-    summary: "≥2 fresh-context reviewers apply the lens for the artifact type (code 11 dims / docs 5 dims / spec- design- principles-conformance)."
+    summary: "fresh-context reviewers apply the artifact lens; reviewer-count mechanically computes a floor of one only for a narrow low-risk whole delta and two for every other or undecidable delta."
   - name: blind-run
     owner: review
     summary: "an agent that never touched the change builds/runs it in a clean environment and writes the blind-run report against every Acceptance line (plus UI flows for product)."
@@ -68,9 +67,6 @@ actions:             # executable steps inside a station; not skills (§3)
   - name: checkpoint
     owner: review
     summary: "one closing review after Build; fixes return to Build, and finalize-review generates a fresh content-bound attestation only after reviewers and checks pass."
-  - name: memory
-    owner: ship
-    summary: "git-memory trailers on the commit plus docs/loom/memory/ entries (templates/memory-README.md) before push."
   - name: alert-to-intent
     owner: maintain
     summary: "an alert or incident becomes evidence on the matching open intent or a new intent with originator maintenance-loop; every incident becomes an eval in mechanisms.yaml."
@@ -84,7 +80,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
     path: docs/loom/intent/<change-id>.md
     template: intent.md
     charter:
-      answers: "why this change exists and how the user will know it is done"
+      answers: "why this change exists, the value when needed, and which observable delivery outcomes prove it is done"
       readers: ["user at decision point 1", "every later station"]
       must:
         - "Problem in the user's words"
@@ -93,12 +89,12 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "Constraints"
         - "Out of scope"
         - "Open questions"
+        - "Material user-outcome or scope choices remain open; only non-material unsupported detail is deleted"
       must_not:
         - {kind: "requirement-level behaviour", goes_to: spec}
         - {kind: "task split or file lists",     goes_to: plan}
         - {kind: "design rationale",             goes_to: spec}
         - {kind: "verification history",         goes_to: attestation}
-        - {kind: "lessons",                      goes_to: memory}
       signoff: capture-intent
       edits_after:
         - {id: delivery-derived-from-default, text: "delivery is derived from canonical evidence on the selected remote-default snapshot; the intent remains confirmed"}
@@ -139,7 +135,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "the intent restated", goes_to: intent}
         - {kind: "task ordering",       goes_to: plan}
         - {kind: "review findings",     goes_to: attestation}
-        - {kind: "lessons",             goes_to: memory}
       signoff: write-spec
       edits_after:
         - {id: changed-req-reruns-decision-point-2, text: "a changed REQ re-runs decision point 2 and recomputes confirmed-behavior"}
@@ -169,7 +164,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "scenario lists inside Test",    goes_to: spec}
         - {kind: "design rationale",              goes_to: spec}
         - {kind: "verification diary",             goes_to: attestation}
-        - {kind: "lessons",                       goes_to: memory}
         - {kind: "verification identity",          goes_to: attestation}
       signoff: write-plan
       edits_after:
@@ -195,8 +189,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "findings"
       must_not:
         - {kind: "design reasoning", goes_to: spec}
-        - {kind: "process accounting", goes_to: memory}
-        - {kind: "lessons",          goes_to: memory}
       signoff: review
       edits_after:
         - {id: regenerate-after-functional-change, text: "the checker replaces the whole attestation after functional content changes and verification passes again"}
@@ -222,32 +214,11 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "What this did to existing data"
         - "I decided for you"
       must_not:
-        - {kind: "diff commentary", goes_to: memory}
         - {kind: "design rationale", goes_to: spec}
         - {kind: "internal ids",     goes_to: attestation}
       signoff: ship
       edits_after:
         - {id: regenerated-after-functional-change, text: "functional content changed after finalization"}
-  memory:
-    path: docs/loom/memory/<slug>.md
-    template: memory-README.md
-    fields: []
-    charter:
-      answers: "what this repository learned that outlives the change"
-      readers: ["future changes", "git-memory recall"]
-      must:
-        - "one lesson per entry in the store README format"
-        - "the trigger"
-        - "the correct path"
-      must_not:
-        - {kind: "change narrative", goes_to: intent}
-        - {kind: "verification identity", goes_to: attestation}
-        - {kind: "task lists",       goes_to: plan}
-      signoff: build
-      edits_after:
-        - {id: memory-entries-appended,               text: "entries are appended"}
-        - {id: superseded-entry-gains-replacement-pointer, text: "a superseded entry gains a pointer to its replacement"}
-        - {id: memory-index-regenerated,               text: "the index is regenerated"}
   kickoff-defaults:
     path: docs/loom/KICKOFF-DEFAULTS.md
     template: KICKOFF-DEFAULTS.md
@@ -259,7 +230,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "one line per key with value, reason and date"
       must_not:
         - {kind: "per-change decisions", goes_to: plan}
-        - {kind: "lessons",              goes_to: memory}
       signoff: capture-intent
       edits_after:
         - {id: kickoff-line-replaced-with-value-reason-date, text: "a line is replaced with a new value, reason and date"}
@@ -273,7 +243,7 @@ standing_docs:       # not per-change (§2a, §8)
     # one shape for the checker to read (wave-end:0-05).
 
 kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
-  - {name: second-vendor,          grammar: "<cli> | none | ask", note: "`ask` defers the choice to the confirmed intent or plan; the small lane never asks"}
+  - {name: second-vendor,          grammar: "<cli> | ask | suggest", note: "`ask` blocks once per full-lane change; `suggest` reports availability without waiting and permits opt-in only before full-lane Review"}
   - {name: docs-lint,              grammar: "<command> | none", note: "declared, not a blocker (W0-02): a declared command runs in CI for its report only; reviewer contract reads it to decide whether style findings are allowed at all"}
   - {name: package-tests,          grammar: "<command> | none", note: "the command finalize-review executes once and push.attestation validates by identity; absent = recomputed from build markers"}
   - {name: standing-docs,          grammar: "waived"}
@@ -289,7 +259,6 @@ artifact_types:      # §6 type mapping; KICKOFF-DEFAULTS artifact-types is rese
   - {glob: "PRINCIPLES.md",              type: standing}
   - {glob: "DESIGN.md",                  type: standing}
   - {glob: "docs/loom/KICKOFF-DEFAULTS.md", type: standing}
-  - {glob: "docs/loom/memory/**",        type: memory}
   - {glob: "**/evidence/**",             type: evidence}
   - {glob: "**/SKILL.md",                type: skill}
   - {glob: "**/agents/*.md",             type: skill}

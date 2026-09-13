@@ -2,7 +2,8 @@
 name: an-extracted-helper-inherits-none-of-its-call-sites-tests
 description: Extracting duplicated logic into a shared helper moves the code but not the coverage — every call site can pass while a branch none of them takes is unprotected, and when the extraction lands as two copies (separate import roots, independent package hashing) the untested twin can be reverted to the exact defect the extraction removed with its whole suite still green
 type: gotcha
-origin: pin-granularity arc (2026-08-28) — a review arm mutated `heading_window.line_leading` and found survivors across all 44 call sites; a later arm found five more surviving in the untested second copy, including reverting the helper to the bare substring search the branch existed to eliminate
+sources:
+  - resource: pin-granularity arc (2026-08-28) — a review arm mutated `heading_window.line_leading` and found survivors across all 44 call sites; a later arm found five more surviving in the untested second copy, including reverting the helper to the bare substring search the branch existed to eliminate
 ---
 
 Twelve hand-rolled copies of a line-leading heading anchor were consolidated

@@ -2,7 +2,8 @@
 name: filesystem-independence-needs-behavioral-cold-start-proof
 description: A plugin can pass filesystem-boundary checks while still requiring an absent sibling at runtime; standalone guarantees need cold-start tests that execute documented commands from a renamed isolated install and observe real success, rejection, and state effects
 type: practice
-origin: codex/loom-plugin-specialization close-out
+sources:
+  - resource: codex/loom-plugin-specialization close-out
 ---
 
 A relative-link and private-path scan proves that one plugin does not reach

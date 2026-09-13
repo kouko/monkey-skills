@@ -2,7 +2,8 @@
 name: hold-every-plan-write-while-a-review-packet-is-sealed
 description: A sealed batch ReviewPacket's identity digests the WHOLE plan file, so any other write to the plan between `packet` and `apply-result` — a claim flip, a Notes line — forces a re-seal + re-record + rebind of the unchanged reviewer results; on this arc it happened FOUR times in one run, and each re-record hit a second trap — an orphan superseded receipt (result_applied false) left in the scan directory blocks the re-send until moved out; apply-result also refuses while ANY batch member on the plan is still not implemented
 type: gotcha
-origin: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — backlog entries 2026-08-31-packet-identity-binds-whole-plan-text and 2026-08-31-orphan-dispatch-receipt-jams-batch (both start events fired on this arc)
+sources:
+  - resource: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — backlog entries 2026-08-31-packet-identity-binds-whole-plan-text and 2026-08-31-orphan-dispatch-receipt-jams-batch (both start events fired on this arc)
 ---
 
 This generalizes the identity-binding gotcha already recorded in

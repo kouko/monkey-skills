@@ -2,7 +2,8 @@
 name: a-probe-that-pins-a-manifest-block-as-a-literal-breaks-when-a-line-is-inserted-inside-it
 description: An adversary probe that rewrites a manifest block by matching its exact text pins every line between its first and last anchor; a later change that adds an entry inside that span turns the probe red for a reason unrelated to the behaviour it tests — append new entries after the last pinned line, or make the probe patch by key rather than by literal
 type: gotcha
-origin: 2026-09-05-artifact-charter-boundaries-and-edit-rights — adding a policy id after the first entry of the review row's edits_after list broke a green probe that patched that block by string replacement; moving the new id to the end of the list restored it
+sources:
+  - resource: 2026-09-05-artifact-charter-boundaries-and-edit-rights — adding a policy id after the first entry of the review row's edits_after list broke a green probe that patched that block by string replacement; moving the new id to the end of the list restored it
 ---
 
 The probe simulated the old bare-string `edits_after` shape by replacing

@@ -2,7 +2,8 @@
 name: same-economic-fact-different-concept-string-needs-first-present-fallback
 description: A producer can book the SAME economic item under DIFFERENT concept strings across sub-shapes of one taxonomy family — TW reinsurers record insurance-contract-liabilities under generic ifrs-full:LiabilitiesArisingFromInsuranceContracts while life/P&C insurers use tifrs-bsci-ins:InsuranceContractLiabilities_CB. A canonical mapper keyed on ONE concept string silently drops the field for the other sub-shape; resolve with a first-present candidate list (try the specific concept, fall back to the generic), not a single lookup. BOUNDED: this applies only where every candidate is a SYNONYM for one item — where they are different measures (a total and its component) first-present silently promotes the component in any period the total is absent.
 type: practice
-origin: branch feat-tw-ixbrl-fh (2026-07-22) — TW -ins insurer canonical; measured across life (三商壽) / P&C (台產/新產) / reinsurance (中再保) sub-shapes
+sources:
+  - resource: branch feat-tw-ixbrl-fh (2026-07-22) — TW -ins insurer canonical; measured across life (三商壽) / P&C (台產/新產) / reinsurance (中再保) sub-shapes
 ---
 
 Within one taxonomy family the "same field" is not always the same concept string.

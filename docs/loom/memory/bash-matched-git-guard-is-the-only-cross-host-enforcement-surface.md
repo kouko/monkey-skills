@@ -2,7 +2,8 @@
 name: bash-matched-git-guard-is-the-only-cross-host-enforcement-surface
 description: A mechanical gate that must hold on BOTH Claude Code and Codex has exactly one place to live — a Bash-matched PreToolUse guard — because Codex 0.139 fires PreToolUse for Bash only (Skill/Write/Edit hooks never fire there); on Claude Code that surface is the plugin's `hooks.json` running `loom_checker.py push --hook`, on Codex it is the repo-local `.codex/hooks.json` (written by `codex_scaffold.py`) running `.codex/hooks/loom-checker`; and inside such a guard, list staged paths with `git diff --cached -z` (NUL split) — the default `core.quotepath` octal-escapes non-ASCII filenames so a `docs/loom/plans/計画.md` fails a `startswith`/`endswith` filter and is silently allowed
 type: gotcha
-origin: branch onramp-explicit-choice-gate (2026-08-18) — on-ramp explicit-choice gate arc; Codex facts docs/loom/codex-verification.md:102-116 + loom-code/skills/using-loom-code/references/codex-tools.md:64-83; quotepath bypass caught by the whole-branch review panel (round 1); arrangement updated by simple-loom-flow W4-06 (2026-09-03), which retired the predecessor (a standalone git-guard.py forwarded by a repo shim) in favor of the loom checker's own `push --hook` entry point on both hosts
+sources:
+  - resource: branch onramp-explicit-choice-gate (2026-08-18) — on-ramp explicit-choice gate arc; Codex facts docs/loom/codex-verification.md:102-116 + loom-code/skills/using-loom-code/references/codex-tools.md:64-83; quotepath bypass caught by the whole-branch review panel (round 1); arrangement updated by simple-loom-flow W4-06 (2026-09-03), which retired the predecessor (a standalone git-guard.py forwarded by a repo shim) in favor of the loom checker's own `push --hook` entry point on both hosts
 ---
 
 Designing the on-ramp choice gate, the "door" candidates were a

@@ -2,7 +2,8 @@
 name: cite-only-after-reading-what-the-source-tells-you-to-read-first
 description: A source document can carry standing instructions to its citers — an erratum, a "read X before citing this" pointer, a mandated citation form — and those instructions sit in the header block that every efficient reading pattern skips; a backtest cited such a document, saw the erratum's first line in a grep result, started reading below it, and shipped a draft that violated all three of its instructions plus inherited two undisclosed contradictions that sat directly under its own load-bearing sentence
 type: practice
-origin: fix-citation-checker-pathless-shorthand whole-branch review (2026-07-31), docs arm rounds 1-3
+sources:
+  - resource: fix-citation-checker-pathless-shorthand whole-branch review (2026-07-31), docs arm rounds 1-3
 ---
 
 A backtest note cited `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`. That audit carries an **erratum block between its header bullets and §1**, which states three things to anyone citing it:

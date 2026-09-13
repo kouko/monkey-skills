@@ -2,7 +2,8 @@
 name: a-backticked-token-with-a-slash-is-a-repo-path-to-the-citation-check
 description: CI's doc-citation check (`loom-code/scripts/check_doc_citations.py`, run over `docs/loom/*.md`, every intent, and the loom skill/agent/reference trees) treats ANY backticked token containing a `/` as an explicit repo-path citation and fails when no such file exists — so a machine-local path like `~/.codex/config.toml` or `/usr/bin/env` written in backticks inside an intent turns the whole PR red; write non-repo paths in prose, keep backticks for paths that resolve in the tree
 type: gotcha
-origin: branch positioning-paragraph-cap-redesign (2026-09-04) — PR #789's first CI run failed on a parked intent (codex-hook-trust) that cited `~/.codex/config.toml` in backticks; the fix was two words of prose and cost an extra review round because it landed after the branch-end pass
+sources:
+  - resource: branch positioning-paragraph-cap-redesign (2026-09-04) — PR #789's first CI run failed on a parked intent (codex-hook-trust) that cited `~/.codex/config.toml` in backticks; the fix was two words of prose and cost an extra review round because it landed after the branch-end pass
 ---
 
 `check_doc_citations.py` extracts citations with a regex over backticks

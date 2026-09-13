@@ -1,6 +1,6 @@
 {
   "name": "tsundoku",
-  "version": "0.11.2",
+  "version": "0.12.0",
   "description": "Turn owned-but-unread Kobo e-books into actionable skills (Claude Code CLI only).",
   "author": {
     "name": "kouko",
@@ -20,6 +20,10 @@
     "book-to-skill",
     "kobodl",
     "pandoc",
-    "tsundoku"
+    "tsundoku",
+    "audiobook",
+    "tts",
+    "m4b",
+    "edge-tts"
   ]
 }

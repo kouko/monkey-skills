@@ -2,7 +2,8 @@
 name: a-rule-stricter-than-the-corpus-best-human-work-is-miscalibrated
 description: When a new gate's threshold is picked by reasoning rather than measured, run it against the best existing human-authored examples you have — if it fails them, the threshold is wrong even though the rule's direction is right. Measured: requiring every load-bearing input to be named passed 1/10 and failed both nodes a human had marked as the good ones; requiring at least one passed exactly those two. A gate that flags the work you would hold up as the model teaches authors that the gate is noise.
 type: practice
-origin: think-orbit 0.1.4 transparency arc, T1 threshold correction (2026-08-19) — the "every" variant was written into the brief and plan without being measured, and the measurement reversed it
+sources:
+  - resource: think-orbit 0.1.4 transparency arc, T1 threshold correction (2026-08-19) — the "every" variant was written into the brief and plan without being measured, and the measurement reversed it
 ---
 
 The rule's direction was settled and correct: a node body must name an upstream it

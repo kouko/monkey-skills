@@ -2,7 +2,8 @@
 name: fail-closed-default-must-be-enforced-not-emergent
 description: A fail-closed "never trust by default" gate must ENFORCE the default with an explicit guard, not let it EMERGE from a comparison — e.g. `accuracy >= threshold` with 0 labels + min_samples≤0 + threshold 0.0 evaluates 0.0 >= 0.0 → TRUSTED with zero ground truth. Add `if not evidence or min_samples < 1: NOT_TRUSTED` before the comparison ladder, and pin it with a zero-evidence test.
 type: gotcha
-origin: 2026-07-14 session — investing-toolkit analysis-kpi slice 5 (reliability gate evaluate); adversarial code-quality review caught the TRUSTED-by-omission path
+sources:
+  - resource: 2026-07-14 session — investing-toolkit analysis-kpi slice 5 (reliability gate evaluate); adversarial code-quality review caught the TRUSTED-by-omission path
 ---
 
 The operational-kpi reliability gate must be fail-closed: a company is TRUSTED

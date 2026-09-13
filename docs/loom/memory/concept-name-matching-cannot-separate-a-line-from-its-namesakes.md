@@ -2,7 +2,8 @@
 name: concept-name-matching-cannot-separate-a-line-from-its-namesakes
 description: Finding a financial line by matching CONCEPT NAMES returns the line's namesakes too — a case-insensitive `revenue|sales` sweep over 46 filers' companyfacts ranked CostOfRevenue (18 filers / 784 rows), DeferredRevenueCurrent and available-for-sale-securities concepts above the one genuine candidate, and reported 42 of 46 filers as carrying an unlisted revenue-shaped concept when the filers with any real gap number between 2 and 4 (two sweeps disagreed; the low figure is the one that favoured abandoning the fix); worse, a name cannot tell a filer's TOTAL from its COMPONENT, because the same concept is the total for one filer and a component for another
 type: gotcha
-origin: 2026-07-28 revenue chain-membership audit, offline over the local companyfacts cache — the sweep that killed a planned chain-widening fix; full measurement in docs/loom/audits/2026-07-28-revenue-chain-and-hierarchy-audit.md §2
+sources:
+  - resource: 2026-07-28 revenue chain-membership audit, offline over the local companyfacts cache — the sweep that killed a planned chain-widening fix; full measurement in docs/loom/audits/2026-07-28-revenue-chain-and-hierarchy-audit.md §2
 ---
 
 Asked "which revenue concepts is our fetch list missing?", the honest method is a

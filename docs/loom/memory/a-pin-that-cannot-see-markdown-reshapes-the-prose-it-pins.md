@@ -2,7 +2,8 @@
 name: a-pin-that-cannot-see-markdown-reshapes-the-prose-it-pins
 description: A prose-pinning regex that cannot match through a markdown code span or emphasis marker does not fail loudly — the author, seeing the RED, quietly drops the backticks from the sentence so the pin passes, and the artifact ends up spelling one term two ways; the defect is in the helper's tokenisation, so widen the helper to tolerate glued markdown and restore the prose, never bend the sentence to the regex
 type: gotcha
-origin: goal-cerate-r2 (goal-create Stop-when repair, 2026-08-31) — three implementers in one arc each hit `_negation_binds` refusing "never a `Stop-when` branch" because `\s+\b` cannot precede a backtick, and each shipped the sentence bare; the whole-branch docs arm then flagged the bare spelling as an inconsistency, and the code arm found a sibling copy of the same helper missing the trailing `\b`, so `never … asked` satisfied a check for `never … ask`
+sources:
+  - resource: goal-cerate-r2 (goal-create Stop-when repair, 2026-08-31) — three implementers in one arc each hit `_negation_binds` refusing "never a `Stop-when` branch" because `\s+\b` cannot precede a backtick, and each shipped the sentence bare; the whole-branch docs arm then flagged the bare spelling as an inconsistency, and the code arm found a sibling copy of the same helper missing the trailing `\b`, so `never … asked` satisfied a check for `never … ask`
 ---
 
 The negation-binding helper this repo sanctions (`\bnever\b\W*(?:\s+\S+){0,n}\s+\b<target>\b`)

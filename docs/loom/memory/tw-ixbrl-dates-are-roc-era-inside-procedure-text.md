@@ -2,7 +2,8 @@
 name: tw-ixbrl-dates-are-roc-era-inside-procedure-text
 description: TW iXBRL date facts are ROC-era (民國) years embedded in procedure prose, not clean ISO dates — e.g. the financial-statement authorisation-for-issue fact (tifrs-notes:DateAndProceduresOfAuthorisationForIssueOfFinancialStatements) reads "本合併財務報告於115年5月13日經董事會通過。" → parse the 民國 date out (115+1911=2026 → 2026-05-13). Guard the ROC year with a LEFT digit boundary so a 4-digit Gregorian "2026年" is NOT misread as ROC "026"→1937 (silent wrong century).
 type: gotcha
-origin: branch tw-kpi-store (2026-07-25, 2.35.0) — the TW KPI producer needed a non-wall-clock as_of; the board authorisation-for-issue date is in the iXBRL but as a ROC-era date wrapped in 董事會 procedure text.
+sources:
+  - resource: branch tw-kpi-store (2026-07-25, 2.35.0) — the TW KPI producer needed a non-wall-clock as_of; the board authorisation-for-issue date is in the iXBRL but as a ROC-era date wrapped in 董事會 procedure text.
 ---
 
 Taiwan financial iXBRL carries dates as **ROC-era (民國) years inside prose**,

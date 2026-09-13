@@ -2,7 +2,8 @@
 name: a-rewrite-that-promises-byte-identical-output-needs-an-oracle-built-from-the-old-code-first
 description: The memory-grep single-pass rewrite promised byte-identical output; the first task built a golden oracle by running the PRE-change script over one fixture and freezing its six outputs, and every later task diffed against those goldens — yet a reviewer still found a shape the fixture never held (a subject containing 0x1F) that the new code silently dropped, so the oracle is the floor a rewrite starts from and never the proof it finished
 type: practice
-origin: 2026-09-06 memory-grep-single-pass (loom-workflow 4.1.0) — W1-01 built the goldens, wave-end round 1 found the gap the goldens could not see
+sources:
+  - resource: 2026-09-06 memory-grep-single-pass (loom-workflow 4.1.0) — W1-01 built the goldens, wave-end round 1 found the gap the goldens could not see
 ---
 
 A rewrite whose contract is "the output does not change" has an obvious

@@ -2,7 +2,8 @@
 name: new-arc-branch-bases-on-origin-main-not-merged-tip
 description: After a squash-merged arc, cut the NEXT arc's branch from origin/main — not from the previous arc's local branch tip; a tip-cut branch carries a stale base whose diff-vs-main is polluted by the old arc's commits and any content main gained since, and the pollution only surfaces at finishing
 type: practice
-origin: 52/53-week filer arc finishing (feat-52-53-week-filer-support, 2026-07-19)
+sources:
+  - resource: 52/53-week filer arc finishing (feat-52-53-week-filer-support, 2026-07-19)
 ---
 
 This repo squash-merges PRs, so a merged arc's local branch tip is

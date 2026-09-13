@@ -2,7 +2,8 @@
 name: verify-agent-mechanisms-on-disk-not-self-report
 description: Behavioral verification of agent-facing mechanisms on cheap model tiers — real-session drive with unique markers, disk-verified effects, transcript grep for output fingerprints, per-verb cold-reader agents, two consecutive clean rounds; never accept the model's self-report as the oracle
 type: process
-origin: PR #500 branch, 2026-07-06 — three dogfood series on one branch
+sources:
+  - resource: PR #500 branch, 2026-07-06 — three dogfood series on one branch
 ---
 
 When behaviorally verifying agent-facing mechanisms (hooks, skills,

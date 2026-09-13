@@ -33,6 +33,7 @@ EXPECTED_RULE_IDS = [
     "spec.req-grammar",
     "spec.ui-flows-recompute",
     "standing.product-principles-reject",
+    "standing.second-vendor-valid",
     "standing.silence",
     "standing.warn",
 ]
@@ -120,6 +121,34 @@ Fixture.
     git(repo, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk")
     git(repo, "checkout", "-q", "-b", "work")
     return repo, remote_head
+
+
+def test_reviewer_count_cli_preserves_output_and_dirty_tree_error(tmp_path: Path) -> None:
+    repo, _ = make_intent_state_repo(tmp_path, delivered=False)
+    (repo / "guide.md").write_text("Usage clarification.\n", encoding="utf-8")
+    git(repo, "add", "guide.md")
+    git(repo, "commit", "-q", "-m", "clarify usage")
+
+    result = run_checker("reviewer-count", "2026-09-09-example", cwd=repo)
+    assert (result.returncode, result.stdout, result.stderr) == (0, "1\n", "")
+
+    (repo / "guide.md").write_text("Uncommitted change.\n", encoding="utf-8")
+    result = run_checker("reviewer-count", "2026-09-09-example", cwd=repo)
+    assert (result.returncode, result.stdout, result.stderr) == (
+        2,
+        "",
+        "reviewer-count needs a clean tree with completed functional content.\n",
+    )
+
+
+def test_reviewer_count_cli_preserves_argument_errors(tmp_path: Path) -> None:
+    for args in [(), (" ",), ("change", "extra")]:
+        result = run_checker("reviewer-count", *args, cwd=tmp_path)
+        assert (result.returncode, result.stdout, result.stderr) == (
+            2,
+            "",
+            "reviewer-count needs one change-id.\n",
+        )
 
 
 def test_list_rules_exits_zero() -> None:
@@ -258,8 +287,8 @@ def test_hooks_probe_is_gone() -> None:
     assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
 
 
-def test_the_rule_population_is_nineteen() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 19
+def test_the_rule_population_is_twenty() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 20
 
 
 # --- contract --require (spec G) -------------------------------------------

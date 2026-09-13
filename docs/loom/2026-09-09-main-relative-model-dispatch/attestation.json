@@ -1,0 +1,85 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-main-relative-model-dispatch",
+  "content_digest": "167eb81d2a969cda403a1e31382dad7ffbc008b8",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/test_run_pilot.py -v",
+      "artifact": "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/test_run_pilot.py",
+      "result": "pass",
+      "command_digest": "880d83128aa362faf331896f2954daea14f6eabdb0dad9cf06eacb706d84e49c"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-dogfood-reviewer",
+      "vendor": "openai",
+      "model": "host-default/unverified",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        "C1"
+      ]
+    },
+    {
+      "reviewer": "claude-code-dogfood-reviewer",
+      "vendor": "anthropic",
+      "model": "host-default/unverified",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "important",
+      "dimension": "correctness",
+      "anchor": "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/run_pilot.py:186",
+      "text": "A rejected or non-JSON paid Claude result leaves no diagnostic artifact; the default private scratch directory limits exposure, but replay failure evidence is lost."
+    },
+    {
+      "severity": "nit",
+      "dimension": "naming",
+      "anchor": "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/test_run_pilot.py:90",
+      "text": "The success-path test remains longer than the review lens's preferred function size."
+    },
+    {
+      "severity": "nit",
+      "dimension": "correctness",
+      "anchor": "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md:25",
+      "text": "The corrected budget summary does not explicitly name the single Stage 2 arm."
+    },
+    {
+      "severity": "nit",
+      "dimension": "refactoring",
+      "anchor": "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/run_pilot.py:23",
+      "text": "The CLI reference constant is used only indirectly by the adjacent grounding comment."
+    },
+    {
+      "severity": "nit",
+      "dimension": "correctness",
+      "anchor": "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md:40",
+      "text": "The initial four-arm effort table could repeat the publication-time redaction caveat more locally."
+    },
+    {
+      "severity": "nit",
+      "dimension": "deletion-first",
+      "anchor": "docs/skill-dogfood/2026-09-09-loom-main-relative-dispatch-plan/historical-cases.md:7",
+      "text": "The redacted Source session column adds little information after publication sanitization."
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+Ran the capture-intent flow in **simulation mode** — no files written, no scripts executed. Below is exactly what *would* be produced and said, given you've already stated the outcome and confirmed it.
+
+## Note on skipped mechanics (since this is a dry run)
+- Step 0 (contract-version check) and the `loom_checker.py` schema/standing runs are shell calls — **not executed**. Treat the artifact below as unvalidated until a real run confirms it.
+- Step 3 principles check — skipped because you told me `PRINCIPLES.md` is already ratified in this repo.
+- Second-vendor (Codex) suggestion — no `docs/loom/KICKOFF-DEFAULTS.md` was read (no file access), so I did not ask it. That's a gap a real run must resolve, not a decision made on your behalf.
+- One-way doors — I found none: muting is a reversible preference toggle, no cost/lock-in/irreversible-data-action axis is in play. Nothing raised.
+
+## Decision point ① — restatement (as it would be asked)
+
+> You want to stop project activity emails from repeatedly interrupting project members — by muting email notifications for one specific project. When it's done: that project's members stop getting activity emails for it, in-app notifications for that project keep working exactly as now, and every other project's email plus all global notification settings stay untouched. Building or verifying an "unmute" capability is not part of this change. Is that right?
+>
+> Separately: saying yes here would normally authorize an automatic, non-forced push + Ready PR once Review passes later, with merge staying a separate decision — but you've told me to opt out of that, so I'm recording it as opted out, not automatic.
+
+**Your answer (given):** yes to the outcome, opt-out on publication.
+
+## Resulting intent artifact (content only — not written to disk)
+
+`docs/loom/intent/2026-09-12-mute-project-email-notifications.md`
+
+```markdown
+---
+originator: kouko
+kind: product
+needs-design: yes — touches the notification-settings surface; no existing DESIGN.md or ui-flows document covers per-project email muting
+status: confirmed 2026-09-12
+---
+
+## Problem
+Project activity emails repeatedly interrupt project members. There is
+currently no way to stop those emails for a specific project without
+affecting anything else.
+
+## Proposed outcome
+A project can be put into an email-muted state. Members of that project
+stop receiving activity emails for it.
+
+## Acceptance
+1. A project can be placed into a distinct muted-email state.
+2. While a project is muted, its members receive no activity emails for
+   that project.
+3. While a project is muted, members still receive in-app notifications
+   for that project's activity, unchanged.
+4. Muting one project has no effect on email or in-app notifications for
+   any other project, and no effect on any global notification setting.
+
+## Constraints
+- Only the email channel is affected; in-app notifications and global
+  notification settings are unaffected by design intent.
+- Scope is a single project at a time.
+
+## Out of scope
+- Providing a way to unmute a project once muted.
+- Any change to in-app notification behavior.
+- Any change to global notification settings.
+- Notification channels other than email and in-app.
+
+## Value case
+Beneficiary: members of a project whose activity email volume is
+disruptive. Urgency: interruption is ongoing today. GO — reduces
+interruption while preserving visibility (in-app stays intact) and
+without touching other projects or global settings.
+
+## Open questions
+- none
+```
+
+Commit message body (if this were real) would include the `needs-design:` line verbatim, per contract requirement.
+
+## Hand-off (simulated)
+
+`needs-design: yes` → this goes to **`loom-design:write-spec`**, not straight to planning.
+
+Questions asked, for the plan's `## Questions asked` section:
+- `① — what — "You want to mute email notifications for one project so members stop being interrupted, while in-app notifications and every other project's/global settings stay unchanged; unmuting is out of scope. Is that right?"` — answered yes
+- `① — consequence — "Saying yes normally authorizes automatic publication after Review; do you want to opt out?"` — answered: opt out
+
+For the record: `write-spec` will not re-run decision point ①. It owns decision point ② ("you type X, you see Y") for product changes, which stays yet to be asked — nothing about interaction flow, persistence, error handling, or a state machine has been decided here, deliberately.

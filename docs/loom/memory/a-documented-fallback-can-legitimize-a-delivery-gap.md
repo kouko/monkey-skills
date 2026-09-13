@@ -2,7 +2,8 @@
 name: a-documented-fallback-can-legitimize-a-delivery-gap
 description: A skill that documents its own degradation path ("script absent → hand-edit / say N/A") turns a delivery defect into apparent design — reviewers verify the fallback claim is TRUE and never ask whether the state it describes is RIGHT, so the gap ships gate-approved; when writing a fallback, state which condition is a temporary environment state vs a permanent delivery gap, and treat "permanently degraded everywhere but the dev repo" as a defect no fallback text may normalize
 type: practice
-origin: 2026-08-10, ship-progress-tooling arc — plan_card.py/backlog_index.py were mandated at 10 call sites by five shipped skills yet shipped in no plugin; the skills' own text said "ships in no plugin" with a loud N/A fallback, so four days of plan gates, SDD triads, and whole-branch reviews all verified the claim true and none flagged the state wrong; surfaced only when an external repo (kumiko) hand-invented a progress table that drifted four times
+sources:
+  - resource: 2026-08-10, ship-progress-tooling arc — plan_card.py/backlog_index.py were mandated at 10 call sites by five shipped skills yet shipped in no plugin; the skills' own text said "ships in no plugin" with a loud N/A fallback, so four days of plan gates, SDD triads, and whole-branch reviews all verified the claim true and none flagged the state wrong; surfaced only when an external repo (kumiko) hand-invented a progress table that drifted four times
 ---
 
 The progress tooling defect survived every gate because the gates were

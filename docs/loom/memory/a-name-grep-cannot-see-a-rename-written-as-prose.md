@@ -2,7 +2,8 @@
 name: a-name-grep-cannot-see-a-rename-written-as-prose
 description: A rename sweep anchored on `name(:|/)` misses every prose occurrence — "a loom-spec change-folder", "the loom-discovery station" — and the sweep reports clean while stale names remain in live assertions and cross-file section references; anchor the separator class to include prose, and treat a clean grep as necessary, never sufficient
 type: gotcha
-origin: loom-design-merge (6 plugins → 2 consolidation, parts 1-3, 2026-08-16/17)
+sources:
+  - resource: loom-design-merge (6 plugins → 2 consolidation, parts 1-3, 2026-08-16/17)
 ---
 
 The inventory grep for the 6→2 plugin rename was:

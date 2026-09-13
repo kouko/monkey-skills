@@ -2,7 +2,8 @@
 name: a-doc-pin-makes-a-prose-defect-permanent
 description: When a test pins prose that describes code and the prose is WRONG about that code, the green test stops being a guard and becomes a guarantee the documentation stays wrong — and because correcting the prose then requires editing an assertion, the ergonomics push toward the two worst outcomes (leave the prose, or delete the pin) and away from the right one, which is strengthening the pin to encode the true distinction and proving by mutation that the old wording now fails
 type: gotcha
-origin: brief-item-addressability arc, whole-branch review (2026-08-13) — a pin required the substring "non-zero" in a gate sentence whose claim that two modes block by one rule had just been falsified against the code
+sources:
+  - resource: brief-item-addressability arc, whole-branch review (2026-08-13) — a pin required the substring "non-zero" in a gate sentence whose claim that two modes block by one rule had just been falsified against the code
 ---
 
 A skill file said a coverage gate ran in a second mode "blocking on a

@@ -16,7 +16,7 @@ def test_rules_are_importable_without_command_modules() -> None:
     script = """
 import sys
 from loom_checker.rules import RULES
-assert len(RULES) == 19
+assert len(RULES) == 20
 assert not any(name.startswith('loom_checker.command_handlers.') for name in sys.modules)
 """
     subprocess.run(
@@ -58,6 +58,7 @@ def test_list_rules_still_reports_the_complete_public_set() -> None:
         text=True,
     )
     rule_ids = {line.split("\t", 1)[0] for line in result.stdout.splitlines()}
-    assert len(rule_ids) == 19
+    assert len(rule_ids) == 20
     assert "push.attestation" in rule_ids
     assert "push.contextual-body" in rule_ids
+    assert "standing.second-vendor-valid" in rule_ids

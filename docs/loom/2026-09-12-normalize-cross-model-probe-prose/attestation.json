@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-12-normalize-cross-model-probe-prose",
+  "content_digest": "1d05419ee5f8807229f50d98c3352ce2a644622c",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-12-host-aware-cross-model-review-language/evidence/probes/test_host_aware_cross_model_review.py",
+      "artifact": "docs/loom/2026-09-12-host-aware-cross-model-review-language/evidence/probes/test_host_aware_cross_model_review.py",
+      "result": "pass",
+      "command_digest": "c61598b0e9c55c52aa8366ec510b146d3b80a65356d3c87f3f3623938c7f3d3c"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "new_episode_code_review",
+      "vendor": "Codex",
+      "model": "inherited",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "new_episode_skill_review",
+      "vendor": "Codex",
+      "model": "inherited",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

@@ -38,6 +38,7 @@ kobo-auth ──▶ kobo-library ──▶ book-extract ──▶ book-distill
 | [`kobo-library`](skills/kobo-library/SKILL.md) | source-platform（`kobo-*`） | 以 title / author / series / publication date / category / description text / reading status / language 搜尋 Kobo library，下載挑選的書為 DRM-free EPUB |
 | [`book-extract`](skills/book-extract/SKILL.md) | format-agnostic（`book-*`） | 透過 NCX 驅動的章節切分把 EPUB 轉成逐章 Markdown；CJK 安全 |
 | [`book-distill`](skills/book-distill/SKILL.md) | format-agnostic（`book-*`） | 以 RIA-TV++（Adler 分析閱讀 → 5 個並行 extractor → 三重驗證 → RIA++ render → Zettelkasten linking → 對抗式壓力測試）把 Markdown 蒸餾為 atomic SKILL.md 集 |
+| [`book-audify`](skills/book-audify/SKILL.md) | format-agnostic（`book-*`） | 逐章 Markdown → 帶章節書籤的個人 `.m4b` 有聲書(清理 → 驗證硬閘門 → edge-tts → ffmpeg 合併);原文書可選「為聽而譯」翻譯線 |
 
 **命名規則**：`kobo-*` skill 綁定 Kobo platform（auth、library API、kobodl binary）。`book-*` skill 接受任何 EPUB 或 chunked Markdown，不依賴 Kobo。也就是 `book-extract` 與 `book-distill` 對其他來源（手動丟進來的 EPUB、圖書館借閱、public domain）也直接適用。
 

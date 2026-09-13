@@ -2,7 +2,8 @@
 name: a-failed-call-is-a-non-observation-not-a-wrong-answer
 description: A measurement that scores model answers must carry each run's status next to its body and score only runs that produced an answer; a failed or timed-out call folded into the scored set adds a wrong answer on every item at once, which is exactly the shape a "systematic error" threshold fires on, so infrastructure failure reads as a finding about the contract
 type: practice
-origin: 2026-09-04-adversary-three-way-attribution-measured — wave-end:1 rounds 1–3 and the third-round design re-look (2026-09-05)
+sources:
+  - resource: 2026-09-04-adversary-three-way-attribution-measured — wave-end:1 rounds 1–3 and the third-round design re-look (2026-09-05)
 ---
 
 The cold-read runner first recorded a non-zero exit as status `ok`; the

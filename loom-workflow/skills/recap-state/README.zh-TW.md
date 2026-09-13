@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 對話中途迷失方向時，這個 skill 會停下來，用七格式把目前狀況
+> 對話中途迷失方向時，這個 skill 會停下來，用六個自然段落把目前狀況
 > 整理清楚，讓你一分鐘內重新上軌道。
 
 ---
@@ -12,11 +12,30 @@
 你正在對話中。一段長長的工具輸出跑完了，或者你剛離開一會兒，
 或者 agent 問了什麼但你已經想不起前提是什麼。你迷失了。
 
-說一聲就能觸發這個 skill。它會把目前的 session 整理成 7 個區塊
-——我們在做什麼、做了哪些決定、你每一輪說了什麼、還有什麼沒做
+說一聲就能觸發這個 skill。它會把目前的 session 整理成六個段落
+——我們的目的、目前位置、重要決定、尚存差距，以及還有什麼沒做
 完——最後問你確認下一步，再繼續工作。
 
 不會寫入任何檔案。整理結果只出現在對話中。
+
+## Goal-Grounded Alignment Loop／目標錨定對齊閉環
+
+這套 recap 以目的作為後續每段的基準。它不只報告最近做了什麼，還會
+確認目前位置與下一步是否仍然服務於你已經說明的目的。
+
+```mermaid
+graph TB
+    Purpose["目的與現在的位置"] -->|"目的決定哪些背景重要"| Background["重要背景"]
+    Background -->|"背景提供判斷依據"| Assessment["差距與目前判斷"]
+    Assessment -->|"未知或分歧形成確認需求"| Question["為何現在需要確認"]
+    Question -->|"確認結果決定待辦"| Pending["接下來尚待完成"]
+    Pending -->|"從待辦提出下一步"| Alignment["對齊目的與下一步"]
+    Alignment -.->|"目的或方向有偏差"| Purpose
+    Alignment -->|"使用者確認一致"| Continue["繼續工作"]
+```
+
+當前目的必須來自對話證據；只有已經明確建立時才顯示更上層目的。
+如果目的仍不清楚，skill 會直接說明，而不自行補寫。
 
 ---
 
@@ -61,7 +80,7 @@ session** 時觸發（away summary）。那是跨 session 的工具。
 這些是 v0.1 刻意不做的部分：
 
 - **任務別版本** — 偵錯專用、設計專用、研究專用的整理格式。
-  v0.1 對所有對話類型用同一套 7 格式。
+  v0.1 對所有對話類型使用同一套六段結構。
 - **自動觸發** — 不需要使用者說話就偵測到迷失。
   v0.1 需要明確呼叫。
 - **`test-prompts.json`** — 評估整理品質用的 prompt。
@@ -74,11 +93,11 @@ session** 時觸發（away summary）。那是跨 session 的工具。
 ## Files
 
 ```
-recap/
+recap-state/
 ├── README.md           <- English README
 ├── README.ja.md        <- 日本語 README
 ├── README.zh-TW.md     <- 本檔（繁體中文）
 ├── SKILL.md            <- 執行檔（給 Claude）
 └── references/
-    └── seven-block-schema.md  <- V1 七格式模板 + 5 共通核心原則
+    └── seven-block-schema.md  <- 對齊模板 + 歷史脈絡 + 5 共通核心原則
 ```

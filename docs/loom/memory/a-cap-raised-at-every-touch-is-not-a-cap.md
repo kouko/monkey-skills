@@ -2,7 +2,8 @@
 name: a-cap-raised-at-every-touch-is-not-a-cap
 description: A numeric ceiling that gets raised each time it binds has stopped being a constraint and become a running total; writing-plans' SKILL.md word cap had been raised 17 times and sat one word under its own limit, and the correct move at the 18th was extracting a section to a reference file, not a raise — the tell is the raise-count in the file's own history, not the current number
 type: practice
-origin: branch plan-field-microstructure (2026-08-19) — the 18th raise would have crossed the repo's hard ceiling, forcing the extraction that should have happened many raises earlier
+sources:
+  - resource: branch plan-field-microstructure (2026-08-19) — the 18th raise would have crossed the repo's hard ceiling, forcing the extraction that should have happened many raises earlier
 ---
 
 A cap exists to force a decision when content stops fitting: cut, extract, or

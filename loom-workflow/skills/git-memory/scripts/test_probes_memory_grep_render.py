@@ -107,16 +107,54 @@ def _run(repo: Path, *args: str, env: dict | None = None) -> subprocess.Complete
 
 # ─── 1. jq invocation count (EXPECTED RED until W1-03 lands) ──────────
 
-def _build_records_repo(repo: Path, n_records: int) -> None:
+# The two contracted sizes of the records fixture. The shape self-assertion
+# in `_build_records_repo` checks the built history against THIS set, not
+# against the builder's own `n_records` argument — an argument-relative
+# read-back holds for any argument and so binds nothing.
+RECORD_COUNTS = (20, 200)
+
+
+def _build_records_repo(repo: Path, n_records: int, bulk) -> None:
     """`n_records` commits, every one memory-worthy with a single
     Decision: trailer, no supersession — the minimal shape that still
     forces the plain renderer's per-record loop (and, pre-W1-03,
     per-record jq calls) to run `n_records` times.
+
+    Built by `bulk.build` (conftest.py's `git fast-import` wrapper, taken
+    as the `bulk_history` fixture) rather than one `git commit` per
+    commit: at 20 + 200 records the per-commit version cost ~7s, the
+    second largest entry in this test directory's runtime. The history is
+    byte-identical — every commit sha matches what `_commit` above
+    produced for the same index, which is why `_commit` stays in place
+    and is still used by every other fixture in this file. No commit here
+    cites another's sha, so this import is a single pass.
     """
     _init_repo(repo)
-    for i in range(n_records):
-        date = f"2020-{(i // 28) % 12 + 1:02d}-{(i % 28) + 1:02d}"
-        _commit(repo, date, f"chore: record {i} (#{i + 1})", f"Decision: decision number {i}".encode())
+    bulk.build(repo, [
+        bulk.spec(
+            date=f"2020-{(i // 28) % 12 + 1:02d}-{(i % 28) + 1:02d}",
+            subject=f"chore: record {i} (#{i + 1})",
+            body=f"Decision: decision number {i}".encode(),
+        )
+        for i in range(n_records)
+    ])
+
+    # Shape self-assertion. The probe below binds jq CALL COUNTS, which a
+    # fixture with the wrong record shape would still satisfy, so the
+    # fixture asserts its own observable shape here instead of trusting
+    # the builder — see the same guard in
+    # test_probes_memory_grep_single_pass.py::_build_perf_repo.
+    records = bulk.read_shape(repo)
+    assert len(records) in RECORD_COUNTS, (
+        f"expected one of {RECORD_COUNTS} commits, got {len(records)}"
+    )
+    assert len(records) == n_records, f"expected {n_records} commits, got {len(records)}"
+    for sha, message in records:
+        decisions = [ln for ln in message.splitlines() if ln.startswith("Decision: ")]
+        assert len(decisions) == 1, (
+            f"expected exactly one Decision: trailer in {sha}, got {len(decisions)}"
+        )
+        assert "Supersedes:" not in message, f"{sha} must carry no supersession"
 
 
 def _jq_call_count(repo: Path, tmp_path: Path, *args: str) -> int:
@@ -146,7 +184,7 @@ def _jq_call_count(repo: Path, tmp_path: Path, *args: str) -> int:
     return sum(1 for _ in log.read_text().splitlines())
 
 
-def test_render_plain_and_json_jq_invocation_count_bounded_and_constant(tmp_path):
+def test_render_plain_and_json_jq_invocation_count_bounded_and_constant(tmp_path, bulk_history):
     """EXPECTED RED until W1-03 lands. A 20-record repo and a 200-record
     repo must each need <=6 jq invocations for `--no-pr` plain and <=6
     for `--no-pr --format=json` — AND the count must be the SAME for
@@ -157,10 +195,10 @@ def test_render_plain_and_json_jq_invocation_count_bounded_and_constant(tmp_path
     """
     small = tmp_path / "small-repo"
     small.mkdir()
-    _build_records_repo(small, 20)
+    _build_records_repo(small, RECORD_COUNTS[0], bulk_history)
     large = tmp_path / "large-repo"
     large.mkdir()
-    _build_records_repo(large, 200)
+    _build_records_repo(large, RECORD_COUNTS[1], bulk_history)
 
     plain_small = _jq_call_count(small, tmp_path)
     plain_large = _jq_call_count(large, tmp_path)

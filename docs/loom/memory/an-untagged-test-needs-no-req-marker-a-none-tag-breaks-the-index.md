@@ -2,7 +2,8 @@
 name: an-untagged-test-needs-no-req-marker-a-none-tag-breaks-the-index
 description: When a test has no registered REQ id, the convention is NO `@req` comment at all — writing `@req: none` (or any value outside the REQ namespace) creates a dangling tag that lands in the living-spec index as a "dangling @req (not in namespace)" section and turns two index tests red; delete the line, don't invent a null token
 type: gotcha
-origin: check-wayfinder decision-map arc (2026-08-28) — two different implementers in one branch (git-guard fence task, fog-checker task) each added `# @req: none — no registered REQ-id in this plan`, each time breaking test_check_living_spec_index's committed-index-current and no-structural-violations tests; both fixes were the same one-line comment deletion
+sources:
+  - resource: check-wayfinder decision-map arc (2026-08-28) — two different implementers in one branch (git-guard fence task, fog-checker task) each added `# @req: none — no registered REQ-id in this plan`, each time breaking test_check_living_spec_index's committed-index-current and no-structural-violations tests; both fixes were the same one-line comment deletion
 ---
 
 The living-spec tag grammar treats every `@req:` occurrence as a

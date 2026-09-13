@@ -2,7 +2,8 @@
 name: doc-wide-concept-sum-conflates-sibling-tables
 description: In an iXBRL (or any tagged) document, a concept/tag name is NOT unique to one table — sibling note-tables reuse the same concept (e.g. TW MOPS `ActualAmountProvided`/`EndingBalance2` appear in BOTH the 背書保證 endorsement table AND the separate 資金貸與 financing-to-others table). Summing a concept DOC-WIDE silently conflates the tables and overcounts (1101: doc-wide 105.9bn vs endorsement-only 62.8bn — 74 of 113 facts belonged to the other table). Scope every aggregate to the row/section span, never a doc-wide concept sweep.
 type: gotcha
-origin: branch tw-ixbrl-endorsement (2026-07-24, 2.33.0) — the endorsement extractor's aggregate; the recon's doc-wide SUM(ActualAmountProvided)=105.9bn was wrong (conflated 資金貸與), span-scoped 62.8bn is correct; caught by the SDD implementer measuring, then whole-branch-verified.
+sources:
+  - resource: branch tw-ixbrl-endorsement (2026-07-24, 2.33.0) — the endorsement extractor's aggregate; the recon's doc-wide SUM(ActualAmountProvided)=105.9bn was wrong (conflated 資金貸與), span-scoped 62.8bn is correct; caught by the SDD implementer measuring, then whole-branch-verified.
 ---
 
 A concept/tag name identifies a *kind of value*, not a *table*. TW MOPS

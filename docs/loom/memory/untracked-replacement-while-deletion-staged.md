@@ -2,7 +2,8 @@
 name: untracked-replacement-while-deletion-staged
 description: During a file relocation, a replacement created with Write stays UNTRACKED while the deletion of the file it replaces is already staged — committing the index as-is ships the deletion without the replacement, and git diff cannot reveal it because untracked files never appear in a diff
 type: gotcha
-origin: PR #556 Axis-B relocation (2026-07-13) — whole-branch review caught it pre-commit
+sources:
+  - resource: PR #556 Axis-B relocation (2026-07-13) — whole-branch review caught it pre-commit
 ---
 
 Relocating `X/foo.py` → `Y/foo.py` by **`git rm X/foo.py` (or a `git mv`

@@ -2,7 +2,8 @@
 name: extracting-a-sibling-module-breaks-hand-listed-cold-install-fixtures
 description: Extracting shared logic into a new sibling module (git_exec.py, sibling_import.py) silently breaks every test fixture that copies scripts into a cold-install layout by hand-listed path — production copytree is fine, the fixture's list is not; grep test_*.py for copyfile/copytree before the first migration task lands, and add the new sibling to each list in the same task
 type: gotcha
-origin: branch loom-script-refector (2026-08-31) — Task 7 hit it in test_live_gate_station_receipt.py (6 subprocess tests → ModuleNotFoundError), Task 8's implementer misread the same 12 failures in test_live_host_review_gate.py as pre-existing until the orchestrator checked the branch baseline
+sources:
+  - resource: branch loom-script-refector (2026-08-31) — Task 7 hit it in test_live_gate_station_receipt.py (6 subprocess tests → ModuleNotFoundError), Task 8's implementer misread the same 12 failures in test_live_host_review_gate.py as pre-existing until the orchestrator checked the branch baseline
 ---
 
 When a script that other scripts import by sibling name gains a NEW

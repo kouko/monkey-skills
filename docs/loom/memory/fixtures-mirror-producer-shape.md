@@ -2,7 +2,8 @@
 name: fixtures-mirror-producer-shape
 description: Test fixtures must mirror the producer's actual field shape — a hand-shaped fixture can certify code that fails on the real producer's output
 type: practice
-origin: PR #479 (loom-pipeline conductor v0.1, 2026-07-04)
+sources:
+  - resource: PR #479 (loom-pipeline conductor v0.1, 2026-07-04)
 ---
 
 A test fixture for a consumer module must mirror the PRODUCER's

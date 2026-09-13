@@ -2,7 +2,8 @@
 name: enumerate-every-copy-before-editing-a-claim-and-name-the-leaks
 description: Before editing a claim that may exist in more than one place, enumerate the population and record the partition instead of describing it — and name what the enumeration cannot see, because a rule that hides its leaks ships as reliable and misses silently: a proposition restated in synonyms is invisible to any string search, and a count of a string inside the document stating that count is never stable
 type: practice
-origin: the review-scope-resolver arc (2026-08-03) — the repair-side half of the finding-origin-attribution arc's recurring defect, moved here out of a gitignored HANDOFF
+sources:
+  - resource: the review-scope-resolver arc (2026-08-03) — the repair-side half of the finding-origin-attribution arc's recurring defect, moved here out of a gitignored HANDOFF
 ---
 
 The finding-origin-attribution arc's recurring defect was a claim that is wrong,

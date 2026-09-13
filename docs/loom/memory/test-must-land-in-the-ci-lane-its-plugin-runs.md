@@ -2,7 +2,8 @@
 name: test-must-land-in-the-ci-lane-its-plugin-runs
 description: A new test only gates if it lands in the exact lane its plugin's CI actually runs — dev-workflow CI runs ONLY dev-workflow/tests/test-*.sh (bash glob, no pytest job over dev-workflow/skills/**), and loom-code CI runs pytest loom-code/scripts/ + only 3 explicitly-named integration .sh (it does NOT glob loom-code/tests/*.sh); a test dropped in the wrong lane is a dark test that passes locally and never gates
 type: gotcha
-origin: PR closeout-privacy-gate (2026-07-19) — caught twice at plan + execution time
+sources:
+  - resource: PR closeout-privacy-gate (2026-07-19) — caught twice at plan + execution time
 ---
 
 Two different plugins in this repo run their CI test suites two

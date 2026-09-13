@@ -2,7 +2,8 @@
 name: a-number-in-prose-needs-a-test-that-recomputes-it
 description: A count written into prose goes stale at the next commit that changes what it counts, and correcting the number just resets the clock — when the repo already ships the function that computes it, pin the number with a test that recomputes it AND reads the document quoting it, failing when the two drift apart; the general rule reviewers converged on is "when a file ships a metric and prose quoting that metric, run the metric"
 type: practice
-origin: north-star-serves-link / dissolve-direction-layer (2026-08-21) — a backlog entry filed to be an honest debt ledger said "three exempt scripts are leaky by the contract's own metric"; two round-8 reviewers independently imported that metric, ran it, and got fourteen
+sources:
+  - resource: north-star-serves-link / dissolve-direction-layer (2026-08-21) — a backlog entry filed to be an honest debt ledger said "three exempt scripts are leaky by the contract's own metric"; two round-8 reviewers independently imported that metric, ran it, and got fourteen
 ---
 
 The number was measured, then the same commit widened the metric's

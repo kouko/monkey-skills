@@ -2,7 +2,8 @@
 name: an-absence-claim-in-a-plan-is-a-hypothesis-not-a-fact
 description: A plan-time claim that "no X exists" (no cap test, no guard, no consumer) is a hypothesis one failed grep can silently found — an abbreviated filename dodges a skill-name grep — so encode the claim as an in-task tripwire (hidden X fires → STOP, report, fall back to a rule the brief pre-recorded) and verify absence by running the candidate edit against the suite, never by name-grep alone
 type: practice
-origin: 2026-08-07 stage-owner-and-blocked-enum arc, T4 rider descope (branch feat-stage-owner-blocked-enum)
+sources:
+  - resource: 2026-08-07 stage-owner-and-blocked-enum arc, T4 rider descope (branch feat-stage-owner-blocked-enum)
 ---
 
 The plan and the plan-document-reviewer both recorded "no rdr word-cap

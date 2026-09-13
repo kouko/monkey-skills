@@ -2,7 +2,8 @@
 name: removing-over-specificity-removes-guarding-you-did-not-know-it-did
 description: A pattern that is too specific produces false alarms, and the obvious fix is to strip the over-specific part — but that part may have been incidentally excluding something, so the fix trades a loud false-positive for a silent false-negative; before loosening any matcher, enumerate what the removed characters were keeping OUT, and check whether a guard elsewhere in the system is a no-op that only stayed safe because of the over-specificity
 type: practice
-origin: adjudication-view Japanese-support arc (2026-08-12) — stripping the サ変 stem 「し」 from the ja modality forms fixed a real false-warning and opened two silent polarity inversions; caught by a whole-branch reviewer's delta confirmation, not by the fix's own tests
+sources:
+  - resource: adjudication-view Japanese-support arc (2026-08-12) — stripping the サ変 stem 「し」 from the ja modality forms fixed a real false-warning and opened two silent polarity inversions; caught by a whole-branch reviewer's delta confirmation, not by the fix's own tests
 ---
 
 The Japanese modality check matched forms like `してはならない`

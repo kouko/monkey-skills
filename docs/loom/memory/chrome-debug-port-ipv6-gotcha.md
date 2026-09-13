@@ -2,7 +2,8 @@
 name: chrome-debug-port-ipv6-gotcha
 description: A user's main Chrome can hold 127.0.0.1:9222 answering 404 while the fresh debug instance binds IPv6-only — chrome-devtools MCP dials IPv4, so fall back to puppeteer-core over the IPv6 WebSocket
 type: gotcha
-origin: PR #477 (ui-verification skill, live dogfood 2026-07-03)
+sources:
+  - resource: PR #477 (ui-verification skill, live dogfood 2026-07-03)
 ---
 
 When driving Chrome via its remote-debugging port for UI

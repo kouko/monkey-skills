@@ -2,7 +2,8 @@
 name: version-bump-packets-must-name-changelog-entry
 description: Every loom plugin keeps a Keep-a-Changelog CHANGELOG.md and every prior version bump updated it in the same commit — but implementer task packets that say only "bump plugin.json" ship entry-less bumps (5 consecutive misses across v1+v2 knowledge-triage); the packet must name the CHANGELOG entry as an explicit deliverable
 type: gotcha
-origin: feat-knowledge-triage-v2 (2026-07-18) — T9 reviewer caught loom-interface-design 0.6.0; check generalized to all five bumps on the arc
+sources:
+  - resource: feat-knowledge-triage-v2 (2026-07-18) — T9 reviewer caught loom-interface-design 0.6.0; check generalized to all five bumps on the arc
 ---
 
 The knowledge-triage arc bumped five plugin versions (loom-code 0.32.0/

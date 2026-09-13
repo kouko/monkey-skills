@@ -2,7 +2,8 @@
 name: derived-durable-id-slug-is-a-lossy-one-way-door
 description: A durable identity mechanically slugged from a richer key (e.g. kpi_id from an XBRL dimensional signature) is a one-way door whose collision fails SILENTLY — two distinct sources merging into one series is data corruption — so guard it fail-loud at the producer AND key the guard on the CONSUMER's own identity normalization, not a finer raw key, or it over-fires on legitimate inputs
 type: gotcha
-origin: PR arc-d US XBRL→kpi_store producer (feat-kpi-xbrl-store-producer, 2026-07-25)
+sources:
+  - resource: PR arc-d US XBRL→kpi_store producer (feat-kpi-xbrl-store-producer, 2026-07-25)
 ---
 
 When a durable identity is derived by a lossy transform (strip suffixes,

@@ -2,7 +2,8 @@
 name: a-cold-template-probe-proves-slot-binding-not-pipeline-drift
 description: A cold-reader dogfood that hands a fresh agent ONLY the template/reference file plus a seed proves whether a writer who reads that file follows the slot; it cannot reproduce the drift a full skill run shows — the spec-expansion baseline produced tables in the cold probe while real shipped proposals had prose matrix sections — so for pipeline-level drift the guarantee is a mechanical validator on the emitted artifact, and the probe's verdict must be reported as "slot binds" not "behavior fixed"
 type: process
-origin: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — docs/loom/dogfood/2026-08-17-artifact-table-routing-dogfood.md Probe 2
+sources:
+  - resource: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — docs/loom/dogfood/2026-08-17-artifact-table-routing-dogfood.md Probe 2
 ---
 
 Probe 1 (brief Alternatives Considered) flipped 0/2 → 3/3 tables between

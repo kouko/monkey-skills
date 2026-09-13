@@ -2,7 +2,8 @@
 name: an-engineering-change-without-a-spec-leaves-interface-detail-with-no-persistent-home
 description: When needs-design is no, the charter sends behaviour detail to a spec that does not exist — the exact interface an implementer needs (ids, exit codes, output shapes) then survives only in dispatch packets, which never enter the repo; until a lightweight engineering spec or an evidence note is the named home, write that packet text into docs/loom/<change-id>/evidence/ before dispatching, so a resumed build can find it
 type: gotcha
-origin: 2026-09-05-artifact-charter-boundaries-and-edit-rights — eight implementer dispatches returned zero NEEDS_CONTEXT, every one carrying 60–100 lines of interface text the 40-word plan fields could not hold; the plan charter's must_not sends behaviour to spec, and the change had none
+sources:
+  - resource: 2026-09-05-artifact-charter-boundaries-and-edit-rights — eight implementer dispatches returned zero NEEDS_CONTEXT, every one carrying 60–100 lines of interface text the 40-word plan fields could not hold; the plan charter's must_not sends behaviour to spec, and the change had none
 ---
 
 The field caps did what they were meant to: the plan stayed at one line per

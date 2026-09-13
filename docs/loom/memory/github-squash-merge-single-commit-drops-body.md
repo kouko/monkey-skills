@@ -2,7 +2,8 @@
 name: github-squash-merge-single-commit-drops-body
 description: GitHub's default squash-merge message for a single-commit PR keeps only the PR/commit title — the full body (including git-memory Decision/Learning/Gotcha trailers) is silently dropped from main's git history; a multi-commit PR concatenates all bodies instead
 type: gotcha
-origin: PR #520 (loom-code mechanical-exemption sync-script category, 2026-07-08)
+sources:
+  - resource: PR #520 (loom-code mechanical-exemption sync-script category, 2026-07-08)
 ---
 
 Verifying `git-memory`'s commit-carrier survival on `main` after PR #520

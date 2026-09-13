@@ -2,7 +2,8 @@
 name: a-plan-can-cite-a-path-that-does-not-exist-and-pass-review
 description: A plan's Acceptance can name a test file that does not exist in the repo and still pass plan-document review, because the reviewer checks that the required field is present and plausible rather than that the path resolves; the guard costs one `ls` per cited path before dispatch
 type: process
-origin: branch direction-queue-gate (2026-08-20) — Task 8's Acceptance named a shipping-version pin that does not exist in this plugin; found by the implementer, after two rounds of plan review had passed it
+sources:
+  - resource: branch direction-queue-gate (2026-08-20) — Task 8's Acceptance named a shipping-version pin that does not exist in this plugin; found by the implementer, after two rounds of plan review had passed it
 ---
 
 Task 8's `Acceptance.RED` named `loom-code/scripts/test_plugin_manifest.py` as

@@ -2,7 +2,8 @@
 name: a-prose-pin-must-require-an-affirmative-un-negated-sentence
 description: A test that pins a contract sentence by keyword co-occurrence is satisfied by the sentence's own negation — "probes are never named test_<unit>_<state>_<expected>; docstrings are in English" passed a probe that looked for the literal plus "English"; the pin must require an affirmative verb before the literal and no negation token in that sentence, and carry synthetic positive and contradictory cases that prove it discriminates
 type: practice
-origin: 2026-09-05 artifact-language-policy (loom-code 1.3.0) — the same defect was raised on two different pin files in one change (the probe-name probe, then the six station-sentence pins), each time by the Codex reader
+sources:
+  - resource: 2026-09-05 artifact-language-policy (loom-code 1.3.0) — the same defect was raised on two different pin files in one change (the probe-name probe, then the six station-sentence pins), each time by the Codex reader
 ---
 
 A pin on prose is tempting to write as "the file contains X and Y". That

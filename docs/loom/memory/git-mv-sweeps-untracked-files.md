@@ -2,7 +2,8 @@
 name: git-mv-sweeps-untracked-files
 description: git mv of a directory physically relocates UNTRACKED files too — a later git add of the new dir sweeps WIP into the commit; unstage by status A via git diff --cached --name-status
 type: gotcha
-origin: PR #440 external-repo migration (2026-06-21)
+sources:
+  - resource: PR #440 external-repo migration (2026-06-21)
 ---
 
 `git mv <dir> <newdir>` physically relocates EVERYTHING inside the

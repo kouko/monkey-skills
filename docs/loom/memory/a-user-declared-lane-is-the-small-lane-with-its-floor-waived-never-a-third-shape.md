@@ -2,7 +2,8 @@
 name: a-user-declared-lane-is-the-small-lane-with-its-floor-waived-never-a-third-shape
 description: The first draft of gate-only listed what it forbade (checker, hooks, agent contracts, SKILL.md) and let ordinary code through with zero readers; the adversary showed the recompute settles a pure small-class delta as small before any declaration is read, so the only coherent shape was "the small lane with the reader floor waived, when the user says so" — PRINCIPLES.md non-negotiable 2 now names exactly that, and a declaration counts only when its commit states the line and the delta recomputes small
 type: practice
-origin: 2026-09-05 user-declared-express-lane (loom-code 1.6.0) — two reader rounds, one ratification; iCHEF-dbt-pipeline's 62 of 63 PRs that skipped loom entirely were the evidence for wanting a recorded way to skip
+sources:
+  - resource: 2026-09-05 user-declared-express-lane (loom-code 1.6.0) — two reader rounds, one ratification; iCHEF-dbt-pipeline's 62 of 63 PRs that skipped loom entirely were the evidence for wanting a recorded way to skip
 ---
 
 A lighter lane is a user's decision about verification cost, and loom

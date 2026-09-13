@@ -2,7 +2,8 @@
 name: name-the-word-count-convention-when-citing-a-count
 description: Two live word-count conventions (`wc -w` and Python `len(text.split())`) can differ by 1 on the same file — a document citing a count without naming its convention reads as contradicting a sibling document that used the other one, and the phantom off-by-one costs real review rounds; name the convention next to the number, and use the pin-test convention when a pin test governs the file
 type: practice
-origin: 2026-08-05 extraction-batch arc (4119 vs 4118 on requesting-docs-review/SKILL.md, two reviewer findings + a Decision Log erratum)
+sources:
+  - resource: 2026-08-05 extraction-batch arc (4119 vs 4118 on requesting-docs-review/SKILL.md, two reviewer findings + a Decision Log erratum)
 ---
 
 During the 0.55.0 extraction batch, the same file measured 4119 words

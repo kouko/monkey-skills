@@ -2,7 +2,8 @@
 name: shipped-skill-text-must-not-assume-the-authors-environment
 description: A skill authored from a personal design note inherits that note's ENVIRONMENT, not just its vocabulary — the tool the author happens to keep their files in becomes a stated premise ("typically inside their Obsidian vault") and, worse, the JUSTIFICATION a mechanical rule cites ("matching the vault's own writing convention"). Neither survives contact with a user who does not have that tool: the premise is merely noise, but the justification points at nothing, so a cold reader cannot check whether the rule applies to them. Grep the shipped text for every proper noun naming a tool, vault, directory layout, or house convention that is the AUTHOR's rather than the PRODUCT's, and either delete it or state the rule without borrowed authority.
 type: practice
-origin: think-orbit 0.1.3 (2026-08-19) — the user, reading the installed 0.1.2, asked 「我發現當前 think orbit 有一段關於把產生的檔案放在 Obsidian Vault 的敘述？」 and ruled 「這個 plugin 不應該以 有 Obsidian vault 為前提」; three references had shipped through a full SDD arc, three review rounds, a whole-branch review and a behavioral dogfood without any of them flagging it
+sources:
+  - resource: think-orbit 0.1.3 (2026-08-19) — the user, reading the installed 0.1.2, asked 「我發現當前 think orbit 有一段關於把產生的檔案放在 Obsidian Vault 的敘述？」 and ruled 「這個 plugin 不應該以 有 Obsidian vault 為前提」; three references had shipped through a full SDD arc, three review rounds, a whole-branch review and a behavioral dogfood without any of them flagging it
 ---
 
 think-orbit's design SSOT was a set of notes in the user's own Obsidian

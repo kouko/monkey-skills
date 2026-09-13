@@ -2,7 +2,8 @@
 name: files-touched-misses-machinery-coupled-files
 description: A plan task's `Files touched` reliably names what the task is ABOUT and misses what it is mechanically COUPLED to — guard tests pinning the state the change alters, an SSOT sitting behind a functional copy, a manifest mirror a hook enforces; three of seven tasks in one plan under-declared this way, and that field is the only oracle authorizing parallel dispatch
 type: gotcha
-origin: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — three independent instances in one plan, each surfaced by a different mechanism
+sources:
+  - resource: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — three independent instances in one plan, each surfaced by a different mechanism
 ---
 
 Three tasks in one plan declared `Files touched` sets their commits then

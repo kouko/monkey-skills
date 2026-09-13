@@ -2,7 +2,8 @@
 name: github-ui-squash-appends-coauthor-and-wraps-body
 description: GitHub UI squash-merge appends a divider + Co-authored-by block AFTER the PR body and hard-wraps long lines — %(trailers) on squash main cannot reliably see body-end trailer blocks even when the PR body ends with a raw footer; grep-level retrieval is the attainable bar (PR #576 live)
 type: gotcha
-origin: PR #576 (this repo, monkey-skills, 2026-07-17)
+sources:
+  - resource: PR #576 (this repo, monkey-skills, 2026-07-17)
 ---
 
 PR #576's body ended with the git-memory O2-mandated raw trailer

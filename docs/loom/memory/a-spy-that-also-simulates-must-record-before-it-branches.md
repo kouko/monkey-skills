@@ -2,7 +2,8 @@
 name: a-spy-that-also-simulates-must-record-before-it-branches
 description: A test double that both RECORDS calls and SIMULATES a branch must append to its ledger before the branch, not after — putting an early return above the append silently stopped recording the one call the assertion was watching for, leaving `attempted == [good]` green while the guard under test was deleted and the boundary really was reached
 type: gotcha
-origin: feat-us-quarterly-statement-series (US quarterly three-statement series arc, round-4 whole-branch review, 2026-08-07)
+sources:
+  - resource: feat-us-quarterly-statement-series (US quarterly three-statement series arc, round-4 whole-branch review, 2026-08-07)
 ---
 
 A test pins three properties in its own name: a row with no accession is

@@ -2,7 +2,8 @@
 name: a-dispatch-return-is-a-receipt-not-the-work
 description: An Agent dispatch returns an acknowledgement immediately and the child's real output arrives later as a separate notification, so a subagent that fans work out and then ends its own turn hands the parent that receipt — text like "I'll wait for their completion notifications" — as if it were the task's result; observed 3x in one session, and the guard is an explicit no-fan-out line in the dispatch packet
 type: gotcha
-origin: branch plan-field-microstructure (2026-08-19) — T14's implementer returned early three times; the harness fact was re-probed live the same day
+sources:
+  - resource: branch plan-field-microstructure (2026-08-19) — T14's implementer returned early three times; the harness fact was re-probed live the same day
 ---
 
 Dispatching an agent returns two things at two different moments. The call

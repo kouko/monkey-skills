@@ -8,7 +8,7 @@ start: the first full manual prune pass proves impractically expensive, or the s
 
 Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
-The prune verb (loom-pipeline/skills/loom-memory/SKILL.md:96-119)
+The prune verb (loom-workflow/skills/loom-memory/SKILL.md:96-119)
 requires checking expiry signals for every store file by hand; the store
 is at 136 entries / ~53,000 words and growing. A lightweight script
 ranking candidates by frontmatter origin age vs git activity on cited

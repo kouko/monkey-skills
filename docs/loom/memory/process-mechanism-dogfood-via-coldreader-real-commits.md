@@ -2,7 +2,8 @@
 name: process-mechanism-dogfood-via-coldreader-real-commits
 description: To dogfood a shipped process RULE (not a whole skill's triggering/output), give a fresh context-blind agent ONLY the rule text + real sandbox git commits (not fabricated data) and ask it to decide+execute each branch — cheaper than a full nested-subagent live run, still catches real misuse
 type: process
-origin: PR #514 (loom-code Review-weight: mechanical) dogfood, 2026-07-08
+sources:
+  - resource: PR #514 (loom-code Review-weight: mechanical) dogfood, 2026-07-08
 ---
 
 `skill-dev-toolkit:dogfood-skill-testing`'s three probes are built to

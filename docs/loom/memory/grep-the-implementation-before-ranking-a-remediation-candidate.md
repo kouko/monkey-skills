@@ -2,7 +2,8 @@
 name: grep-the-implementation-before-ranking-a-remediation-candidate
 description: A list of unadjudicated remediation candidates goes stale the moment any later arc ships one of them, and nothing in the list announces that — so re-verify each candidate against the implementation before ranking, costing, or recommending it; ranking an already-built mechanism is indistinguishable from ranking an open one until someone greps
 type: process
-origin: 2026-08-03, completing the §8 candidate backtest (`docs/loom/audits/2026-08-03-remediation-candidate-status-and-live-population.md`) — the ranking pass was handed four candidates to evaluate and found two of them already shipped
+sources:
+  - resource: 2026-08-03, completing the §8 candidate backtest (`docs/loom/audits/2026-08-03-remediation-candidate-status-and-live-population.md`) — the ranking pass was handed four candidates to evaluate and found two of them already shipped
 ---
 
 An audit that ends in a list of unadjudicated remediation candidates is a

@@ -2,7 +2,8 @@
 name: prose-shipped-with-a-mechanism-describes-the-road-not-taken
 description: Prose authored in the SAME commit as the mechanism it describes reliably overstates it — the author writes what the mechanism was FOR while a reader can only see what it DOES, so the sentence records the design the commit rejected, the guarantee it aimed at, or the count it had before the last edit; no round of review catches its own overclaim, and the cheap fix is to write the description in a SECOND commit, reading the already-finished code
 type: practice
-origin: north-star-serves-link / dissolve-direction-layer (2026-08-21) — four separate whole-branch review rounds (5, 6, 7, 8) each found this class in a different sentence, three of them inside the hunk that had just been written to fix the previous instance
+sources:
+  - resource: north-star-serves-link / dissolve-direction-layer (2026-08-21) — four separate whole-branch review rounds (5, 6, 7, 8) each found this class in a different sentence, three of them inside the hunk that had just been written to fix the previous instance
 ---
 
 Four instances on one branch, each caught by a reviewer and none by the

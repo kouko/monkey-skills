@@ -2,7 +2,8 @@
 name: a-guarantee-grows-in-the-telling-where-no-task-can-see-it
 description: When several tasks each ship a correctly-scoped mechanism, the prose written AROUND them — a protocol rule, release notes, a test's docstring — tends to describe the union as unconditional; every per-task review passes because every task scoped its own mechanism right, and only a cumulative read catches the guarantee that grew
 type: gotcha
-origin: 2026-08-18 stale-render arc (loom-code 0.88.0) — the same overclaim recurred four times in one branch across two different axes, caught once in a test docstring, once in the CHANGELOG, and twice by whole-branch review
+sources:
+  - resource: 2026-08-18 stale-render arc (loom-code 0.88.0) — the same overclaim recurred four times in one branch across two different axes, caught once in a test docstring, once in the CHANGELOG, and twice by whole-branch review
 ---
 
 Four legs shipped in one arc: a version stamp (scoped to the two HTML

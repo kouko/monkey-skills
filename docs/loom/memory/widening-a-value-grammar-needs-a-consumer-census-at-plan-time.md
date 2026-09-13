@@ -2,7 +2,8 @@
 name: widening-a-value-grammar-needs-a-consumer-census-at-plan-time
 description: A plan that widens what a field may legally contain must enumerate every consumer of that field's grammar at plan time and give each one a task or a recorded reason it needs none — otherwise the new value is legal in the SSOT and rejected by a downstream gate, which makes it inert in practice; the tell is subtle because the gate's rejection reads as a defect in the value rather than as evidence about the gate, so fixing the symptom removes the signal
 type: practice
-origin: brief-item-addressability arc (2026-08-13) — a plan legalised `none — <reason>` in `Brief item covered`, and the plan-document-reviewer's own prompt still enumerated only two referent kinds, so the value conformed to the schema and was gapped by the project's own plan reviewer
+sources:
+  - resource: brief-item-addressability arc (2026-08-13) — a plan legalised `none — <reason>` in `Brief item covered`, and the plan-document-reviewer's own prompt still enumerated only two referent kinds, so the value conformed to the schema and was gapped by the project's own plan reviewer
 ---
 
 The plan widened one field's grammar: `Brief item covered` gained a third

@@ -2,7 +2,8 @@
 name: stamp-changelog-test-counts-at-closeout
 description: CHANGELOG test counts go stale during multi-round review fix-ups — stamp the number with pytest --collect-only at branch close-out, not mid-branch
 type: practice
-origin: PR #492 (loom-code 0.23.0 mechanical gates, 2026-07-04)
+sources:
+  - resource: PR #492 (loom-code 0.23.0 mechanical gates, 2026-07-04)
 ---
 
 A CHANGELOG entry that quotes a test count ("41 tests") goes stale

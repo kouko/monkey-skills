@@ -21,6 +21,7 @@ from git_exec import run_git
 from .digest import functional_content_digest
 from .helpers import git_ok
 from .probes import command_executes_artifact, command_names_artifact, declared_test_command
+from .reviewers import required_reviewer_count
 
 
 
@@ -96,8 +97,10 @@ def validate_attestation(
         return [(rule, "attestation records no reviewer verdict")]
     reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts if isinstance(v, dict)}
     reviewers.discard("")
-    if len(reviewers) < 2:
-        return [(rule, "attestation needs two distinct reviewers")]
+    reviewer_floor = required_reviewer_count(repo, change_id, head_sha)
+    if len(reviewers) < reviewer_floor:
+        needed = "two" if reviewer_floor == 2 else "one"
+        return [(rule, f"attestation needs {needed} distinct reviewers")]
     for verdict in verdicts:
         if not isinstance(verdict, dict) or verdict.get("verdict") not in {
             "PASS", "PASS_WITH_NOTES"

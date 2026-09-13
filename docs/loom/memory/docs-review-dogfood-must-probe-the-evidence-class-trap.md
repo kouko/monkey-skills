@@ -2,7 +2,8 @@
 name: docs-review-dogfood-must-probe-the-evidence-class-trap
 description: When dogfooding any docs-review contract change, the load-bearing probe is the evidence-class trap — a cold round-2 reviewer whose headline surviving defect is evidence-class must still return a passing verdict (evidence never gates); a misread silently reproduces the 🟡-accumulation loop the class filter exists to kill, and no grep pin can catch it
 type: practice
-origin: PR feat-requesting-docs-review-skill (loom-code 0.42.0, 2026-07-30) — dogfood record docs/loom/dogfood/2026-07-30-requesting-docs-review-dogfood.md §D3
+sources:
+  - resource: PR feat-requesting-docs-review-skill (loom-code 0.42.0, 2026-07-30) — dogfood record docs/loom/dogfood/2026-07-30-requesting-docs-review-dogfood.md §D3
 ---
 
 Grep pins verify the aggregation words exist; only a behavioral probe verifies a

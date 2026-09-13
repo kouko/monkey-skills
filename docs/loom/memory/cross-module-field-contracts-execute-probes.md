@@ -2,7 +2,8 @@
 name: cross-module-field-contracts-execute-probes
 description: In build-assembled programs, cross-module field contracts are the systemic risk — review by concatenating the modules and executing behavioral probes, not by grep
 type: practice
-origin: PR #479 (loom-pipeline conductor v0.1, 17-task build, 2026-07-04)
+sources:
+  - resource: PR #479 (loom-pipeline conductor v0.1, 17-task build, 2026-07-04)
 ---
 
 In a build-assembled program — separate source modules concatenated

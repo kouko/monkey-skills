@@ -2,7 +2,8 @@
 name: migration-acceptance-greps-scope-by-content-not-filetype
 description: A migration task's acceptance grep scoped by file type (SKILL.md/README only) leaves .py/.yml/schema-doc consumers of the migrated names unscanned — sweep by content pattern repo-wide and justify carve-outs, or the blind spot ships
 type: process
-origin: PR (data-markets consolidation, branch finacial-analytics-r2, 2026-07-11)
+sources:
+  - resource: PR (data-markets consolidation, branch finacial-analytics-r2, 2026-07-11)
 ---
 
 During the data-markets consolidation, the doc-migration task's GREEN

@@ -2,7 +2,8 @@
 name: imperative-placement-prominence-decides-weak-model-firing
 description: An action-moment imperative that NAMES the skill can still fail to fire on a weak model if it's buried as a prose aside appended after routing logic — the SAME sentence promoted to a prominent bold directive (a numbered load-bearing rule, or inside an <EXTREMELY-IMPORTANT> block, near the router's core guidance) fires reliably; placement/prominence is a second axis beyond imperative-vs-descriptive, and guard tests that only assert the string is PRESENT are blind to it
 type: gotcha
-origin: feat-bba-proactive-trigger-hardening (2026-07-25) rounds 4-5 weak-model dogfood
+sources:
+  - resource: feat-bba-proactive-trigger-hardening (2026-07-25) rounds 4-5 weak-model dogfood
 ---
 
 The bba-hardening branch added the SAME imperative ("before you ask a

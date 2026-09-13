@@ -2,7 +2,8 @@
 name: same-length-mutation-outlives-its-restore-via-pycache
 description: CPython validates a `.pyc` by (source mtime SECONDS, source size), so a length-preserving mutation restored within the same second leaves the mutant's bytecode valid — the next case in a mutation run then executes against it, which turned a real survivor into a reported "5 of 5 killed"
 type: gotcha
-origin: 2026-07-27 mutation-testing arc (PR #623) — the false kill was caught only by re-running with bytecode writing disabled
+sources:
+  - resource: 2026-07-27 mutation-testing arc (PR #623) — the false kill was caught only by re-running with bytecode writing disabled
 ---
 
 A mutation harness that writes a mutant, runs pytest, and restores the

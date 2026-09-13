@@ -2,7 +2,8 @@
 name: nested-cross-file-locks-need-one-global-order
 description: When one function HOLDS lock A while acquiring lock B (nested cross-file/cross-store locks), it is deadlock-free ONLY if every code path acquires them in the same global order — no path may take them B-then-A. Sequential use (release A, THEN acquire B) is not nesting and never deadlocks; prefer it, and when you must nest, prove the global order by checking every sibling that touches both locks.
 type: practice
-origin: 2026-07-14 session — investing-toolkit analysis-kpi slice 3 (kpi_schema.confirm holds the schema-file lock while adjudicating through review_queue's queue-file lock); verified in code review
+sources:
+  - resource: 2026-07-14 session — investing-toolkit analysis-kpi slice 3 (kpi_schema.confirm holds the schema-file lock while adjudicating through review_queue's queue-file lock); verified in code review
 ---
 
 The operational-kpi `analysis-kpi` skill has three file-per-key durable stores,

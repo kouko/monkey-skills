@@ -2,7 +2,8 @@
 name: an-advertised-permission-gets-one-live-run-against-its-own-validator
 description: A permission sentence and the validator banning its side effect can ship in ONE branch and contradict each other — each reads fine alone, per-task review passes both, and no text sweep sees it because neither text quotes the other; the catch is EXECUTING the advertised action once against the branch's own shipped validator (build the smallest artifact the permission licenses, run the validator, expect exit 0), so every review of a branch that both grants a capability and ships an enforcement mechanism owes one such live probe per granted capability
 type: gotcha
-origin: 2026-08-08 direction-layer arc (loom-code 0.69.0), whole-branch round-1 docs arm — DIRECTION.md's charter granted "## Next may point at a roadmap entry by filename" while the same branch's validator banned date tokens outside ## Now; backlog filenames are date-prefixed by the store's own filename rule, so exercising the permission failed validate exit 1; caught only by the docs arm running the validator on a pointer-bearing fixture, after two per-task review rounds and a CHANGELOG round had passed all three carriers
+sources:
+  - resource: 2026-08-08 direction-layer arc (loom-code 0.69.0), whole-branch round-1 docs arm — DIRECTION.md's charter granted "## Next may point at a roadmap entry by filename" while the same branch's validator banned date tokens outside ## Now; backlog filenames are date-prefixed by the store's own filename rule, so exercising the permission failed validate exit 1; caught only by the docs arm running the validator on a pointer-bearing fixture, after two per-task review rounds and a CHANGELOG round had passed all three carriers
 ---
 
 The direction-layer branch shipped, in one arc: a charter permission

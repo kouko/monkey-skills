@@ -2,7 +2,8 @@
 name: squash-dialog-can-drop-entire-pr-body
 description: The GitHub merge dialog can ship a title-only squash commit even when repo settings are correctly PR_TITLE+PR_BODY (#578 live) — a heading-based memory-worthiness detector goes green-blind when the whole body vanishes, so post-merge verify must treat title-only "(#N)" commits as suspicious (mechanized in memory-grep --verify-merged)
 type: gotcha
-origin: PR #578 (this repo, monkey-skills, 2026-07-17)
+sources:
+  - resource: PR #578 (this repo, monkey-skills, 2026-07-17)
 ---
 
 PR #578's squash commit on `main` (`2c147cd7`) has a body of exactly

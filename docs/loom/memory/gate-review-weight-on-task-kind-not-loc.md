@@ -2,7 +2,8 @@
 name: gate-review-weight-on-task-kind-not-loc
 description: When deciding how much review a change deserves, gate on task KIND (mechanical/prose/version-bump vs logic/heuristic/hook/security-surface), never on diff LOC size — LOC is a weak, sometimes wrong proxy
 type: practice
-origin: PR #514 (loom-code Review-weight: mechanical), 2026-07-08
+sources:
+  - resource: PR #514 (loom-code Review-weight: mechanical), 2026-07-08
 ---
 
 An external opinion proposed tiering SDD/whole-branch review by diff

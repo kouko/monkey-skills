@@ -2,7 +2,8 @@
 name: editing-a-user-dirty-file-sweeps-their-wip-into-your-commit
 description: Path-level git add cannot split hunks — editing a file that already carries the user's uncommitted WIP sweeps the WIP into your commit silently (tests stay green, diff looks intentional); check git status per-file BEFORE editing, and if dirty: reconstruct the edit onto the committed base, commit, then restore the user's delta uncommitted on top
 type: gotcha
-origin: PR chore-description-diet (2026-07-30) whole-branch review round 1
+sources:
+  - resource: PR chore-description-diet (2026-07-30) whole-branch review round 1
 ---
 
 Path-level `git add <file>` cannot split hunks — editing a file that

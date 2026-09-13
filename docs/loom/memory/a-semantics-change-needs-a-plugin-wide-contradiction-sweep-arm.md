@@ -2,7 +2,8 @@
 name: a-semantics-change-needs-a-plugin-wide-contradiction-sweep-arm
 description: When a branch changes the SEMANTICS of a rule (authorization polarity, a gate's direction) rather than just its text, dispatch one extra review arm that sweeps the WHOLE plugin for restatements of the old semantics — the changed-files arm is structurally blind to unchanged files, and the old meaning survives in README mirrors (×N languages), runtime-loaded reference tables, worked examples, and test fixtures; on the 0.58.0 arc this arm found the only 🔴 (a runtime-loaded table re-teaching the deleted re-ask) plus 7 surfaces the plan's own neighbor sweep missed
 type: practice
-origin: 2026-08-05 request-derived-authorization arc (loom-code 0.58.0), whole-branch round 1 docs arm B
+sources:
+  - resource: 2026-08-05 request-derived-authorization arc (loom-code 0.58.0), whole-branch round 1 docs arm B
 ---
 
 The 0.58.0 arc flipped authorization polarity (publish re-asks deleted;

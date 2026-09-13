@@ -1,6 +1,7 @@
 """fix:W1-05 — the package-tests runner runs one pytest session per group."""
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -63,6 +64,23 @@ def test_loom_family_preset_covers_every_ci_test_surface() -> None:
         and "/loom-workflow/skills/" in command[3]
     )
     assert actual_skill_dirs == expected_skill_dirs
+
+
+def test_loom_family_preset_discovers_relocated_memory_skill_tests() -> None:
+    commands = loom_family_commands(REPO, verbosity="-q")
+    rendered = [" ".join(command) for command in commands]
+    assert any("loom-workflow/skills/loom-memory/scripts" in command for command in rendered)
+
+
+def test_relocated_memory_skill_tests_pass_through_the_workflow_python_command() -> None:
+    commands = loom_family_commands(REPO, verbosity="-q", only="workflow-python")
+    memory_command = next(
+        command for command in commands
+        if "loom-workflow/skills/loom-memory/scripts" in command[3]
+    )
+    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+    result = subprocess.run(memory_command, capture_output=True, text=True, cwd=REPO, env=env)
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_loom_family_preset_is_the_only_test_command_named_by_ci_and_kickoff() -> None:

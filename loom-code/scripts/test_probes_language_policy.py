@@ -69,7 +69,7 @@ def _sentences(text: str) -> list[str]:
 
 def _template_files():
     files = sorted(TEMPLATES_DIR.glob("*.md")) + sorted(TEMPLATES_DIR.glob("*.json"))
-    assert len(files) == 8, f"expected 8 template files, found {len(files)}: {files}"
+    assert len(files) == 7, f"expected 7 template files, found {len(files)}: {files}"
     return files
 
 
@@ -83,10 +83,13 @@ def test_templates_cjk_absent(path: Path):
     today (at W0-01) on intent.md (76 CJK chars), plan.md (112),
     spec-minimal.md (141), PRINCIPLES-interview.md (200) — each carries CJK
     field comments; already GREEN today on KICKOFF-DEFAULTS.md,
-    memory-README.md, PURPOSE.md, and attestation.json (already English/JSON-only).
+    PURPOSE.md, and attestation.json (already English/JSON-only).
     Turns fully GREEN at W1-01, which translates the four RED files — this
     test asserts only the desired end state, so it turns GREEN on its own
-    once W1-01 lands, with no change needed here."""
+    once W1-01 lands, with no change needed here. (`memory-README.md` was
+    retired from this directory by REQ-25 of
+    2026-09-10-okf-compatible-loom-memory — the one active store template
+    now lives under `loom-memory/templates/memory-store/`.)"""
     text = path.read_text(encoding="utf-8")
     hits = CJK_RANGE.findall(text)
     assert not hits, (
@@ -330,7 +333,7 @@ def test_ProbenameHelper_SyntheticParagraphs_Discriminates():
 
 def test_checker_rulecount_pinned():
     """GREEN pin: `loom_checker.py --list-rules`, resolved inside REPO (not
-    the installed plugin cache), prints exactly 19 lines today. A
+    the installed plugin cache), prints exactly 20 lines today. A
     regression here means the checker's rule surface moved without this
     change touching it, which is out of scope."""
     assert LOOM_CHECKER.is_file(), f"loom_checker.py not found at {LOOM_CHECKER}"
@@ -345,8 +348,8 @@ def test_checker_rulecount_pinned():
     assert result.returncode == 0, (
         f"loom_checker.py --list-rules exited {result.returncode}: {result.stderr}"
     )
-    assert len(lines) == 19, (
-        f"--list-rules printed {len(lines)} non-empty lines, expected 19:\n"
+    assert len(lines) == 20, (
+        f"--list-rules printed {len(lines)} non-empty lines, expected 20:\n"
         + "\n".join(lines)
     )
 

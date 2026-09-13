@@ -2,7 +2,8 @@
 name: two-reviewers-disagreeing-on-a-count-means-it-was-never-countable
 description: When two independent reviewers each count the same population carefully and return different totals, the disagreement is not a tie to break — it says the counting rule was never written down, so every total is defensible under one reading and wrong under another; replace the number with the command that derives it, and expect the command to need the same scrutiny the number did
 type: practice
-origin: pin-granularity arc (2026-08-28) — three review rounds spent refuting three different totals for one population, ending with two `opus` arms reporting 14 and 15 after each counting independently
+sources:
+  - resource: pin-granularity arc (2026-08-28) — three review rounds spent refuting three different totals for one population, ending with two `opus` arms reporting 14 and 15 after each counting independently
 ---
 
 A backlog entry stated how many sites carried a duplicated idiom. Round after

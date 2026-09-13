@@ -2,7 +2,8 @@
 name: a-recorded-word-count-must-be-python-split-never-wc
 description: Any word count a gate recomputes across macOS and CI must be Python `len(str.split())` — BSD and GNU `wc -w` disagree in every locale (3 words apart under UTF-8; under LC_ALL=C GNU drops every all-non-ASCII word, 147 here), so "pin LC_ALL=C" made the mismatch worse, and `LC_ALL=C bash … | wc -w` pins bash, not wc
 type: gotcha
-origin: simple-loom-flow (2026-09-03) — CI-1 and CI-2 on PR #780; `check_mechanisms.py --measure` baseline 923fb84a = 5278 by str.split, 5281 by BSD wc, 5131 by GNU wc in C
+sources:
+  - resource: simple-loom-flow (2026-09-03) — CI-1 and CI-2 on PR #780; `check_mechanisms.py --measure` baseline 923fb84a = 5278 by str.split, 5281 by BSD wc, 5131 by GNU wc in C
 ---
 
 `check_mechanisms.py --measure` recomputes the session-start baseline from

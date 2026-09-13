@@ -2,7 +2,8 @@
 name: snippet-stats-need-primary-source-check
 description: A web-search snippet paraphrasing a statistic needs a primary-source check before citing — a different-agent reviewer with web access catches what the generator's shared priors miss
 type: practice
-origin: PR #443 (deliberate-simplification ledger research, 2026-06-22)
+sources:
+  - resource: PR #443 (deliberate-simplification ledger research, 2026-06-22)
 ---
 
 A web-search result snippet that paraphrases a statistic is not

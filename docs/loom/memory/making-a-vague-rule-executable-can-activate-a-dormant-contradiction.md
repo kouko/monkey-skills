@@ -2,7 +2,8 @@
 name: making-a-vague-rule-executable-can-activate-a-dormant-contradiction
 description: Rewriting a judgment-shaped instruction into a mechanically checkable one can turn a harmless ambiguity into a live conflict with a neighbouring rule — the two coexisted only because neither was precise enough to disagree, so hardening one demands re-reading every rule it now interacts with
 type: gotcha
-origin: 2026-08-18 stale-render arc (loom-code 0.88.0) — a delivery check was rewritten from "matches the plugin whose protocol you are reading" to naming the exact manifest file to read, which then false-blocked the working-tree carve-out stated two paragraphs above it; the branch making the change was itself the worked example
+sources:
+  - resource: 2026-08-18 stale-render arc (loom-code 0.88.0) — a delivery check was rewritten from "matches the plugin whose protocol you are reading" to naming the exact manifest file to read, which then false-blocked the working-tree carve-out stated two paragraphs above it; the branch making the change was itself the worked example
 ---
 
 A protocol carried two rules: an exception letting a session that is

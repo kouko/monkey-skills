@@ -2,7 +2,8 @@
 name: skill-folder-structure-hook-reads-stdin-json-and-ignores-argv
 description: A PostToolUse hook script that reads its target from the stdin JSON event ignores a path passed as argv — invoking it as `bash hook.sh <path>` from CI or a reviewer shell exits 0 without checking anything, so a "structure check" step built on the hook is a silent no-op; use the repo's CI checker (which takes the plugin as an argument) for any non-hook invocation
 type: gotcha
-origin: think-orbit Part 1 close-out (2026-08-18) — `.claude/hooks/validate-skill-folder-structure.sh <path>` was used as a CI step and as reviewer GREEN evidence for six tasks; a probe with a nested subfolder returned exit 0, revealing the hook reads `tool_input.file_path` from stdin (`INPUT=$(cat)`) and never looks at `$1`; `tsundoku-ci.yml` carries the same dead step
+sources:
+  - resource: think-orbit Part 1 close-out (2026-08-18) — `.claude/hooks/validate-skill-folder-structure.sh <path>` was used as a CI step and as reviewer GREEN evidence for six tasks; a probe with a nested subfolder returned exit 0, revealing the hook reads `tool_input.file_path` from stdin (`INPUT=$(cat)`) and never looks at `$1`; `tsundoku-ci.yml` carries the same dead step
 ---
 
 `.claude/hooks/validate-skill-folder-structure.sh` is wired as a

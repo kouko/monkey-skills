@@ -2,7 +2,8 @@
 name: measure-a-checks-fire-rate-before-building-it
 description: Before building a mechanical check, run its naive form over the existing corpus and count how often it fires — the measurement is cheaper than the build and can kill the design; a signal that fires on most instances is a notifier rather than a gate, and a defect class that is not deterministically decidable at all is answered by removing the category of claim from the format contract instead of by a detector
 type: practice
-origin: the docs-review mechanism arc (2026-08-04), where the same measurement was run twice in one session and returned opposite verdicts
+sources:
+  - resource: the docs-review mechanism arc (2026-08-04), where the same measurement was run twice in one session and returned opposite verdicts
 ---
 
 A proposed check arrives already justified: a real defect shipped, and the

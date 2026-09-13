@@ -2,7 +2,8 @@
 name: a-workflow-replay-must-preflight-its-harness-before-timing
 description: A workflow replay whose declared command does not exist at the pinned target, uses the wrong command signature, or selects its runtime through a future placeholder is ungradeable before timing begins — validate every command against the target and bind every external runtime to exact bytes first, because repairing the harness after measuring can otherwise be mistaken for a policy speedup
 type: gotcha
-origin: 2026-09-06 remove-build-time-reviews historical replay
+sources:
+  - resource: 2026-09-06 remove-build-time-reviews historical replay
 ---
 
 A fixed-patch replay can still compare the wrong thing. In this run the task

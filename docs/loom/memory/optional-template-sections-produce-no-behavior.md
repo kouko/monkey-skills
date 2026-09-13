@@ -2,7 +2,8 @@
 name: optional-template-sections-produce-no-behavior
 description: A template section marked optional ("remove if none") produces near-zero compliance even when preloaded doctrine tells writers when to fill it — measured 1/29 plans-briefs carrying a Mermaid block while the brief template already had a `## Diagrams` section; behavior appeared only after the slot became fill-or-declare (embed the artifact or write a pinned N/A line with a reason, deleting the heading forbidden) with a reviewer dimension that treats an absent slot or false N/A as a finding
 type: practice
-origin: feat/visualization-trigger-layer (2026-08-11) — loom-code 0.76.0 / loom-spec 0.9.0 / loom-interface-design 0.11.0
+sources:
+  - resource: feat/visualization-trigger-layer (2026-08-11) — loom-code 0.76.0 / loom-spec 0.9.0 / loom-interface-design 0.11.0
 ---
 
 Before this arc, the brief template carried an optional `## Diagrams`

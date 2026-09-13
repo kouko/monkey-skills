@@ -2,7 +2,8 @@
 name: parallel-wave-commit-discipline
 description: Parallel subagent waves share one git index — commit orchestrator-serially with explicit pathspecs (never git add -A, never plain git commit), verify with git show --stat HEAD; and NEVER recover a swept commit with reset --soft while siblings are still committing — if a sibling committed after you, the reset orphans THEIR commit too (verify HEAD is still yours first)
 type: process
-origin: PR #488 (25-commit wave, zero incidents) + loom-pipeline v1.1 batch mode PRs #483–#487 (race observed live), 2026-07-04; reset-orphaning variant + pathspec-insufficiency observed live on loop-convergence-fixes (2026-07-18, incident log in docs/loom/plans/2026-07-18-loop-convergence-fixes.md)
+sources:
+  - resource: PR #488 (25-commit wave, zero incidents) + loom-pipeline v1.1 batch mode PRs #483–#487 (race observed live), 2026-07-04; reset-orphaning variant + pathspec-insufficiency observed live on loop-convergence-fixes (2026-07-18, incident log in docs/loom/plans/2026-07-18-loop-convergence-fixes.md)
 ---
 
 When several implementer subagents work in parallel in one checkout

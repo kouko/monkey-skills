@@ -2,7 +2,8 @@
 name: two-skill-structure-checkers-disagree-name-which-one
 description: This repo enforces skill folder structure with TWO tools that do not agree — `.claude/hooks/validate-skill-folder-structure.sh` rejects only nested subdirectories (`find -mindepth 2 -type d`) while `scripts/check-skill-structure.py` additionally rejects unexpected top-level files as CHK-SKL-012 — so "the skill-structure checker forbids X" is an ambiguous claim that a reviewer will probe against whichever one they reach first and disprove; always name the tool and the rule id
 type: reference
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — a docs reviewer returned STILL_BLOCKING on a sentence saying "the skill-structure checker rejects a trigger-eval.json at a skill root"; they ran the hook, got exit 0, and were right
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — a docs reviewer returned STILL_BLOCKING on a sentence saying "the skill-structure checker rejects a trigger-eval.json at a skill root"; they ran the hook, got exit 0, and were right
 ---
 
 Two tools in this repo enforce the skill folder convention, with different

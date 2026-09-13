@@ -2,7 +2,8 @@
 name: ixbrl-dom-traversal-drops-nested-facts
 description: Parsing inline-XBRL (iXBRL = XBRL tags embedded in HTML, e.g. Taiwan MOPS filings) by DOM/HTML-tree traversal silently drops the majority of facts — ix:nonFraction/nonNumeric nested inside <td> are discarded by HTML tree-repair. Extract with regex or iterparse over the ix: tags, never a DOM walk, and guard with an exact whole-file fact-count assertion.
 type: gotcha
-origin: branch xbrl-tw (2026-07-19) — TW iXBRL ingestion; lxml DOM iter yielded 387 facts for TSMC 2330 2024Q3 vs the true 2002 (~85% dropped)
+sources:
+  - resource: branch xbrl-tw (2026-07-19) — TW iXBRL ingestion; lxml DOM iter yielded 387 facts for TSMC 2330 2024Q3 vs the true 2002 (~85% dropped)
 ---
 
 Taiwan financial statements (and iXBRL generally) embed each tagged fact as

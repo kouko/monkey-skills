@@ -2,7 +2,8 @@
 name: convergence-is-not-evidence-when-the-sample-is-shared
 description: Two independent implementers reaching the same rule is NOT evidence the rule is right when both read the same sample — the agreement measures the sample, not the world; a sign-based filter converged on by two tasks was wrong for every oil major and survived two review rounds precisely because the convergence read as corroboration
 type: gotcha
-origin: branch feat-spine-chain-coverage (as-filed statement reconstruction, 2026-07-26) — the sign-vs-balance revenue filter
+sources:
+  - resource: branch feat-spine-chain-coverage (as-filed statement reconstruction, 2026-07-26) — the sign-vs-balance revenue filter
 ---
 
 Two tasks independently needed to exclude cost concepts from the set of

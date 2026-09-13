@@ -1,15 +1,18 @@
 ---
 name: maintain
 description: |
-  Routes an incident or regression into an existing or new intent and requires a permanent failing case before the fix. Use for CI failures, bug reports, alerts, or dogfood incidents.
+  Routes an incident or regression outside an active unmerged change into an existing or new intent. Use for bug reports, alerts, post-delivery regressions, or dogfood incidents.
 version: 1.1.0
 ---
 
 # Maintain
 
 Maintenance changes how work enters Loom, not how it is published.
+An active unmerged change's CI failure stays with that change and follows
+Ship's continuation contract instead of entering Maintain.
 
-1. Reproduce the incident and capture the smallest permanent regression case.
+1. Reproduce the incident. Reuse an existing test that exposes the root cause,
+   or capture the smallest permanent regression case when coverage is missing.
 2. Attach it to the matching open intent, or create one with
    `originator: maintenance-loop` when none exists.
 3. Record which existing check should have caught it. Add a new mechanism only

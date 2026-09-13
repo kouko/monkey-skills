@@ -2,7 +2,8 @@
 name: reading-code-and-running-code-fail-differently
 description: Whole-branch review and a cold-agent walkthrough catch disjoint defect classes, so rounds of the first never substitute for one of the second — six review rounds plus 1789 passing tests missed two fail-OPEN defects that three cold agents found in ten minutes, because a reviewer reads the path the author intended and a stranger types the path they guess; conversely the reviewers found unreachable code and prose describing rejected designs, which run perfectly
 type: practice
-origin: north-star-serves-link / dissolve-direction-layer (2026-08-21) — the user asked for an end-to-end dogfood after six review rounds; its first finding outranked everything the six rounds had produced
+sources:
+  - resource: north-star-serves-link / dissolve-direction-layer (2026-08-21) — the user asked for an end-to-end dogfood after six review rounds; its first finding outranked everything the six rounds had produced
 ---
 
 What six rounds of reading, and 1789 passing tests, did not find:

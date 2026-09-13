@@ -9,6 +9,7 @@ plan commit, and the template's one-sentence spec-change-path comment.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -17,6 +18,35 @@ from prose_pin import NEGATION_RE
 REPO = Path(__file__).resolve().parents[2]
 SKILL = REPO / "loom-code" / "skills" / "write-plan" / "SKILL.md"
 TEMPLATE = REPO / "loom-code" / "contract" / "templates" / "plan.md"
+SECOND_VENDOR_REFERENCE = (
+    REPO
+    / "loom-code"
+    / "skills"
+    / "write-plan"
+    / "references"
+    / "second-vendor-ask-and-docs-lint.md"
+)
+
+
+def _section(text: str, heading: str) -> str:
+    match = re.search(rf"^{re.escape(heading)}$.*?(?=^## |\Z)", text, re.M | re.S)
+    assert match, f"section {heading!r} missing"
+    return match.group(0)
+
+
+def test_decision_boundary_owns_implementation_not_product_behaviour() -> None:
+    section = _section(SKILL.read_text(encoding="utf-8"), "## Decision boundary")
+    low = section.lower()
+    for concept in (
+        "confirmed specification",
+        "simplest reversible implementation",
+        "product gap",
+        "clarification",
+        "invent",
+        "product behaviour",
+    ):
+        assert concept in low, concept
+    assert len(section.split()) <= 90
 
 
 def _has_negation(sentence: str) -> bool:
@@ -123,3 +153,101 @@ def test_matcher_engineering_spec_sentence_negated_rejected() -> None:
         "line."
     )
     assert _has_negation(sentence)
+
+
+# --- W1-02 -- suggest is visible after risk evidence, without becoming a
+# fourth decision point ----------------------------------------------------
+
+
+def test_suggest_runs_policy_after_plan_risk_evidence_exists() -> None:
+    text = SKILL.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "second_vendor_policy.py" in flat
+    assert "after the plan's Risk lines exist" in flat
+    assert "recommendation_reasons" in flat
+    assert "notice_kind" in flat
+
+
+def test_suggest_is_non_blocking_and_has_no_background_listener() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "continue without waiting" in flat
+    assert "no background listener" in flat
+    assert "do not reclassify risk" in flat
+
+
+def test_ask_still_asks_once_per_full_lane_change() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "second-vendor: ask" in flat
+    assert "every full-lane change" in flat
+    assert "AskUserQuestion" in text
+    assert "request_user_input" in text
+    assert "render both choices in the user's current conversation language" in flat
+    assert "decline this change" in flat
+    assert "https://code.claude.com/docs/en/tools-reference" in text
+    assert "https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs" in text
+    assert "這次不使用" not in text
+    assert "recommended" in flat
+
+
+def test_ask_is_host_aware_and_has_complete_fallbacks() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "On Codex, probe `claude` then `gemini`" in flat
+    assert "On Claude Code, probe `codex` then `gemini`" in flat
+    assert "blocking plain-language Markdown question" in flat
+    assert "no runnable different-model-family CLI" in flat
+    assert "continue without asking" in flat
+    assert "第二位讀者" not in text
+    assert "second reader" not in text.lower()
+
+
+def test_suggest_uses_one_cell_markdown_table_with_spacing() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "exactly two blank lines before and after" in flat
+    assert "| <heading> |\n|---|\n| <description> |" in text
+    assert "one heading and one descriptive cell" in flat
+    assert "raw Markdown" in text
+
+
+def test_small_lane_suggest_is_information_only() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "small lane" in flat
+    assert "informational only" in flat
+    assert "next-change-only" in flat
+    assert "reviewer floor is computed later and independently" in flat
+    assert "there is only one reader" not in flat
+
+
+def test_reference_has_no_none_mode_or_per_change_none_answer() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    assert "second-vendor: <cli> | none" not in text
+    assert "`<cli>` / `none`" not in text
+
+
+def test_confirmed_selection_is_recorded_for_closing_review() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "selection-confirmed" in flat
+    assert "plan's `## Risks` section" in flat
+    assert "Closing Review consumes" in flat
+    assert "before Closing Review starts" in flat
+    assert "`plan-maintained`" in flat
+    assert "commit that plan edit" in flat
+    assert "before committing the plan" not in flat
+
+
+def test_risk_based_reviewer_floor_has_minor_release_metadata() -> None:
+    claude_manifest = json.loads(
+        (REPO / "loom-code/.claude-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    codex_manifest = json.loads(
+        (REPO / "loom-code/.codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    changelog = (REPO / "loom-code/CHANGELOG.md").read_text(encoding="utf-8")
+    assert claude_manifest["version"] == "3.1.1"
+    assert codex_manifest["version"] == "3.1.1"
+    assert "## [3.1.1]" in changelog

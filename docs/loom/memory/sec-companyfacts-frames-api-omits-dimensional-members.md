@@ -2,7 +2,8 @@
 name: sec-companyfacts-frames-api-omits-dimensional-members
 description: SEC's companyfacts / frames REST API returns only default-axis (total) facts — dimensional/segment members are not reliably present, so multi-year DIMENSIONAL XBRL history must iterate individual filings, not one API call
 type: gotcha
-origin: multi-filing historical fetch scope A (feat-multifiling-historical-fetch, investing-toolkit 2.21.0, 2026-07-16)
+sources:
+  - resource: multi-filing historical fetch scope A (feat-multifiling-historical-fetch, investing-toolkit 2.21.0, 2026-07-16)
 ---
 
 The SEC EDGAR `data.sec.gov` REST APIs (`companyfacts`, `companyconcept`,

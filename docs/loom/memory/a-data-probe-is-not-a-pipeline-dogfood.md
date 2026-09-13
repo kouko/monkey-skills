@@ -2,7 +2,8 @@
 name: a-data-probe-is-not-a-pipeline-dogfood
 description: A probe that samples the DATA answers "does the shape I need exist?" — it never answers "does the pipeline survive this input?". An 8-filer fact-level probe cleared every filer, and the first end-to-end run against one of them aborted the whole ingest. Run the real producers into the real consumer, per filer, before believing coverage; and run ALL the filers before concluding from the first two, in either direction.
 type: practice
-origin: company total (top-line) revenue arc (branch feat-total-revenue-lane, investing-toolkit 2.36.0, 2026-07-25) — the arc's only shipping blocker, and three more findings, came from the live run rather than from 1075 tests, 11 task-review triads, or 5 whole-branch reviews
+sources:
+  - resource: company total (top-line) revenue arc (branch feat-total-revenue-lane, investing-toolkit 2.36.0, 2026-07-25) — the arc's only shipping blocker, and three more findings, came from the live run rather than from 1075 tests, 11 task-review triads, or 5 whole-branch reviews
 ---
 
 The arc opened with a live 8-filer probe that answered its design question well:

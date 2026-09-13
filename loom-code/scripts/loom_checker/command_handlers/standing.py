@@ -54,6 +54,14 @@ def cmd_standing(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             err.write(line.format(missing=" or ".join(missing)) + "\n")
 
     failures: list[tuple[str, str]] = []
+    if kickoff_defaults(repo).get("second-vendor", "").strip() == "none":
+        failures.append(
+            (
+                "standing.second-vendor-valid",
+                "`second-vendor: none` was removed; replace it with "
+                "`second-vendor: suggest` for non-blocking, opt-in behavior.",
+            )
+        )
     if front.get("kind", "").strip() == "product":
         # standing.silence: the waiver above silenced the WARN and stops here.
         if principles is None:

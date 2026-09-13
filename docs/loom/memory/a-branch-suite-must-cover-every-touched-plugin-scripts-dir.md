@@ -2,7 +2,8 @@
 name: a-branch-suite-must-cover-every-touched-plugin-scripts-dir
 description: A branch-verify command that covers only the dirs the branch CHANGED is a structural false-green in both directions — it misses touched plugin scripts/ dirs it never loads, and it misses the CONSUMERS of what changed, which by definition live outside the changed tree; enumerate every dir the branch touched AND every dir that imports or loads what it moved, or the aggregate run shares a boundary with the change and no run can cross it
 type: practice
-origin: 2026-08-15 plain-relay-contract arc — whole-branch review round 1 caught 6 plugin-local test failures (3934cbf2 lockstep cleanup missed 3 dirs); the orchestrator's verify command had returned 1633 passed across the habitual subset, never loading the 3 touched dirs where the breakage lived
+sources:
+  - resource: 2026-08-15 plain-relay-contract arc — whole-branch review round 1 caught 6 plugin-local test failures (3934cbf2 lockstep cleanup missed 3 dirs); the orchestrator's verify command had returned 1633 passed across the habitual subset, never loading the 3 touched dirs where the breakage lived
 ---
 
 The loom family ships six plugins, each with its own `scripts/` test

@@ -2,7 +2,8 @@
 name: a-changelog-summarizes-layers-no-per-task-review-cross-reads
 description: A release note restates every layer's semantics in one place, yet no per-task triad reviews it against those layers — cross-read the changelog at whole-branch time
 type: gotcha
-origin: decision-map protocol-hardening branch, whole-branch review round 1 (2026-08-29)
+sources:
+  - resource: decision-map protocol-hardening branch, whole-branch review round 1 (2026-08-29)
 ---
 
 A CHANGELOG entry is a one-paragraph restatement of semantics that live

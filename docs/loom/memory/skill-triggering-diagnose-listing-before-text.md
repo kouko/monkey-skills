@@ -2,7 +2,8 @@
 name: skill-triggering-diagnose-listing-before-text
 description: Skill under-firing recipe — diagnose the live listing first (host evicts least-used descriptions over the ~1% budget), fix with an entry router + repositioned descriptions (routers survive eviction; CJK keyword stuffing is A/B-refuted), measure with a corpus A/B on the firing harness
 type: practice
-origin: research-skill-r2 branch (research-toolkit triggering + dogfood, 2026-07-06)
+sources:
+  - resource: research-skill-r2 branch (research-toolkit triggering + dogfood, 2026-07-06)
 ---
 
 When a plugin's skills "rarely auto-trigger", the defect is usually NOT

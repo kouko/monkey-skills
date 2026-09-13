@@ -2,7 +2,8 @@
 name: a-docs-reviewer-dimension-sentence-gates-templates-not-generated-instances
 description: A sentence added to docs-reviewer's omission (or any) dimension row reaches only contract-class `.md` — skill files, references, agents, hooks — because record-class `docs/**` is outside its jurisdiction; it never gates the generated briefs, plans, or specs the sentence is written about, so instance-level enforcement must be a validator or a reviewer that reads instances (plan-document-reviewer, spec validator), and the arc's brief should say which one — recorded twice now (2026-08-11 diagram slot, 2026-08-17 table routing)
 type: gotcha
-origin: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — brief Decision, Task 5; precedent docs/loom/plans/2026-08-11-visualization-trigger-layer.md Decision Log 1
+sources:
+  - resource: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — brief Decision, Task 5; precedent docs/loom/plans/2026-08-11-visualization-trigger-layer.md Decision Log 1
 ---
 
 Both slot arcs added a docs-reviewer omission sentence "so reviewers catch

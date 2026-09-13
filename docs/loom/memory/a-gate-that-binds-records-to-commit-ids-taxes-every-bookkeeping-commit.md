@@ -2,7 +2,8 @@
 name: a-gate-that-binds-records-to-commit-ids-taxes-every-bookkeeping-commit
 description: When a push gate compares a probe's or verdict's recorded sha to the reviewed commit by commit id, every commit that only moves the record (a dispatch entry, a verdict, a trailer rewrite) invalidates the record and forces a re-run or a confirmation round — #791 re-ran its 1368-test suite about eight times; bind records to the content tree with the change's own review.json removed (commit-id fast path first), and a fix round then needs only the reader whose findings the fix stayed inside
 type: practice
-origin: 2026-09-06 checker-fix-rounds-and-tree-bound-probes (loom-code 1.4.0) — three rules recomputed against commit ids; two readers re-dispatched for every fix round; the close line needing its own round because the PR number exists only after a push
+sources:
+  - resource: 2026-09-06 checker-fix-rounds-and-tree-bound-probes (loom-code 1.4.0) — three rules recomputed against commit ids; two readers re-dispatched for every fix round; the close line needing its own round because the PR number exists only after a push
 ---
 
 The push gate's job is "the tree the readers passed is the tree that

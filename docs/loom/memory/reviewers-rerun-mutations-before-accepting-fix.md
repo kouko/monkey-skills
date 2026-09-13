@@ -2,7 +2,8 @@
 name: reviewers-rerun-mutations-before-accepting-fix
 description: Reviewers should re-run the breaking mutation themselves (e.g. delete the guard in scratch and watch the test fail) before accepting a fix claim
 type: practice
-origin: PR #488 (loom family connective tissue, SDD wave reviews 2026-07-04)
+sources:
+  - resource: PR #488 (loom family connective tissue, SDD wave reviews 2026-07-04)
 ---
 
 When an implementer claims "fixed, test now catches it", the

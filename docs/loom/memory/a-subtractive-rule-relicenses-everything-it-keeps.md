@@ -2,7 +2,8 @@
 name: a-subtractive-rule-relicenses-everything-it-keeps
 description: A rule that only says what to remove makes no surviving claim safer — every sentence it exempts is re-endorsed by the exemption, and the exempted ones are exactly those that assert something about behaviour and can therefore be wrong; the code-as-spec arc shipped a false docstring inside the fix that kept it, because the rule promoted that sentence from delete to keep-as-interface and nothing then checked it
 type: practice
-origin: 2026-08-22 code-as-spec-writing-rule arc — round 1 restored a display-name contract as INTERFACE, round 2 found the restored sentence stated the opposite of what the code does, and both round-2 reviewers found it by calling the function while four earlier readings missed it
+sources:
+  - resource: 2026-08-22 code-as-spec-writing-rule arc — round 1 restored a display-name contract as INTERFACE, round 2 found the restored sentence stated the opposite of what the code does, and both round-2 reviewers found it by calling the function while four earlier readings missed it
 ---
 
 A subtractive rule — delete what the code already shows, drop the dead

@@ -2,7 +2,8 @@
 name: a-narrowing-that-leaves-a-substring-passes-every-containment-pin
 description: When a change replaces a value with a SUBSTRING of itself — a narrowed form, a stripped prefix, a shortened token — every containment assertion written against the old value stays green, because the new value is still `in` the old text; the stale copy therefore survives review, mutation batteries, and the pin that exists to guard it, and the fix is to change the assertion KIND (exact equality against the shipped source) rather than to tighten the string
 type: practice
-origin: adjudication-view Japanese-support arc (2026-08-12), fix round — the protocol's ja modality table went stale against `adjudication_profiles.py` and no pin could see it; the drift pin's own first draft had the same bug and passed
+sources:
+  - resource: adjudication-view Japanese-support arc (2026-08-12), fix round — the protocol's ja modality table went stale against `adjudication_profiles.py` and no pin could see it; the drift pin's own first draft had the same bug and passed
 ---
 
 A fix rewrote every Japanese modality form as a verb-independent suffix:

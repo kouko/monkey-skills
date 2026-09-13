@@ -2,7 +2,8 @@
 name: prose-contract-mechanism-transcribes-from-code
 description: When plan/protocol prose names a MECHANISM (a formula, a status value, a field) the wording must be transcribed from the shipped code's schema, not from research/industry vocabulary — industry terms drift from the machine reality and weak-model consumers execute the wording literally
 type: gotcha
-origin: memo quarterly-KPI wiring slice, T5/T8 review rounds (feat-memo-quarterly-kpi-wiring, 2026-07-18)
+sources:
+  - resource: memo quarterly-KPI wiring slice, T5/T8 review rounds (feat-memo-quarterly-kpi-wiring, 2026-07-18)
 ---
 
 Industry research supplies the right POLICY vocabulary ("implied Q4 = FY

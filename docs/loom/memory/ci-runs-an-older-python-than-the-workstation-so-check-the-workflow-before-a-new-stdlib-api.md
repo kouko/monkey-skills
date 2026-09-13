@@ -2,7 +2,8 @@
 name: ci-runs-an-older-python-than-the-workstation-so-check-the-workflow-before-a-new-stdlib-api
 description: The workstation runs Python 3.12 while `.github/workflows/loom-code-ci.yml` pins 3.11, so a stdlib keyword added in 3.12 (`TemporaryDirectory(delete=...)`) passes every local test and raises `TypeError` on every CI run; before using a stdlib API newer than the workflow's `python-version`, run the file once under that interpreter (`uv run --python 3.11 --with-requirements requirements-dev.txt -- python …`), and expect the second-vendor reader to be the one that notices
 type: gotcha
-origin: 2026-09-05-graduated-probes-independent-of-local-history — wave-end:1 round 1 (2026-09-06); the Codex reader raised it as fatal, the Anthropic reader and thirty-two green probes on 3.12 did not
+sources:
+  - resource: 2026-09-05-graduated-probes-independent-of-local-history — wave-end:1 round 1 (2026-09-06); the Codex reader raised it as fatal, the Anthropic reader and thirty-two green probes on 3.12 did not
 ---
 
 The rehearsal script's first version kept or removed its clone with

@@ -2,7 +2,8 @@
 name: match-kpi-on-full-dimensional-signature-not-one-axis
 description: An XBRL fact's identity is its FULL dimensional signature (all real breakdown axis:member pairs) — key a KPI by the whole signature, not one axis member, or a cross-dimensioned fact conflates a total with its slices; treat ConsolidationItemsAxis as a separate reconciliation qualifier, never a breakdown
 type: gotcha
-origin: operational-kpi full-dimensional-signature slice (feat-operational-kpi-xbrl-pilot, 2026-07-15)
+sources:
+  - resource: operational-kpi full-dimensional-signature slice (feat-operational-kpi-xbrl-pilot, 2026-07-15)
 ---
 
 When extracting a KPI series from XBRL dimensional facts, a fact's identity is

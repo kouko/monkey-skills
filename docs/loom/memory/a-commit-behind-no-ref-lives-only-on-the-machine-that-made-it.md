@@ -2,7 +2,8 @@
 name: a-commit-behind-no-ref-lives-only-on-the-machine-that-made-it
 description: A check pinned to a commit that no pushed ref reaches passes on every machine whose object store still holds that commit and dies on every fresh clone before a single assertion runs, so a green local run is evidence about one machine's unreclaimed garbage rather than about the branch — and no clone depth recovers it, because depth fetches what refs reach and a commit behind no ref is behind no depth
 type: gotcha
-origin: PR #748 (goal-create — the two-test CI repair, 2026-08-27)
+sources:
+  - resource: PR #748 (goal-create — the two-test CI repair, 2026-08-27)
 ---
 
 A behaviour-evidence suite pinned its instruction surface to a commit from the

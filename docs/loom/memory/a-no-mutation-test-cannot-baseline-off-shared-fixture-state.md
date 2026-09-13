@@ -2,7 +2,8 @@
 name: a-no-mutation-test-cannot-baseline-off-shared-fixture-state
 description: A "does not mutate its input" test that snapshots a SHARED fixture as its baseline is vacuous against an IDEMPOTENT write-back — earlier tests already ran the code over that state, so the mutation is in the baseline and the assertion compares it to itself; the tell is passing in-file and failing alone, the fix is a pristine read, and a deep copy of the polluted state inherits the blindness
 type: gotcha
-origin: feat-us-quarterly-statement-series Task E (US quarterly series arc, 2026-07-30)
+sources:
+  - resource: feat-us-quarterly-statement-series Task E (US quarterly series arc, 2026-07-30)
 ---
 
 A test named `test_derivation_does_not_mutate_the_statements_it_is_given` guarded

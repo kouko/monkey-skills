@@ -2,7 +2,8 @@
 name: extraction-severing-cross-ref-needs-weak-model-test
 description: Extracting a rule to a reference file can sever its PROXIMITY to a cross-referenced rule in the body — a strong-model equivalence gate still passes (it reconstructs the link), but a weak model loads the extracted rule and drops the connection. Weak-model cold-read is mandatory, not optional, for any extraction-based skill slim that separates a rule from a rule it depends on
 type: gotcha
-origin: branch slim-loom-code-brainstorm-finishing — loom-code 0.31.2 (brainstorming + finishing token slim, 2026-07-16)
+sources:
+  - resource: branch slim-loom-code-brainstorm-finishing — loom-code 0.31.2 (brainstorming + finishing token slim, 2026-07-16)
 ---
 
 Slimming `finishing-a-development-branch` moved its "When NOT to use"

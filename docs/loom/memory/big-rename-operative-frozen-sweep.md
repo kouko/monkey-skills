@@ -2,7 +2,8 @@
 name: big-rename-operative-frozen-sweep
 description: Big-rename recipe — split operative vs frozen references, regex look-behind guards for path collisions, git mv to preserve history, closing grep-guard for zero operative survivors
 type: process
-origin: PR #440 (loom suite rename, 2026-06-21)
+sources:
+  - resource: PR #440 (loom suite rename, 2026-06-21)
 ---
 
 Recipe for a large identifier/path rename across a repo, proven on

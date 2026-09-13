@@ -2,7 +2,8 @@
 name: workflow-agent-results-and-courier-args-need-guards
 description: Workflow scripts — every agent() result can be null (skip/terminal error) and must degrade to a failed item; agent() can also THROW (schema-forced output failure), and a sync try/catch around a RETURNED promise cannot catch its rejection — the stage must be async with await inside the try; any operator arg interpolated into a courier agent's Bash instruction text needs a per-segment character allow-list; and the allow-list MUST explicitly reject '.'/'..' segments — the character class ^[A-Za-z0-9._-]+$ admits them (traversal found live TWICE: improve-loop T4 and the matrix guard it was never back-ported to)
 type: gotcha
-origin: branch feat-principles-replay-loop-l1-l2 (2026-07-11) — round-1 🔴 + whole-branch 🟡; extended by branch feat-replay-matrix-stage-guard (stage-throw dropped rows in 2/3 real matrix runs); extended by branch l3-loop-run-20260711 (2026-07-12) — dot-segment traversal second occurrence
+sources:
+  - resource: branch feat-principles-replay-loop-l1-l2 (2026-07-11) — round-1 🔴 + whole-branch 🟡; extended by branch feat-replay-matrix-stage-guard (stage-throw dropped rows in 2/3 real matrix runs); extended by branch l3-loop-run-20260711 (2026-07-12) — dot-segment traversal second occurrence
 ---
 
 In `.claude/workflows/*.js` scripts, two guard obligations recur and were

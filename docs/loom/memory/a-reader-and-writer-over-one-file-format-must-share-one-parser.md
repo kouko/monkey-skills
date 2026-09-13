@@ -2,7 +2,8 @@
 name: a-reader-and-writer-over-one-file-format-must-share-one-parser
 description: When one task ships a tolerant reader for a file format and a later task ships a stricter writer for the same format, inputs the reader accepts silently fall through the writer — the write reports success and changes nothing; reader and writer must call one shared span/parse routine, and a writer that cannot locate its target must fail loud, never return quietly
 type: practice
-origin: think-orbit Part 1 whole-branch review (2026-08-18) — the frontmatter loader accepted a delimiter line that strips to `---` (trailing whitespace) while `break`'s rewriter required an exact `---\n` and returned None on mismatch; `check` passed, `break` printed `stale: …` and exit 0, and the assumption stayed `open`; both per-task triads had PASSed — only the branch-scope panel saw the seam
+sources:
+  - resource: think-orbit Part 1 whole-branch review (2026-08-18) — the frontmatter loader accepted a delimiter line that strips to `---` (trailing whitespace) while `break`'s rewriter required an exact `---\n` and returned None on mismatch; `check` passed, `break` printed `stale: …` and exit 0, and the assumption stayed `open`; both per-task triads had PASSed — only the branch-scope panel saw the seam
 ---
 
 Two functions parsed the same frontmatter delimiter with different

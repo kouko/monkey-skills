@@ -2,7 +2,8 @@
 name: a-green-suite-can-be-an-artifact-of-the-working-tree
 description: A test that reads a real repo artifact reads the WORKING-TREE copy, so an uncommitted edit can keep it green for an entire session while the same test fails at HEAD — a real-artifact test must read the committed content (git show HEAD:<path>) or the suite is reporting on the author's desk, not on the branch
 type: gotcha
-origin: PR #693 (feat/open-question-dispatch-gate, merged 2026-08-14) — the arc's own gate test; recorded 2026-08-18 in the arc's residue pass
+sources:
+  - resource: PR #693 (feat/open-question-dispatch-gate, merged 2026-08-14) — the arc's own gate test; recorded 2026-08-18 in the arc's residue pass
 ---
 
 A test that exercises a checker against a real document in the repo

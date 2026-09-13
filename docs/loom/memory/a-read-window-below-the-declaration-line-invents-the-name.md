@@ -2,7 +2,8 @@
 name: a-read-window-below-the-declaration-line-invents-the-name
 description: Reading a file through a line-range window that starts BELOW the declaration line shows you the body and hides the identifier, and the identifier then gets written from memory of what the body meant — producing a confidently-wrong symbol name surrounded by facts that all check out, which is precisely what makes it survive review; when a citation names a symbol, the read that sourced it must have included the line that declares it
 type: gotcha
-origin: brief-item-addressability plan, round-2 review (2026-08-13) — a plan GREEN clause named a pytest function that does not exist; the sourcing read was `sed -n '95,120p'` against a file whose `def` sat at line 94
+sources:
+  - resource: brief-item-addressability plan, round-2 review (2026-08-13) — a plan GREEN clause named a pytest function that does not exist; the sourcing read was `sed -n '95,120p'` against a file whose `def` sat at line 94
 ---
 
 A plan task's GREEN clause asserted that an existing pin

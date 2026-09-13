@@ -2,7 +2,8 @@
 name: a-parallel-wave-shares-one-git-index
 description: Six implementers dispatched in parallel onto one worktree share a single git index — a sibling's pathspec-less `git commit` swept another task's already-staged files into its own commit, and a sibling's `git reset --soft HEAD~1` un-committed a DIFFERENT sibling's already-landed commit; a worker also ran `git stash push/pop` against an explicit prohibition (the stack happened to come back intact) — every worker packet must mandate a scoped commit command and ban reset/stash outright, because prose alone did not hold
 type: gotcha
-origin: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — ca76d2fe (Task 1's files landed under Task 8's message via a pathspec-less commit), 710ff268 un-committed by a sibling's `git reset --soft HEAD~1` then re-committed as 7d9f3c91
+sources:
+  - resource: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — ca76d2fe (Task 1's files landed under Task 8's message via a pathspec-less commit), 710ff268 un-committed by a sibling's `git reset --soft HEAD~1` then re-committed as 7d9f3c91
 ---
 
 The plan dispatched six implementers in parallel against one shared

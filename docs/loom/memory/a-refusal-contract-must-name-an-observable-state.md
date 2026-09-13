@@ -2,7 +2,8 @@
 name: a-refusal-contract-must-name-an-observable-state
 description: a contract telling an agent to refuse by silence is unenforceable and unobservable — a refusal must be a named output state the orchestrator can distinguish from a dead agent, backed by mechanical validation at both the dispatch and intake boundaries
 type: practice
-origin: PR (reviewer packet fail-closed arc, 2026-08-25); live tests n=2 same-day
+sources:
+  - resource: PR (reviewer packet fail-closed arc, 2026-08-25); live tests n=2 same-day
 ---
 
 The reviewer discipline's original malformed-packet rule said "return no

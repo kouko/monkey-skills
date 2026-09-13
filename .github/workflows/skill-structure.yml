@@ -237,5 +237,12 @@ jobs:
         #
         # Unlike its former host this job is not PR-gated: the store can drift
         # on a direct push to main too, and the check needs no PR context.
+        #
+        # The repository-local `check_loom_memory_integrity.py` this step used
+        # to call was retired at 2026-09-10-okf-compatible-loom-memory (the
+        # store's OKF v0.2-compatible profile is validated by the
+        # loom-workflow:loom-memory skill's own validator, relocated there
+        # at 2026-09-11-loom-memory-into-loom-workflow) — run that validator
+        # against the migrated store instead.
         run: |
-          python3 scripts/check_loom_memory_integrity.py
+          python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py validate docs/loom/memory

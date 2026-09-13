@@ -2,7 +2,8 @@
 name: static-text-pins-blind-to-courier-runtime-holes
 description: Static text-pin tests on Workflow JS are structurally blind to runtime security holes in courier surfaces — a green 240+-test suite coexisted with a live path-traversal bypass and a dcg-blocked revert command; security-critical courier code needs an adversarial reviewer that EXECUTES probes (standalone node eval, in-repo guard-doc grep), plus an executable pin mirroring the repro once fixed
 type: practice
-origin: branch feat-principles-replay-l3-loop (2026-07-11) — T4 quality review, 2 🔴 found live behind a fully green suite
+sources:
+  - resource: branch feat-principles-replay-l3-loop (2026-07-11) — T4 quality review, 2 🔴 found live behind a fully green suite
 ---
 
 On the L3 improve-loop branch, the workflow test suite (static regex/marker

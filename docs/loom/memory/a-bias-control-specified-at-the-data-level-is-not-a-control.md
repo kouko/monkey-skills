@@ -2,7 +2,8 @@
 name: a-bias-control-specified-at-the-data-level-is-not-a-control
 description: A control specified as a shape in the data — two runs, two verdicts, two records — is satisfiable by an implementation in which the control does not exist, because the property that made it a control lives in the process that produced those records; a conforming implementation then pays the full cost and buys nothing, and every scenario still passes
 type: gotcha
-origin: 2026-08-28, independent-advisor spec expansion — the order-counterbalancing requirement had two swap runs with two verdicts and no requirement that the runs be independent
+sources:
+  - resource: 2026-08-28, independent-advisor spec expansion — the order-counterbalancing requirement had two swap runs with two verdicts and no requirement that the runs be independent
 ---
 
 The `independent-advisor` spec set out to defeat position bias: a judge

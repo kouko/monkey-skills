@@ -281,35 +281,103 @@ def test_extract_commits_folded_continuation_joined_single_space(tmp_path):
 
 # ─── 6. subprocess count contract (EXPECTED RED today) ─────────────
 
-def _build_perf_repo(repo: Path, n_commits: int = 200, memory_count: int = 40) -> None:
+# The perf fixture's contracted shape. These are the numbers the probes
+# below were written against, so the shape self-assertion in
+# `_build_perf_repo` compares the built history against THESE rather than
+# against the builder's own arguments — an argument-relative assertion holds
+# for every argument and therefore binds nothing. `perf_repo` passes them
+# explicitly and the builder takes no defaults, so a caller that perturbs
+# the shape fails the read-back instead of silently building something else.
+PERF_COMMITS = 200
+PERF_MEMORY_WORTHY = 40
+PERF_SUPERSEDED = 5
+
+
+def _build_perf_repo(repo: Path, bulk, n_commits: int, memory_count: int) -> None:
     """200 commits, 40 memory-worthy (Decision:), 5 of those also carry
     Supersedes: pointing at an earlier memory commit. Every commit
     touches the same tracked file so a --path pathspec matches all of
     them (exercising the path-scoped git-call count too).
+
+    Built by `bulk.build` (conftest.py's `git fast-import` wrapper, taken
+    as the `bulk_history` fixture) rather than one `git commit` per
+    commit: the per-commit version cost ~9s, which was a third of this
+    whole test directory's runtime. The history it produces is
+    byte-identical — every commit sha matches what `_commit` above
+    produced for the same index, which is why `_commit` is left in place
+    and still used by every small fixture in this file.
+
+    The supersession targets are what forces fast-import into more than
+    one pass: commit 38 cites commit 36's sha and commit 39 cites 38's,
+    and a sha only exists once written, so the stream is cut into waves
+    (see conftest.py). `2 * i - memory_count` reproduces the original
+    negative-index arithmetic — commits 35..39 supersede 30, 32, 34, 36,
+    38 respectively.
     """
     _init_repo(repo)
-    tracked = repo / "content.txt"
-    memory_shas: list[str] = []
+
+    def _superseding_body(i: int):
+        return lambda sha: f"Gotcha: superseding decision {i}\nSupersedes: {sha}".encode()
+
+    specs = []
     for i in range(n_commits):
         date = f"2020-{(i // 28) % 12 + 1:02d}-{(i % 28) + 1:02d}"
-        subject = f"chore: commit {i} (#{i + 100})"
-        body = None
-        if i < memory_count:
-            supersede_target = None
-            if i >= memory_count - 5:
-                # memory_shas holds one entry per prior memory-worthy
-                # commit (i of them so far); the last 5 memory commits
-                # each supersede an earlier, distinct one.
-                supersede_target = memory_shas[i - memory_count]
-            text = f"Decision: memory decision number {i}"
-            if supersede_target:
-                text = f"Gotcha: superseding decision {i}\nSupersedes: {supersede_target}"
-            body = text.encode()
-        tracked.write_text(f"content at commit {i}\n")
-        subprocess.run(["git", "add", "content.txt"], cwd=repo, check=True)
-        sha = _commit(repo, date, subject, body)
-        if i < memory_count:
-            memory_shas.append(sha)
+        common = {
+            "date": date,
+            "subject": f"chore: commit {i} (#{i + 100})",
+            "files": {"content.txt": f"content at commit {i}\n"},
+        }
+        if i >= memory_count:
+            specs.append(bulk.spec(**common))
+        elif i >= memory_count - 5:
+            specs.append(bulk.spec(
+                **common,
+                supersedes_index=2 * i - memory_count,
+                body_from_sha=_superseding_body(i),
+            ))
+        else:
+            specs.append(bulk.spec(
+                **common,
+                body=f"Decision: memory decision number {i}".encode(),
+            ))
+    bulk.build(repo, specs)
+
+    # Shape self-assertion. The probes below bind git-call COUNTS, which a
+    # fixture with the wrong record shape would still satisfy — verified:
+    # dropping memory_count to 39 left both of them green. So the fixture
+    # asserts its own observable shape here against the PERF_* literals
+    # above, and a rewrite (or a caller) that quietly stopped producing
+    # 200/40/5 fails loudly at build time.
+    records = bulk.read_shape(repo)
+    shas_so_far: set[str] = set()
+    memory_worthy = superseded = 0
+    for sha, message in records:
+        if "Decision:" in message or "Gotcha:" in message:
+            memory_worthy += 1
+        for line in message.splitlines():
+            if line.startswith("Supersedes: "):
+                superseded += 1
+                target = line.removeprefix("Supersedes: ").strip()
+                assert target in shas_so_far, (
+                    f"Supersedes: in {sha} cites {target}, which is not an earlier commit"
+                )
+        shas_so_far.add(sha)
+    assert len(records) == PERF_COMMITS, (
+        f"expected {PERF_COMMITS} commits, got {len(records)}"
+    )
+    assert memory_worthy == PERF_MEMORY_WORTHY, (
+        f"expected {PERF_MEMORY_WORTHY} memory-worthy commits, got {memory_worthy}"
+    )
+    assert superseded == PERF_SUPERSEDED, (
+        f"expected {PERF_SUPERSEDED} Supersedes: commits, got {superseded}"
+    )
+    touching = subprocess.run(
+        ["git", "-C", str(repo), "log", "--format=%H", "--", "content.txt"],
+        capture_output=True, text=True, check=True,
+    ).stdout.split()
+    assert len(touching) == PERF_COMMITS, (
+        f"expected all {PERF_COMMITS} commits to touch content.txt, got {len(touching)}"
+    )
 
 
 def _count_shim_dir(tmp_path: Path, tool: str, log_path: Path) -> Path:
@@ -328,10 +396,10 @@ def _count_shim_dir(tmp_path: Path, tool: str, log_path: Path) -> Path:
 
 
 @pytest.fixture(scope="module")
-def perf_repo(tmp_path_factory):
+def perf_repo(tmp_path_factory, bulk_history):
     repo = tmp_path_factory.mktemp("perf-repo") / "repo"
     repo.mkdir()
-    _build_perf_repo(repo)
+    _build_perf_repo(repo, bulk_history, PERF_COMMITS, PERF_MEMORY_WORTHY)
     return repo
 
 

@@ -2,7 +2,8 @@
 name: schema-shaped-fixtures-certify-the-rule-not-the-parser
 description: A fixture corpus authored from the format spec certifies the VERDICT RULE and says nothing about the PARSER — a 10-cell frozen corpus shipped the R3 variant at 0 false alarms while the real plan corpus broke the parse layer in five shapes the schema never names (wrapped multi-line values, trailing parenthetical annotations, letter-suffixed task numbers, Status-line comment tails, nested-bullet lists); only a sweep of the entire real corpus certifies the parser, and every rate computed before that sweep is contaminated
 type: practice
-origin: branch docs-declared-vs-actual-measurement (2026-08-01) — declared-vs-actual Files touched measurement arc
+sources:
+  - resource: branch docs-declared-vs-actual-measurement (2026-08-01) — declared-vs-actual Files touched measurement arc
 ---
 
 The declared-vs-actual comparator was measured two ways on one branch.

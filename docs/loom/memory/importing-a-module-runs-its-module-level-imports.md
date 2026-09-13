@@ -2,7 +2,8 @@
 name: importing-a-module-runs-its-module-level-imports
 description: A test that uses only a module's PURE helpers still runs that module's module-level imports — so its non-stdlib module-level deps (requests/edgar/etc.) must be stubbed in sys.modules BEFORE the import, or the offline CI env errors at fixture setup (module import != function call)
 type: gotcha
-origin: multi-filing historical fetch scope A, CI offline-suite failure on PR #573 (feat-multifiling-historical-fetch, 2026-07-16)
+sources:
+  - resource: multi-filing historical fetch scope A, CI offline-suite failure on PR #573 (feat-multifiling-historical-fetch, 2026-07-16)
 ---
 
 Importing a module executes ALL of its module-level statements, including its

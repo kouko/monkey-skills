@@ -2,7 +2,8 @@
 name: a-directory-move-shifts-every-relative-path-derivation
 description: Moving files one directory deeper silently breaks every `Path(__file__).parents[N]` chain in them — the derivation still resolves, just to the wrong directory, so no import fails and no grep for the old name matches; the 6→2 plugin merge hit this three separate times and only pytest ever surfaced it
 type: gotcha
-origin: loom-design-merge (6 plugins → 2 consolidation, parts 1-3, 2026-08-16/17)
+sources:
+  - resource: loom-design-merge (6 plugins → 2 consolidation, parts 1-3, 2026-08-16/17)
 ---
 
 The merge moved each retired plugin's scripts one level deeper:

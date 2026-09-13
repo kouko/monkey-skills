@@ -2,7 +2,8 @@
 name: a-mutation-test-must-run-the-production-assertion
 description: A test written to prove a pin is not vacuous must mutate the INPUT and invoke the PRODUCTION assertion — never re-implement the assertion beside it against a helper, because then reverting the production call site leaves the whole "mutation-proof" suite green and the guard can be deleted silently; the recursive form of the vacuity it was written to kill
 type: practice
-origin: branch fix/design-md-spec-conformance (2026-08-10) — whole-branch review found two schema pins that could not fail; the remediation added eleven mutation tests to prove they now could; a delta reviewer reverted both production call sites with the document pristine and got 16/16 green
+sources:
+  - resource: branch fix/design-md-spec-conformance (2026-08-10) — whole-branch review found two schema pins that could not fail; the remediation added eleven mutation tests to prove they now could; a delta reviewer reverted both production call sites with the document pristine and got 16/16 green
 ---
 
 The arc's headline defect was two assertions that could not fail: a

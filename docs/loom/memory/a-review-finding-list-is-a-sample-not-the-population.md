@@ -2,7 +2,8 @@
 name: a-review-finding-list-is-a-sample-not-the-population
 description: A reviewer's finding list enumerates the sites it happened to reach, not every site carrying the defect — three stale copies of one false claim were named and fixed, two more survived because they paraphrase the claim without naming its symbol; treat each finding as a defect CLASS and sweep for its paraphrases, not just its citations
 type: gotcha
-origin: feat-us-quarterly-statement-series (US quarterly three-statement series arc, rounds 3-4 whole-branch review, 2026-08-07)
+sources:
+  - resource: feat-us-quarterly-statement-series (US quarterly three-statement series arc, rounds 3-4 whole-branch review, 2026-08-07)
 ---
 
 A round-3 whole-branch review found that a contract change — `_acquire_raw_filing`

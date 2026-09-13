@@ -2,7 +2,8 @@
 name: a-cross-field-check-over-a-bitemporal-store-must-pin-one-vintage
 description: A check that relates several stored fields (an accounting identity, a ratio, a sum) must read them all from ONE vintage — taking each field's own latest silently compares across filings whenever one field was restated more often than another, and reports the store working correctly as if it were an error; 4 of 6 live filers false-flagged this way, one by 5.7% on a period that balances to the dollar inside its own filing
 type: gotcha
-origin: US as-reported statement lane (feat-us-as-reported-statement-lane, investing-toolkit 2.38.0, 2026-07-26) — found by the live dogfood; invisible to 1165 green tests
+sources:
+  - resource: US as-reported statement lane (feat-us-as-reported-statement-lane, investing-toolkit 2.38.0, 2026-07-26) — found by the live dogfood; invisible to 1165 green tests
 ---
 
 A bitemporal store keeps every vintage: a restatement APPENDS a record rather

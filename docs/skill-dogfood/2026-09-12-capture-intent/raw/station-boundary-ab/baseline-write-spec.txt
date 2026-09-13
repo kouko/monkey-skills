@@ -1,0 +1,47 @@
+**Simulation only — no files written, no commands run.**
+
+## Requirements
+
+```
+REQ-1 — Muting stops project activity emails
+  WHEN a user mutes a project, the system shall stop sending activity emails for that project → Acceptance #1
+
+REQ-2 — In-app notifications unaffected by mute
+  WHILE a project is muted, the system shall continue to show in-app notifications for that project unchanged → Acceptance #2
+
+REQ-3 — Global settings unaffected by mute
+  WHILE a project is muted, the system shall leave the user's global notification settings unchanged → Acceptance #3
+
+REQ-4 — Unmute out of scope
+  The system shall provide no way to unmute a project in this change → Acceptance #4
+```
+
+## UI flows
+
+```
+1. Happy path — Mute a project
+   You mute a project; you see its activity emails stop; its in-app
+   notifications keep appearing exactly as before; your global
+   notification settings stay exactly as they were.
+
+2. Reverse — N/A — unmute is out of scope for this change
+
+3. Error — N/A — not stated in the confirmed intent; no error
+   presentation is introduced here
+
+4. Boundary/empty — N/A — not stated in the confirmed intent
+```
+
+---
+
+## Decision point ② — confirmation message (to send to the user)
+
+> You mute a project, and from then on you stop getting activity emails for it. Your in-app notifications for that project keep showing up exactly as before, and your overall notification settings don't change at all. Is that right?
+>
+> One thing to flag: this version has no way to unmute a project once you mute it — muting is currently one-directional. Are you OK with that?
+
+---
+
+**Boundary check** — nothing above adds a goal, actor, scope, UI control/placement, persistence method, technical component, or error presentation beyond what was given: the mute *trigger* (button, menu, settings row, etc.) is deliberately left unspecified since the input never named one; REQ-4 and the "reverse" UI flow only restate the given out-of-scope boundary, not a new one.
+
+Not simulated further (per your instruction to stop at this portion): `## Design decision`, `## Alternatives considered`, `## Current state evidence`, contract-version/intake checker runs, commit, and hand-off to `write-plan` — those belong to the rest of the write-spec station and were intentionally skipped.

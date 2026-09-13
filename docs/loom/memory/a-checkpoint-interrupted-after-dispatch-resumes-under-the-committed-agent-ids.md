@@ -2,7 +2,8 @@
 name: a-checkpoint-interrupted-after-dispatch-resumes-under-the-committed-agent-ids
 description: When a session dies between the `chore(loom): dispatch review` commit and the verdicts (a /clear, a crash), the dispatched agents are gone but their `dispatch[]` entries are already committed — re-dispatch fresh agents under the SAME agent_ids and the same HEAD rather than appending new entries; and read review.json's template placeholders (`<agent id>`, `PASS|PASS_WITH_NOTES|NEEDS_REVISION`) as "round not yet written", not as a corrupted record — §7 writes verdicts, probes and open_findings together at the end of the round, so a review.json with only `dispatch[]` filled is the normal mid-round state
 type: process
-origin: branch reviewer-adversary-positioning (2026-09-04) — session /clear'd between the two-reader dispatch commit and their verdicts; checker showed six BLOCKs on the placeholders which read as a hole but was the expected mid-round state
+sources:
+  - resource: branch reviewer-adversary-positioning (2026-09-04) — session /clear'd between the two-reader dispatch commit and their verdicts; checker showed six BLOCKs on the placeholders which read as a hole but was the expected mid-round state
 ---
 
 A review checkpoint has two commits: the dispatch record first

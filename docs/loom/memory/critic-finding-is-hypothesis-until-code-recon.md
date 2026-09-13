@@ -2,7 +2,8 @@
 name: critic-finding-is-hypothesis-until-code-recon
 description: A spec-critic finding that asserts a codebase fact is a HYPOTHESIS until code recon confirms it — spec-only lens panels can re-seed counterfactual requirements; verify the premise in code before building machinery to satisfy it
 type: gotcha
-origin: operational-kpi scope-B quarterly rebuild, T17 (feat-operational-kpi-quarterly, 2026-07-18)
+sources:
+  - resource: operational-kpi scope-B quarterly rebuild, T17 (feat-operational-kpi-quarterly, 2026-07-18)
 ---
 
 A completeness-critic panel reads the SPEC and its decision docs — not the

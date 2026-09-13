@@ -2,7 +2,8 @@
 name: a-silently-skipped-edit-reports-as-a-completed-one
 description: Tools that no-op on a non-match instead of erroring turn a skipped fix into a reported one — a Python str.replace whose search string differed by one word left a correction applied to one of two files while the run reported success, and a mutation-battery slice that matched the wrong `EOF` produced syntactically broken mutants whose failures were reported as kills; prefer the tool that errors on a non-match, and verify the fix landed rather than that the command exited
 type: practice
-origin: mechanize-memory-store-integrity-gate whole-branch review (2026-07-31), rounds 3-4
+sources:
+  - resource: mechanize-memory-store-integrity-gate whole-branch review (2026-07-31), rounds 3-4
 ---
 
 Two instances in one branch, both in the *verification* layer rather than the code under test:

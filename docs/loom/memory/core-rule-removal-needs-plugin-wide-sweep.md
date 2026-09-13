@@ -2,7 +2,8 @@
 name: core-rule-removal-needs-plugin-wide-sweep
 description: A load-bearing rule (e.g. writing-plans' task-sizing criterion) gets quoted/paraphrased across far more files than the one defining it — router cards, agent contracts, sibling READMEs in every shipped language, living design docs — grep the whole plugin, not just the defining skill file, before considering a removal complete
 type: process
-origin: PR #516 (writing-plans time-box removal, 2026-07-08) — two review rounds still caught residue after an initial "fix the SKILL.md" pass
+sources:
+  - resource: PR #516 (writing-plans time-box removal, 2026-07-08) — two review rounds still caught residue after an initial "fix the SKILL.md" pass
 ---
 
 Removing writing-plans' ≤5-min criterion started as an edit to one file

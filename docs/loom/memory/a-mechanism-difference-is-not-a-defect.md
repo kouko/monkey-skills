@@ -2,7 +2,8 @@
 name: a-mechanism-difference-is-not-a-defect
 description: An audit finding of the form "lane A uses method X while lane B uses the better method Y" describes a MECHANISM, not an outcome — twice in one day a planned conversion was withdrawn because measuring the two methods' ANSWERS showed they agree almost everywhere, and where they differ the "better" method was wrong (a structural rule promoted the wrong equity figure on 8 of 8 filers, and left 3 currently-answered fields unresolved). Before converting a lane to the better mechanism, measure the answers, not the mechanisms; and count how often the two can even be compared, because a sample where only one candidate exists cannot discriminate at all.
 type: gotcha
-origin: 2026-07-28 — two ratified work items withdrawn on measurement before implementation; full evidence in docs/loom/audits/2026-07-28-revenue-chain-and-hierarchy-audit.md §2-§3 (the first) and §8 (the second)
+sources:
+  - resource: 2026-07-28 — two ratified work items withdrawn on measurement before implementation; full evidence in docs/loom/audits/2026-07-28-revenue-chain-and-hierarchy-audit.md §2-§3 (the first) and §8 (the second)
 ---
 
 An audit is good at finding that two lanes do the same job differently. That

@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 REVIEW = (ROOT / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
 SHIP = (ROOT / "loom-code/skills/ship/SKILL.md").read_text(encoding="utf-8")
+MAINTAIN = (ROOT / "loom-code/skills/maintain/SKILL.md").read_text(encoding="utf-8")
 BUILD = (ROOT / "loom-code/skills/build/SKILL.md").read_text(encoding="utf-8")
 CAPTURE = (ROOT / "loom-design/skills/capture-intent/SKILL.md").read_text(encoding="utf-8")
 PLAN = (ROOT / "loom-code/skills/write-plan/SKILL.md").read_text(encoding="utf-8")
@@ -17,6 +18,38 @@ MEMORY_PR = (
 SHIP_PROSE = " ".join(SHIP.split())
 CAPTURE_PROSE = " ".join(CAPTURE.split())
 PLAN_PROSE = " ".join(PLAN.split())
+INTENT_TEMPLATE = (ROOT / "loom-code/contract/templates/intent.md").read_text(encoding="utf-8")
+CONTRACT_MANIFEST = (ROOT / "loom-code/contract/manifest.yaml").read_text(encoding="utf-8")
+
+
+def test_review_uses_one_computed_reviewer_floor_without_prose_allowlist() -> None:
+    review_prose = " ".join(REVIEW.split())
+    assert "loom_checker.py reviewer-count <change-id>" in review_prose
+    assert "computed reviewer floor" in review_prose
+    assert "Every change: two fresh-context reviewers" not in REVIEW
+    assert "tests only" not in review_prose
+    assert "docs only" not in review_prose
+
+
+def test_station_summaries_do_not_duplicate_reviewer_counts() -> None:
+    stations = [
+        CAPTURE,
+        PLAN,
+        *((ROOT / "loom-design/skills" / name / "SKILL.md").read_text(encoding="utf-8")
+          for name in ("write-spec", "product-principles", "design-system")),
+    ]
+    for station in stations:
+        flat = " ".join(station.split())
+        assert "reviewer count comes from the installed Review policy" in flat
+        assert "one in the small lane, two or more in the full lane" not in flat
+
+
+def test_principles_require_the_mechanically_computed_reviewer_floor() -> None:
+    principles = " ".join(PRINCIPLES.split())
+    assert "mechanically computed reviewer floor" in principles
+    assert "one reviewer only when the checker proves the whole change is narrow and low-risk" in principles
+    assert "two reviewers for every other or undecidable change" in principles
+    assert "zero reviewers" not in principles
 
 
 def test_review_generates_attestation_without_ledger_ceremony() -> None:
@@ -38,6 +71,58 @@ def test_ship_keeps_publication_safety() -> None:
     assert "destination/refspec safety" in SHIP
     assert "deterministic secrets scan" in SHIP
     assert "cannot be bypassed" in SHIP
+
+
+def test_ci_failure_continues_without_new_recovery_machinery() -> None:
+    for phrase in (
+        "same active task",
+        "failed required checks and each available failure log",
+        "existing test already exposes the root cause",
+        "same bounded Review episode",
+        "Every committed-file change",
+        "must not be rerun automatically",
+        "publication command's failure does not end the task",
+        "PR title, body, or other publication data not committed to the "
+        "repository may be fixed in place and reuse the matching attestation",
+        "required change to requirements, visible behaviour, or guarantees",
+        "required diagnostics or permission",
+        "persistent external failure established from available evidence",
+        "Run it to observe RED",
+        "rerun it to observe GREEN",
+    ):
+        assert phrase in SHIP_PROSE
+    assert "active unmerged change" in MAINTAIN
+    assert "Use for CI failures" not in MAINTAIN
+    for forbidden in ("recovery script", "failure classifier", "recovery state"):
+        assert forbidden not in SHIP_PROSE
+
+
+def test_review_uses_one_observable_claude_attempt_and_existing_retry() -> None:
+    review_prose = " ".join(REVIEW.split())
+    for phrase in (
+        "scripts/claude_reviewer.py",
+        "one Claude attempt",
+        "empty-output",
+        "timeout",
+        "same functional-content digest",
+        "does not retry",
+        "outside the Codex sandbox",
+        "reusable host approval",
+        "Do not fall back to a sandboxed Claude invocation",
+        "separate authentication preflight",
+        "broader Python or shell access",
+        "Do not read, copy, or move Claude credentials",
+        "Only an unauthenticated result from this outside-sandbox invocation",
+        "stop without treating it as transient",
+    ):
+        assert phrase in review_prose
+    assert "Do not run a model-backed preflight." in review_prose
+
+
+def test_review_consumes_every_second_vendor_selection_source() -> None:
+    review_prose = " ".join(REVIEW.split())
+    for source in ("fixed CLI", "per-change `ask` answer", "`selection-confirmed`"):
+        assert source in review_prose
 
 
 def test_ship_uses_one_publish_command_after_acceptance() -> None:
@@ -161,3 +246,48 @@ def test_build_has_no_evidence_accounting() -> None:
     assert "finalize-review" in BUILD
     assert "Build never writes `attestation.json`" in BUILD
     assert "review.json" not in BUILD
+
+
+def test_capture_intent_boundaries_are_shared_with_code_only_intake() -> None:
+    for phrase in (
+        "ask only for missing required-field content",
+        "observable delivery outcome",
+        "complete scenarios",
+        "Keep, neutralize, defer, reopen, or delete",
+        "must remain `open`",
+        "explicit answer",
+        "decision points remain unchanged",
+        "move it to Open questions",
+        "before confirmation",
+    ):
+        assert phrase in CAPTURE_PROSE
+        assert phrase in PLAN_PROSE
+
+    assert "question quota" in CAPTURE_PROSE
+    assert "question quota" in PLAN_PROSE
+
+
+def test_shared_intent_contract_names_altitude_without_new_schema() -> None:
+    assert "observable delivery outcomes, not scenarios or implementation" in INTENT_TEMPLATE
+    assert "each line provable by a blind run" in INTENT_TEMPLATE
+    assert (
+        "Material user-outcome or scope choices remain open; only non-material "
+        "unsupported detail is deleted"
+    ) in CONTRACT_MANIFEST
+    assert "why this change exists, the value when needed" in CONTRACT_MANIFEST
+    assert "source-id" not in CONTRACT_MANIFEST
+    assert "question-id" not in CONTRACT_MANIFEST
+
+
+def test_code_only_field_boundaries_keep_problem_and_value_semantics() -> None:
+    assert "who it affects, and the consequence" in PLAN_PROSE
+    assert "beneficiary, urgency, and GO/NO-GO" in PLAN_PROSE
+    assert "engineering intent omits obvious value" in PLAN_PROSE
+
+
+def test_code_only_surface_routing_matches_capture_intent() -> None:
+    normalized = " ".join(PLAN_PROSE.split())
+    assert "file artifact a user or external system depends on" in normalized
+    assert "Visible effects with an unknown surface and no spec require" in normalized
+    assert "surface-neutral reason" in normalized
+    assert "internal files alone do not" in normalized

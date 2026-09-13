@@ -2,7 +2,8 @@
 name: an-open-intent-commit-must-carry-its-needs-design-line
 description: Even for a status:open intent, the commit that last changed its status/needs-design line must carry the needs-design: line verbatim in the commit message, or intent.needs-design-reason blocks — write the line into the commit body whenever an intent file is created or its status/needs-design line changes
 type: gotcha
-origin: 2026-09-03-squash-merge-drops-the-needs-design-line intent, discovered during 2026-09-03-loom-post-merge-seams
+sources:
+  - resource: 2026-09-03-squash-merge-drops-the-needs-design-line intent, discovered during 2026-09-03-loom-post-merge-seams
 ---
 
 `intent.needs-design-reason` does not exempt an open intent from carrying

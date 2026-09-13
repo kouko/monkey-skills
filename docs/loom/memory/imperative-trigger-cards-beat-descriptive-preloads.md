@@ -2,7 +2,8 @@
 name: imperative-trigger-cards-beat-descriptive-preloads
 description: Preloading a rule into session context fixes "rule never read", NOT "rule read but not obeyed" — weak models act on short imperative action-moment cards ("before typing X → invoke Y FIRST", 2/2 flip) while descriptive discipline prose provably in context moved behavior 0/2; phrase always-loaded cards as imperatives anchored to the acting moment
 type: practice
-origin: more-visualization branch dogfood (docs/loom/dogfood/2026-07-10-visual-trigger-weak-model-dogfood.md)
+sources:
+  - resource: more-visualization branch dogfood (docs/loom/dogfood/2026-07-10-visual-trigger-weak-model-dogfood.md)
 ---
 
 Two always-loaded injections were A/B-tested on haiku the same day: an

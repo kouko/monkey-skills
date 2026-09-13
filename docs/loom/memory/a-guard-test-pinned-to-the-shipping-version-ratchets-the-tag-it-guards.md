@@ -2,7 +2,8 @@
 name: a-guard-test-pinned-to-the-shipping-version-ratchets-the-tag-it-guards
 description: A test that asserts a document's version tag equals plugin.json's CURRENT version turns every release bump into a silent rewrite of that tag — check 19's "(v0.89.0+)" introduction marker ratcheted through 9 releases to "(v0.98.0+)", becoming the only drifting tag in its table and factually wrong; the guard must live-compare against the fact's own SSOT (the schema heading's tag), never against the shipping version
 type: gotcha
-origin: branch loom/code-reviewer-sonnet-default (2026-08-24) — both docs-review panel arms independently caught the drift (dual-semantics + incorrect-fact); root cause was test_check19_version_tag_matches_shipping_version comparing the tag to plugin.json
+sources:
+  - resource: branch loom/code-reviewer-sonnet-default (2026-08-24) — both docs-review panel arms independently caught the drift (dual-semantics + incorrect-fact); root cause was test_check19_version_tag_matches_shipping_version comparing the tag to plugin.json
 ---
 
 A `(vX.Y.Z+)` tag on a rule means "in force since X.Y.Z" — a frozen

@@ -2,7 +2,8 @@
 name: verbatim-phrase-guards-break-on-hard-line-wrap
 description: A grep/substring guard that asserts a multi-word phrase VERBATIM fails the moment an editor hard-wraps that phrase across a newline (e.g. "blast\nradius") — the file reads fine to a human but the contiguous-substring assertion misses; keep any guard-pinned canonical phrase on ONE physical line, and prefer a contiguous-match assertion over non-contiguous fragment checks. The same wrap defeats verbatim EDITING: a str.replace/Edit whose target spans a newline silently no-ops, and a verification grep written the same way confirms the false success — normalize whitespace on BOTH sides before editing AND before verifying
 type: gotcha
-origin: feat-bba-proactive-trigger-hardening (2026-07-25) — 3 of 6 SDD implementers hit it independently pinning the trigger triple
+sources:
+  - resource: feat-bba-proactive-trigger-hardening (2026-07-25) — 3 of 6 SDD implementers hit it independently pinning the trigger triple
 ---
 
 When a guard test asserts a canonical multi-word phrase verbatim

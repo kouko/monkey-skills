@@ -194,3 +194,24 @@ def test_tri_lang_readmes_consistent():
         f"SKILL.md description does not contain >=3 zh-TW trigger phrases; "
         f"found {zhtw_in_skill}"
     )
+
+
+def test_tri_lang_readmes_show_localized_goal_grounded_alignment_loop():
+    readmes = {
+        "en": (_read(README_EN), ("Purpose and current position", "Align purpose and next step")),
+        "ja": (_read(README_JA), ("目的と現在地", "目的と次の一歩をそろえる")),
+        "zh-TW": (_read(README_ZHTW), ("目的與現在的位置", "對齊目的與下一步")),
+    }
+
+    for language, (text, labels) in readmes.items():
+        assert "Goal-Grounded Alignment Loop" in text, f"{language} README lacks loop name"
+        assert "```mermaid" in text, f"{language} README lacks Mermaid loop diagram"
+        for label in labels:
+            assert label in text, f"{language} README lacks localized label: {label}"
+
+    assert "7-block schema" not in readmes["en"][0]
+    assert "7 ブロックスキーマ" not in readmes["ja"][0]
+    assert "7 格式" not in readmes["zh-TW"][0]
+    for language, (text, _) in readmes.items():
+        assert "recap-state/" in text, f"{language} README uses a stale directory root"
+        assert "\nrecap/\n" not in text, f"{language} README names a nonexistent directory"

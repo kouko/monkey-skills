@@ -22,6 +22,7 @@ from ..attestation import ATTESTATION_SCHEMA, _command_digest
 from ..digest import functional_content_digest
 from ..helpers import UsageError, artifact_path, git_ok, git_text, load_manifest, read_text, repo_root, report
 from ..probes import NO_PACKAGE_TESTS, PROBE_RUN_TIMEOUT, argv_for, command_executes_artifact, command_names_artifact, declared_test_command
+from ..reviewers import required_reviewer_count
 
 
 
@@ -40,6 +41,11 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         raise UsageError(f"cannot read review input: {exc}") from exc
     if not isinstance(review_input, dict):
         raise UsageError("review input must be a JSON object.")
+    repo = repo_root(Path.cwd())
+    head_sha = git_text(repo, "rev-parse", "HEAD")
+    status_before = git_text(repo, "status", "--porcelain")
+    if status_before:
+        return report([("finalize.clean-tree", "commit functional content before finalizing review")], err)
     verdicts = review_input.get("verdicts")
     findings = review_input.get("findings", [])
     adversarial = review_input.get("adversarial", [])
@@ -51,19 +57,19 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         return report([("finalize.verdicts", "every reviewer verdict must pass")], err)
     reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts}
     reviewers.discard("")
-    if len(reviewers) < 2:
-        return report([("finalize.verdicts", "two distinct reviewers are required")], err)
+    reviewer_floor = required_reviewer_count(repo, change_id, head_sha)
+    if len(reviewers) < reviewer_floor:
+        needed = "two" if reviewer_floor == 2 else "one"
+        return report(
+            [("finalize.verdicts", f"{needed} distinct reviewers are required")],
+            err,
+        )
     if not isinstance(findings, list) or not isinstance(adversarial, list):
         return report([("finalize.schema", "findings and adversarial must be lists")], err)
     if not adversarial:
         return report([("finalize.adversarial", "at least one adversarial artifact is required")], err)
 
-    repo = repo_root(Path.cwd())
     manifest = load_manifest()
-    head_sha = git_text(repo, "rev-parse", "HEAD")
-    status_before = git_text(repo, "status", "--porcelain")
-    if status_before:
-        return report([("finalize.clean-tree", "commit functional content before finalizing review")], err)
     config_before = git_text(repo, "config", "--list", "--null")
     package_command, source = declared_test_command(repo)
     if package_command is None or package_command.strip().lower() == NO_PACKAGE_TESTS:

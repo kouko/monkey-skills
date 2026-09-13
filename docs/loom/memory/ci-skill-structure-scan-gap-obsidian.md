@@ -2,7 +2,8 @@
 name: ci-skill-structure-scan-gap-obsidian
 description: .github/workflows/skill-structure.yml scans only domain-teams + loom plugins — an obsidian (or other unscanned plugin) SKILL.md CHK-SKL-010 word-cap breach merges silently; check wc -w ≤4,500 before adding text
 type: gotcha
-origin: feat/digest-multiview-synthesis whole-branch review (2026-07-10)
+sources:
+  - resource: feat/digest-multiview-synthesis whole-branch review (2026-07-10)
 ---
 
 The repo's skill-structure CI (`.github/workflows/skill-structure.yml`) runs

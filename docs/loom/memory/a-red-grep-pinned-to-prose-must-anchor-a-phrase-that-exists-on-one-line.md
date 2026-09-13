@@ -2,7 +2,8 @@
 name: a-red-grep-pinned-to-prose-must-anchor-a-phrase-that-exists-on-one-line
 description: A plan's RED/GREEN grep against prose files fails silently when the pinned phrase is soft-wrapped across lines or exists only as close variants — before pinning, run the exact grep against the live file and anchor to a phrase that occurs on ONE line with the expected count (n=2 - arc-3 Task 5's unsatisfiable RED, arc-4b plan round-1's zero-count RED)
 type: process
-origin: loom arc 3 (Task 5 RED grep unsatisfiable, phrase soft-wrapped; plan Amendment log 2026-08-07) + loom arc 4b (plan round-1 🔴 — RED pinned "same shape as its Step 8 siblings", 0 single-line occurrences vs 3 wording variants, 2026-08-07)
+sources:
+  - resource: loom arc 3 (Task 5 RED grep unsatisfiable, phrase soft-wrapped; plan Amendment log 2026-08-07) + loom arc 4b (plan round-1 🔴 — RED pinned "same shape as its Step 8 siblings", 0 single-line occurrences vs 3 wording variants, 2026-08-07)
 ---
 
 Markdown prose in this repo is hard-wrapped near 72-80 columns, so a

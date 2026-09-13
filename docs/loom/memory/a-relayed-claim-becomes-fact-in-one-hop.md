@@ -2,7 +2,8 @@
 name: a-relayed-claim-becomes-fact-in-one-hop
 description: A claim travelling agent→orchestrator→agent loses its provenance at the first hop and arrives as fact — nine times on one branch, twice inside the fix for an earlier instance; tag every relayed claim in the dispatch packet with how it was verified, and never verify a citation by reading
 type: gotcha
-origin: feat-us-quarterly-statement-series (US quarterly three-statement series arc, 2026-07-29)
+sources:
+  - resource: feat-us-quarterly-statement-series (US quarterly three-statement series arc, 2026-07-29)
 ---
 
 Across roughly fifteen implementer/review rounds on one branch, **nine** separate

@@ -2,7 +2,7 @@
 name: write-plan
 description: |
   Turn a confirmed intent into a task plan at docs/loom/<change-id>/plan.md. Use when someone asks to plan, start, or implement a change; when an intent file exists but is not confirmed yet; or when there is no intent yet and the work is about to begin. This is the entry station for engineering changes, and the entry station for every change when loom-design is not installed.
-version: 1.0.0
+version: 1.0.1
 ---
 
 ## What this station does
@@ -16,6 +16,15 @@ positive and negative or boundary cases, and risk. You do **not** implement
 anything, and you do not ask
 the user to approve the plan: how the work is split is your decision, and
 you write down why.
+
+## Decision boundary
+
+This station chooses the simplest reversible implementation that satisfies the
+confirmed specification. It may split that work into tasks and tests, but it
+must not invent or reinterpret product behaviour. A product gap is returned
+for clarification instead of being silently filled in the plan.
+
+## Workflow setup
 
 When `loom-design` is installed, an upstream station (`capture-intent`)
 has already interviewed the user and confirmed the intent. When it is not
@@ -36,6 +45,8 @@ prefix; nothing else changes.
 skill-shell variable, so Codex stations use the injected skill path shown by
 the host instead of copying Claude's substitution contract.
 
+## Artifact vocabulary
+
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees
 happen. `kind: engineering` is everything else: refactors, internal
@@ -53,7 +64,7 @@ date, not the example's).
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
 | write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-ready`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
 | build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
-| review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
+| review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; reviewer count comes from the installed Review policy | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
 | ship | diff / PR — the pushed change branch and its pull request | automatic for canonical intent authorization; one user decision for a legacy intent; merge is separate | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
@@ -69,9 +80,9 @@ non-decision authorisation stop, the first time this repo is used (step
 2. **Any choice that is expensive to undo** — asked in the same message,
    as consequences ("from then on it only runs on ___, ___ per month"),
    never as jargon.
-3. **Once per change, if a second AI command-line tool is installed here** —
-   whether to use it as a second reviewer. Your answer is remembered and
-   never asked again.
+3. **When this repo uses `second-vendor: ask` in the full lane** — whether
+   to use the available other-vendor tool for this change. `suggest` is not
+   a question: its notice comes after the plan exists and never pauses work.
 4. **If this is a product change and this repo has no product principles
    yet** — about ten minutes of questions, in the same conversation as
    question 1, confirmed together with it.
@@ -107,7 +118,7 @@ file, and the user sees exactly the same questions.
 ## Step 0 — Check the contract version
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 2.0
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 2.1
 ```
 
 Exit 0: continue. Anything else, the rule is `contract.requires`: print
@@ -149,6 +160,31 @@ the user named a change, match the slug.
 "provisionally" and you do not confirm on the user's behalf. The checker
 enforces the same rule at step 4 (`intake.confirmed`), so a plan written
 early cannot be shipped anyway.
+When this station performs code-only intake, use the same capture boundary:
+ask only for missing required-field content, never a fixed intake question
+quota; existing decision points remain unchanged.
+Problem holds present pain, who it affects, and the consequence, with no
+diagnosis or fix; Proposed outcome holds the wanted capability;
+Acceptance holds each observable delivery outcome, not value, complete
+scenarios, UI placement, state transitions, test steps, or implementation;
+Constraints are already fixed; product Value case gives beneficiary, urgency,
+and GO/NO-GO, while an engineering intent omits obvious value;
+Out of scope names excluded capability; Open questions contains only unresolved
+outcome or scope choices. After drafting, make one author pass: **Keep,
+neutralize, defer, reopen, or delete**. Behaviour defers to spec, method to
+plan, and unsupported detail is deleted. This pass creates no field, ID,
+requirement, scenario, product behaviour, or review loop.
+Publication and second-reviewer authorisation never enter Problem, Proposed
+outcome, Acceptance, Constraints, or Out of scope. Keep publication
+authorisation in the intent's `publication:` frontmatter line and preserve the
+question list for this plan's `## Questions asked` section.
+Visible effects with an unknown surface and no spec require
+`needs-design: yes` with a surface-neutral reason; internal files alone do not.
+Complete the code-only altitude pass before confirmation. A material outcome
+or scope fork needs an explicit answer; accepting the restatement is
+insufficient; reopen means move it to Open questions, stop confirmation, and
+the intent must remain `open`.
+<!-- /gate -->
 
 ## Step 2 — Standing documents
 
@@ -207,18 +243,13 @@ twice.
    inside this same message ("this will rewrite your ___, I am doing it the
    way you said: ___"), so the user sees it without being stopped for it.
 
-3. **The second-reviewer suggestion, at most once per change**, and
-   `second-vendor: ask`. Load `references/second-vendor-ask-and-docs-lint.md`
-   before composing this message whenever `docs/loom/KICKOFF-DEFAULTS.md`
-   has no `second-vendor:` line, or has `second-vendor: ask` — it owns the
-   detection rule, the suggestion wording (the number to say: five of the seven
-   serious problems this system's own spec review found were caught by only
-   one of the two vendors), and the standing `ask` question
-   (「這次要不要用 Codex 當第二位讀者？」, asked every change, answer written
-   to the intent's decision record). In the
-   small lane there is only one reader, so `second-vendor: ask` is not
-   asked and that field is omitted. If a `second-vendor:` line other than
-   `ask` already exists, say nothing about it.
+3. **The cross-model review question, only for `second-vendor: ask`.** Load
+   `references/second-vendor-ask-and-docs-lint.md` before composing this
+   message. A missing line is initialized as `second-vendor: suggest`; it
+   does not add a question. In a full lane, `ask` puts its per-change
+   host-aware question here using the native interface or documented fallback,
+   and records the answer in the intent decision record. In a
+   small lane it is omitted. A fixed CLI and `suggest` add no question here.
 
 4. **The principles interview**, if step 2 demanded it.
 
@@ -275,7 +306,8 @@ limit on rounds here; there is on guessing.
 Read the intent's `needs-design:` line. It is `yes` when either holds:
 
 - **(a)** the change touches a surface the user reads or types into — a
-  GUI, a TUI, CLI arguments and output, an external API — and no
+  GUI, a TUI, CLI arguments and output, an external API, or a file artifact a
+  user or external system depends on — and no
   `DESIGN.md` or ui-flows document already covers that surface; or
 - **(b)** the behaviour is multi-state or multi-object, and there is no
   spec for it.
@@ -434,6 +466,25 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py intake write-plan <change-
 The second run is when `intake.test-case-pair` can inspect the completed
 Task DAG and block missing ownership, empty case pairs, or unresolved intent
 questions. A pre-plan intake pass cannot substitute for this readiness run.
+
+### Resolve `second-vendor: suggest`
+
+Run this after the plan's Risk lines exist and both checks pass. Load
+`references/second-vendor-ask-and-docs-lint.md`. Probe only the eligible
+other-vendor CLIs described there, then pass the observed mode, lane, host,
+usable vendors, anchored risk evidence, response state, and whether Closing
+Review has started as JSON on stdin to:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/second_vendor_policy.py
+```
+
+On Codex, use the injected loom-code plugin root as in step 0. Treat the
+JSON result as the decision: render its `notice_kind`, `notice_vendor`, and
+`recommendation_reasons`; do not reproduce the risk mapping in prose. A
+notice is commentary, not a decision point, and work continues without
+waiting. The reference owns response timing, small-lane behavior, and the
+no-listener boundary.
 
 **Forks you decided yourself.** Every one gets a one-line reason on its
 task: what you chose and why. Any one-way door that surfaces now — after

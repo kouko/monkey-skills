@@ -2,7 +2,8 @@
 name: a-record-class-prose-batch-cannot-resolve-through-the-batch-cli
 description: An all-record-class prose Review Batch has a valid single-arm resolution in the batch library but no path through the batch review CLI, so it must resolve task-by-task through individual review instead
 type: gotcha
-origin: 2026-09-01 — prose-edit self-sweep arc (docs/loom/plans/2026-09-01-prose-edit-self-sweep.md, DL-2); backlog 2026-09-01-apply-result-cannot-take-record-class-narrowed-arms
+sources:
+  - resource: 2026-09-01 — prose-edit self-sweep arc (docs/loom/plans/2026-09-01-prose-edit-self-sweep.md, DL-2); backlog 2026-09-01-apply-result-cannot-take-record-class-narrowed-arms
 ---
 
 The prose review lane's library contract accepts a single-arm

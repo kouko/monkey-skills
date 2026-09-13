@@ -11,6 +11,6 @@ Only loom-code writes here; the other plugins read.
 | `templates/plan.md` | plan shape (§2d) |
 | `templates/attestation.json` | generated closing-review evidence bound to the functional-content digest |
 | `templates/PRINCIPLES-interview.md` | the product-principles interview run inside decision point ① when a product intent meets a repo without a ratified PRINCIPLES.md |
-| `templates/KICKOFF-DEFAULTS.md`, `templates/memory-README.md`, `templates/PURPOSE.md` | scaffolds for an adopting repo's `docs/loom/` |
+| `templates/KICKOFF-DEFAULTS.md`, `templates/PURPOSE.md` | scaffolds for an adopting repo's `docs/loom/` |
 
 The checker that enforces the schemas is `loom-code/scripts/loom_checker.py` (`--list-rules` prints every rule id).

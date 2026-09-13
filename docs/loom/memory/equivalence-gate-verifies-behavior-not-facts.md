@@ -2,7 +2,8 @@
 name: equivalence-gate-verifies-behavior-not-facts
 description: A behavioral-equivalence gate (judge ensemble comparing outputs) faithfully preserves inherited FACTUAL errors — a wrong citation (Beck Child Test "Part II", actually Part III) survived an equivalence-gated compression and a fresh reuse because both sides of every comparison carried the same error; factual accuracy of names/citations/numbers in skill text needs an explicit review dimension (or a fact-check pass), it is never covered by equivalence
 type: gotcha
-origin: feat/pocock-compression-port whole-branch review (2026-07-13), error lineage through PR #559
+sources:
+  - resource: feat/pocock-compression-port whole-branch review (2026-07-13), error lineage through PR #559
 ---
 
 writing-plans' Beck citation said "Part II §Child Test". PR #559's

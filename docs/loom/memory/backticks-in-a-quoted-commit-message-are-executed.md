@@ -2,7 +2,8 @@
 name: backticks-in-a-quoted-commit-message-are-executed
 description: Backticks inside a double-quoted `git commit -m` argument are command-substituted by the shell before git ever sees them, so a message quoting an identifier in backticks silently loses that word — and the loss is invisible in the command you typed; compose commit bodies in a file and pass -F
 type: gotcha
-origin: branch direction-queue-gate (2026-08-20) — a commit message explaining a substring collision had the substring in backticks; the shell ate it and the sentence lost its subject
+sources:
+  - resource: branch direction-queue-gate (2026-08-20) — a commit message explaining a substring collision had the substring in backticks; the shell ate it and the sentence lost its subject
 ---
 
 The commit body said: *the substring `resolv` matches inside both*. The shell

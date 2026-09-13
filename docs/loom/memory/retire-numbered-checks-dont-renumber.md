@@ -2,7 +2,8 @@
 name: retire-numbered-checks-dont-renumber
 description: When a numbered check/criterion is dropped but other files cross-reference it by number, retire it in place (mark permanently N/A) rather than renumber — renumbering cascades edits into every file citing a specific number
 type: process
-origin: PR #516 (writing-plans time-box removal, 2026-07-08) — plan-document-reviewer-prompt.md's Check 5 retired, not renumbered
+sources:
+  - resource: PR #516 (writing-plans time-box removal, 2026-07-08) — plan-document-reviewer-prompt.md's Check 5 retired, not renumbered
 ---
 
 Removing writing-plans' ≤5-min task-sizing criterion also meant retiring

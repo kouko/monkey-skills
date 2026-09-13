@@ -15,6 +15,7 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py push [--head <ref>] [--hook]
     loom_checker.py publish --intent <absolute-path> --title <text> --body-file <absolute-path>
     loom_checker.py publish --confirm-authorized --title <text> --body-file <absolute-path>
+    loom_checker.py reviewer-count <change-id>
     loom_checker.py finalize-review <change-id> --input <review-input.json>
     loom_checker.py standing <path-to-intent>
     loom_checker.py contract --require <major.minor>
@@ -40,6 +41,7 @@ from loom_checker.command_handlers.intent import cmd_intent, cmd_intents
 from loom_checker.command_handlers.plan import cmd_plan
 from loom_checker.command_handlers.publish import cmd_publish
 from loom_checker.command_handlers.push import cmd_push
+from loom_checker.command_handlers.reviewer_count import cmd_reviewer_count
 from loom_checker.command_handlers.standing import cmd_standing
 from loom_checker.helpers import UsageError
 from loom_checker.rules import list_rules
@@ -58,6 +60,7 @@ COMMANDS = {
     "contract": cmd_contract,
     "charter": cmd_charter,
     "plan": cmd_plan,
+    "reviewer-count": cmd_reviewer_count,
     "finalize-review": cmd_finalize_review,
 }
 

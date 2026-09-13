@@ -2,7 +2,8 @@
 name: changing-what-a-token-is-defeats-downstream-guards
 description: Changing a shared primitive's SHAPE (what counts as a token, a record, an id) silently defeats every guard written against the old shape — and the per-task review triad is structurally blind to it, because the task that CHANGED the shape never reads the guard, and the guard's own task was reviewed against the old shape.
 type: practice
-origin: branch feat-prose-kpi-part-2 (2026-07-20) — one task's change to token shape defeated two separate guards shipped in the prior part; only whole-branch review saw it
+sources:
+  - resource: branch feat-prose-kpi-part-2 (2026-07-20) — one task's change to token shape defeated two separate guards shipped in the prior part; only whole-branch review saw it
 ---
 
 Part 2's Task 1 made the number locator absorb a trailing magnitude word,

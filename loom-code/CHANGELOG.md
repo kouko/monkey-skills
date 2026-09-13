@@ -1,5 +1,158 @@
 # Changelog
 
+## [3.1.1] — 2026-09-12 — shared intent content boundaries
+
+- Give code-only intake the same gap-driven field boundaries and one-pass
+  author self-check as `capture-intent`.
+- Clarify the shared intent template and charter without adding fields, IDs,
+  checker rules, stations, or review loops.
+- Keep incident intake with `maintain`, and treat user- or external-system
+  dependent file artifacts as visible surfaces in both installation shapes.
+
+## [3.1.0] — 2026-09-12 — risk-based reviewer floor
+
+- Compute Closing Review's reviewer floor from the complete branch delta: one
+  reviewer only for narrow test, evidence, per-change Loom record, and
+  non-operative documentation changes; two for protected, mixed, unknown, or
+  undecidable changes.
+- Make Review query that policy before dispatch while `finalize-review` and
+  publication validation independently recompute it from the selected commit.
+- Keep package execution, adversarial programs, content-bound attestation, and
+  publication safety unchanged; no review lane state or user declaration is
+  added.
+
+Contract 2.2 adds the `reviewer-count` query and makes its executable policy
+the source of truth for review depth.
+
+## [3.0.1] — 2026-09-12 — host-aware cross-model review prompts
+
+- Select ask-mode candidates from the active host's different model families
+  instead of hard-coding Codex, and never offer the host itself.
+- Prefer each host's native question interface with `do not use` as the
+  conservative recommendation; retain a blocking Markdown fallback when the
+  native control is unavailable and report-and-continue when no candidate runs.
+- Render non-blocking suggest notices as a single-column Markdown table with
+  one heading, one descriptive cell, and two blank lines on either side.
+
+## [3.0.0] — 2026-09-12 — non-blocking second-vendor suggestions
+
+Breaking. Replace the silent `second-vendor: none` setting with `suggest`:
+an available other-vendor CLI is now surfaced after plan risk evidence exists,
+while work continues without it unless the user opts in before Closing Review.
+High-risk full-lane changes receive an anchored recommendation; ordinary full
+lanes and small lanes receive availability information, with small lanes never
+adding another reviewer to the active change. `ask` and fixed CLI modes retain
+their prior behavior.
+
+- Put all lane, risk, timing, response, and vendor selection decisions in one
+  deterministic no-I/O policy module; skills present its result without
+  duplicating classification.
+- Reject old `second-vendor: none` defaults with migration guidance to
+  `suggest`, and make `suggest` the repository and template default.
+- Publish contract 2.1 and require it from loom-design so mixed installs
+  cannot treat `suggest` as a fixed executable name.
+
+budget-exception: standing.second-vendor-valid — makes removal of the silent-off
+  mode mechanically enforceable instead of relying on prose or silently
+  changing old configurations
+
+## [2.2.1] — 2026-09-12 — malformed reviewer output can use its promised retry
+
+- Let a completed non-conforming reviewer response redispatch the same
+  effective profile within the shared budget instead of terminating as
+  `no-legal-redispatch`; malformed output remains ineligible for model or
+  effort escalation.
+- Keep YAML validation and Closing Review's stricter one-retry limit in the
+  orchestrator while the Claude runner remains a content-agnostic,
+  single-attempt transport boundary.
+- Preserve `execution-failed` for missing or known non-retry failure kinds;
+  only an unknown kind is rejected as malformed caller input.
+
+## [2.2.0] — 2026-09-11 — the recording moment stated at the end of review
+
+- The closing review's convergence section now ends with an inert paragraph
+  stating when a lesson is recorded and how little qualifies. It sits before
+  Finalize because a store edit after the attestation exists invalidates it.
+- The paragraph carries no gate marker, names no plugin, and invokes nothing, so
+  the mechanism count is unchanged and no budget exception is needed.
+
+## [2.1.3] — 2026-09-11 — memory skill relocated into loom-workflow
+
+- Widened the contract-citation scan to the relocated memory skill's new home,
+  so the gate keeps covering its runtime prose after the move.
+
+budget-exception: loom-memory — the skill retired out of its own plugin and
+  into loom-workflow becomes visible to the family-wide skill recount, raising
+  the net mechanism population by one. No new mechanism was built: the same
+  skill is counted at a new address.
+
+## [2.1.2] — 2026-09-11 — repository-memory ownership retired
+
+- Removed the repository-memory coupling this plugin used to own: the
+  contract manifest's `memory` action pin, the `memory-README.md` template,
+  and the contract README's memory-store instructions are all gone. The
+  store and its validator now belong solely to the independent `loom-memory`
+  plugin, and this plugin installs and runs identically whether or not
+  `loom-memory` is installed alongside it.
+- No behavior change for a caller that never touched the retired action.
+
+## [2.1.1] — 2026-09-10 — atomic Claude reviewer profiles
+
+budget-exception: review.atomic-claude-dispatch — makes the cross-vendor
+atomic profile and non-stacking retry boundary executable instead of leaving
+reviewers to infer routing failures from undifferentiated process errors
+
+- Pass a resolved Claude reviewer model and effort as one pair, or omit both
+  overrides so host-default fallback remains atomic.
+- Reject partial or unsupported-effort profiles as typed input errors before
+  starting Claude, and reserve host rejection for the grounded model marker.
+- Give runner result kinds distinct shell exit codes and let an override-free
+  replacement consume the transient retry slot, preventing a third invocation.
+- Preserve the runner's single-attempt, stdin, timeout, diagnostic,
+  no-session-persistence, and credential-boundary behavior.
+
+## [2.1.0] — 2026-09-10 — main-relative subagent dispatch
+
+budget-exception: dispatch-profile.relative-routing — registers the one shared
+dispatch-time policy gate instead of duplicating routing mechanisms per station
+
+- Resolve one shared, host-neutral model-and-effort profile before every Build
+  and Review dispatch, using task evidence instead of role or round labels.
+- Preserve five portable effort tiers, evidence-gate expensive escalation, and
+  fall back atomically when a host cannot verify or accept the requested pair.
+- Keep routing records session-local, prohibit static agent profile pins, and
+  verify that the shared contract remains available in standalone installs.
+
+## [2.0.12] — 2026-09-10 — Codex Claude credential boundary
+
+- Standardize Codex-to-Claude second-reader calls on the existing runner
+  outside the Codex sandbox, where the user's existing Claude login is visible.
+- Scope reusable host approval to that runner command and stop on unavailable
+  authorization instead of falling back to a misleading sandboxed auth result.
+- Remove the public executable override so that runner-scoped approval cannot
+  be extended to execute another program outside the sandbox.
+- Keep the existing runner, timeout, empty-output handling, and retry budget
+  unchanged; add no authentication preflight or credential handling.
+
+## [2.0.11] — 2026-09-10 — observable Claude reviewer attempts
+
+- Run each Claude Code second-reviewer attempt through one thin subprocess
+  boundary that rejects blank stdout and terminates at the declared timeout.
+- Preserve exit, stderr, and elapsed diagnostics while keeping retry ownership
+  in Closing Review's existing one-retry executor rule.
+- Invoke the formal review directly without adding a model-backed preflight,
+  persistent state, verdict parser, or vendor-specific retry budget.
+
+## [2.0.10] — 2026-09-10 — continue active work after CI failure
+
+- Keep a required-CI failure in the same active task, inspect its failed checks
+  and available logs, and continue the original change without a user prompt.
+- Reuse existing regression coverage when it exposes the cause, resume the
+  bounded review episode after every committed repair, and never retry an
+  unattributed failure automatically.
+- Keep active unmerged CI failures out of Maintain and reuse an attestation only
+  for pull-request data that was not committed to the repository.
+
 ## [2.0.9] — 2026-09-10 — faster required-check observation
 
 - Poll required checks every 10 seconds while keeping the 60-minute pending

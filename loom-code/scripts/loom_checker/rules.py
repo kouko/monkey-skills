@@ -105,6 +105,11 @@ RULES: list[tuple[str, str]] = [
         "<YYYY-MM-DD>` signature with a real date, over three or more distinct non-negotiables.",
     ),
     (
+        "standing.second-vendor-valid",
+        "KICKOFF-DEFAULTS rejects the removed `second-vendor: none` value with explicit "
+        "migration guidance to use the non-blocking `suggest` mode.",
+    ),
+    (
         "standing.silence",
         "KICKOFF-DEFAULTS `standing-docs: waived` silences the WARN only, never the product rejection.",
     ),

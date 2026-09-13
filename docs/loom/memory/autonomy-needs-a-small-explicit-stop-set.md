@@ -2,7 +2,8 @@
 name: autonomy-needs-a-small-explicit-stop-set
 description: Autonomous execution is reliable only when it advances approved bounded work by default and uses one small explicit set of authority and safety stops; duplicate prompts and empty work queues are notifications, not reasons to ask.
 type: practice
-origin: branch loom-autonomy-defaults (2026-08-22)
+sources:
+  - resource: branch loom-autonomy-defaults (2026-08-22)
 ---
 
 An agent can keep moving after a bounded plan is approved only when its

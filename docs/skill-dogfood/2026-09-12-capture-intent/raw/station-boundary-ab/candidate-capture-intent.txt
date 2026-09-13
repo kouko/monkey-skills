@@ -1,0 +1,91 @@
+## Simulated capture-intent run (no files written, no commands executed)
+
+**Step 0 — contract check:** skipped per your simulate-only instruction (would normally run `loom_checker.py contract --require 2.0`). Assumed pass.
+
+**Interview:** your framing already covers Problem / Proposed outcome / Constraints / Out of scope, so I drafted directly rather than asking more.
+
+**Step 3 — standing documents:** you stated the repo already has ratified `PRINCIPLES.md`, so the product-principles interview is skipped.
+
+---
+
+### Decision point ① (simulated message to you)
+
+> 你要的是：讓一個 project 的動態通知信不要再一直打斷成員。做完後你可以：把某個 project 設為靜音之後不再收到它的活動信，但同一個 project 的站內通知不受影響，其他 project 與全域通知設定也完全不變。對嗎？
+>
+> (You want repeated project-activity emails to stop interrupting members. When done, you'll be able to: mute one project so its activity emails stop, while that project's in-app notifications and all global notification settings stay exactly as they are today. Is that right?)
+
+**One-way doors found:** none. This change doesn't touch a framework/vendor/data format, doesn't create a standing cost, and takes no irreversible action on existing data — so no consequence-form question is needed here.
+
+**Publication:** answering yes here would normally also authorize automatic non-forced push + Ready PR after review. You're opting out of that now, so `publication: automatic` will **not** be written.
+
+**Second-vendor suggestion:** no `docs/loom/KICKOFF-DEFAULTS.md` visible in this simulated repo, so the once-per-change Codex-as-second-reader question isn't triggered this round.
+
+**Your answer (per given context):** yes to the restatement, opt out of automatic publication.
+
+---
+
+### Final intent artifact — `docs/loom/intent/2026-09-12-mute-project-activity-email.md` (simulated content, not written)
+
+```markdown
+---
+originator: kouko
+kind: product
+needs-design: yes — touches a settings surface members read/interact with to control notifications; no DESIGN.md or ui-flows document covers per-project muting
+status: confirmed 2026-09-12
+---
+
+## Problem
+Project members keep getting interrupted by activity emails from a project
+they belong to. The volume of these emails disrupts their work, and they
+currently have no way to stop just that project's emails without touching
+anything else.
+
+## Proposed outcome
+A project member can mute one project so its activity emails stop, while
+everything else about how they're notified — in-app notifications for that
+project, and all global notification settings — stays exactly as it is
+today.
+
+## Acceptance
+1. After muting a project, I no longer receive activity emails for that
+   project.
+2. I still see in-app notifications for that project exactly as before.
+3. My global notification settings, and email/in-app notifications for my
+   other projects, are unaffected.
+
+## Constraints
+- Only the email channel is affected by muting; no other notification
+  channel changes.
+
+## Value case
+Beneficiary: project members currently interrupted by activity email from
+a project they're part of. Urgency: the interruption is ongoing and named
+as the specific pain (email volume), not a hypothetical. GO — clear,
+recurring pain with a narrow fix.
+
+## Out of scope
+- Unmuting a previously muted project.
+- Any change to in-app notification behavior.
+- Any change to global or account-level notification settings.
+- Muting notification channels other than email.
+
+## Open questions
+- none
+```
+
+**Note:** since publication was opted out, `publication: automatic — authorized …` is **absent** from this file, as instructed.
+
+*(Simulated only: commit `docs(loom): intent 2026-09-12-mute-project-activity-email confirmed` and the `loom_checker.py intent …` verification were not actually run.)*
+
+---
+
+### Hand-off (simulated)
+
+`needs-design: yes` → hands to **`loom-design:write-spec`** for change-id `2026-09-12-mute-project-activity-email`.
+
+Questions asked, to be copied verbatim into the plan's `## Questions asked` section:
+- `① — what — Do you want to mute one project's activity email while leaving in-app notifications and global settings unchanged?`
+- `① — consequence — (one-way-door check) No one-way doors found for this change.`
+- `① — consequence — Answering yes normally authorizes automatic push + Ready PR after review; you opted out, so publication stays unauthorized.`
+
+Two things for the next station: `write-plan`/`write-spec` will **not** re-run decision point ① — `status` is already `confirmed`. Decision point ② ("you type ___, you see ___") happens next, at `write-spec`, since this is a product change.

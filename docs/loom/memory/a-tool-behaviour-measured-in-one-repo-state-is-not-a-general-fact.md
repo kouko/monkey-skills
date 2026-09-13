@@ -2,7 +2,8 @@
 name: a-tool-behaviour-measured-in-one-repo-state-is-not-a-general-fact
 description: An external tool's behaviour measured live in ONE repository state and then written down as an unconditional fact is falsified by an ordinary state change — `git cat-file -t <sha>:<gitlink>` exits 128 when the submodule's commit object is missing locally and exits 0 reporting type `commit` after a plain fetch, so a docstring that named the first outcome as "what gitlinks do" mis-stated which branch the code takes; live measurement satisfies the grounding rule and still produces a false claim unless the state it was measured in is named
 type: gotcha
-origin: Task 2 of the finding-origin-attribution arc (loom-code, 2026-08-02) — four consecutive review rounds, each closing a wrong-and-silent claim, three of them introduced by the edit that closed the previous one
+sources:
+  - resource: Task 2 of the finding-origin-attribution arc (loom-code, 2026-08-02) — four consecutive review rounds, each closing a wrong-and-silent claim, three of them introduced by the edit that closed the previous one
 ---
 
 Live verification is the strongest grounding source this repo recognises, and

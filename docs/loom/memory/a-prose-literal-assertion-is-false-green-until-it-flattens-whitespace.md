@@ -2,7 +2,8 @@
 name: a-prose-literal-assertion-is-false-green-until-it-flattens-whitespace
 description: Markdown prose wraps, so a multi-word phrase is usually NOT a contiguous substring of the file. A test asserting such a phrase is absent passes before any edit; one asserting it is present fails for the wrong reason. Both directions are broken, and the failure is invisible — the test is green. Hit three times in one arc (a plan's own acceptance criterion, a router assertion, then that same test's absence checks). Flatten the body with `re.sub(r"\s+", " ", text)` once and assert every literal against the flattened copy; verify each present-assertion is absent beforehand and each absent-assertion is present beforehand.
 type: gotcha
-origin: think-orbit 0.1.4 transparency arc (2026-08-19) — three independent occurrences across T1's plan, T4's router test, and T4's own review round
+sources:
+  - resource: think-orbit 0.1.4 transparency arc (2026-08-19) — three independent occurrences across T1's plan, T4's router test, and T4's own review round
 ---
 
 `silent file writing` does not appear in `using-think-orbit/SKILL.md`. The sentence

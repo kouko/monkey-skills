@@ -2,7 +2,8 @@
 name: the-memory-step-belongs-before-the-closing-review-round
 description: A commit that lands after the branch-end checkpoint always costs a confirmation round plus a re-created close commit, so probe graduation and docs/loom/memory entries are build's last-wave task (W<n>-memory), done after package tests and before the single closing review call; ship then writes only trailers and questions — three changes (#789, #790, #791) paid the post-review round before the order was fixed, #791 three times
 type: practice
-origin: 2026-09-05 memory-step-before-branch-end-and-prose-pin-rule (loom-code 1.3.1) — the ship station scheduled graduation and store entries after the branch-end review by design, guaranteeing a post-review commit every change
+sources:
+  - resource: 2026-09-05 memory-step-before-branch-end-and-prose-pin-rule (loom-code 1.3.1) — the ship station scheduled graduation and store entries after the branch-end review by design, guaranteeing a post-review commit every change
 ---
 
 The close-commit shape (`HEAD` review-only, `HEAD^` the one-line close,

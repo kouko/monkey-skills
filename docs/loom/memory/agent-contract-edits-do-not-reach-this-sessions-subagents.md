@@ -2,7 +2,8 @@
 name: agent-contract-edits-do-not-reach-this-sessions-subagents
 description: An ordinary subagent dispatch loads its role contract from the installed plugin, not from the repo working tree, so an agent-contract edit on a branch does not reach the reviewers that branch dispatches — and the subagent cannot reliably report which version it loaded, because it may have read the repo copy as a review artifact and mistake that for its own system prompt
 type: gotcha
-origin: PR #645 (2026-08-04) — the delta-scope rule was edited into loom-code/agents/docs-reviewer.md and every reviewer dispatched that session still ran the cached 0.47.0 contract
+sources:
+  - resource: PR #645 (2026-08-04) — the delta-scope rule was edited into loom-code/agents/docs-reviewer.md and every reviewer dispatched that session still ran the cached 0.47.0 contract
 ---
 
 Editing `loom-code/agents/<role>.md` on a branch changes the file the

@@ -2,7 +2,8 @@
 name: tri-state-aggregate-filter-with-is-not-falsy
 description: When a check returns a TRI-STATE result (pass / fail / not-applicable, e.g. True/False/None), an aggregate that collects failures MUST filter with `is False` (or `is True`), never a falsy test — `if not result` / `if not passed` silently miscounts the N/A (None) state as a failure. Pin it with a test that would FAIL under the wrong (falsy) filter.
 type: gotcha
-origin: 2026-07-14 session — investing-toolkit analysis-kpi slice 4 (kpi_validate.validate aggregating tri-state rule checks)
+sources:
+  - resource: 2026-07-14 session — investing-toolkit analysis-kpi slice 4 (kpi_validate.validate aggregating tri-state rule checks)
 ---
 
 `kpi_validate.py`'s four rule checks each return `{"rule", "passed", "detail"}`

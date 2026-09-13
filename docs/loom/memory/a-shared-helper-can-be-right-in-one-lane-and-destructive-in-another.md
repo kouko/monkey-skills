@@ -2,7 +2,8 @@
 name: a-shared-helper-can-be-right-in-one-lane-and-destructive-in-another
 description: Reusing a helper across two lanes copies its SEMANTICS, not just its code — a resolver that correctly fails loud on ambiguity in a lane that must emit ONE answer silently destroys data in a lane that stores every alternative separately. The reuse instruction came from the plan, both lanes' own tests passed, and the loss was only visible by running the real producer against a filer that reports two legitimate alternatives.
 type: gotcha
-origin: US as-reported statement lane (feat-us-as-reported-statement-lane, investing-toolkit 2.38.0, 2026-07-26) — found simultaneously by the live dogfood and the whole-branch reviewer, from opposite ends
+sources:
+  - resource: US as-reported statement lane (feat-us-as-reported-statement-lane, investing-toolkit 2.38.0, 2026-07-26) — found simultaneously by the live dogfood and the whole-branch reviewer, from opposite ends
 ---
 
 `_resolve_concept_per_period` was written for the top-line revenue lane,

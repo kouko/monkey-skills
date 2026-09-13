@@ -2,7 +2,8 @@
 name: substring-assertions-must-pin-the-phrase-their-message-names
 description: A structural grep-test over a prompt artifact fails silently when its assertion matches a token that also occurs elsewhere in the guarded text — the assertion passes, its own failure message names a clause nobody is guarding, and only a word-level mutation of that exact clause exposes it; this recurred FOUR times in one branch, each instance introduced by the fix for the previous one, and every instance was caught by review rather than by the mutation battery, because deleting whole sentences leaves the duplicate token intact
 type: practice
-origin: harden-memory-store-integrity-checkpoint whole-branch review (2026-07-31), rounds 1-3
+sources:
+  - resource: harden-memory-store-integrity-checkpoint whole-branch review (2026-07-31), rounds 1-3
 ---
 
 Guarding a prompt artifact (a SKILL.md step) with substring assertions, four assertions in one branch passed while the clause each claimed to guard was deletable:

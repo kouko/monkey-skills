@@ -2,7 +2,8 @@
 name: a-test-count-cannot-see-a-deleted-test
 description: A commit that removes one test and adds another leaves the file's test count unchanged and the suite green, so neither the count nor the green is evidence the removal was intended — a span-cut edit between two helper definitions silently deleted the test sitting between them, and review found it only as four orphaned symbols; diff the collected test NAMES against the previous commit, never the count
 type: gotcha
-origin: codex/standardize-complexity-gate (stage-specific complexity gates, round-5 delta review, 2026-08-27)
+sources:
+  - resource: codex/standardize-complexity-gate (stage-specific complexity gates, round-5 delta review, 2026-08-27)
 ---
 
 A remediation edit removed two helper functions from

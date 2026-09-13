@@ -2,7 +2,8 @@
 name: sibling-attractor-makes-lexical-tuning-unstable
 description: When a slimmed description regresses because a SIBLING skill's description attracts its queries (cross-family first-fire), restoring partial keyword thickness does not clear the attractor — it only moves WHICH record loses (measured: 170-char lost zh+en, 217-char candidate recovered en but newly lost ja); the only measured-stable states are the full pre-slim description or fixing the attractor side — revert fully per the A/B bar, don't tune mid-band
 type: gotcha
-origin: description-token-economy Task 8 post-merge A/B + remedy experiment (2026-07-14), evidence in docs/skill-dogfood/2026-07-14-description-token-economy/ab-results.md §remedy-experiment
+sources:
+  - resource: description-token-economy Task 8 post-merge A/B + remedy experiment (2026-07-14), evidence in docs/skill-dogfood/2026-07-14-description-token-economy/ab-results.md §remedy-experiment
 ---
 
 user-insights' description was slimmed 899→170 chars. The post-merge A/B

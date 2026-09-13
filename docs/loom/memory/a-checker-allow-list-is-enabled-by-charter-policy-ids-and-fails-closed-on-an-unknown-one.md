@@ -2,7 +2,8 @@
 name: a-checker-allow-list-is-enabled-by-charter-policy-ids-and-fails-closed-on-an-unknown-one
 description: A rule that permits a class of edits reads the permitted classes as stable ids from the charter row in contract/manifest.yaml, implements one branch per id, blocks an id it does not implement, and pins the implemented set equal to the manifest's — a new allowance is a new id (vendors-gain-entries), never a widened existing branch, because the rule's prose and the manifest then agree by construction
 type: practice
-origin: 2026-09-05-artifact-charter-boundaries-and-edit-rights — two readers found the first plan-edits rule hard-coded its five allowances (a second drift surface beside the charter), and a later fix let `vendors` ride on the four other arrays' id without any policy naming it
+sources:
+  - resource: 2026-09-05-artifact-charter-boundaries-and-edit-rights — two readers found the first plan-edits rule hard-coded its five allowances (a second drift surface beside the charter), and a later fix let `vendors` ride on the four other arrays' id without any policy naming it
 ---
 
 The first implementation enumerated the allowed edits as Python branches

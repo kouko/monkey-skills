@@ -1,0 +1,62 @@
+**Simulated run — no files written, no commands executed.** Below is what `write-plan` would produce for this input, walked through station-by-station.
+
+## Station reasoning (compressed)
+
+- **kind: product** — invoking mute now visibly changes what the user experiences (no more activity emails for that project), so it's product, not internal-only.
+- **Intent/spec state**: input says "confirmed spec" — so decision points ① and ② are already closed upstream; this run starts at the intake check before Step 5.
+- **needs-design**: already `yes` (spec exists, confirmed-behavior already set) — no new spec work here.
+- **Acceptance lines**, taken only from what was stated, nothing added:
+  1. Invoking mute on a project stops that project's activity emails.
+  2. In-app notifications for that project stay unchanged.
+  3. Global notification settings stay unchanged.
+  (Unmute is out of scope — not an acceptance line, just a boundary noted so no task drifts into it.)
+- **Task shape**: this is one guard check in the existing email dispatch path, keyed off the existing `ProjectNotificationPolicy` mute state. It doesn't touch the in-app path or global settings at all — those two Acceptance lines are non-regression boundaries on the *same* task, not separate work. One task, one wave.
+
+## `docs/loom/2026-09-12-mute-stops-activity-emails/plan.md` (simulated content)
+
+```markdown
+---
+intent: 2026-09-12-mute-stops-activity-emails@<spec sha>
+kind: product
+---
+
+# Plan: mute stops project activity emails
+
+Spec: docs/loom/2026-09-12-mute-stops-activity-emails/spec.md
+(cited, not duplicated — see spec for REQ-1..REQ-3 Design decision)
+
+## Wave 1
+
+- **W1-01** — Gate email dispatch on the project's mute state
+  acceptance: 1,2,3
+  Files: email dispatch path (reads ProjectNotificationPolicy mute flag)
+  Test: A1 positive: muted project → email dispatch does not fire;
+        negative: unmuted project → email dispatch fires as before.
+        A2 boundary: in-app dispatch path executes unchanged when the
+        project is muted.
+        A3 boundary: global notification settings are unread/unwritten
+        by this check.
+  Risk: Single conditional in an existing dispatch path; see spec
+        REQ-1..REQ-3 Design decision.
+
+## Questions asked
+
+(none — spec was provided pre-confirmed for this run; decision points
+① and ② were already closed upstream)
+
+## Risks
+
+- agent-decided — the guard reads only the invoking project's mute
+  state, never a global or cross-project flag, so it cannot regress
+  Acceptance #3 by construction.
+```
+
+## What was deliberately left out (traced back to your boundary)
+
+- No unmute task/logic — explicitly out of scope.
+- No new IDs, fields, or states beyond `ProjectNotificationPolicy`'s existing mute flag and the plan's own `W<n>-<nn>` convention.
+- No new API, persistence, or error-handling — spec didn't ask for any, so none invented.
+- No review-step additions — review station is invoked by `build`/`loom-code:review` per the standing contract, not scheduled inside this plan.
+- One wave, one task — nothing here needs a second task; splitting would fabricate boundaries the spec didn't draw.
+
+Since this is a simulation, no `plan.md` file, branch, or commit was actually created, and none of the `loom_checker.py` gates (`plan`, `intake write-plan`) were run — they'd need a real repo and real spec file to validate against.

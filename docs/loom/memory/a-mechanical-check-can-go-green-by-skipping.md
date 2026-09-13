@@ -2,7 +2,8 @@
 name: a-mechanical-check-can-go-green-by-skipping
 description: A check that fires only when BOTH sides are present goes green by SKIPPING when one side stops matching its pattern — striking through a field label made the backlog store's field-agreement check silently stop checking, and the resulting exit 0 was reported as agreement; before trusting a green on a pair-check, probe that the check actually ran
 type: gotcha
-origin: feat-us-quarterly-statement-series (US quarterly three-statement series arc, round-4 whole-branch review, 2026-08-07)
+sources:
+  - resource: feat-us-quarterly-statement-series (US quarterly three-statement series arc, round-4 whole-branch review, 2026-08-07)
 ---
 
 `scripts/backlog_index.py --validate` enforces that a backlog entry's frontmatter

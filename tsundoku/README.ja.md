@@ -38,6 +38,7 @@ kobo-auth ──▶ kobo-library ──▶ book-extract ──▶ book-distill
 | [`kobo-library`](skills/kobo-library/SKILL.md) | source-platform（`kobo-*`） | Kobo library を title / author / series / publication date / category / description text / reading status / language で検索し、選択した本を DRM-free EPUB として download |
 | [`book-extract`](skills/book-extract/SKILL.md) | format-agnostic（`book-*`） | NCX 駆動の章分割で EPUB を chapter ごとの Markdown に変換。CJK 安全 |
 | [`book-distill`](skills/book-distill/SKILL.md) | format-agnostic（`book-*`） | RIA-TV++（Adler analytical read → 5 並列 extractor → triple verification → RIA++ render → Zettelkasten linking → adversarial pressure test）で Markdown を atomic SKILL.md set へ |
+| [`book-audify`](skills/book-audify/SKILL.md) | format-agnostic（`book-*`） | 章別 Markdown → チャプター付きパーソナル `.m4b` オーディオブック(クリーニング → 検証ハードゲート → edge-tts → ffmpeg 結合);外国語書籍は「聴くための翻訳」対応 |
 
 **命名規則**：`kobo-*` skill は Kobo platform に紐づきます（auth、library API、kobodl binary）。`book-*` skill は任意の EPUB / chunked Markdown で動作し、Kobo 依存はありません。つまり `book-extract` と `book-distill` は他経路（手動の EPUB drop、図書館の貸出、public domain）で入手した本にもそのまま使えます。
 

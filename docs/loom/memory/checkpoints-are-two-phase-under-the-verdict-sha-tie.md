@@ -2,7 +2,8 @@
 name: checkpoints-are-two-phase-under-the-verdict-sha-tie
 description: Because push.reviewed-sha ties every latest-round verdict sha to reviewed_sha, the adversary's probe file and the blind-run report must be committed BEFORE the two readers are dispatched, so the readers can record the final HEAD — dispatching all checkpoint arms in one message makes the reviewers' recorded sha stale
 type: gotcha
-origin: 2026-09-03-loom-post-merge-seams
+sources:
+  - resource: 2026-09-03-loom-post-merge-seams
 ---
 
 A checkpoint review has readers (fresh-context reviewers producing a

@@ -2,7 +2,8 @@
 name: argparse-subparser-default-shadows-parent
 description: Python argparse — a subparser's default silently overwrites the parent parser's already-parsed option value (silent wrong-value bug class)
 type: gotcha
-origin: PR #492 (loom-code 0.23.0 mechanical gates, 2026-07-04)
+sources:
+  - resource: PR #492 (loom-code 0.23.0 mechanical gates, 2026-07-04)
 ---
 
 In Python `argparse`, when a subparser declares a default for an

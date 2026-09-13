@@ -2,7 +2,8 @@
 name: retiring-a-mechanism-must-move-its-tests
 description: When a redesign RETIRES a guard and MOVES its property to a new home, the guard's adversarial tests must move with it — deleting them alongside the old machinery leaves the property implemented-but-unverified, a coverage regression a "tests still green" check cannot see.
 type: practice
-origin: branch feat-kpi-obs-history (2026-07-22) — T9 retired the read-time unit-scale inference (and T8) and moved whole-word magnitude matching to the 8-K producer; the old word-boundary tests were deleted with the read-side scaler and not replaced
+sources:
+  - resource: branch feat-kpi-obs-history (2026-07-22) — T9 retired the read-time unit-scale inference (and T8) and moved whole-word magnitude matching to the 8-K producer; the old word-boundary tests were deleted with the read-side scaler and not replaced
 ---
 
 Task 9 replaced a read-time scale INFERENCE (parse a magnitude word out of

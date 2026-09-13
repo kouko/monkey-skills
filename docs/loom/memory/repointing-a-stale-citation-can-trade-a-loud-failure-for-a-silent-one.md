@@ -2,7 +2,8 @@
 name: repointing-a-stale-citation-can-trade-a-loud-failure-for-a-silent-one
 description: A citation sweep that repoints a dangling anchor at a plausible new target makes things WORSE unless the target is checked for the cited content — an out-of-range line anchor fails loudly (the citation checker flags it), while a repointed path that resolves but does not carry the claim reads as authoritative and no tool can see it; two of eight repoints on one branch attributed a measurement and a premise to entry files that had never held them, one because the original anchor pointed at a section header rather than the figure, one because the premise had been deleted months before the migration the sweep followed
 type: gotcha
-origin: whole-branch review rounds 2-3 of the docs-backlog-one-entry-per-file arc (2026-08-02), monkey-skills
+sources:
+  - resource: whole-branch review rounds 2-3 of the docs-backlog-one-entry-per-file arc (2026-08-02), monkey-skills
 ---
 
 Repointing a citation is not the same operation as fixing it. A dangling

@@ -2,7 +2,8 @@
 name: unifying-a-normalization-has-a-scope
 description: When you fix "two sites normalized a value differently" by extracting a shared helper, the fix covers exactly the sites you routed through it — and the summary sentence you write ("they can never drift apart again") is almost always broader than what you earned; three review rounds each found the same defect class at a different unrouted site
 type: gotcha
-origin: PR arc kpi_id injective identity (feat-kpi-id-consolidation-axis, 2.37.0, 2026-07-26)
+sources:
+  - resource: PR arc kpi_id injective identity (feat-kpi-id-consolidation-axis, 2.37.0, 2026-07-26)
 ---
 
 An arc whose whole purpose was "make the durable id agree with itself" shipped

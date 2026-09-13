@@ -2,7 +2,8 @@
 name: pin-a-finding-to-the-test-whose-docstring-labels-it
 description: A plan's finding→test pin table built by grepping test NAMES for a plausible match is unreliable — the correct binding is the test whose own docstring self-labels the finding (e.g. a `"""F1: …"""` line), and only a reviewer checking docstrings against the pin table catches a name-based mispin
 type: practice
-origin: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — spec-reviewer caught the mispin at 5721b1fe
+sources:
+  - resource: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — spec-reviewer caught the mispin at 5721b1fe
 ---
 
 The plan's F1/F2 pin table (which regression test proves which

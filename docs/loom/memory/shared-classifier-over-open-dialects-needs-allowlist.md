@@ -2,7 +2,8 @@
 name: shared-classifier-over-open-dialects-needs-allowlist
 description: A predicate shared across N producers that each emit their own error/metadata dialect must decide by a POSITIVE allowlist of what counts as real data, never a denylist of known error keys — a denylist silently fails toward the dangerous direction the moment an unsampled producer adds a key you did not list
 type: gotcha
-origin: branch feat-us-sec-narrative-memo-wiring (US SEC narrative→memo wiring, 2026-07-13) — pack_inventory false-presence across 5 markets
+sources:
+  - resource: branch feat-us-sec-narrative-memo-wiring (US SEC narrative→memo wiring, 2026-07-13) — pack_inventory false-presence across 5 markets
 ---
 
 `pack_inventory._is_failed_section` is ONE predicate consumed by all five

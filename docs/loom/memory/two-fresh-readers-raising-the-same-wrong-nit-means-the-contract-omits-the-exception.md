@@ -2,7 +2,8 @@
 name: two-fresh-readers-raising-the-same-wrong-nit-means-the-contract-omits-the-exception
 description: When two independent fresh-context readers raise the same finding and a ratified policy says they are wrong, the defect is in the contract they read, not in the readers — list the exception in the contract text they were handed (the reviewer contract now names the artifacts that stay in the user's language) and stop rebutting it round after round
 type: practice
-origin: 2026-09-05-artifact-charter-boundaries-and-edit-rights — the anthropic and codex readers each flagged the blind-run report for not being English at two checkpoints; the language-policy intent's Acceptance 1 keeps that report in the user's language, and the reviewer contract's language paragraph had not listed it
+sources:
+  - resource: 2026-09-05-artifact-charter-boundaries-and-edit-rights — the anthropic and codex readers each flagged the blind-run report for not being English at two checkpoints; the language-policy intent's Acceptance 1 keeps that report in the user's language, and the reviewer contract's language paragraph had not listed it
 ---
 
 The reviewer contract said internal artifacts are English and listed the

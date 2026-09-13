@@ -2,7 +2,8 @@
 name: a-brief-level-obligation-needs-a-named-deliverable-in-each-partition
 description: A brief-level obligation stated once for the whole arc ("residues + pointers") but not itemized as a named deliverable inside each partition/task ships unmet through every per-task gate — plan review and per-task reviewers verify tasks against their own itemized lists, so an obligation living only at the brief level has no gate that owns it; only a whole-branch pass can catch it, at the most expensive point
 type: gotcha
-origin: 2026-08-05 extraction-batch arc (PR #652 round 1) via the orchestrator-tree-detach-hardening brief
+sources:
+  - resource: 2026-08-05 extraction-batch arc (PR #652 round 1) via the orchestrator-tree-detach-hardening brief
 ---
 
 The 0.55.0 extraction batch's brief stated in its Smallest End State

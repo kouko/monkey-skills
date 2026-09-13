@@ -140,6 +140,14 @@ def test_no_deleted_mechanism_is_mentioned(empty_repo):
         assert gone not in context.lower(), gone
 
 
+def test_suggest_notice_is_after_plan_and_not_a_decision_point(empty_repo):
+    context = _context(_run(empty_repo))
+    assert "after the plan's risk evidence exists" in context
+    assert "continues without waiting" in context
+    dp1 = context[context.index("①"):context.index("②")]
+    assert "second-vendor suggestion" not in dp1
+
+
 if __name__ == "__main__":  # pragma: no cover - manual measurement helper
     sys.exit(pytest.main([__file__, "-q"]))
 
