@@ -237,7 +237,8 @@ def test_manifest_includes_shared_dependencies_of_retained_gates():
     for path in ("requirements-package-tests.lock", ".claude/hooks/test_check_codex_manifest_drift.py",
                  "docs/skill-dogfood/2026-09-13-compress-loom-skill-descriptions/cases.md",
                  "CLAUDE.md", "PRINCIPLES.md",
-                 "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md"):
+                 "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md",
+                 "docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md"):
         assert extraction.selected(path, paths), path
 
 
