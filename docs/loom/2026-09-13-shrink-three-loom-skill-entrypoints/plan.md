@@ -44,19 +44,19 @@ Wave 2
 - Risk: Use a patch release because behavior is preserved; regenerate the Codex manifest from the Claude source of truth — agent-decided.
 
 **W2-02 Publish the loom-design package revision**  after: W1-02  acceptance: 4
-- Files: loom-design/CHANGELOG.md, loom-design/.claude-plugin/plugin.json, loom-design/.codex-plugin/plugin.json
+- Files: loom-design/CHANGELOG.md, loom-design/.claude-plugin/plugin.json, loom-design/.codex-plugin/plugin.json, loom-design/scripts/spec/test_capture_intent_contract.py
 - Test: A4 positive: isolated-loom-design-install; negative: cross-plugin-boundary.
 - Risk: Use a patch release because behavior is preserved; do not turn the local one-way-door carrier into a mandatory sibling dependency — agent-decided.
 
 **W2-03 Publish the loom-workflow package revision**  after: W1-03  acceptance: 4
-- Files: loom-workflow/CHANGELOG.md, loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json
+- Files: README.md, loom-workflow/CHANGELOG.md, loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json
 - Test: A4 positive: isolated-loom-workflow-install; negative: codex-manifest-drift.
 - Risk: Use a patch release because behavior is preserved; keep translated README claims aligned without counting translation edits as skill reduction — agent-decided.
 
 Wave 3
 
 **W3-01 Integrate measurements, marketplace metadata, and package gates**  after: W2-01, W2-02, W2-03  acceptance: 1, 2, 3, 4
-- Files: .claude-plugin/marketplace.json, docs/loom/2026-09-13-shrink-three-loom-skill-entrypoints/evidence/integration.md
+- Files: loom-code/scripts/test_write_plan_station_text.py, docs/loom/2026-09-13-shrink-three-loom-skill-entrypoints/plan.md, docs/loom/2026-09-13-shrink-three-loom-skill-entrypoints/evidence/integration.md
 - Test: A1 positive: counts-below-caps; boundary: exact-cap. A2 positive: equivalence-ensemble; negative: load-bearing-deletion. A3 positive: package-reduction; negative: relocation-only. A4 positive: isolated-installs; negative: cross-plugin-link.
 - Risk: A green package suite cannot prove semantic equivalence; require each skill's frozen baseline, invariant snapshot, and layered refactor verdict — agent-decided.
 
