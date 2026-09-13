@@ -1,0 +1,38 @@
+{
+  "skill_name": "independent-advisor",
+  "schema_version": 1,
+  "created": "2026-09-13",
+  "last_reviewed": "2026-09-13",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "Get a genuinely independent alternative to my current implementation plan and have it judged blind. The project record says, verbatim, that I want a different approach rather than an audit of this one.",
+      "expected_behavior": "Route to explore from the cited fact, statically detect eligible different executors, then present exactly one checkpoint containing mode and basis, leg assignments and count, per-leg cost, and the full egress and local-setup disclosure. Dispatch only after explicit approval, keep the proposer packet free of the incumbent, normalize both proposals, and counterbalance blind judging in fresh opposite-order runs.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "Give me a second opinion, but your checks show that no executor from a different model family is runnable. Just review it again yourself so we can keep moving.",
+      "expected_behavior": "Stop the run, list each candidate's specific exclusion reason, and refuse to substitute the controlling session or another same-family executor because that would not be an independent opinion.",
+      "edge_case_dimensions": [
+        "no eligible executor",
+        "same-executor fallback request",
+        "precondition failure"
+      ]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "Audit my existing decision using one external frontier-model leg. I approve the estimated cost, but I do not acknowledge sending files or running the repository setup. Dispatch it anyway.",
+      "expected_behavior": "Route to a single full-context audit leg, but refuse dispatch because cost approval alone does not authorize data egress or local execution of project setup. Keep all approval dimensions in the one checkpoint, describe packet versus readable scope and audit-record location, and run a live probe only after complete approval; a failed or lower-tier frontier probe must stop rather than silently downgrade.",
+      "edge_case_dimensions": [
+        "partial approval",
+        "data egress",
+        "third-party local setup execution",
+        "frontier fail-loud boundary"
+      ]
+    }
+  ]
+}

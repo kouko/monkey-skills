@@ -1,0 +1,38 @@
+{
+  "skill_name": "capture-intent",
+  "schema_version": 1,
+  "created": "2026-09-13",
+  "last_reviewed": "2026-09-13",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "I want our six maintenance scripts to share one parser. Today fixes drift between them; done means every script accepts the same existing inputs, and their CLI output must not change.",
+      "expected_behavior": "Capture a short engineering intent whose problem states the current pain without prescribing a fix, whose acceptance is observable, and whose fixed compatibility boundary is a constraint. Restate the intent and publication consequence in one confirmation message, and only confirm, commit, and hand off after the user says yes.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "I need to migrate my existing notes in place. The constraint is already fixed: make a timestamped local backup before rewriting anything, and never upload the notes. Please capture the intent.",
+      "expected_behavior": "Recognize the irreversible existing-state action, but do not ask the user to choose a handling already pinned by the constraint. Include the rewrite consequence and the specified backup and no-upload safeguards in the single restatement, and keep the intent open until that restatement is confirmed.",
+      "edge_case_dimensions": [
+        "irreversible existing-state action",
+        "choice already pinned by constraint",
+        "confirmation boundary"
+      ]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "I want the product to feel much smarter and become the best option for everyone. Start the change.",
+      "expected_behavior": "Do not turn the aspiration into requirements or design choices. Ask one gap-driven what-question at a time to establish affected users, present pain, observable outcomes, constraints, exclusions, and the product value case; retain unresolved scope in Open questions and do not confirm on the user's behalf.",
+      "edge_case_dimensions": [
+        "ambiguous product aspiration",
+        "missing outcome and scope",
+        "value case",
+        "prohibited design questions"
+      ]
+    }
+  ]
+}
