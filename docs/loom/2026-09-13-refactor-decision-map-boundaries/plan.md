@@ -42,6 +42,11 @@ charter: 1.0
 - Test: A1 positive: decision-map-suite; negative: public-api-regression. A3 positive: package-suite; boundary: isolated-plugin-layout.
 - Risk: No opportunistic behavior changes; agent-decided to revert any extraction that cannot preserve existing tests exactly.
 
+**W3-02 Align the plugin release metadata**  after: W3-01  acceptance: 3
+- Files: loom-workflow/CHANGELOG.md, loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json, README.md
+- Test: A3 positive: package-suite-version; negative: changelog-manifest-drift.
+- Risk: Use the next patch version and manifest sync; agent-decided because this is a compatible internal refactor release.
+
 ## Questions asked
 1 — what — 第一個變更的 intent 已起草。你要的是：在不改變既有指令、Python 入口、錯誤行為及資料格式的前提下，拆清 Decision Map 的驗證、解析、儲存與交易責任；完成後，各部分可獨立測試，既有套件與整合測試維持通過。對嗎？
 
