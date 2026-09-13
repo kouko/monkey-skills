@@ -7,7 +7,7 @@ charter: 1.0
 - Forward: `loom-code/skills/write-plan/SKILL.md` `description:` repeats family-entry routing that a plugin router can own once.
 - Reverse: `scripts/check-skill-structure.py:is_router_skill` already recognizes thin router skills without imposing the normal description word floor.
 - Error: `loom-code/scripts/check_mechanisms.py:R1/R3/R4` rejects unregistered routers, unjustified mechanism growth, or routing mechanisms without executable evaluation.
-- Data: the 20 current `loom-*/skills/*/SKILL.md` descriptions render to 6,756 characters and 1,052 whitespace-delimited words.
+- Data: the 20 current `loom-*/skills/*/SKILL.md` descriptions render to 6,746 characters and 1,052 whitespace-delimited words.
 - Boundary: `scripts/test_loom_plugin_install_layout.py:test_isolated_loom_plugins_are_standalone_and_compose_by_public_contract` verifies each plugin without private sibling dependencies.
 
 ## Task DAG
@@ -16,7 +16,7 @@ charter: 1.0
 
 **W0-01 Add the failing catalogue budget and routing corpus**  after: none  acceptance: 1, 2
 - Files: scripts/test_loom_skill_description_catalog.py, docs/skill-dogfood/2026-09-13-compress-loom-skill-descriptions/cases.md
-- Test: A1 positive: rendered-total-at-most-4053; boundary: router-overhead-counted. A2 positive: plugin-umbrella-and-direct-skill; negative: adjacent-skill-and-ordinary-request.
+- Test: A1 positive: rendered-total-at-most-4047; boundary: router-overhead-counted. A2 positive: plugin-umbrella-and-direct-skill; negative: adjacent-skill-and-ordinary-request.
 - Risk: A synthetic corpus can reward its own wording; agent-decided — freeze realistic direct, umbrella, collision, multilingual, and explicit-only cases before editing descriptions.
 
 ### Wave 1 — add thin routers and remove repeated metadata
