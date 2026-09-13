@@ -240,7 +240,8 @@ def test_manifest_includes_shared_dependencies_of_retained_gates():
                  "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md",
                  "docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md",
                  "docs/loom/plans/2026-08-30-outcome-map-v3.md",
-                 "docs/loom/evidence/outcome-map-v3/proposal.md"):
+                 "docs/loom/evidence/outcome-map-v3/proposal.md",
+                 "docs/loom/memory/README.md", "docs/loom/memory/index.md"):
         assert extraction.selected(path, paths), path
 
 
