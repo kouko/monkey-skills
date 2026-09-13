@@ -12,6 +12,10 @@ The runtime contract therefore has no behavioral admission. W2-02 restored
 the baseline contract byte for byte, removed the candidate-only reference and
 focused contract test, and retained this negative evidence. Package manifests
 and the changelog remain unchanged because the candidate was not admitted.
+The rejected candidate is the exact commit
+`e2161e2fe6b3bf40d33b8a0c45cb035f77d2d73c`; all candidate byte, hash, and
+path claims below are recomputed from that Git object rather than accepted from
+this report.
 
 ## W2-02 disposition
 
@@ -22,20 +26,65 @@ and the changelog remain unchanged because the candidate was not admitted.
   `loom-code/skills/write-plan/references/cumulative-boundary-reassessment.md`
   and `loom-code/scripts/test_cumulative_boundary_contract.py` runtime
   candidate paths.
-- Preserved the frozen cases, admission probe, normalized evidence, and
-  intentionally failing full-admission check.
+- Preserved the frozen cases, admission probe, and normalized evidence. The
+  full probe passes only when it observes the exact six frozen non-admission
+  reasons; it does not deselect or weaken the admission oracle.
+
+The exact expected reasons are:
+
+1. `status is not ADMITTED`
+2. `L4 candidate does not meet the frozen rubric`
+3. `L1 baseline does not meet the frozen non-tie requirement`
+4. `conditional reference loading does not match the challenge corpus`
+5. `baseline cost evidence is missing`
+6. `candidate cost evidence is missing`
 
 ## Identities and execution
 
 | Item | Observed identity |
 |---|---|
 | Baseline revision | `1973ff35c4919e4c40795808240249c7ee40f506` |
+| Candidate revision | `e2161e2fe6b3bf40d33b8a0c45cb035f77d2d73c` |
 | Fixture specification | `a9c3448869bc73985b3219ffeeb53770beb16c09134c888489639caf1a0b1723` |
 | Frozen rubric | `ea89194e8d5673e3eba94b016318ba4e76d1da8d4893947a3d517658b1256594` |
 | Baseline Write Plan | `e4c249bae4a5badbd15c258fbfe6d4d2d920e9eba58329fa2ee05bfe573c0da4` |
 | Candidate Write Plan | `edeb377b3fe4b1a3d5d776dbfde5d4631fd52a03e46fc7d3bd8ae0d9b90e49d0` |
 | Candidate reference | `0c6f5465cd0765efb6eb82b6a2dffef5d86fb2120af43e173541006c8b2a93b2` |
 | Normalizer | `de640cfa9cb5a9e898dc26fdecef386f0e63987733be01da5e5f4cc3eae18735` |
+
+The candidate commit contains a 30,427-byte Write Plan contract and a
+2,601-byte detailed reference. Its complete committed path delta is the two
+contract paths above plus
+`loom-code/scripts/test_cumulative_boundary_contract.py`. The admission probe
+recomputes those bytes, SHA-256 values, and paths with `git rev-parse
+--verify`, `git show`, and `git diff-tree --no-commit-id --name-only -r`.
+
+The normalized public evidence is bound to committed carriers, not current
+working-tree copies:
+
+| Carrier | Revision | Git blob |
+|---|---|---|
+| Frozen cases | `4864ea08d96824f74a9b824f39ded1e27b910fd9` | `e97ac10e201da9abd2885e3b6a548effb223eeff` |
+| Frozen admission probe | `4864ea08d96824f74a9b824f39ded1e27b910fd9` | `ab40c5061e070d19cad2f3d106d1b4de7c308a42` |
+| Normalized runner/auditor report | `d7e72bb348b8e0092c611992f1bee140ed2f2a6e` | `29d9be0261ccc4f9d65fba22ddd0d9cdd2c4febf` |
+
+### Git replay assumptions
+
+The replay harness requires Git 2.32 or newer and assumes the documented
+porcelain/plumbing behavior of that release. Git 2.32 documents
+`--initial-branch`, `--object-format`, and `--template` for `git init`, and the
+revision/path selectors used by `rev-parse`, `show`, and `diff-tree`.[^git-init]
+[^git-revisions] [^git-show] [^git-diff-tree]
+
+Every Git subprocess clears inherited repository pointers, alternate object
+stores, template selection, `GIT_CONFIG_PARAMETERS`, and every numbered
+`GIT_CONFIG_KEY_*` / `GIT_CONFIG_VALUE_*` pair. It sets
+`GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_SYSTEM=/dev/null`,
+`GIT_CONFIG_NOSYSTEM=1`, and `GIT_CONFIG_COUNT=0`; fixture commands also use an
+empty template directory, an empty `core.hooksPath`, and
+`git commit --no-gpg-sign --no-verify`. These are the documented controls for
+global/system configuration, environment-injected configuration, templates,
+hooks, configured signing, and commit hooks.[^git-config] [^git-commit]
 
 - Eight fresh Codex runners used `gpt-5.6-sol` at `medium` effort: one
   baseline and one candidate run for each frozen fixture. The only assigned
@@ -137,9 +186,7 @@ Tests were written and observed failing before production changes.
 ## Reproduction commands
 
 ```text
-python3 -m pytest loom-code/scripts/test_probes_cumulative_boundary_reassessment.py -q -k 'not observed_report_meets_admission_bar'
 python3 -m pytest loom-code/scripts/test_probes_cumulative_boundary_reassessment.py -q
-python3 -m pytest loom-code/scripts/test_cumulative_boundary_contract.py -q
 python3 loom-code/scripts/check_mechanisms.py --baseline 1973ff35c4919e4c40795808240249c7ee40f506
 python3 loom-code/scripts/check_mechanisms.py --measure
 ```
@@ -172,12 +219,37 @@ python3 loom-code/scripts/check_mechanisms.py --measure
     "rubric_sha256": "ea89194e8d5673e3eba94b016318ba4e76d1da8d4893947a3d517658b1256594",
     "baseline_revision": "1973ff35c4919e4c40795808240249c7ee40f506",
     "baseline_contract_sha256": "e4c249bae4a5badbd15c258fbfe6d4d2d920e9eba58329fa2ee05bfe573c0da4",
+    "candidate_revision": "e2161e2fe6b3bf40d33b8a0c45cb035f77d2d73c",
     "candidate_contract_sha256": "edeb377b3fe4b1a3d5d776dbfde5d4631fd52a03e46fc7d3bd8ae0d9b90e49d0",
+    "candidate_contract_bytes": 30427,
     "candidate_reference_sha256": "0c6f5465cd0765efb6eb82b6a2dffef5d86fb2120af43e173541006c8b2a93b2",
+    "candidate_reference_bytes": 2601,
+    "candidate_revision_paths": [
+      "loom-code/scripts/test_cumulative_boundary_contract.py",
+      "loom-code/skills/write-plan/SKILL.md",
+      "loom-code/skills/write-plan/references/cumulative-boundary-reassessment.md"
+    ],
     "candidate_changed_contract_paths": [
       "loom-code/skills/write-plan/SKILL.md",
       "loom-code/skills/write-plan/references/cumulative-boundary-reassessment.md"
-    ]
+    ],
+    "artifact_carriers": {
+      "cases": {
+        "revision": "4864ea08d96824f74a9b824f39ded1e27b910fd9",
+        "path": "docs/skill-dogfood/2026-09-13-cumulative-boundary-reassessment/cases.md",
+        "blob": "e97ac10e201da9abd2885e3b6a548effb223eeff"
+      },
+      "admission_probe": {
+        "revision": "4864ea08d96824f74a9b824f39ded1e27b910fd9",
+        "path": "loom-code/scripts/test_probes_cumulative_boundary_reassessment.py",
+        "blob": "ab40c5061e070d19cad2f3d106d1b4de7c308a42"
+      },
+      "normalized_report": {
+        "revision": "d7e72bb348b8e0092c611992f1bee140ed2f2a6e",
+        "path": "docs/skill-dogfood/2026-09-13-cumulative-boundary-reassessment/report.md",
+        "blob": "29d9be0261ccc4f9d65fba22ddd0d9cdd2c4febf"
+      }
+    }
   },
   "fixtures": {
     "L1": {"head": "45a097b6180c90a8dc68d2f057b03d8d4ae7687a", "tree": "74e9c6734d9ebfd6f2a1920b99f461be253445bc"},
@@ -233,3 +305,10 @@ python3 loom-code/scripts/check_mechanisms.py --measure
   "claims_scope": "frozen-four-case-corpus-only"
 }
 ```
+
+[^git-init]: Git project, “git-init 2.32.0,” https://git-scm.com/docs/git-init/2.32.0.html
+[^git-config]: Git project, “git-config 2.32.0 — Environment,” https://git-scm.com/docs/git-config/2.32.0.html#ENVIRONMENT
+[^git-commit]: Git project, “git-commit 2.32.0,” https://git-scm.com/docs/git-commit/2.32.0.html
+[^git-revisions]: Git project, “gitrevisions 2.32.0,” https://git-scm.com/docs/gitrevisions/2.32.0.html
+[^git-show]: Git project, “git-show 2.32.0,” https://git-scm.com/docs/git-show/2.32.0.html
+[^git-diff-tree]: Git project, “git-diff-tree 2.32.0,” https://git-scm.com/docs/git-diff-tree/2.32.0.html

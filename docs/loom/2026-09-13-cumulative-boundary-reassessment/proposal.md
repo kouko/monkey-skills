@@ -37,7 +37,7 @@ background monitor, or an automatic refactoring engine.
 ## What current Loom does and misses
 
 Write Plan currently tells the agent to follow existing module boundaries when
-the choice is internal to the code (`loom-code/skills/write-plan/SKILL.md:267`)
+the choice is internal to the code (`loom-code/skills/write-plan/SKILL.md:274`)
 and requires each task to touch one module boundary and remain independently
 executable (`loom-code/skills/write-plan/SKILL.md:404`). The implementer blocks
 rather than silently crossing the planned boundary
@@ -338,7 +338,7 @@ This is a planning draft, not the ratified Loom plan.
 
 ## Sources
 
-[^1]: Arcelli Fontana et al., “Exploring the Relation Between Co-changes and Architectural Smells,” *SN Computer Science* (2021), https://link.springer.com/article/10.1007/s42979-020-00407-5
+[^1]: Sas et al., “Exploring the Relation Between Co-changes and Architectural Smells,” *SN Computer Science* (2021), https://link.springer.com/article/10.1007/s42979-020-00407-5
 [^2]: ISO, “ISO/IEC 25010:2023 — Product quality model,” https://www.iso.org/standard/78176.html
 [^3]: Bairi et al., “CodePlan: Repository-level Coding using LLMs and Planning,” *Proceedings of the ACM on Software Engineering* (FSE 2024), https://www.microsoft.com/en-us/research/publication/codeplan-repository-level-coding-using-llms-and-planning-2/
 [^4]: Zhang et al., “RepoCoder: Repository-Level Code Completion Through Iterative Retrieval and Generation,” EMNLP 2023, https://aclanthology.org/2023.emnlp-main.151/
