@@ -86,13 +86,13 @@ backlog や番号付きの plan を渡されたら `mode: proposal`。1 つの�
 
 ## Upstream chain
 
-10 個の skill のうち 1 つが MIT-licensed な upstream に由来します。完全な attribution はその skill の `NOTICE` ファイル参照。（`skill-creator-advance` と `skill-judge` の upstream attribution は、移転先の `skill-dev-toolkit` に一緒に移りました。）
+1 つの skill が MIT-licensed な upstream に由来します。完全な attribution はその skill の `NOTICE` ファイル参照。（`skill-creator-advance` と `skill-judge` の upstream attribution は、移転先の `skill-dev-toolkit` に一緒に移りました。）
 
 | Skill | Upstream chain |
 |---|---|
 | `critique`（`mode: complexity`） | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` → `complexity-critique` にリネーム後、`critique` に統合） |
 
-残り 9 個の skill はオリジナル設計で、外部 upstream への attribution はありません。詳細は各 skill の `NOTICE`（存在する場合）参照。
+その他の skill はオリジナル設計で、外部 upstream への attribution はありません。詳細は各 skill の `NOTICE`（存在する場合）参照。
 
 ## Repository 構成
 

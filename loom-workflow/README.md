@@ -86,13 +86,13 @@ Use `mode: proposal` when handed a backlog or numbered plan. Use `mode: complexi
 
 ## Upstream chain
 
-One of the ten skills derives from an MIT-licensed upstream. Full attribution lives in the skill's `NOTICE` file. (`skill-creator-advance`'s and `skill-judge`'s upstream attributions moved with them to `skill-dev-toolkit`.)
+One skill derives from an MIT-licensed upstream. Full attribution lives in the skill's `NOTICE` file. (`skill-creator-advance`'s and `skill-judge`'s upstream attributions moved with them to `skill-dev-toolkit`.)
 
 | Skill | Upstream chain |
 |---|---|
 | `critique` (`mode: complexity`) | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills (renamed `reducing-entropy` → `complexity-critique`, merged into `critique`) |
 
-The remaining nine skills are original designs with no external upstream to attribute. Details in each skill's `NOTICE` file where one exists.
+The other skills are original designs with no external upstream to attribute. Details live in each skill's `NOTICE` file where one exists.
 
 ## Repository structure
 
