@@ -13,8 +13,8 @@ Overall verdict: **PROCEED**
 - Candidate: `/Users/kouko/.codex/candidates/2026-09-13-shrink-three-loom-skill-entrypoints/capture-intent/package`.
 
 The candidate was applied only after Q1-Q3 and the layered reducer passed.
-`test-prompts.json` is the confirmed W0 evaluation input and is outside both
-package totals.
+`test-prompts.json` is the confirmed W0 evaluation input and is included in
+the corrected cumulative candidate package total.
 
 ## Refactor
 
@@ -50,10 +50,10 @@ Verdict: **PASS (3/3 equivalent, high confidence)**.
 
 | Measure | Baseline | Candidate | Reduction |
 |---|---:|---:|---:|
-| `SKILL.md` words | 3,553 | 2,930 | 623 (17.53%) |
-| `SKILL.md` bytes | 22,925 | 19,696 | 3,229 (14.08%) |
-| Package words | 4,822 | 4,199 | 623 (12.92%) |
-| Package bytes | 30,711 | 27,482 | 3,229 (10.51%) |
+| `SKILL.md` words | 3,553 | 2,711 | 842 (23.70%) |
+| `SKILL.md` bytes | 22,925 | 18,527 | 4,398 (19.18%) |
+| Package words | 4,822 | 4,267 | 555 (11.51%) |
+| Package bytes | 30,711 | 28,560 | 2,151 (7.00%) |
 
 The package is below the at-most-4,339-word target. The skill-specific body cap
 also passes.

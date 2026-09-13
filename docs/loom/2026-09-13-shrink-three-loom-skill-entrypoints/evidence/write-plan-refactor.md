@@ -10,8 +10,8 @@ Final verdict: **PROCEED**
 - Canonical manifest: `/Users/kouko/.codex/baselines/2026-09-13-shrink-three-loom-skill-entrypoints/write-plan/baseline/manifest.json`
 - External manifest SHA-256: `3640966106aca26f5a10075cf25374b216ec466cd9211e06eab40d145e2e6101`
 - `package_gate.py verify`: PASS before each candidate comparison.
-- `test-prompts.json` is the W0 evaluation input created after the pinned
-  export and, as declared in `baseline.md`, is outside both package totals.
+- `test-prompts.json` was created after the pinned export and is included in
+  the corrected cumulative candidate package total.
 
 ## Rejected first candidate
 
@@ -50,12 +50,13 @@ Verdict: **PASS (3/3 equivalent, high confidence)**.
 
 | Measure | Baseline | Final candidate | Reduction |
 |---|---:|---:|---:|
-| `SKILL.md` words | 4,498 | 3,682 | 816 (18.14%) |
-| `SKILL.md` bytes | 29,872 | 25,042 | 4,830 (16.17%) |
-| Package words | 6,364 | 5,548 | 816 (12.82%) |
-| Package bytes | 42,124 | 37,294 | 4,830 (11.47%) |
+| `SKILL.md` words | 4,498 | 3,510 | 988 (21.97%) |
+| `SKILL.md` bytes | 29,872 | 24,085 | 5,787 (19.37%) |
+| Package words | 6,364 | 5,615 | 749 (11.77%) |
+| Package bytes | 42,124 | 38,323 | 3,801 (9.02%) |
 
-The final package is below the at-most-5,727-word target. References are
+The corrected package, including `test-prompts.json`, is below the
+at-most-5,727-word target. References are
 unchanged, so the reduction is deletion/compression rather than relocation.
 
 Verdict: **PASS (whole package reduced by at least 10%)**.

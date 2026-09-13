@@ -157,7 +157,9 @@ wording. The rules below remain binding wherever the report is stored.
 - Mechanically check every leg; its **own claim of completion** proves nothing.
   Reject each under its own **distinguishable reason**: empty output; **a refusal**;
   **a missing template field**; output that **restates its own input**; an
-  unchecked claim marked **fabrication suspect**; or no reasoning trace.
+  unchecked claim marked **fabrication suspect**; or no reasoning trace. A
+  **missing template field is not retried blind**; only the empty-output retry
+  described above is permitted.
 - Put `degraded_legs` and failure attribution in the report body. If **no leg produced usable output**, deliver a failure report naming every leg's failure.
   Record unprobed tiers as having **no verification evidence**; independent
   defects are **listed separately**; report actual `leg_count` and `early_stopped`.

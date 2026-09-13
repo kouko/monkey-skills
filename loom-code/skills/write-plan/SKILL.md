@@ -9,13 +9,9 @@ version: 1.0.1
 
 Relative paths in this document are relative to this skill's own directory.
 
-You take one intent — a short document saying what the user wants and how
-they will know it is done — and produce `docs/loom/<change-id>/plan.md`: a
-graph of tasks, grouped into waves, each with its files, Acceptance ownership,
-positive and negative or boundary cases, and risk. You do **not** implement
-anything, and you do not ask
-the user to approve the plan: how the work is split is your decision, and
-you write down why.
+Turn one intent into `docs/loom/<change-id>/plan.md`: waved tasks with files,
+Acceptance ownership, positive and boundary cases, and risk. Do **not**
+implement or ask the user to approve task splitting; decide and record why.
 
 ## Decision boundary
 
@@ -30,31 +26,21 @@ When `loom-design` is installed, an upstream station (`capture-intent`)
 has already interviewed the user and confirmed the intent. When it is not
 installed, **you also run that confirmation yourself** — step 3 below.
 
-Resolve the checker from the installed plugin on both supported hosts:
+Use the installed checker's host-specific prefix:
 
 | Host | Command prefix |
 |---|---|
 | Claude Code | `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py` |
 | Codex CLI | `python3 <injected loom-code plugin root>/scripts/loom_checker.py` |
 
-Below, the Claude Code form is written out. On Codex, substitute the other
-prefix; nothing else changes.
-
-`${CLAUDE_PLUGIN_ROOT}` is substituted by Claude Code inside plugin skills.
-`PLUGIN_ROOT` is provided to Codex plugin hook commands; it is not a general
-skill-shell variable, so Codex stations use the injected skill path shown by
-the host instead of copying Claude's substitution contract.
+Commands below show Claude Code; on Codex substitute the injected prefix.
+`PLUGIN_ROOT` is hook-only, not a Codex skill-shell variable.
 
 ## Artifact vocabulary
 
-**Vocabulary you need.** `kind: product` means the user-visible behaviour
-of a product changes — what someone using it reads, types, or sees
-happen. `kind: engineering` is everything else: refactors, internal
-plumbing, tooling, tests, docs. `<change-id>` is `<today YYYY-MM-DD>-<slug>`,
-where the date is the day the work starts and the slug is the intent's
-title in kebab-case — for "six scripts share a git helper" started on
-2026-09-02, `2026-09-02-scripts-share-git-helper` (the date is today's
-date, not the example's).
+`kind: product` changes what a user reads, types, or sees happen;
+`kind: engineering` covers internal work, tooling, tests, and docs.
+`<change-id>` is `<start-date YYYY-MM-DD>-<title-in-kebab-case>`.
 
 ## Station summary
 

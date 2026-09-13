@@ -9,26 +9,18 @@ version: 1.0.0
 
 Relative paths in this document are relative to this skill's own directory.
 
-Someone tells you what they want. You ask until you understand it, write
-one short document — `docs/loom/intent/<change-id>.md` — restate it back
-in their own words, and once they say yes, hand the change to the station
-that plans it. You do not design anything, you do not plan anything, and
-you never ask the user to judge the quality of your work.
+Ask only until the wanted outcome is clear, write
+`docs/loom/intent/<change-id>.md`, restate it in the user's words, then hand a
+confirmed intent onward. Do not design, plan, or ask the user to judge quality.
 
 ## Artifact vocabulary
 
-**Vocabulary you need.** `kind: product` means the user-visible behaviour
-of a product changes — what someone using it reads, types, or sees happen.
-`kind: engineering` is everything else: refactors, internal plumbing,
-tooling, tests, docs. `<change-id>` is `<today YYYY-MM-DD>-<slug>`, where
-the date is the day the work starts and the slug is the intent's title in
-kebab-case — for "CLI todo gains a due date" started on 2026-09-02,
-`2026-09-02-cli-todo-due-date` (the date is today's date, not the
-example's).
+`kind: product` changes what a user reads, types, or sees happen;
+`kind: engineering` covers internal work, tooling, tests, and docs.
+`<change-id>` is `<start-date YYYY-MM-DD>-<title-in-kebab-case>`.
 
-The file formats and the checker belong to `loom-code`; this station is
-one good way to produce them. Everything it writes is read back by
-`loom-code`'s stations, so the shapes below are not negotiable.
+`loom-code` owns the file formats and checker; its stations consume this
+output, so preserve the required shapes.
 
 ## Station summary
 
@@ -63,31 +55,24 @@ Codex may also need one first-use repository authorisation stop.
 
 ## Step 0 — Check the contract version
 
-This station's artifacts are defined by `loom-code`'s contract package, so
-refuse to run against a version that does not declare them.
-
-Plugins cannot read each other's files, so there is no
-`${CLAUDE_PLUGIN_ROOT}` path that reaches `loom-code` from here. Find its
-checkout on this host:
+The artifacts belong to `loom-code`'s contract; reject versions that do not
+declare them. Plugins cannot cross-read roots, so locate `loom-code` by host:
 
 | Host | Where `loom-code` lives |
 |---|---|
 | Claude Code | the plugin cache — `~/.claude/plugins/cache/<marketplace>/loom-code/<version>/`, one directory per installed version; take the newest |
 | Codex CLI | the installed `loom-code` plugin directory; use its checker script |
 
-Then run, with that directory in place of `<loom-code>`:
+Run:
 
 ```
 python3 <loom-code>/scripts/loom_checker.py contract --require 2.1
 ```
 
-Exit 0: continue. Anything else, the rule is `contract.requires`: print
-what the checker printed, tell the user to update `loom-code`, and
-**stop**. Do not work around it and do not guess a path — if you cannot
-find the checkout, say so and ask the user where `loom-code` is installed.
-
-If the installed checker cannot be found on Codex, stop and ask the user to
-install or update `loom-code`; do not create a repository-local copy.
+Exit 0 continues. Otherwise print the `contract.requires` output, request a
+`loom-code` update, and **stop**. Never guess, work around, or create a
+repo-local checker; if its install cannot be found, ask for its location or
+installation/update.
 
 ## Step 1 — Interview
 
@@ -96,11 +81,10 @@ Draft directly when already sufficient. No intake question quota applies.
 Problems/outcomes are valid before choosing features or implementation.
 Existing decision points remain unchanged.
 
-Cover affected people and their current workaround; observable "when finished
-I can ___" outcomes provable by a stranger in a clean environment; fixed
-constraints; and explicit exclusions. For product, also cover why now, why not
-an existing tool, and what loses the time. End with GO or NO-GO and one reason;
-write a NO-GO as `status: withdrawn — <reason>` and stop.
+Cover affected people, workaround, clean-environment observable outcomes,
+fixed constraints, and exclusions. For product also cover urgency, existing
+alternatives, and displaced work. End with GO or NO-GO plus one reason; write
+NO-GO as `status: withdrawn — <reason>` and stop.
 
 **Every question you ask must be of type `what`** — what do you want, what
 happens today, what would you be able to do. Nothing about how it should

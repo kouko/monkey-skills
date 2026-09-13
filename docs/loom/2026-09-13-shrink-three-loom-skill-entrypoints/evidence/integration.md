@@ -12,15 +12,22 @@ each isolated round, rather than `wc`'s different tokenization.
 
 | Skill | Baseline `SKILL.md` | Final `SKILL.md` | Entrypoint reduction | Baseline package | Final package | Package reduction | Q1 | Q2 | Q3 |
 |---|---:|---:|---:|---:|---:|---:|---|---|---|
-| `write-plan` | 4,498 | 3,682 | 816 (18.14%) | 6,364 | 5,548 | 816 (12.82%) | PASS, 3/3 equivalent | PASS, >=10% | PASS |
-| `capture-intent` | 3,553 | 2,930 | 623 (17.53%) | 4,822 | 4,199 | 623 (12.92%) | PASS, 3/3 equivalent | PASS, >=10% | PASS |
-| `independent-advisor` | 4,035 | 1,946 | 2,089 (51.77%) | 7,620 | 5,531 | 2,089 (27.41%) | PASS, 3/3 equivalent | PASS, >=10% | PASS |
-| **Total** | **12,086** | **8,558** | **3,528 (29.19%)** | **18,806** | **15,278** | **3,528 (18.76%)** | **PASS** | **PASS** | **PASS** |
+| `write-plan` | 4,498 | 3,510 | 988 (21.97%) | 6,364 | 5,615 | 749 (11.77%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
+| `capture-intent` | 3,553 | 2,711 | 842 (23.70%) | 4,822 | 4,267 | 555 (11.51%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
+| `independent-advisor` | 4,035 | 1,962 | 2,073 (51.38%) | 7,620 | 6,819 | 801 (10.51%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
+| **Total** | **12,086** | **8,183** | **3,903 (32.29%)** | **18,806** | **16,701** | **2,105 (11.19%)** | **PASS** | **PASS** | **PASS** |
 
 Q1 is behavioral equivalence, Q2 is whole-package reduction, and Q3 is
 invariant/capability quality. Every skill passed independently; no reduction
-was borrowed across packages. Bundled references stayed byte-identical, so the
-package reductions are deletion/compression, not relocation.
+was borrowed across packages. Package totals include the shipped
+`test-prompts.json` files. Bundled references stayed byte-identical, so the
+remaining reductions are deletion/compression, not relocation.
+
+Round 1 Closing Review found that the earlier accounting excluded those prompt
+fixtures. The skills were reduced further, all three focused contract suites
+were rerun, and the same reviewers verify the functional fix delta in Round 2.
+It also restored `independent-advisor`'s rule that a missing template field is
+not blindly retried, with a focused regression assertion.
 
 Claude Code was not used for baseline replay, judging, refactoring, or this
 integration pass, per the user's constraint. All equivalence judgments in the

@@ -378,6 +378,7 @@ def test_report_leads_with_divergence_and_discloses_degradation():
             "restates its own input",
             "fabrication suspect",
             "no reasoning trace",
+            "missing template field is not retried blind",
         ],
         "degraded and failed legs are disclosed": [
             "`degraded_legs`",
