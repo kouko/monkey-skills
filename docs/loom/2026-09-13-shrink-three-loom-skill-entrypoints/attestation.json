@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-13-shrink-three-loom-skill-entrypoints",
-  "content_digest": "16697e0ca5590073a89ec591b5d450a8ac537129",
+  "content_digest": "f19feb04628d81c2f68f34ebda086208e9b1f87d",
   "executions": [
     {
       "kind": "package-tests",
