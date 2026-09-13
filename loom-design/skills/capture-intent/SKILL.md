@@ -47,31 +47,19 @@ one good way to produce them. Everything it writes is read back by
 Give the user this list if they ask what is coming. It is the whole list;
 nothing else in the change stops for them.
 
-1. **Here (this station), "is this what you want?"** — I restate the
-   problem and what you will be able to do when it is done. You say yes,
-   or you correct me.
-2. **Here, any choice that is expensive to undo** — asked in the same
-   message, as consequences ("from then on it only runs on ___, ___ per
-   month"), never as jargon.
-3. **Here, only when the repo uses `second-vendor: ask` in the full lane**
-   — whether to use another vendor for this change. `suggest` adds no
-   question at capture-intent; write-plan owns its post-plan notice.
-4. **Here, if this is a product change and this repo has no product
-   principles yet** — about ten minutes of questions, in this same
-   conversation, confirmed together with question 1.
-5. **Later, at `write-spec`, product changes only** — "you type ___ and
-   you see ___". Engineering changes skip it.
-6. **Later, at the end** — you read a report that says, for every line of
-   your Acceptance list, how it was tried and what happened, and you say
-   OK or not OK.
+1. **Here:** one message confirms the restated intent, every expensive-to-undo
+   choice in consequence form, a product's new principles when needed, and —
+   only for full-lane `second-vendor: ask` — whether to use another vendor.
+   `suggest` adds no question at capture-intent; write-plan owns its post-plan
+   notice.
+2. **At `write-spec`, product only:** confirm visible behaviour ("you type
+   ___ and see ___"). Engineering changes skip this.
+3. **At the end:** accept or reject the report showing how each Acceptance
+   line was tried and what happened.
 
-Questions 5 and 6 belong to later stations. Nothing about how the work is
-split, reviewed, or verified is ever put to you.
-
-With `loom-code` installed on its own, questions 1–4 are asked by its
-`write-plan` station instead, in the same words; the user sees no
-difference. On Codex there is also one non-decision authorisation stop the
-first time a repo is used — see the last section.
+Nothing about task splitting, review mechanics, or verification is put to the
+user. With `loom-code` alone, `write-plan` performs this station's questions;
+Codex may also need one first-use repository authorisation stop.
 
 ## Step 0 — Check the contract version
 
@@ -108,21 +96,11 @@ Draft directly when already sufficient. No intake question quota applies.
 Problems/outcomes are valid before choosing features or implementation.
 Existing decision points remain unchanged.
 
-Cover, in the user's own words and with no jargon:
-
-- **Who is affected**, and what they do today instead.
-- **What "done" looks like**, written as things the user can do: "when
-  this is finished I can ___". Each line must be provable by someone who
-  has never seen the change, running it in a clean environment — that is
-  what these lines are for. "The code is cleaner" is not one; "I can set a
-  due date when I add a task and see it in the list" is.
-- **Constraints** — anything already fixed: platform, language, a service
-  they pay for, data they cannot move.
-- **What is out of scope**, said out loud, so it does not creep back.
-- **For product, the value case** — why now, why this rather than an
-  existing tool, and what concretely loses the time. End with GO or NO-GO
-  and one reason. A NO-GO is a real outcome: write the intent with
-  `status: withdrawn — <reason>` and stop.
+Cover affected people and their current workaround; observable "when finished
+I can ___" outcomes provable by a stranger in a clean environment; fixed
+constraints; and explicit exclusions. For product, also cover why now, why not
+an existing tool, and what loses the time. End with GO or NO-GO and one reason;
+write a NO-GO as `status: withdrawn — <reason>` and stop.
 
 **Every question you ask must be of type `what`** — what do you want, what
 happens today, what would you be able to do. Nothing about how it should
@@ -179,9 +157,7 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
   `no` (`intent.needs-design-recompute`) against the repo's interface-surface
   globs and blocks a mismatch.
 
-  Worked example — "CLI todo gains a due date": adding a due date changes
-  the arguments the user types and the list they read back, and no
-  ui-flows document covers due dates, so (a) holds →
+  Example: a new uncovered CLI due-date surface is
   `needs-design: yes — CLI surface changes, no ui-flows cover due dates`.
 
 - `status: open` for now; step 4 turns it into `confirmed`.
@@ -250,29 +226,15 @@ twice, and this is the only stop this station makes.
    `publication: automatic — authorized <date> by <name>` only after that
    informed yes; an opt-out leaves the field absent.
 
-2. **The one-way doors found so far**, in consequence form. A one-way door
-   is a choice that is expensive or impossible to undo. The reference that
-   defines them lives in `loom-code`'s `write-plan` station — the file
-   `one-way-door.md` in that skill's own references directory, which you
-   cannot read from here; the classes are:
-   - **(a)** hard to swap later — framework, language, database,
-     authentication method, hosting platform, package manager;
-   - **(b)** creates money or a standing obligation — paid services,
-     third-party APIs needing an account, infrastructure to maintain;
-   - **(c)** limits what the user can do in future — data formats, export
-     ability, platform lock-in;
-   - **(d)** sets the ceiling on output quality — model, algorithm or data
-     source, when candidates differ on an axis the user feels (accuracy,
-     speed, cost per run, language or format coverage, privacy);
-   - **(e)** an irreversible action on the user's existing state —
-     rewriting or deleting their data in place, changing an existing file
-     format with no backup, sending their data off their machine. This one
-     is asked **even when there is no fork at all**. Class (e) still yields to
-   the **check** gate below: when the intent's Constraints or `PRINCIPLES.md`
-   already pin how that existing data is handled, do **not** ask — restate
-   the handling in consequence form inside this same message ("this will
-   rewrite your ___, I am doing it the way you said: ___"), so the user sees
-   it without being stopped for it.
+2. **Every one-way door found so far**, in consequence form. These are
+   expensive or impossible to undo: a hard-to-swap platform or foundation; a
+   monetary or standing obligation; future limits such as formats, export, or
+   lock-in; an output-quality ceiling the user feels (accuracy, speed, cost,
+   coverage, privacy); or an irreversible action on existing state, including
+   rewriting/deleting data or sending it off-device. Existing-state actions
+   count even without a fork. If Constraints or `PRINCIPLES.md` already fix
+   their handling, do not ask again; restate the pinned handling and consequence
+   in this message so the user still sees it.
 
    Four gates, in order: **check** the intent's Acceptance and Constraints
    and `PRINCIPLES.md` first — an axis already pinned there is not asked,
@@ -284,16 +246,9 @@ twice, and this is the only stop this station makes.
    this change is asked once, here, inside this message. Never open an
    extra stop.
 
-   The shape is fixed and carries no mechanism vocabulary:
-
-   > Option A: from then on it only runs on ___, it costs ___ per month,
-   > and swapping it out means rewriting ___. Option B: ___. I suggest A,
-   > because ___.
-
-   With no fork — class (e) — the same shape states the consequence and the
-   safeguard: "this will rewrite your ___ into a new format and the old
-   program will not read it; I will keep a backup at ___ first. Is that
-   OK?"
+   State options as user consequences and recommend one with a reason. With no
+   fork, state the irreversible consequence and safeguard (for example, what
+   is rewritten, what stops reading it, and where the backup is kept).
 
 3. **The cross-model review question, only for `second-vendor: ask`.** Read
    `references/second-vendor.md` for mode routing and the availability
@@ -310,21 +265,11 @@ twice, and this is the only stop this station makes.
 4. **The principles confirmation**, if step 3 ran the interview — restated
    in the same message, confirmed by the same yes.
 
-**Every question in this message must be one of three types, or the
-consequence form for one-way doors**: what do you want (the restatement), what will
-you see (visible behaviour — that belongs to decision point ② at
-`write-spec`), did it work (acceptance — decision point ③ at `ship`). A
-question fitting none of them is a question the user cannot answer. Three
-that fail the test, and what to do instead:
-
-| Not a question for the user | Why | Instead |
-|---|---|---|
-| "Should the parser be recursive or table-driven?" | They would have to read the grammar and the call sites to have an opinion | Pick the one the existing code already uses; note the reason |
-| "Should this live in `auth/` or a new `session/` module?" | A module boundary is only visible from inside the code | Follow the repo's existing boundaries; note it |
-| "Should the new tests use pytest fixtures or a helper class?" | The answer is whatever the suite already does | Read one existing test and match it |
-
-The review station has a dimension for exactly this, `user-judgment-leak`,
-and returns NEEDS_REVISION when it finds one.
+Questions may only ask what the user wants, what they will see (reserved for
+decision point ② at `write-spec`), whether acceptance worked (decision point ③
+at `ship`), or state one-way-door consequences. Decide implementation choices
+from repo evidence and record the reason; asking the user is a
+`user-judgment-leak` review failure.
 
 **Write down every question you asked**, as `{decision_point, text, type}`
 with `type` one of `what` / `behaviour` / `done` / `consequence`. The
