@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.1.4] — 2026-09-13 — smaller write-plan entrypoint
+
+- Preserve `write-plan` behavior while reducing its entrypoint from 4,498 to
+  3,525 words and its complete package from 6,364 to 5,630 words.
+
 ## [3.1.3] — 2026-09-13 — compact skill discovery
 
 - Add optional `using-loom-code` discovery routing and compress the five leaf
