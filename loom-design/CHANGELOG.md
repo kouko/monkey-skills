@@ -12,6 +12,13 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.1.5] — 2026-09-13 — capture-intent entrypoint reduction
+
+Patch. Behavior-preserving refactor of `capture-intent`: the entrypoint shrank
+from 3,553 to 2,698 words, and the whole skill package from 4,822 to 4,254
+words, while retaining its interview, confirmation, routing, and handoff
+contracts.
+
 ## [2.1.4] — 2026-09-13 — compact skill discovery
 
 - Add optional `using-loom-design` discovery routing and compress the four

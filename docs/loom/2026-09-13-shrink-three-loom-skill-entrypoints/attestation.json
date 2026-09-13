@@ -1,0 +1,54 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-13-shrink-three-loom-skill-entrypoints",
+  "content_digest": "f19feb04628d81c2f68f34ebda086208e9b1f87d",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_write_plan_station_text.py -q",
+      "artifact": "loom-code/scripts/test_write_plan_station_text.py",
+      "result": "pass",
+      "command_digest": "758028412d9385b72d580ae8a36e8e279043ec263ee5cdb38a04815cebbe7b61"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-design/scripts/spec/test_capture_intent_contract.py -q",
+      "artifact": "loom-design/scripts/spec/test_capture_intent_contract.py",
+      "result": "pass",
+      "command_digest": "9a6ff6b79e30327ef576f3fe141023750b5d6007267435a6ec4466d6739a799a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-workflow/scripts/test_independent_advisor_compaction.py -q",
+      "artifact": "loom-workflow/scripts/test_independent_advisor_compaction.py",
+      "result": "pass",
+      "command_digest": "f04c792fd1604f7d99ebcc99a9ca066aba9ff593578c25fccf834acca6688146"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-reviewer-a",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "codex-reviewer-b",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
