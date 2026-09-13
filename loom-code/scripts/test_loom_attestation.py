@@ -8,7 +8,9 @@ import sys
 from io import StringIO
 from pathlib import Path
 
-import loom_checker
+from loom_checker import attestation as attestation_module
+from loom_checker import digest, probes, reviewers
+from loom_checker.command_handlers import finalize, push, reviewer_count
 
 
 CHANGE = "2026-09-08-example"
@@ -52,8 +54,8 @@ def test_functional_digest_ignores_declared_publication_paths(tmp_path: Path) ->
     evidence.write_text('{"content_digest":"old"}\n', encoding="utf-8")
     after = commit(repo, "publication evidence")
 
-    assert loom_checker.functional_content_digest(repo, before, CHANGE, manifest()) == \
-        loom_checker.functional_content_digest(repo, after, CHANGE, manifest())
+    assert digest.functional_content_digest(repo, before, CHANGE, manifest()) == \
+        digest.functional_content_digest(repo, after, CHANGE, manifest())
 
 
 def test_functional_mutation_invalidates_digest(tmp_path: Path) -> None:
@@ -62,8 +64,8 @@ def test_functional_mutation_invalidates_digest(tmp_path: Path) -> None:
     (repo / "src.py").write_text("VALUE = 2\n", encoding="utf-8")
     after = commit(repo, "functional change")
 
-    assert loom_checker.functional_content_digest(repo, before, CHANGE, manifest()) != \
-        loom_checker.functional_content_digest(repo, after, CHANGE, manifest())
+    assert digest.functional_content_digest(repo, before, CHANGE, manifest()) != \
+        digest.functional_content_digest(repo, after, CHANGE, manifest())
 
 
 def test_another_changes_attestation_is_functional_content(tmp_path: Path) -> None:
@@ -74,8 +76,8 @@ def test_another_changes_attestation_is_functional_content(tmp_path: Path) -> No
     other.write_text("{}\n", encoding="utf-8")
     after = commit(repo, "other evidence")
 
-    assert loom_checker.functional_content_digest(repo, before, CHANGE, manifest()) != \
-        loom_checker.functional_content_digest(repo, after, CHANGE, manifest())
+    assert digest.functional_content_digest(repo, before, CHANGE, manifest()) != \
+        digest.functional_content_digest(repo, after, CHANGE, manifest())
 
 
 def matching_attestation(repo: Path) -> dict:
@@ -84,7 +86,7 @@ def matching_attestation(repo: Path) -> dict:
     return {
         "schema": "loom-attestation/v1",
         "change_id": CHANGE,
-        "content_digest": loom_checker.functional_content_digest(
+        "content_digest": digest.functional_content_digest(
             repo, git(repo, "rev-parse", "HEAD"), CHANGE, manifest()
         ),
         "executions": [{
@@ -107,7 +109,7 @@ def matching_attestation(repo: Path) -> dict:
 
 def test_matching_attestation_validates_without_executing_commands(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
-    failures = loom_checker.validate_attestation(
+    failures = attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, matching_attestation(repo), manifest()
     )
     assert failures == []
@@ -117,7 +119,7 @@ def test_well_formed_forged_attestation_fails_closed(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
     attestation = matching_attestation(repo)
     attestation["executions"][0]["command_digest"] = "0" * 64
-    failures = loom_checker.validate_attestation(
+    failures = attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     )
     assert any("command digest" in reason for _, reason in failures)
@@ -128,7 +130,7 @@ def test_package_execution_must_match_declared_command(tmp_path: Path) -> None:
     attestation = matching_attestation(repo)
     attestation["executions"][0]["command"] = "true"
     attestation["executions"][0]["command_digest"] = hashlib.sha256(b"true").hexdigest()
-    failures = loom_checker.validate_attestation(
+    failures = attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     )
     assert any("declared package command" in reason for _, reason in failures)
@@ -138,13 +140,13 @@ def test_attestation_requires_two_reviewers_and_adversarial_execution(tmp_path: 
     repo = repo_with_content(tmp_path)
     attestation = matching_attestation(repo)
     attestation["verdicts"] = attestation["verdicts"][:1]
-    failures = loom_checker.validate_attestation(
+    failures = attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     )
     assert any("two distinct reviewers" in reason for _, reason in failures)
     attestation = matching_attestation(repo)
     attestation["executions"] = attestation["executions"][:1]
-    failures = loom_checker.validate_attestation(
+    failures = attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     )
     assert any("adversarial execution" in reason for _, reason in failures)
@@ -157,7 +159,7 @@ def test_reviewer_floor_is_one_only_for_narrow_low_risk_paths() -> None:
         "loom-code/scripts/test_example.py",
         "docs/guide.md",
     }
-    assert loom_checker.reviewer_floor_for_paths(change_paths, CHANGE) == 1
+    assert reviewers.reviewer_floor_for_paths(change_paths, CHANGE) == 1
 
     for protected in (
         "src.py",
@@ -173,7 +175,7 @@ def test_reviewer_floor_is_one_only_for_narrow_low_risk_paths() -> None:
         "tests/hooks/hooks.json",
         "tests/contract/manifest.yaml",
     ):
-        assert loom_checker.reviewer_floor_for_paths(
+        assert reviewers.reviewer_floor_for_paths(
             change_paths | {protected}, CHANGE
         ) == 2
 
@@ -188,7 +190,7 @@ def test_matching_low_risk_attestation_accepts_one_reviewer(tmp_path: Path) -> N
     attestation = matching_attestation(repo)
     attestation["verdicts"] = attestation["verdicts"][:1]
 
-    assert loom_checker.validate_attestation(
+    assert attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     ) == []
 
@@ -196,7 +198,7 @@ def test_matching_low_risk_attestation_accepts_one_reviewer(tmp_path: Path) -> N
 def test_reviewer_floor_fails_closed_when_branch_base_is_unknown(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
 
-    assert loom_checker.required_reviewer_count(repo, CHANGE) == 2
+    assert reviewers.required_reviewer_count(repo, CHANGE) == 2
 
 
 def test_reviewer_floor_sees_both_sides_of_a_protected_file_rename(
@@ -212,7 +214,7 @@ def test_reviewer_floor_sees_both_sides_of_a_protected_file_rename(
     runtime.rename(guide)
     commit(repo, "rename runtime as docs")
 
-    assert loom_checker.required_reviewer_count(repo, CHANGE) == 2
+    assert reviewers.required_reviewer_count(repo, CHANGE) == 2
 
 
 def test_reviewer_count_command_reports_the_computed_floor(
@@ -227,7 +229,7 @@ def test_reviewer_count_command_reports_the_computed_floor(
     monkeypatch.chdir(repo)
     out, err = StringIO(), StringIO()
 
-    assert loom_checker.cmd_reviewer_count([CHANGE], out, err) == 0
+    assert reviewer_count.cmd_reviewer_count([CHANGE], out, err) == 0
     assert out.getvalue() == "1\n"
     assert err.getvalue() == ""
 
@@ -237,7 +239,7 @@ def test_stale_attestation_fails_closed(tmp_path: Path) -> None:
     attestation = matching_attestation(repo)
     (repo / "src.py").write_text("VALUE = 3\n", encoding="utf-8")
     head = commit(repo, "new behavior")
-    failures = loom_checker.validate_attestation(repo, head, CHANGE, attestation, manifest())
+    failures = attestation_module.validate_attestation(repo, head, CHANGE, attestation, manifest())
     assert any("functional content digest" in reason for _, reason in failures)
 
 
@@ -249,7 +251,7 @@ def test_adversarial_execution_must_name_a_committed_artifact(tmp_path: Path) ->
         "kind": "adversarial", "command": command, "artifact": "missing.py",
         "result": "pass", "command_digest": hashlib.sha256(command.encode()).hexdigest(),
     })
-    failures = loom_checker.validate_attestation(
+    failures = attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     )
     assert any("committed artifact" in reason for _, reason in failures)
@@ -263,14 +265,14 @@ def test_adversarial_wrapper_cannot_fake_execution(tmp_path: Path) -> None:
         "command": command,
         "command_digest": hashlib.sha256(command.encode()).hexdigest(),
     })
-    failures = loom_checker.validate_attestation(
+    failures = attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     )
     assert any("execute the artifact directly" in reason for _, reason in failures)
 
 
 def test_pytest_runner_directly_executes_named_artifact() -> None:
-    assert loom_checker.command_executes_artifact(
+    assert probes.command_executes_artifact(
         "python3 -m pytest tests/probe.py -q", "tests/probe.py"
     )
 
@@ -292,7 +294,7 @@ def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) ->
         "findings": [],
         "adversarial": [{"command": "python3 src.py", "artifact": "src.py"}],
     }), encoding="utf-8")
-    checker = Path(loom_checker.__file__)
+    checker = Path(__file__).with_name("loom_checker.py")
     result = subprocess.run(
         [sys.executable, str(checker), "finalize-review", CHANGE, "--input", str(review_input)],
         cwd=repo, capture_output=True, text=True, env=os.environ.copy(),
@@ -300,7 +302,7 @@ def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) ->
     assert result.returncode == 0, result.stderr
     output = repo / f"docs/loom/{CHANGE}/attestation.json"
     attestation = json.loads(output.read_text(encoding="utf-8"))
-    assert loom_checker.validate_attestation(
+    assert attestation_module.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     ) == []
     assert [run["kind"] for run in attestation["executions"]] == [
@@ -329,7 +331,7 @@ def test_finalize_review_accepts_one_reviewer_for_low_risk_change(tmp_path: Path
     }), encoding="utf-8")
 
     result = subprocess.run(
-        [sys.executable, str(Path(loom_checker.__file__)), "finalize-review", CHANGE,
+        [sys.executable, str(Path(__file__).with_name("loom_checker.py")), "finalize-review", CHANGE,
          "--input", str(review_input)],
         cwd=repo, capture_output=True, text=True, env=os.environ.copy(),
     )
@@ -353,11 +355,11 @@ def test_push_reuses_matching_attestation_without_subprocesses(
 
     import inspect
 
-    source = inspect.getsource(loom_checker._cmd_push)
+    source = inspect.getsource(push._cmd_push)
     assert "subprocess.run" not in source
     assert "check_probes" not in source
     monkeypatch.chdir(repo)
-    assert loom_checker._cmd_push([]) == 0
+    assert push._cmd_push([]) == 0
     assert functional_head
 
 
@@ -383,5 +385,5 @@ def test_finalize_surfaces_failed_command_output(tmp_path: Path, monkeypatch) ->
     }), encoding="utf-8")
     monkeypatch.chdir(repo)
     error = StringIO()
-    assert loom_checker.cmd_finalize_review([CHANGE, "--input", str(review_input)], err=error) == 1
+    assert finalize.cmd_finalize_review([CHANGE, "--input", str(review_input)], err=error) == 1
     assert "PACKAGE_SENTINEL" in error.getvalue()

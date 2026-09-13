@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-13-checker-modularize",
+  "content_digest": "60b26d7ea68101ee49225876d6199104ca136962",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_loom_checker_modules.py -q",
+      "artifact": "loom-code/scripts/test_loom_checker_modules.py",
+      "result": "pass",
+      "command_digest": "d82f6495052e53a278f4c4042aeb8dedb76128dd8d4ca46728eca6fe5bc81812"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-reviewer-one",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "codex-reviewer-two",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

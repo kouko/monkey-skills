@@ -8,6 +8,7 @@ rename is a deliberate, visible edit rather than silent drift.
 from __future__ import annotations
 
 import json
+import runpy
 import subprocess
 import sys
 from pathlib import Path
@@ -122,6 +123,34 @@ Fixture.
     return repo, remote_head
 
 
+def test_reviewer_count_cli_preserves_output_and_dirty_tree_error(tmp_path: Path) -> None:
+    repo, _ = make_intent_state_repo(tmp_path, delivered=False)
+    (repo / "guide.md").write_text("Usage clarification.\n", encoding="utf-8")
+    git(repo, "add", "guide.md")
+    git(repo, "commit", "-q", "-m", "clarify usage")
+
+    result = run_checker("reviewer-count", "2026-09-09-example", cwd=repo)
+    assert (result.returncode, result.stdout, result.stderr) == (0, "1\n", "")
+
+    (repo / "guide.md").write_text("Uncommitted change.\n", encoding="utf-8")
+    result = run_checker("reviewer-count", "2026-09-09-example", cwd=repo)
+    assert (result.returncode, result.stdout, result.stderr) == (
+        2,
+        "",
+        "reviewer-count needs a clean tree with completed functional content.\n",
+    )
+
+
+def test_reviewer_count_cli_preserves_argument_errors(tmp_path: Path) -> None:
+    for args in [(), (" ",), ("change", "extra")]:
+        result = run_checker("reviewer-count", *args, cwd=tmp_path)
+        assert (result.returncode, result.stdout, result.stderr) == (
+            2,
+            "",
+            "reviewer-count needs one change-id.\n",
+        )
+
+
 def test_list_rules_exits_zero() -> None:
     assert run_checker("--list-rules").returncode == 0
 
@@ -180,17 +209,17 @@ def test_no_arguments_exits_2() -> None:
 
 
 def test_publish_is_a_declared_cli_command() -> None:
-    import loom_checker
+    entry = runpy.run_path(str(CHECKER), run_name="_loom_checker_entry")
 
-    assert loom_checker.COMMANDS["publish"] is loom_checker.cmd_publish
-    assert "loom_checker.py publish --confirm-authorized" in loom_checker.__doc__
+    assert entry["COMMANDS"]["publish"] is entry["cmd_publish"]
+    assert "loom_checker.py publish --confirm-authorized" in entry["__doc__"]
 
 
 def test_intents_is_a_declared_cli_command() -> None:
-    import loom_checker
+    entry = runpy.run_path(str(CHECKER), run_name="_loom_checker_entry")
 
-    assert loom_checker.COMMANDS["intents"] is loom_checker.cmd_intents
-    assert "loom_checker.py intents" in loom_checker.__doc__
+    assert entry["COMMANDS"]["intents"] is entry["cmd_intents"]
+    assert "loom_checker.py intents" in entry["__doc__"]
 
 
 def test_intents_lists_only_active_confirmed_intents_by_default(tmp_path: Path) -> None:
