@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": ".codex/hooks/validate-skill-folder-structure.sh"
-          },
+          }
         ]
       }
     ]
