@@ -1,27 +1,11 @@
 from __future__ import annotations
 
-import hashlib
-import json
-import os
-import re
-import shlex
-import shutil
-import subprocess
-import sys
-import tempfile
-import time
-from datetime import date
+from loom_checker.helpers import UsageError
+from loom_checker.helpers import read_text
+from loom_checker.helpers import report
+from loom_checker.rule_checks.intake import check_plan_field_caps
 from pathlib import Path
-from urllib.parse import quote
-
-import yaml
-
-from git_exec import run_git
-
-from .intake import check_plan_field_caps
-from ..helpers import UsageError, read_text, report
-
-
+import sys
 
 
 def cmd_plan(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
@@ -46,6 +30,3 @@ def cmd_plan(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         err.write(f"cannot read plan file {path}: {exc}\n")
         return 2
     return report(check_plan_field_caps(text), err)
-
-
-__all__ = [name for name in globals() if not name.startswith("__")]

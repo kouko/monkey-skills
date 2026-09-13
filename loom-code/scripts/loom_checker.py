@@ -37,7 +37,8 @@ from loom_checker.command_handlers.charter import cmd_charter
 from loom_checker.command_handlers.contract import cmd_contract
 from loom_checker.command_handlers.finalize import cmd_finalize_review
 from loom_checker.command_handlers.intake import cmd_intake
-from loom_checker.command_handlers.intent import cmd_intent, cmd_intents
+from loom_checker.command_handlers.intent import cmd_intent
+from loom_checker.command_handlers.intents import cmd_intents
 from loom_checker.command_handlers.plan import cmd_plan
 from loom_checker.command_handlers.publish import cmd_publish
 from loom_checker.command_handlers.push import cmd_push

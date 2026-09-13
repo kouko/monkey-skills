@@ -1,7 +1,7 @@
 """Regression coverage for publication command classification."""
 from __future__ import annotations
 
-from loom_checker.command_handlers import push as loom_checker
+from loom_checker.rule_checks import push as loom_checker
 
 
 def test_quoted_rg_pattern_is_not_a_publisher() -> None:

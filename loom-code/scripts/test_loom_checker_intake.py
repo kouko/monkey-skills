@@ -981,7 +981,7 @@ def test_unresolved_remote_default_blocks_intake_as_indeterminate(tmp_path: Path
 def test_remote_snapshot_read_failure_is_indeterminate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_path: str
 ) -> None:
-    from loom_checker.command_handlers import intent as lc
+    from loom_checker import intent_state as lc
 
     repo = make_repo(tmp_path)
     commit_intent(repo, "status: confirmed 2026-09-02")
@@ -1068,7 +1068,7 @@ def test_local_trunk_absence_does_not_hide_the_remote_default(tmp_path: Path) ->
 
 
 def test_reopen_log_pattern_derives_from_the_status_closed_alternative() -> None:
-    from loom_checker.command_handlers import intent as lc
+    from loom_checker import intent_state as lc
 
     assert lc.STATUS_CLOSED_LITERAL
     assert lc.STATUS_CLOSED_LITERAL in lc.STATUS.pattern

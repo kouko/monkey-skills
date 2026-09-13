@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from loom_checker.command_handlers.intake import check_plan_field_caps  # noqa: E402
+from loom_checker.rule_checks.intake import check_plan_field_caps
 
 
 def _plan(

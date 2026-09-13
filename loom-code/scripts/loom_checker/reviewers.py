@@ -1,17 +1,21 @@
-"""Risk-derived reviewer floor shared by attestation and finalization."""
-
 from __future__ import annotations
 
+from loom_checker.artifact_types import _TEST_NAME_RE
+from loom_checker.helpers import UsageError
+from loom_checker.helpers import _is_host_plumbing
+from loom_checker.helpers import branch_base
+from loom_checker.helpers import git_text
 from pathlib import Path
-
-from .artifact_types import _TEST_NAME_RE
-from .helpers import UsageError, _is_host_plumbing, branch_base, git_text
 
 
 _LOW_RISK_DOC_EXTENSIONS = frozenset({".md", ".mdx", ".rst", ".txt"})
+
+
 _REVIEW_PROTECTED_PARTS = frozenset(
     {"agents", "api", "cli", "commands", "contract", "hooks", "skills", "templates"}
 )
+
+
 _REVIEW_PROTECTED_NAMES = frozenset(
     {"agents.md", "claude.md", "design.md", "kickoff-defaults.md", "principles.md", "skill.md"}
 )
@@ -68,6 +72,3 @@ def required_reviewer_count(
     except (OSError, UsageError):
         return 2
     return reviewer_floor_for_paths(paths, change_id)
-
-
-__all__ = ["required_reviewer_count", "reviewer_floor_for_paths"]

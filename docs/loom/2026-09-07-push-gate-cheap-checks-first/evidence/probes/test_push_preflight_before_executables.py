@@ -17,7 +17,7 @@ SCRIPTS = Path(__file__).resolve().parents[5] / "loom-code" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import test_loom_checker_push as push_fixture  # noqa: E402
-import loom_checker  # noqa: E402
+from loom_checker.command_handlers import push as loom_checker  # noqa: E402
 
 
 def _package_command(label: str, *, exit_code: int = 0, mutate: bool = False) -> str:

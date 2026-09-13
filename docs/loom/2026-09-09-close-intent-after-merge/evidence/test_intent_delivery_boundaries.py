@@ -10,7 +10,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(REPO_ROOT / "loom-code" / "scripts"))
 
-import loom_checker  # noqa: E402
+from loom_checker import intent_state as loom_checker  # noqa: E402
 
 CHANGE_ID = "2026-09-09-adversarial"
 

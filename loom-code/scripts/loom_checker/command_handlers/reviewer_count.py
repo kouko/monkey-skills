@@ -1,12 +1,11 @@
-"""The ``reviewer-count`` command."""
-
 from __future__ import annotations
 
-import sys
+from loom_checker.helpers import UsageError
+from loom_checker.helpers import git_text
+from loom_checker.helpers import repo_root
+from loom_checker.reviewers import required_reviewer_count
 from pathlib import Path
-
-from ..helpers import UsageError, git_text, repo_root
-from ..reviewers import required_reviewer_count
+import sys
 
 
 def cmd_reviewer_count(args: list[str], out=sys.stdout, err=sys.stderr) -> int:

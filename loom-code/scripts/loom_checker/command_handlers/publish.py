@@ -1,28 +1,30 @@
 from __future__ import annotations
 
-import hashlib
+from loom_checker.command_handlers.push import _cmd_push
+from loom_checker.helpers import UsageError
+from loom_checker.helpers import artifact_path
+from loom_checker.helpers import changed_paths
+from loom_checker.helpers import git_maybe
+from loom_checker.helpers import git_ok
+from loom_checker.helpers import git_text
+from loom_checker.helpers import glob_to_regex
+from loom_checker.helpers import is_real_date
+from loom_checker.helpers import load_manifest
+from loom_checker.helpers import repo_root
+from loom_checker.helpers import report
+from loom_checker.parsing import parse_document
+from loom_checker.rule_checks.publish import validate_contextual_pr_body
+from loom_checker.rule_checks.push import CANONICAL_PUSH_FLAGS
+from loom_checker.rule_checks.push import github_repo_from_origin
+from pathlib import Path
+from urllib.parse import quote
 import json
 import os
 import re
-import shlex
-import shutil
 import subprocess
 import sys
 import tempfile
 import time
-from datetime import date
-from pathlib import Path
-from urllib.parse import quote
-
-import yaml
-
-from git_exec import run_git
-
-from .push import CANONICAL_PUSH_FLAGS, _cmd_push, github_repo_from_origin
-from ..helpers import UsageError, artifact_path, changed_paths, git_maybe, git_ok, git_text, glob_to_regex, is_real_date, load_manifest, repo_root, report
-from ..parsing import parse_document
-
-
 
 
 PUBLISH_REDIRECT_ENV = {
@@ -79,69 +81,6 @@ def _publish_usage(reason: str, err) -> int:
 
 def _publish_block(reason: str, err) -> int:
     return report([("push.attestation", reason)], err)
-
-
-CONTEXTUAL_PR_HEADINGS = (
-    "Context", "Intended outcome", "Scope", "Decisions", "Implementation",
-    "Behaviour change", "Verification", "Risks and rollback", "Follow-ups",
-)
-
-
-def validate_contextual_pr_body(body: str) -> str | None:
-    """Recompute the structural PR-body floor; semantic truth stays review-owned."""
-    sections: list[tuple[str, list[str]]] = []
-    outside_fences: list[str] = []
-    fence: tuple[str, int] | None = None
-    for line in body.splitlines():
-        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
-        if marker and fence is None:
-            token = marker.group(1)
-            fence = (token[0], len(token))
-            continue
-        if marker and fence is not None:
-            token, suffix = marker.group(1), marker.group(2)
-            if token[0] == fence[0] and len(token) >= fence[1] and not suffix.strip():
-                fence = None
-            continue
-        if fence is not None:
-            continue
-        outside_fences.append(line)
-        heading = re.fullmatch(r"## ([^#\n].*)", line)
-        if heading:
-            sections.append((heading.group(1), []))
-        elif sections:
-            sections[-1][1].append(line)
-
-    if [heading for heading, _content in sections] != list(CONTEXTUAL_PR_HEADINGS):
-        return (
-            "PR body must contain Ship's nine top-level contextual headings "
-            "exactly once and in order, with no competing top-level heading"
-        )
-    for heading, lines in sections:
-        content = "\n".join(lines)
-        visible = re.sub(r"<!--.*?-->", " ", content, flags=re.DOTALL)
-        alphanumeric_count = sum(character.isalnum() for character in visible)
-        one_ascii_token = re.fullmatch(r"\s*[A-Za-z]+[.!?:;,-]*\s*", visible) is not None
-        template_placeholder = re.fullmatch(r"\s*<[^>\n]+>\s*", visible) is not None
-        sentinel = (
-            heading == "Follow-ups"
-            and re.sub(r"[\W_]+", "", visible).casefold() == "none"
-        )
-        if (
-            (alphanumeric_count < 8 or one_ascii_token or template_placeholder)
-            and not sentinel
-        ):
-            return f"PR body section {heading!r} has no substantive content"
-    visible_body = re.sub(
-        r"<!--.*?-->", " ", "\n".join(outside_fences), flags=re.DOTALL
-    )
-    if re.search(
-        r"\b(?:private|hidden)(?:\s+or\s+(?:private|hidden))?\s+chain-of-thought\b",
-        visible_body,
-        flags=re.IGNORECASE,
-    ):
-        return "PR body must not claim to expose private or hidden chain-of-thought"
-    return None
 
 
 def _publish_origin_state(repo: Path, expected_branch: str) -> tuple[str | None, str | None]:
@@ -698,6 +637,3 @@ def _cmd_publish_trusted(
     return _observe_required_ci(
         url, trusted_gh=trusted_gh, repo=repo, env=env, out=out, err=err
     )
-
-
-__all__ = [name for name in globals() if not name.startswith("__")]

@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = Path(__file__).resolve()
 sys.path.insert(0, str(ROOT / "loom-code/scripts"))
 
-import loom_checker  # noqa: E402
+from loom_checker.command_handlers import publish as loom_checker  # noqa: E402
 
 
 def main() -> int:

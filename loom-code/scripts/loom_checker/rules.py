@@ -1,22 +1,6 @@
 from __future__ import annotations
 
-import hashlib
-import json
-import os
-import re
-import shlex
-import shutil
-import subprocess
 import sys
-import tempfile
-import time
-from datetime import date
-from pathlib import Path
-from urllib.parse import quote
-
-import yaml
-
-from git_exec import run_git
 
 
 RULES: list[tuple[str, str]] = [
@@ -140,6 +124,3 @@ def list_rules(out=sys.stdout) -> int:
     for rule_id, description in sorted(RULES):
         out.write(f"{rule_id}\t{description}\n")
     return 0
-
-
-__all__ = [name for name in globals() if not name.startswith("__")]

@@ -1,24 +1,14 @@
 from __future__ import annotations
 
-import hashlib
-import json
+from loom_checker.parsing import _COMMENT
+
+from datetime import date
+from git_exec import run_git
+from pathlib import Path
 import os
 import re
-import shlex
-import shutil
-import subprocess
 import sys
-import tempfile
-import time
-from datetime import date
-from pathlib import Path
-from urllib.parse import quote
-
 import yaml
-
-from git_exec import run_git
-
-_COMMENT = re.compile(r"\s+#\s.*$")
 
 
 def _contract_dir() -> Path:
@@ -276,6 +266,3 @@ def changed_paths(repo: Path) -> set[str]:
             if line.strip() and not _is_host_plumbing(line):
                 paths.add(line)
     return paths
-
-
-__all__ = [name for name in globals() if not name.startswith("__")]
