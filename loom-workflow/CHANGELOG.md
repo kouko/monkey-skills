@@ -4,7 +4,7 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased] — Decision Map boundary integration
+## [4.3.4] — 2026-09-13 — Decision Map boundary integration
 
 - Completed the behavior-preserving Decision Map boundary split: document
   parsing, persistence, validation, ticket mutations, and close/rechart
