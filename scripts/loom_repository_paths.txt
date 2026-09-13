@@ -39,6 +39,9 @@ scripts/fixtures/loom-memory-store/
 requirements-dev.txt
 requirements-package-tests.lock
 LICENSE
+# Root standing documents consumed by standalone Loom contracts.
+CLAUDE.md
+PRINCIPLES.md
 # Existing package-runner hook suite and its implementations.
 .claude/hooks/test_remind_memory_mirror.py
 .claude/hooks/remind-memory-mirror.sh
@@ -60,6 +63,7 @@ docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-findin
 docs/skill-dogfood/2026-09-13-cumulative-boundary-reassessment/cases.md
 docs/skill-dogfood/2026-09-13-cumulative-boundary-reassessment/report.md
 docs/skill-dogfood/2026-09-13-replaceable-boundary-standard/report.md
+docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md
 # Operative Loom evidence; other project histories require exact reviewed paths.
 docs/loom/KICKOFF-DEFAULTS.md
 docs/loom/evidence/mechanisms.yaml
