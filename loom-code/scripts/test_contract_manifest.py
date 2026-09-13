@@ -56,13 +56,15 @@ def test_seven_stations_with_owner(manifest):
 
 
 def test_loom_code_station_names_match_skill_dirs(manifest):
-    """The manifest's loom-code stations ARE the skills/ directory listing —
-    no exemption list any more: W1-06 deleted the pre-redesign directories,
-    so a directory that is not a declared station is a defect, not a
-    leftover."""
+    """The five lifecycle stations match their skill directories; the
+    optional discovery router exists on disk but stays outside the lifecycle
+    contract."""
     declared = {s["name"] for s in manifest["stations"] if s["owner"] == "loom-code"}
     on_disk = {p.name for p in (REPO / "loom-code" / "skills").iterdir() if p.is_dir()}
-    assert declared == on_disk
+    router = "using-loom-code"
+    assert router not in declared
+    assert router in on_disk
+    assert declared == on_disk - {router}
 
 
 def test_every_action_names_one_owner_station(manifest):
