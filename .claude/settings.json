@@ -15,10 +15,6 @@
           {
             "type": "command",
             "command": ".claude/hooks/remind-memory-mirror.sh"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/check-memory-store-integrity.sh"
           }
         ]
       }

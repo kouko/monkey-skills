@@ -34,27 +34,12 @@ jobs:
       - name: Run check-skill-structure.py against domain-teams
         run: python3 scripts/check-skill-structure.py domain-teams
 
-      # One step per loom plugin, each running even when a sibling fails
-      # (`!cancelled()`): a shared run block — or default step skipping —
-      # stops at the first failure and masks the remaining plugins' results.
-      - name: Run check-skill-structure.py against loom-code
-        if: ${{ !cancelled() }}
-        run: python3 scripts/check-skill-structure.py loom-code
-
-      - name: Run check-skill-structure.py against loom-design
-        if: ${{ !cancelled() }}
-        run: python3 scripts/check-skill-structure.py loom-design
-
-      - name: Run check-skill-structure.py against loom-workflow
-        if: ${{ !cancelled() }}
-        run: python3 scripts/check-skill-structure.py loom-workflow
-
       - name: Run check-skill-structure.py against copywriting-toolkit
         if: ${{ !cancelled() }}
         run: python3 scripts/check-skill-structure.py copywriting-toolkit
 
   shared-conventions-drift:
-    name: loom-workflow shared conventions drift
+    name: shared conventions drift
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -72,7 +57,6 @@ jobs:
         # skill-tuning (functional copies). Header blockquotes that
         # mark canonical-vs-copy are stripped before diff so legitimate
         # SSOT-vs-copy header divergence does not trigger false positives.
-        # Same-PR drift rule from loom-workflow PR-2/PR-3 NOTICE.
         run: python3 scripts/check-shared-conventions-drift.py
 
   marketplace-description-sync:
@@ -112,7 +96,7 @@ jobs:
 
       - name: Run copywriting-toolkit pytest suite
         # First pytest suite for this plugin (scripts/ only — kept as its
-        # own invocation, not merged with scripts/ or loom-code/scripts/,
+        # own invocation, not merged with other plugin scripts,
         # per the repo's existing per-plugin pytest job pattern, e.g.
         # investing-toolkit-pytest-offline below).
         env:
@@ -214,35 +198,3 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 scripts/check_version_bump.py --base "$BASE_SHA" --head "$HEAD_SHA"
-
-  loom-memory-store-integrity:
-    name: loom memory store integrity
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Check loom-memory store integrity
-        # Split out of `plugin version bump` (which it used to ride as a second
-        # step) because a failure there reported a job name that describes a
-        # DIFFERENT check — twice, a missing §Index line surfaced as
-        # "plugin version bump failed" and cost a diagnosis round before anyone
-        # looked at the store. A gate's job name is the first thing a reader
-        # sees; it has to name what actually broke.
-        #
-        # Unlike its former host this job is not PR-gated: the store can drift
-        # on a direct push to main too, and the check needs no PR context.
-        #
-        # The repository-local `check_loom_memory_integrity.py` this step used
-        # to call was retired at 2026-09-10-okf-compatible-loom-memory (the
-        # store's OKF v0.2-compatible profile is validated by the
-        # loom-workflow:loom-memory skill's own validator, relocated there
-        # at 2026-09-11-loom-memory-into-loom-workflow) — run that validator
-        # against the migrated store instead.
-        run: |
-          python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py validate docs/loom/memory
