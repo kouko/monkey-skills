@@ -210,15 +210,13 @@ twice, and this is the only stop this station makes.
    `publication: automatic — authorized <date> by <name>` only after that
    informed yes; an opt-out leaves the field absent.
 
-2. **Every one-way door found so far**, in consequence form. These are
-   expensive or impossible to undo: a hard-to-swap platform or foundation; a
-   monetary or standing obligation; future limits such as formats, export, or
-   lock-in; an output-quality ceiling the user feels (accuracy, speed, cost,
-   coverage, privacy); or an irreversible action on existing state, including
-   rewriting/deleting data or sending it off-device. Existing-state actions
-   count even without a fork. If Constraints or `PRINCIPLES.md` already fix
-   their handling, do not ask again; restate the pinned handling and consequence
-   in this message so the user still sees it.
+2. **Every one-way door found so far**, in consequence form. The five classes
+   are: **(a) Hard to swap later**; **(b) Creates money or a standing
+   obligation**; **(c) Limits what the user can do in future**; **(d) Sets the
+   ceiling on output quality**; and **(e) An irreversible action on the user's
+   existing state**. Class (e) counts without a fork. If Constraints or
+   `PRINCIPLES.md` already fix handling, do not ask again; restate the pinned
+   handling and consequence so the user still sees it.
 
    Four gates, in order: **check** the intent's Acceptance and Constraints
    and `PRINCIPLES.md` first — an axis already pinned there is not asked,

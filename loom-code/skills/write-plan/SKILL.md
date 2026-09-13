@@ -10,7 +10,7 @@ version: 1.0.1
 Relative paths in this document are relative to this skill's own directory.
 
 Turn one intent into `docs/loom/<change-id>/plan.md`: waved tasks with files,
-Acceptance ownership, positive and boundary cases, and risk. Do **not**
+Acceptance ownership, positive and negative or boundary cases, and risk. Do **not**
 implement or ask the user to approve task splitting; decide and record why.
 
 ## Decision boundary
@@ -34,7 +34,7 @@ Use the installed checker's host-specific prefix:
 | Codex CLI | `python3 <injected loom-code plugin root>/scripts/loom_checker.py` |
 
 Commands below show Claude Code; on Codex substitute the injected prefix.
-`PLUGIN_ROOT` is hook-only, not a Codex skill-shell variable.
+`${CLAUDE_PLUGIN_ROOT}` is substituted by Claude Code. `PLUGIN_ROOT` is provided to Codex plugin hook commands; it is not a general skill-shell variable.
 
 ## Artifact vocabulary
 

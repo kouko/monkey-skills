@@ -12,10 +12,10 @@ each isolated round, rather than `wc`'s different tokenization.
 
 | Skill | Baseline `SKILL.md` | Final `SKILL.md` | Entrypoint reduction | Baseline package | Final package | Package reduction | Q1 | Q2 | Q3 |
 |---|---:|---:|---:|---:|---:|---:|---|---|---|
-| `write-plan` | 4,498 | 3,510 | 988 (21.97%) | 6,364 | 5,615 | 749 (11.77%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
-| `capture-intent` | 3,553 | 2,711 | 842 (23.70%) | 4,822 | 4,267 | 555 (11.51%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
+| `write-plan` | 4,498 | 3,525 | 973 (21.63%) | 6,364 | 5,630 | 734 (11.53%) | PASS, 3/3 equivalent + bounded review verification | PASS, >=10% | PASS |
+| `capture-intent` | 3,553 | 2,698 | 855 (24.06%) | 4,822 | 4,254 | 568 (11.78%) | PASS, 3/3 equivalent + bounded review verification | PASS, >=10% | PASS |
 | `independent-advisor` | 4,035 | 1,962 | 2,073 (51.38%) | 7,620 | 6,819 | 801 (10.51%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
-| **Total** | **12,086** | **8,183** | **3,903 (32.29%)** | **18,806** | **16,701** | **2,105 (11.19%)** | **PASS** | **PASS** | **PASS** |
+| **Total** | **12,086** | **8,185** | **3,901 (32.28%)** | **18,806** | **16,703** | **2,103 (11.18%)** | **PASS** | **PASS** | **PASS** |
 
 Q1 is behavioral equivalence, Q2 is whole-package reduction, and Q3 is
 invariant/capability quality. Every skill passed independently; no reduction
@@ -25,9 +25,12 @@ remaining reductions are deletion/compression, not relocation.
 
 Round 1 Closing Review found that the earlier accounting excluded those prompt
 fixtures. The skills were reduced further, all three focused contract suites
-were rerun, and the same reviewers verify the functional fix delta in Round 2.
+were rerun, and the same reviewers verified the functional fix delta.
 It also restored `independent-advisor`'s rule that a missing template field is
 not blindly retried, with a focused regression assertion.
+Finalization then exposed exact cross-package prose pins absent from focused
+coverage; the final digest restores only those carriers and keeps every package
+above the independent 10% word-reduction threshold.
 
 Claude Code was not used for baseline replay, judging, refactoring, or this
 integration pass, per the user's constraint. All equivalence judgments in the

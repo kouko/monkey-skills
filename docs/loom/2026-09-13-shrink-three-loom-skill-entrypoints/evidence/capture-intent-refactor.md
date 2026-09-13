@@ -50,10 +50,10 @@ Verdict: **PASS (3/3 equivalent, high confidence)**.
 
 | Measure | Baseline | Candidate | Reduction |
 |---|---:|---:|---:|
-| `SKILL.md` words | 3,553 | 2,711 | 842 (23.70%) |
-| `SKILL.md` bytes | 22,925 | 18,527 | 4,398 (19.18%) |
-| Package words | 4,822 | 4,267 | 555 (11.51%) |
-| Package bytes | 30,711 | 28,560 | 2,151 (7.00%) |
+| `SKILL.md` words | 3,553 | 2,698 | 855 (24.06%) |
+| `SKILL.md` bytes | 22,925 | 18,378 | 4,547 (19.83%) |
+| Package words | 4,822 | 4,254 | 568 (11.78%) |
+| Package bytes | 30,711 | 28,411 | 2,300 (7.49%) |
 
 The package is below the at-most-4,339-word target. The skill-specific body cap
 also passes.
