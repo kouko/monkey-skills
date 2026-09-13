@@ -114,3 +114,60 @@ def test_persistence_unsupported_exchange_preserves_original(tmp_path, monkeypat
         persistence.atomic_write(target, "candidate", expected=b"original")
     assert target.read_bytes() == b"original"
     assert sorted(path.name for path in tmp_path.iterdir()) == ["target.md"]
+
+
+def test_validation_owner_and_facade_delegation(tmp_path, monkeypatch):
+    validation = importlib.import_module("map_validation")
+    tree = ast.parse(Path(validation.__file__).read_text())
+    imports = {
+        alias.name for node in ast.walk(tree) if isinstance(node, ast.Import)
+        for alias in node.names
+    } | {
+        node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
+    }
+    assert "map_store" not in imports
+    for name in ("_check_schema_version", "_check_map_structure",
+                 "_check_destination_acceptance", "_check_blocked_by",
+                 "_check_v3_ticket_closure_evidence", "_has_delivery_evidence"):
+        assert getattr(map_store, name) is getattr(validation, name)
+        assert getattr(validation, name).__module__ == "map_validation"
+    calls = []
+
+    def check(map_dir, doc, repo_root, *, read_ticket):
+        calls.append((map_dir, doc, repo_root, read_ticket))
+        raise map_store.SchemaViolation("injected validation diagnostic")
+
+    (tmp_path / "MAP.md").write_text(
+        "---\nmap-id: example\nschema_version: 3\nstate: charting\n---\n"
+    )
+    monkeypatch.setattr(validation, "validate_document", check)
+    assert map_store.validate(tmp_path, tmp_path) == (
+        2, "injected validation diagnostic"
+    )
+    assert len(calls) == 1
+    assert calls[0][0] == calls[0][2] == tmp_path
+    assert calls[0][3] is map_store.read_ticket
+
+
+def test_validation_preserves_order_and_legacy_ticket_helpers(tmp_path):
+    validation = importlib.import_module("map_validation")
+    text = (
+        "---\nmap-id: example\nschema_version: 3\nstate: charting\n---\n"
+        "## Destination\n\n## Notes\n\n## Decisions-so-far\n\n"
+        "## Not-yet-specified (fog)\n\n## Out-of-scope\n"
+    )
+    (tmp_path / "MAP.md").write_text(text)
+    assert map_store.validate(tmp_path, tmp_path) == (
+        0, f"{tmp_path} is a valid decision-map store"
+    )
+    assert map_store._check_tickets(tmp_path, "charting", 3) is None
+    doc = map_store.read_map(tmp_path)
+    assert map_store._check_monotonic_relations(tmp_path, doc) is None
+    assert validation.validate_document(
+        tmp_path, doc, tmp_path, read_ticket=map_store.read_ticket
+    ) is None
+    # Invalid version must win over the simultaneously missing sections.
+    (tmp_path / "MAP.md").write_text(text.replace("version: 3", "version: 2").split("##")[0])
+    assert map_store.validate(tmp_path, tmp_path) == (
+        2, "schema_version 2 is retired; migrate MAP.md to schema_version 3 or later"
+    )
