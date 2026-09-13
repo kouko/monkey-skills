@@ -603,4 +603,3 @@ def validate_document(
         read_ticket=read_ticket,
     )
     _check_monotonic_relations(map_dir, doc, read_ticket=read_ticket)
-
