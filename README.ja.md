@@ -2,16 +2,13 @@
 
 言語: [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> 個人用 Claude Code plugin marketplace — domain-team workflow、skill 開発、哲学的思考、Obsidian、投資、copywriting、slides、書籍 distillation、コードリポジトリナレッジ、制作物脱構築、Salesforce SOQL クエリを網羅した 11 個の plugin。
+> 個人用 Claude Code plugin marketplace — domain-team workflow、skill 開発、哲学的思考、Obsidian、投資、copywriting、書籍 distillation、コードリポジトリナレッジ、制作物脱構築、Salesforce SOQL クエリを扱う plugin 集合。
 
 ## Plugin 一覧
 
 | Plugin | Version | Skill 数 | Command 数 | 説明 |
 |--------|---------|---------:|-----------:|------|
 | [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skill — planning、code、design、research、copywriting を checkpoint ベースの quality gate と共に提供。 |
-| [`loom-code`](loom-code/) | 3.1.3 | 6 | 0 | write-plan・build・review・ship・maintain の 5 ステーションが 1 つの変更を計画からマージ済み PR まで運び、checker が push のたびにレビューを再計算する。Claude Code + Codex 対応。 |
-| [`loom-design`](loom-design/) | 2.1.4 | 5 | 0 | capture-intent・write-spec の 2 ステーションが、曖昧なアイデアを確認済みの intent と、ユーザー自身の言葉で読み返す spec に変える。product-principles と design-system の 2 ツール付き。loom-code の contract package を読む。Claude Code + Codex 対応。 |
-| [`loom-workflow`](loom-workflow/) | 4.3.2 | 12 | 4 | git ベースの project memory、`critique`（proposal / complexity）、recap、handoff、session distill、`goal-create`、`independent-advisor` によるクロス executor のセカンドオピニオン、デリバリーアークを intent で回す長期 Outcome Map 向けの loom workflow tools。 |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | 問題の明確化と深い推論のための哲学的思考 framework。 |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | 投資調査 toolkit — macro regime 診断（US/JP/TW/KR/CN）、DCF、screener、primary source adapter 経由の equity snapshot。 |
@@ -21,7 +18,7 @@
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | 制作物（コピー / ドキュメント / UI / 論証 / 製品 / 組織）を逆向きに分解し、設計判断・借用フレームワーク・修辞メカニズム・意図的な省略を可視化。Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman に紐付け、EN/JA/ZH 文化バリアント（Hinds 起承転結 / 劉勰《文心雕龍》六観 / Hu/Hwang 面子・関係）。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』の系譜。 |
 | [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | Salesforce DX MCP server を Claude Code plugin 化 — brew-first installer、read-only な SOQL query（data toolset のみ）。macOS のみ。⚠️ Claude Code CLI 限定 — Cowork sandbox 非対応。 |
 
-**合計**：84 skill、42 slash command（表に並ぶのは 10 plugin；marketplace は 18 plugin 出荷中 — 表は完全同期前。権威ソースは [`marketplace.json`](.claude-plugin/marketplace.json)）。
+上表は概要です。完全な plugin 一覧は [`marketplace.json`](.claude-plugin/marketplace.json) を正とします。
 
 > 各 plugin の description で ⚠️ が付いているもの（`investing-toolkit`、`tsundoku`、`salesforce-toolkit`、および `obsidian` 内の `defuddle` skill）は Claude Code CLI 環境を要求します — Cowork sandbox は外部 network 通信や subprocess 実行を遮断します。
 
@@ -53,14 +50,13 @@ Symlink 方式と plugin 方式の手順は [`.codex/INSTALL.md`](.codex/INSTALL
 ```
 monkey-skills/
 ├── .claude-plugin/
-│   └── marketplace.json          # plugin 登録（8 件）
+│   └── marketplace.json          # plugin 登録
 ├── .codex/
 │   └── INSTALL.md                # Codex 用インストール手順
 ├── .github/workflows/
 │   ├── skill-structure.yml       # CI：skill 規約を強制
 │   └── scraper-deps-monthly.yml  # CI：月次の依存リフレッシュ
 ├── domain-teams/                 # plugin
-├── loom-workflow/                # plugin
 ├── philosophers-toolkit/         # plugin
 ├── obsidian/                     # plugin
 ├── investing-toolkit/            # plugin

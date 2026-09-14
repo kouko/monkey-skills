@@ -11,14 +11,6 @@
           {
             "type": "command",
             "command": ".claude/hooks/check-codex-manifest-drift.sh"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/remind-memory-mirror.sh"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/check-memory-store-integrity.sh"
           }
         ]
       }

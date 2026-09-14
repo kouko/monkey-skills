@@ -20,7 +20,7 @@ Agent({
   type here — peer selection requires judgment (business-line
   comparability, scale-tier fit), not just retrieval.
 - **Do not add `name:`** — see
-  `loom-code/skills/using-loom-code/references/environment-gotchas.md`
+  the host's current Claude Code tool documentation
   §A1: naming turns a one-shot blocking dispatch into a persistent
   mailbox-semantics teammate whose output is never delivered.
 - One-shot, blocking: the orchestrator waits for the JSON peer list

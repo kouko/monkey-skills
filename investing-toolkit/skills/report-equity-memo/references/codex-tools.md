@@ -3,7 +3,7 @@
 > Phase 2.5's peer-discovery step names Claude Code's `general-purpose`
 > subagent type directly. This file maps that onto Codex and is
 > **doc-sourced, not session-exercised** against this plugin. See
-> `loom-code/skills/using-loom-code/references/codex-tools.md` for the
+> Use the host's current Codex tool documentation for the
 > verified detail on Codex's `multi_agent` primitive
 > (`spawn_agent`/`wait_agent`/`close_agent`).
 

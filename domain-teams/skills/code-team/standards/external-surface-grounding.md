@@ -95,9 +95,8 @@ catch:
 
 ## Severity (delegated to reviewer rubric)
 
-Severity rules live in the reviewer prompts — see **D7 "External
-Surface Grounding"** in `loom-code/agents/code-quality-reviewer.md`
-(per-task) and `loom-code/agents/code-reviewer.md` (whole-branch).
+Severity rules live in this standard and in the reviewer prompts; no external
+plugin files are required.
 Calibration per §Resolved Decisions Q4 of the brief:
 
 - **🔴 fatal MUST** — categories 1-4 (HTTP API / SDK package / MCP tool

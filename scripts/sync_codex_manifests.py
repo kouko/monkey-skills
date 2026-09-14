@@ -49,10 +49,8 @@ SHARED_FIELDS = (
 CLAUDE_MANIFEST = (".claude-plugin", "plugin.json")
 CODEX_MANIFEST = (".codex-plugin", "plugin.json")
 
-# Plugins whose Codex manifest is in scope for sync/scaffold: the 21 Batch-A
-# plugins plus loom-code (which shipped its Codex manifest first).
-# Phase 2b made the whole repo eligible: loom-workflow (a PostToolUse validation
-# hook, no SessionStart context-injection), collab-toolkit + salesforce-toolkit
+# Every repository plugin with a Codex manifest is eligible for sync.
+# MCP plugins such as collab-toolkit and salesforce-toolkit
 # (MCP servers) now ship Codex manifests too — every repo plugin has a
 # .codex-plugin/plugin.json under the SSOT.
 CODEX_ELIGIBLE = (
@@ -66,7 +64,6 @@ CODEX_ELIGIBLE = (
     "gws-toolkit",
     "investing-toolkit",
     "legal-toolkit",
-    "loom-design",
     "obsidian",
     "philosophers-toolkit",
     "repo-wiki",
@@ -75,8 +72,6 @@ CODEX_ELIGIBLE = (
     "systems-thinking-toolkit",
     "translation-toolkit",
     "tsundoku",
-    "loom-code",
-    "loom-workflow",
     "collab-toolkit",
     "salesforce-toolkit",
     "think-orbit",

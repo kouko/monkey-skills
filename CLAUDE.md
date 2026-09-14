@@ -8,11 +8,6 @@
 - Bad: `domain-teams/skills/code-team/checklists/security-checklist.md`
 - 原因：Claude Code 提供 Base Path，bundled files 從 skill 目錄相對解析
 
-### 兩份文件：intent.md 與 spec.md（loom 1.0）
-- `docs/loom/intent/<change-id>.md`（capture-intent／write-plan 擁有）— 使用者語言：Problem、Proposed outcome、Acceptance（每條可被盲跑證明）、Constraints、Out of scope、Open questions
-- `docs/loom/<change-id>/spec.md`（write-spec 擁有）— 工程語言：`REQ-<n> — <name>` 每條對回 intent 的 Acceptance 編號、Design decision（標 agent-decided／user-decided）、Current state evidence、UI flows
-- spec.md 只在 `needs-design: yes` 時存在；spec 一律 reference 它的 intent，不重述
-
 ### Skill Structure（CRITICAL — Anthropic 規範，違規會被 hook 擋）
 
 **MUST：skill 資料夾扁平 — subfolder 內不可再嵌 subfolder。**
@@ -41,54 +36,14 @@ skills/init/references/v1/spec.md     ← references/ 下開 v1/
 - Reference files 從 SKILL.md 直接引用，路徑都是 `<subfolder>/<file>` 一層 deep
 - **違規會被 `.claude/hooks/validate-skill-folder-structure.sh` 擋下**（PostToolUse on Write|Edit）
 
-### Contract Citations
-
-**MUST：執行期散文契約不得引用本 repo 的開發紀錄** — a runtime prose
-contract under the loom skill and agent trees must not cite one of this
-repository's development records under `docs/`.
-
-- 原因：派出去的 agent 讀的是**它當下所在的 repo**，所以這種引用只在本
-  repo 解得開。這是可攜性缺陷，不是風格偏好
-- 豁免一 **loom-scaffolded store directories**：loom 為任何 adopting repo 定義
-  的協定路徑（store 目錄、協定檔名、文法佔位符）——那是 schema，不是引用
-- 豁免二 **`.py`/`.sh` provenance comments**：出處註解沒有 model 會讀到，
-  除非它主動開檔
-- 用 `loom-code/scripts/check_contract_citations.py` 檢查；違規的完整定義在
-  該腳本裡，這裡不重複（重複＝第二個漂移面）
-- **既有債務是分階段清的**：腳本裡的 `DEBT_LIST` 記著規則上線時就已違規的
-  檔案，清單只能變短。在清單上的檔案仍算違規，只是尚未清理——新的違規
-  在任何地方都會即刻被擋。看到一個 on-list 檔案裡還有引用，那是待辦，
-  不是規則的例外
-
 ### Quality Gates
+其他 plugin（domain-teams、投資／研究 toolkit 等）仍用四級系統 SELF / MUST / SHOULD / MAY。
 
-**loom 家族（loom-code／loom-design／loom-workflow）**：品質只有三種驗證動作，
-其餘都是形式（concept-model §6）。
-
-| 動作 | 誰做 | 產出 |
-|---|---|---|
-| **讀** | ≥2 個 fresh-context reviewer，按型別選鏡頭（code 11 維／docs 5 維／spec-conformance／design-conformance／principles-conformance） | verdict → generated attestation |
-| **盲跑** | 乾淨環境照 intent 的 Acceptance 逐條試，寫成使用者看得懂的盲跑報告 | 報告 ＋ `probes[]` |
-| **對抗** | mutation／fuzz，或對抗 agent 自寫 ≥3 個可執行的 abuse／邊界案例並逐筆自跑 | `probes[]`（`kind: adversarial`） |
-
-- 三者跑在 **checkpoint review**（review 站）上，不是逐 task 三臂審查；寫的人不能自己驗
-- 決定性的閘只有一支 **checker**：`python3 loom-code/scripts/loom_checker.py --list-rules`
-  是規則清單的 SSOT（規則全部是「重算」，不是宣稱）；這裡不重列規則 id，重列＝第二個漂移面
-- 散文不當閘：只有 SKILL.md／reference 內以 `<!-- gate: <id> -->` 標記的段落算閘，
-  沒標記的散文不得當閘用
-- 其他 plugin（domain-teams、投資／研究 toolkit 等）仍用四級系統 SELF / MUST / SHOULD / MAY；
-  gate 定義明確指定檔案路徑（相對路徑），verdict 約束內嵌於 PASS_WITH_NOTES 定義
-
-### loom 1.0 flow
-- 七站：capture-intent → write-spec →（write-plan → build → review → ship），maintain 回頭開 intent
-- 三個人類決策點：①覆述並確認 intent（含單向門問法）②product 的可見行為確認（spec）③盲跑報告驗收
-- 入口與完整站序：`docs/loom/README.md`；概念模型：`docs/loom/2026-09-02-simple-loom-flow/concept-model.md`
+Loom plugin 已移至獨立的 `kouko/loom-plugins` repository；本 repo 的 `docs/loom/` 僅作歷史紀錄，不是現行開發流程。
 
 ### Agent Behavioral Rules
 - worker：produces artifacts, does NOT produce gate verdicts
 - evaluator：produces verdicts, does NOT modify artifacts
-- **writer ≠ judge 由流程保證**：closing review 使用 fresh-context reviewer；
-  產生的 attestation 綁定功能內容與 reviewer identity，不維護 dispatch ledger
 - Knowledge access is open（行為限制，非閱讀限制）
 
 ### Agent Launch Convention

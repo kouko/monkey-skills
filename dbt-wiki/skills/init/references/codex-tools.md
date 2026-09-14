@@ -1,10 +1,7 @@
 # Codex CLI — tool name mapping for `dbt-wiki`
 
-> Phase B parallel orchestration phrases subagent dispatch in
-> host-neutral prose. For the verified detail on Codex's `multi_agent`
-> primitive (`spawn_agent`/`wait_agent`/`close_agent`) see
-> `loom-code/skills/using-loom-code/references/codex-tools.md`. This
-> file only maps `dbt-wiki`'s per-domain fan-out onto it and is
+> This self-contained file maps `dbt-wiki`'s per-domain fan-out onto the
+> host's current Codex concurrent-subagent tool shape and is
 > **doc-sourced, not session-exercised** against this plugin.
 
 ## Per-domain fan-out dispatch

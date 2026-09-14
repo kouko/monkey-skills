@@ -109,12 +109,12 @@ def test_real_plugins_unaffected(tmp_path: Path) -> None:
     marker, and the marker mechanism must not change their check results.
 
     This is a narrower, in-process re-statement of the manual before/after
-    diff run against loom-code + domain-teams during development (both were
-    byte-identical). Guards against a future edit to `_path_check_lines`
+    diff run against domain-teams during development. Guards against a future
+    edit to `_path_check_lines`
     accidentally broadening the exemption's scope.
     """
     repo_root = Path(__file__).resolve().parent.parent
-    for plugin in ("domain-teams", "loom-code"):
+    for plugin in ("domain-teams",):
         skills_dir = repo_root / plugin / "skills"
         assert skills_dir.is_dir()
         for skill_md in skills_dir.glob("*/SKILL.md"):

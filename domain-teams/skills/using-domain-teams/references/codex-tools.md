@@ -1,11 +1,8 @@
 # Codex CLI — tool name mapping for `domain-teams`
 
-> Every team's worker/evaluator launch instructions are host-neutral
-> prose. For the verified detail on Codex's `multi_agent` primitive
-> (`spawn_agent`/`wait_agent`/`close_agent`) see
-> `loom-code/skills/using-loom-code/references/codex-tools.md`. This
-> file only maps `domain-teams`' worker/evaluator + parallel-fan-out
-> dispatch points onto it and is **doc-sourced, not session-exercised**
+> This self-contained file maps `domain-teams`' worker/evaluator and
+> parallel-fan-out dispatch onto the host's current Codex tool shape. It is
+> **doc-sourced, not session-exercised**
 > against this specific plugin.
 
 ## Worker / evaluator dispatch

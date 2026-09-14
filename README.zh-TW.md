@@ -2,16 +2,13 @@
 
 語言：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 個人 Claude Code plugin marketplace — 11 個 plugin，涵蓋 domain-team workflow、skill 開發、哲學思考、Obsidian、投資、copywriting、slides、書籍 distillation、code repo 知識、作品逆向解構、Salesforce SOQL 查詢。
+> 個人 Claude Code plugin marketplace — 涵蓋 domain-team workflow、skill 開發、哲學思考、Obsidian、投資、copywriting、書籍 distillation、code repo 知識、作品逆向解構、Salesforce SOQL 查詢的 plugin 集合。
 
 ## Plugin 列表
 
 | Plugin | 版本 | Skill 數 | Command 數 | 說明 |
 |--------|------|---------:|-----------:|------|
 | [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skill — planning、code、design、research、copywriting，搭配 checkpoint 為基礎的 quality gate。 |
-| [`loom-code`](loom-code/) | 3.1.3 | 6 | 0 | write-plan、build、review、ship、maintain 五個站把一次變更從計畫送到合併的 PR，checker 在每次 push 前重算審查。支援 Claude Code + Codex。 |
-| [`loom-design`](loom-design/) | 2.1.4 | 5 | 0 | capture-intent、write-spec 兩個站把粗略的想法變成確認過的 intent，以及一份使用者用自己的話讀回的 spec，另有 product-principles 與 design-system 兩個工具。讀 loom-code 的 contract package。支援 Claude Code + Codex。 |
-| [`loom-workflow`](loom-workflow/) | 4.3.2 | 12 | 4 | 提供 git 為基底的 project memory、`critique`（proposal / complexity）、recap、handoff、session distill、`goal-create`、`independent-advisor` 跨 executor 第二意見，以及以 intent 推進交付弧的長期 Outcome Map 的 loom workflow tools。 |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | 用於釐清問題與深化推理的哲學思考 framework。 |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | 投資研究 toolkit — macro regime 診斷（US/JP/TW/KR/CN）、DCF、screener、透過 primary source adapter 取得的 equity snapshot。 |
@@ -21,7 +18,7 @@
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | 將外部作品（文案 / 文件 / UI / 論證 / 產品 / 組織）進行逆向解構，揭露設計決策、借用框架、修辭機制、與刻意省略。底座結合 Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman 八大傳統，搭配 EN/JA/ZH 文化變體（Hinds 起承転結 / 劉勰《文心雕龍》六觀 / Hu/Hwang 面子關係）。BCG 價值鏈解構（バリュー・チェーンの脱構築）系譜。 |
 | [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | 將 Salesforce DX MCP server 包裝成 Claude Code plugin — brew-first 安裝、read-only SOQL 查詢（僅 data toolset）。僅支援 macOS。⚠️ 限 Claude Code CLI — 不支援 Cowork sandbox。 |
 
-**總計**：84 個 skill、42 個 slash command（表內列 10 個 plugin；marketplace 出貨 18 個 — 表尚未完整同步；權威來源請見 [`marketplace.json`](.claude-plugin/marketplace.json)）。
+上表是精簡導覽；完整 plugin 清單以 [`marketplace.json`](.claude-plugin/marketplace.json) 為準。
 
 > 在自身 description 中標示 ⚠️ 的 plugin（`investing-toolkit`、`tsundoku`、`salesforce-toolkit`，以及 `obsidian` 中的 `defuddle` skill）必須在 Claude Code CLI 環境執行 — Cowork sandbox 會封鎖其對外網路或 subprocess 操作。
 
@@ -53,14 +50,13 @@ Symlink 與 plugin 兩種安裝方式請見 [`.codex/INSTALL.md`](.codex/INSTALL
 ```
 monkey-skills/
 ├── .claude-plugin/
-│   └── marketplace.json          # plugin 註冊表（8 筆）
+│   └── marketplace.json          # plugin 註冊表
 ├── .codex/
 │   └── INSTALL.md                # Codex 安裝指南
 ├── .github/workflows/
 │   ├── skill-structure.yml       # CI：強制 skill 結構規範
 │   └── scraper-deps-monthly.yml  # CI：每月相依套件更新
 ├── domain-teams/                 # plugin
-├── loom-workflow/                # plugin
 ├── philosophers-toolkit/         # plugin
 ├── obsidian/                     # plugin
 ├── investing-toolkit/            # plugin
@@ -84,6 +80,8 @@ monkey-skills/
 [GitHub repository](https://github.com/kouko/monkey-skills) 提交 issue 與 PR。
 Skill 開發慣例（檔案路徑、Two-Layer Spec、quality gate、agent role、跨 plugin
 delegation）請參閱 [`CLAUDE.md`](CLAUDE.md)。
+
+原 Loom plugin 已移至獨立的 [`loom-plugins`](https://github.com/kouko/loom-plugins) repository；`docs/loom/` 僅保留歷史紀錄。
 
 ## 授權
 

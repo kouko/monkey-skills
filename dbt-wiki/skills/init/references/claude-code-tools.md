@@ -24,7 +24,7 @@ Claude Code runs them concurrently — Claude Code only parallelizes
 across separate messages block on each other.
 
 - **Do not add `name:`** to any of these calls — see
-  `loom-code/skills/using-loom-code/references/environment-gotchas.md`
+  the host's current Claude Code tool documentation
   §A1: naming turns a one-shot blocking dispatch into a persistent
   mailbox-semantics teammate whose output is never delivered as this
   turn's tool result.

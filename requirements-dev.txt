@@ -1,6 +1,4 @@
-# Package-test suite dependencies (docs/loom/KICKOFF-DEFAULTS.md package-tests).
-# Both CI (.github/workflows/loom-code-ci.yml) and local runs install from
-# this one file — see docs/loom/2026-09-03-package-tests-run-in-parallel.
+# Shared development and test dependencies.
 # One package per line, its reason on the line above it.
 
 # the test runner
@@ -13,5 +11,3 @@ pyyaml
 markdown-it-py
 # width-aware CJK diagram checks used by the package suite
 wcwidth
-# History extraction integration tests use the documented callback API.
-git-filter-repo==2.47.0

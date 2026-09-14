@@ -160,95 +160,40 @@ def test_non_skill_content_change_inside_a_plugin_needs_no_bump(tmp_path):
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-@pytest.mark.parametrize(
-    "rel",
-    [
-        "loom-code/skills/tdd-iron-law/SKILL.md",
-        "loom-code/hooks/hooks.json",
-        "loom-code/agents/implementer.md",
-        "loom-code/references/environment-gotchas.md",
-    ],
-)
-def test_every_skill_content_dir_counts_as_skill_content(tmp_path, rel):
-    """The gate is wider than skills/ — hooks/, agents/, references/ ship too.
-
-    One case per entry in SKILL_CONTENT_DIRS: each of those subdirs is shipped
-    plugin content, so a change under ANY of them without a bump must fail.
-    """
+@pytest.mark.parametrize("rel", [
+    "domain-teams/skills/example/SKILL.md",
+    "domain-teams/hooks/hooks.json",
+    "domain-teams/agents/example.md",
+    "domain-teams/references/example.md",
+])
+def test_every_shipped_content_dir_counts_as_skill_content(tmp_path, rel):
     repo = _init_repo(tmp_path)
-    _manifest(repo, "loom-code", "1.0.0")
+    _manifest(repo, "domain-teams", "1.0.0")
     _write(repo, rel, "v1\n")
     base = _commit(repo, "base")
-
     _write(repo, rel, "v2\n")
-    head = _commit(repo, "shipped-content change, no bump")
-
+    head = _commit(repo, "content change, no bump")
     result = _run(repo, base, head)
-
     assert result.returncode != 0
-    assert "loom-code" in result.stdout
+    assert "domain-teams" in result.stdout
 
 
-def test_skill_content_moved_out_of_a_plugin_is_a_violation(tmp_path):
-    """A file MOVED OUT of a plugin still changes that plugin's shipped content.
-
-    Git's default rename detection collapses a move to its DESTINATION path only,
-    so `loom-code/skills/x/SKILL.md -> docs/x.md` would print just `docs/x.md` —
-    the plugin loses a shipped skill and the gate sees no hit (fail-open). The
-    diff must therefore run with rename detection off.
-    """
+def test_shipped_content_moved_out_is_a_violation(tmp_path):
     repo = _init_repo(tmp_path)
-    _manifest(repo, "loom-code", "1.0.0")
-    _write(repo, "loom-code/skills/retired/SKILL.md", "aaa\nbbb\nccc\n")
+    _manifest(repo, "domain-teams", "1.0.0")
+    _write(repo, "domain-teams/skills/retired/SKILL.md", "aaa\nbbb\nccc\n")
     base = _commit(repo, "base")
-
     (repo / "docs").mkdir()
-    _git(repo, "mv", "loom-code/skills/retired/SKILL.md", "docs/retired.md")
-    head = _commit(repo, "move a skill out of the plugin, no bump")
-
+    _git(repo, "mv", "domain-teams/skills/retired/SKILL.md", "docs/retired.md")
+    head = _commit(repo, "move content out, no bump")
     result = _run(repo, base, head)
-
-    assert result.returncode != 0, result.stdout + result.stderr
-    assert "loom-code" in result.stdout
-
-
-def test_scripts_dir_counts_as_skill_content():
-    """A plugin's own gate code lives under scripts/ (e.g. loom_gate_markers.py).
-
-    Editing it currently ships with no version bump because scripts/ is not in
-    SKILL_CONTENT_DIRS — a silent stale `plugin update` for gate-code changes.
-    """
-    assert plugins_with_skill_content(
-        ["loom-code/scripts/loom_gate_markers.py"]
-    ) == {"loom-code"}
+    assert result.returncode != 0
+    assert "domain-teams" in result.stdout
 
 
-def test_scripts_dir_test_file_is_not_skill_content():
-    """test_*.py files colocated in scripts/ are tests, not skill content.
-
-    The loom plugins keep tests inline in scripts/ (loom-design ~60 test
-    files across its five station subdirs, loom-code ~90). Per the module
-    docstring, tests require no bump — a test-only edit under scripts/ must
-    not demand one, even though scripts/ is a skill-content dir.
-
-    The plugin named here MUST be one that is currently in CODEX_ELIGIBLE.
-    `plugins_with_skill_content` early-continues on any path whose plugin is
-    not eligible, so naming a retired plugin makes this test vacuous — it
-    would pass even with the test-file-skip logic deleted. That is exactly
-    what happened when the 6->2 merge removed loom-pipeline/ and this
-    fixture still named it; the non-test control assertion below is the
-    tripwire that keeps the vacuous form from coming back.
-    """
-    assert plugins_with_skill_content(
-        ["loom-design/scripts/pipeline/test_pipeline_batch_queue.py"]
-    ) == set()
-
-    # Control: the SAME plugin, a non-test file — must be detected as skill
-    # content. Without this, the assertion above cannot distinguish "skipped
-    # because it is a test" from "skipped because the plugin is unreachable".
-    assert plugins_with_skill_content(
-        ["loom-design/scripts/pipeline/batch_queue.py"]
-    ) == {"loom-design"}
+def test_scripts_dir_and_test_file_rules_remain_covered():
+    assert plugins_with_skill_content(["domain-teams/scripts/validator.py"]) == {"domain-teams"}
+    assert plugins_with_skill_content(["domain-teams/scripts/test_validator.py"]) == set()
 
 
 def test_changes_outside_any_plugin_are_a_no_op(tmp_path):

@@ -1,10 +1,7 @@
 # Codex CLI — tool name mapping for `translation-toolkit`
 
-> All 5 active specialist skills phrase subagent dispatch in
-> host-neutral prose. For the verified detail on Codex's `multi_agent`
-> primitive (`spawn_agent`/`wait_agent`/`close_agent`) see
-> `loom-code/skills/using-loom-code/references/codex-tools.md`. This
-> file only maps `translation-toolkit`'s 2 dispatch points onto it and
+> This self-contained file maps `translation-toolkit`'s two host-neutral
+> dispatch points onto the current Codex concurrent-subagent tool shape and
 > is **doc-sourced, not session-exercised** against this plugin.
 
 ## S1 back-translation gate (all 5 skills)
