@@ -1,0 +1,64 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-09-22-obsidian-viz-decision-guide",
+  "content_digest": "1518466693afdf443330f15545ba7ee2773c3785",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "reviewer-1",
+      "vendor": "claude",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "reviewer-2",
+      "vendor": "claude",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [],
+  "selection": {
+    "confirmations": [
+      {
+        "code": "FQNK",
+        "skip": [
+          "implementer",
+          "tdd",
+          "adversarial",
+          "blind-run"
+        ],
+        "source": "user-typed",
+        "at": "2026-09-21T17:36:09Z"
+      }
+    ],
+    "skip": [
+      "implementer",
+      "tdd",
+      "adversarial",
+      "blind-run"
+    ],
+    "source": "user-typed",
+    "prior_failures": [
+      {
+        "step": "adversarial",
+        "rule": "finalize.adversarial",
+        "head_sha": "165a6d8c0fd8368814dab51b677aa47903e72552",
+        "branch": "obsidian-skill",
+        "at": "2026-09-21T17:33:56Z"
+      }
+    ]
+  }
+}
