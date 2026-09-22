@@ -19,26 +19,36 @@ SKILL_DIR = Path(__file__).parent.parent / "skills/obsidian-markdown"
 GUIDE = SKILL_DIR / "references/viz-decision-guide.md"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 
-MERMAID_TYPE_KEYWORDS = [
-    "flowchart", "graph TD", "graph LR", "sequenceDiagram", "stateDiagram",
-    "erDiagram", "classDiagram", "C4Context", "gitGraph", "gantt", "timeline",
-    "mindmap", "xychart", "pie", "quadrant", "quadrantChart", "quadrant-chart",
-    "architecture-beta", "block-beta",
+# Regex patterns (matched case-insensitively on word boundaries).
+MERMAID_TYPE_PATTERNS = [
+    r"flowchart", r"graph (td|tb|bt|lr|rl)", r"sequencediagram", r"statediagram",
+    r"erdiagram", r"classdiagram", r"c4\w+", r"gitgraph", r"gantt", r"timeline",
+    r"mindmap", r"xychart", r"pie", r"quadrant", r"quadrantchart", r"quadrant-chart",
+    r"architecture-beta", r"block-beta",
 ]
+
+FENCE = re.compile(r"^(`{3,}|~{3,}).*?^\1[ \t]*$", re.M | re.S)
 
 
 def _headings(markdown: str) -> set[str]:
-    return {m.group(1).strip() for m in re.finditer(r"^#{1,6} (.+)$", markdown, re.M)}
+    """Headings outside fenced code blocks."""
+    body = FENCE.sub("", markdown)
+    return {m.group(1).strip() for m in re.finditer(r"^#{1,6} (.+)$", body, re.M)}
+
+
+def _slug(heading: str) -> str:
+    return re.sub(r"[^a-z0-9 -]", "", heading.lower()).replace(" ", "-")
 
 
 def test_guide_names_no_mermaid_diagram_type():
-    text = GUIDE.read_text(encoding="utf-8").lower()
-    found = [k for k in MERMAID_TYPE_KEYWORDS if re.search(rf"\b{re.escape(k.lower())}\b", text)]
+    text = GUIDE.read_text(encoding="utf-8")
+    found = [p for p in MERMAID_TYPE_PATTERNS if re.search(rf"\b{p}\b", text, re.I)]
     assert not found, f"guide restates Mermaid type choice (owned by the visualizer skill): {found}"
 
 
 def test_skill_md_points_to_guide_exactly_once():
-    count = SKILL_MD.read_text(encoding="utf-8").count("viz-decision-guide.md")
+    text = SKILL_MD.read_text(encoding="utf-8")
+    count = len(re.findall(r"viz-decision-guide(\.md)?\b", text))
     assert count == 1, f"SKILL.md must have a single entry point to the guide, found {count}"
 
 
@@ -47,10 +57,12 @@ def test_guide_links_resolve():
     links = re.findall(r"\]\(([^)]+)\)", text)
     assert links, "guide should hand off to its owners via links"
     for link in links:
+        link = link.strip().split(" ", 1)[0]  # drop an optional "title"
+        if re.match(r"^[a-z][a-z0-9+.-]*:", link, re.I):
+            continue  # external URL: not a repo file
         path, _, anchor = link.partition("#")
         target = (GUIDE.parent / path).resolve() if path else GUIDE.resolve()
         assert target.is_file(), f"broken link target: {link}"
-        if anchor and target in (SKILL_MD.resolve(), GUIDE.resolve()):
-            headings = _headings(target.read_text(encoding="utf-8"))
-            slugs = {re.sub(r"[^a-z0-9 -]", "", h.lower()).replace(" ", "-") for h in headings}
+        if anchor:
+            slugs = {_slug(h) for h in _headings(target.read_text(encoding="utf-8"))}
             assert anchor in slugs, f"anchor #{anchor} not a heading in {target.name}"

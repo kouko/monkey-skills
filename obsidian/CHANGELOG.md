@@ -23,8 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - `tests/test_obsidian_markdown_viz_guide.py` — fails if the guide names
-  a Mermaid diagram type, if SKILL.md points to the guide more than once,
-  or if a guide link does not resolve.
+  a Mermaid diagram keyword, if SKILL.md points to the guide more than
+  once, or if a local guide link points to a missing file or heading
+  (headings inside code fences do not count; external URLs are skipped).
+  Prose restatements such as "sequence diagram" are not caught.
 
 ## [3.20.2] — 2026-07-30 description diet
 
