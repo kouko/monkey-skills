@@ -1,0 +1,60 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-09-22-obsidian-viz-guide-ownership",
+  "content_digest": "ed0f93b517b3eb3ae2f448aa8ff87df8a4295033",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "reviewer-1",
+      "vendor": "claude",
+      "model": "opus",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "reviewer-2",
+      "vendor": "claude",
+      "model": "opus",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [],
+  "selection": {
+    "confirmations": [
+      {
+        "code": "QEKR",
+        "skip": [
+          "spec",
+          "plan",
+          "implementer",
+          "tdd",
+          "adversarial",
+          "blind-run"
+        ],
+        "source": "user-typed",
+        "at": "2026-09-22T09:47:03Z"
+      }
+    ],
+    "skip": [
+      "spec",
+      "plan",
+      "implementer",
+      "tdd",
+      "adversarial",
+      "blind-run"
+    ],
+    "source": "user-typed",
+    "prior_failures": []
+  }
+}
