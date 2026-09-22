@@ -1,45 +1,29 @@
-# 視覺化選擇指引
+# Visualization Decision Guide
 
-> 用法：每次新增 diagram/table/callout 前，分析內容類型並自動選擇對應格式。
+> **Scope.** This guide decides one thing: which **presentation form** a piece of content gets — diagram, table, callout, list, or prose. It is advice, not a gate.
+>
+> It does **not** decide, and must not restate:
+> - whether to draw a diagram inline or delegate it, or which diagram type to use → [SKILL.md §Diagrams](../SKILL.md#diagrams-mermaid)
+> - which callout type to use → [SKILL.md §Callouts](../SKILL.md#callouts)
+> - list and table syntax — standard Markdown
+> - a domain table's layout → the skill that owns it (see [Domain layouts](#domain-layouts))
 
-## 自動選擇決策邏輯（Agent 適用）
+## Pick the form
 
-```
-IF 內容 = 流程/決策/狀態機 → USE Mermaid flowchart
-ELIF 內容 = 概念關係/層級 → USE Mermaid mindmap
-  EXCEPT 大量文字 → USE 巢狂列表 + 標題層級
-  NOTE: mindmap 屬非 flowchart 類型，實際使用時仍須委派 `obsidian:obsidian-mermaid-visualizer`
-ELIF 內容 = 多維度比較 → USE Markdown 表格
-  EXCEPT 維度 > 4 → USE 結構化文字
-  NOTE: 可考慮轉置（項目為欄、維度為列）僅在 項目數 < 維度數 且 項目數 ≤ 4 時有效
-  REFERENCE strategy-lever-and-cascade 3×N table 格式
-ELIF 內容 = 關鍵洞察/警告 → USE Callout (`[!tip]`/`[!warning]`)
-  EXCEPT callout > 2 → USE 章節標題
-ELIF 內容 = 時間序列/演進 → USE Mermaid timeline
-  EXCEPT 資料點 > 12 → USE 表格
-ELIF 內容 = 空白草圖/構想 → USE Mermaid flowchart / Mermaid mindmap
-  EXCEPT 匯入現有 Mermaid → KEEP Mermaid
-ELIF 內容 = 2×2 分類 → USE Mermaid quadrant-chart
-  EXCEPT 詳細紀錄 → USE 表格
-ELIF 內容 = 純文字列清單 → USE 巢狀列表 / 區塊引用
-  EXCEPT 項目 > 10 → USE 目錄
-ELSE → USE 純文字 + 標題層級
-```
+Ask these questions in order and take the first "yes". If two or more questions fit the same content, check [Tie-breakers](#tie-breakers) before deciding.
 
-## 快速對照表
+0. **User's choice** — Did the user ask for a specific form? Use it and skip the remaining questions; a requested diagram still goes through [SKILL.md §Diagrams](../SKILL.md#diagrams-mermaid).
+1. **Diagram** — Does the content have steps, branches, states, dependencies, dated events in chronological order, numeric trends or proportions, or positions on two axes — structure the reader would otherwise have to rebuild in their head? A pure parent–child hierarchy read top-down does not count here (it is a nested list, question 4) unless links across branches matter. If yes, continue at [SKILL.md §Diagrams](../SKILL.md#diagrams-mermaid).
+2. **Table** — Are there several items that share the same attributes, and will the reader compare them attribute by attribute?
+3. **Callout** — Is it one short statement the reader must not miss (a summary, a caveat, a tip, an open question)? Pick the type per [SKILL.md §Callouts](../SKILL.md#callouts).
+4. **List** — Is it a set of parallel points, or points nested under parent points? Nest the list to show hierarchy.
+5. **Prose** — None of the above: write paragraphs under headings.
 
-| 內容訊息 | 推薦呈現 | 何時避免/改用 |
-|----------|----------|---------------|
-| 流程/決策/狀態機 | Mermaid flowchart | 節點超過 6 個 → 委派 `obsidian:obsidian-mermaid-visualizer` |
-| 概念關係/層級 | Mermaid mindmap | 大量文字 → 巢狂列表 + 標題層級 |
-| 多維度比較 | Markdown 表格 | 維度超過 4 → 結構化文字；可轉置僅在項目數 < 維度數 且 ≤ 4 時 |
-| 關鍵洞察/警告 | Callout (`[!tip]`/`[!warning]`) | callout 超過 2 個 → 章節標題 |
-| 時間序列/演進 | Mermaid timeline | 資料點超過 12 個 → 表格 |
-| 空白草圖/構想 | Mermaid flowchart / Mermaid mindmap | 匯入現有 Mermaid → KEEP Mermaid |
-| 2×2 分類 | Mermaid quadrant-chart | 詳細紀錄 → 表格 |
-| 純文字列清單 | 巢狀列表 / 區塊引用 | 超過 10 項 → 目錄 |
+## Tie-breakers
 
-> **專業領域參考**：多維度比較（策略槓桿 vs 情境）請參考 `systems-thinking-toolkit/skills/strategy-lever-and-cascade/SKILL.md` 的 3×N table 格式（欄位=槓桿、列=情境、儲存格=目標設定、分類=robust/contingent/bet）。
+- **Diagram or table**: if the reader needs exact values or a cell-by-cell comparison, use a table; if the reader needs the shape (order, structure, trend), use a diagram. Add the second form only when it shows something the first does not.
+- **Callout or heading**: a callout marks an exception to the surrounding text. If most sections would open with a callout, they are not exceptions — use headings and plain paragraphs instead.
 
-> [!abstract] 一句話結論
-> 流程→Mermaid diagram，比較→表格，洞察→callout，草圖→Mermaid/列表。
+## Domain layouts
+
+- Scenario × lever tables: follow the layout defined by the `systems-thinking-toolkit:strategy-lever-and-cascade` skill when it is available.
