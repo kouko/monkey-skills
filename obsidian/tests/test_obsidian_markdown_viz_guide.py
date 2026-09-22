@@ -4,8 +4,12 @@ The guide owns ONE question: which presentation form (diagram / table /
 callout / list / prose). Mermaid type choice belongs to the
 obsidian-mermaid-visualizer skill, delegation rules to SKILL.md §Diagrams,
 callout types to SKILL.md §Callouts. Restating those rules in the guide is
-how it drifted into contradicting them (2026-09-22), so these tests fail the
-build if the guide grows them back.
+how it drifted into contradicting them (2026-09-22).
+
+What these tests check (and only this): the guide names no Mermaid diagram
+keyword, SKILL.md links to the guide exactly once, and every link in the
+guide resolves (file and SKILL.md heading anchor). Prose restatements such as
+"sequence diagram" or "more than 6 nodes" are NOT caught — review for those.
 """
 
 import re
@@ -40,13 +44,13 @@ def test_skill_md_points_to_guide_exactly_once():
 
 def test_guide_links_resolve():
     text = GUIDE.read_text(encoding="utf-8")
-    skill_headings = _headings(SKILL_MD.read_text(encoding="utf-8"))
     links = re.findall(r"\]\(([^)]+)\)", text)
     assert links, "guide should hand off to its owners via links"
     for link in links:
         path, _, anchor = link.partition("#")
-        target = (GUIDE.parent / path).resolve()
+        target = (GUIDE.parent / path).resolve() if path else GUIDE.resolve()
         assert target.is_file(), f"broken link target: {link}"
-        if anchor and target == SKILL_MD.resolve():
-            slugs = {re.sub(r"[^a-z0-9 -]", "", h.lower()).replace(" ", "-") for h in skill_headings}
-            assert anchor in slugs, f"anchor #{anchor} not a SKILL.md heading"
+        if anchor and target in (SKILL_MD.resolve(), GUIDE.resolve()):
+            headings = _headings(target.read_text(encoding="utf-8"))
+            slugs = {re.sub(r"[^a-z0-9 -]", "", h.lower()).replace(" ", "-") for h in headings}
+            assert anchor in slugs, f"anchor #{anchor} not a heading in {target.name}"

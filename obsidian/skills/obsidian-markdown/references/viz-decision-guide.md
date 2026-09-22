@@ -9,13 +9,13 @@
 
 ## Pick the form
 
-Ask these questions in order and take the first "yes".
+Ask these questions in order and take the first "yes". If two or more questions fit the same content, check [Tie-breakers](#tie-breakers) before deciding.
 
 0. **User's choice** — Did the user ask for a specific form? Use it and stop here.
-1. **Diagram** — Does the content have steps, branches, states, dependencies, numeric trends or proportions, or positions on two axes — structure the reader would otherwise have to rebuild in their head? A pure parent–child hierarchy read top-down does not count here (it is a nested list, question 4) unless links across branches matter. If yes, continue at [SKILL.md §Diagrams](../SKILL.md#diagrams-mermaid).
+1. **Diagram** — Does the content have steps, branches, states, dependencies, dated events in chronological order, numeric trends or proportions, or positions on two axes — structure the reader would otherwise have to rebuild in their head? A pure parent–child hierarchy read top-down does not count here (it is a nested list, question 4) unless links across branches matter. If yes, continue at [SKILL.md §Diagrams](../SKILL.md#diagrams-mermaid).
 2. **Table** — Are there several items that share the same attributes, and will the reader compare them attribute by attribute?
 3. **Callout** — Is it one short statement the reader must not miss (a summary, a caveat, a tip, an open question)? Pick the type per [SKILL.md §Callouts](../SKILL.md#callouts).
-4. **List** — Is it a set of parallel points, or points nested under parent points, with no shared attributes to compare? Nest the list to show hierarchy.
+4. **List** — Is it a set of parallel points, or points nested under parent points? Nest the list to show hierarchy.
 5. **Prose** — None of the above: write paragraphs under headings.
 
 ## Tie-breakers
