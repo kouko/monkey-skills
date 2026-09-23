@@ -176,6 +176,20 @@ def test_cjk_splits_words(tmp_path):
     assert tokens_of(plan(tmp_path), "SKILL.md") == 4
 
 
+def test_core_path_matched_on_boundaries(tmp_path):
+    write(tmp_path, "SKILL.md", "Load data.md before anything else.\n")
+    write(tmp_path, "data.md", "d")
+    write(tmp_path, "a.md", "a")
+    core = {f["path"]: f["core"] for f in plan(tmp_path)["files"]}
+    assert core["data.md"] is True
+    assert core["a.md"] is False
+
+
+def test_threshold_flags_removed(tmp_path):
+    write(tmp_path, "SKILL.md", "hi")
+    assert run(tmp_path, "--limit", "10").returncode == 2
+
+
 def test_missing_skill_md_exits_2(tmp_path):
     write(tmp_path, "notes.md", "just notes")
     proc = run(tmp_path)
