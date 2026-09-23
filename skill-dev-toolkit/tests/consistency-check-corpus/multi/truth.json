@@ -1,0 +1,403 @@
+{
+  "plants": [
+    {
+      "id": "X1",
+      "type": "direct",
+      "scope": "cross",
+      "sides": [
+        {
+          "role": "plant",
+          "file": "references/eval-methodology.md",
+          "lines": [
+            24,
+            25,
+            26
+          ],
+          "text": "This is why the baseline is not reserved for the full eval path: even on the quick path, each manually run test case is paired with a baseline run so the user can review the two outputs side by side."
+        },
+        {
+          "role": "existing",
+          "file": "SKILL.md",
+          "lines": [
+            287
+          ],
+          "text": "| **Method** | Run 2-3 test cases manually (no subagent spawning); review outputs inline with the user; skip grading, benchmarking, and baseline comparison; iterate on direct user feedback | Spawn parallel subagent runs with baselines; grade with assertions, aggregate benchmarks; structured inline review with markdown reports |"
+        }
+      ],
+      "steps": 1,
+      "explanation": "SKILL.md's quick eval path explicitly skips baseline comparison; the inserted eval-methodology text says even the quick path pairs every test case with a baseline run."
+    },
+    {
+      "id": "X2",
+      "type": "conditional",
+      "scope": "cross",
+      "sides": [
+        {
+          "role": "plant",
+          "file": "SKILL.md",
+          "lines": [
+            521
+          ],
+          "text": "This creates a `.skill` file that can be shared and installed. The packager depends on Claude Code's local toolchain, so on Claude.ai skip this step and point the user at the finished skill folder instead."
+        },
+        {
+          "role": "existing",
+          "file": "references/platform-adaptations.md",
+          "lines": [
+            25
+          ],
+          "text": "**Packaging**: The `package_skill.py` script works anywhere with Python and a filesystem. On Claude.ai, you can run it and the user can download the resulting `.skill` file."
+        }
+      ],
+      "steps": 1,
+      "explanation": "Condition = running on Claude.ai. SKILL.md (plant) says packaging needs Claude Code's toolchain so skip it on Claude.ai; platform-adaptations says package_skill.py works anywhere with Python + filesystem and on Claude.ai you can run it and the user downloads the .skill."
+    },
+    {
+      "id": "X3",
+      "type": "direct",
+      "scope": "cross",
+      "sides": [
+        {
+          "role": "plant",
+          "file": "agents/grader.md",
+          "lines": [
+            105
+          ],
+          "text": "3. If `timing.json` is missing, rebuild it from the executor's transcript — the harness writes `total_tokens` and `duration_ms` into the footer of every subagent transcript, so these figures can always be recovered after the run"
+        },
+        {
+          "role": "existing",
+          "file": "SKILL.md",
+          "lines": [
+            347
+          ],
+          "text": "This is the only opportunity to capture this data — it comes through the task notification and isn't persisted elsewhere. Process each notification as it arrives rather than trying to batch them."
+        },
+        {
+          "role": "existing_also",
+          "file": "references/schemas.md",
+          "lines": [
+            201
+          ],
+          "text": "**How to capture:** When a subagent task completes, the task notification includes `total_tokens` and `duration_ms`. Save these immediately — they are not persisted anywhere else and cannot be recovered after the fact."
+        }
+      ],
+      "steps": 1,
+      "explanation": "SKILL.md (and schemas.md) say total_tokens/duration_ms arrive only in the task notification, are not persisted elsewhere, and cannot be recovered later; the grader plant says they are written into every subagent transcript footer and can always be recovered after the run."
+    },
+    {
+      "id": "X4",
+      "type": "direct",
+      "scope": "cross",
+      "sides": [
+        {
+          "role": "plant",
+          "file": "agents/analyzer.md",
+          "lines": [
+            208
+          ],
+          "text": "2. Note the configurations tested (with_skill, without_skill). When the skill under test is an existing one, its baseline runs are recorded in benchmark.json with `\"configuration\": \"old_skill\"` rather than `without_skill` — compare against that label"
+        },
+        {
+          "role": "existing",
+          "file": "references/schemas.md",
+          "lines": [
+            297
+          ],
+          "text": "- `configuration`: Must be `\"with_skill\"` or `\"without_skill\"` (the viewer uses this exact string for grouping and color coding)"
+        }
+      ],
+      "steps": 1,
+      "explanation": "schemas.md says benchmark.json run configuration must be exactly \"with_skill\" or \"without_skill\"; the analyzer plant says existing-skill baselines are recorded with configuration \"old_skill\". (SKILL.md 314's old_skill/outputs/ is a directory name, not the configuration field.)"
+    },
+    {
+      "id": "X5",
+      "type": "chain",
+      "scope": "cross",
+      "sides": [
+        {
+          "role": "plant",
+          "file": "references/iteration-automation.md",
+          "lines": [
+            32,
+            33,
+            34,
+            35,
+            36
+          ],
+          "text": "include X\" or \"never do Y\" and the output violates this. A common case: a skill step that relies on an `AskUserQuestion` gate, where the with-skill transcript shows the question inlined as plain text instead of an actual `AskUserQuestion` tool call — treat that as an instruction violation, fix the skill, and rerun"
+        },
+        {
+          "role": "middle_hop",
+          "file": "SKILL.md",
+          "lines": [
+            299
+          ],
+          "text": "For each test case, spawn two subagents in the same turn — one with the skill, one without. Don't spawn the with-skill runs first and come back for baselines later — launch everything at once so it all finishes around the same time."
+        },
+        {
+          "role": "existing",
+          "file": "references/asking-user-questions.md",
+          "lines": [
+            186,
+            187,
+            188
+          ],
+          "text": "- `AskUserQuestion` is **main agent only** in Claude Code. Subagents spawned via the Agent / Task tool do not have access. The fallback contract handles this."
+        },
+        {
+          "role": "existing_support",
+          "file": "references/asking-user-questions.md",
+          "lines": [
+            109,
+            110,
+            111,
+            112
+          ],
+          "text": "If AskUserQuestion is unavailable in your environment (subagent context, web client, sandbox), inline the question as plain text with the same options. Do NOT silently default to any preset. Do NOT skip the step. The user-as-gate contract must be honored regardless of UI mechanism."
+        }
+      ],
+      "steps": 2,
+      "explanation": "Plant: a with-skill transcript that inlines the question as plain text instead of calling AskUserQuestion is an instruction violation to fix and rerun. Hop (SKILL.md 299): with-skill runs are spawned subagents. asking-user-questions: subagents do not have AskUserQuestion, and inlining as plain text is the prescribed fallback that honors the contract. So in the with-skill run, inline plain text is the correct behavior, not a defect."
+    },
+    {
+      "id": "X6",
+      "type": "direct",
+      "scope": "within",
+      "sides": [
+        {
+          "role": "plant",
+          "file": "agents/comparator.md",
+          "lines": [
+            176
+          ],
+          "text": "- **winner**: \"A\", \"B\", or \"TIE\" — when expectations are provided, this is the side with the higher assertion pass rate; rubric scores decide only when the pass rates are equal"
+        },
+        {
+          "role": "existing",
+          "file": "agents/comparator.md",
+          "lines": [
+            81,
+            82
+          ],
+          "text": "1. **Primary**: Overall rubric score (content + structure) 2. **Secondary**: Assertion pass rates (if applicable)"
+        },
+        {
+          "role": "existing_also",
+          "file": "agents/comparator.md",
+          "lines": [
+            75,
+            199
+          ],
+          "text": "4. Use expectation scores as secondary evidence (not the primary decision factor) - **Output quality first**: Assertion scores are secondary to overall task completion."
+        }
+      ],
+      "steps": 1,
+      "explanation": "Within comparator.md: Step 6 ranks rubric score primary and assertion pass rate secondary (also line 75, 199); the plant in Field Descriptions says with expectations the higher pass rate wins and rubric only breaks ties."
+    }
+  ],
+  "genuine": [
+    {
+      "confidence": "confirmed",
+      "sides": [
+        {
+          "file": "references/description-design.md",
+          "lines": [
+            242,
+            243
+          ]
+        },
+        {
+          "file": "SKILL.md",
+          "lines": [
+            447,
+            448,
+            449
+          ]
+        }
+      ],
+      "explanation": "description-design checklist requires an explicit negative trigger ('Do NOT use for X') when close skills exist; SKILL.md house standard says disambiguate NOT by 'Do NOT use for X' negation (SKILL.md 108-109 declares house standard wins, but the texts conflict)."
+    },
+    {
+      "confidence": "confirmed",
+      "sides": [
+        {
+          "file": "references/description-design.md",
+          "lines": [
+            160,
+            169,
+            170,
+            171,
+            172,
+            173,
+            190,
+            191,
+            192
+          ]
+        },
+        {
+          "file": "SKILL.md",
+          "lines": [
+            450,
+            451
+          ]
+        }
+      ],
+      "explanation": "description-design endorses an optional multilingual keyword belt and says keep CJK trigger words; SKILL.md house standard: no CJK/multilingual keyword redundancy."
+    },
+    {
+      "confidence": "confirmed",
+      "sides": [
+        {
+          "file": "SKILL.md",
+          "lines": [
+            226
+          ]
+        },
+        {
+          "file": "references/schemas.md",
+          "lines": [
+            20,
+            21,
+            22,
+            23,
+            24,
+            35
+          ]
+        }
+      ],
+      "explanation": "SKILL.md says the evals.json schema has an `assertions` field; schemas.md's evals.json uses `expectations`."
+    },
+    {
+      "confidence": "borderline",
+      "sides": [
+        {
+          "file": "SKILL.md",
+          "lines": [
+            274
+          ]
+        },
+        {
+          "file": "SKILL.md",
+          "lines": [
+            411
+          ]
+        }
+      ],
+      "explanation": "Line 274: when improving an existing skill the baseline should be the original version; line 411: use judgment — original or previous iteration."
+    },
+    {
+      "confidence": "borderline",
+      "sides": [
+        {
+          "file": "SKILL.md",
+          "lines": [
+            314
+          ]
+        },
+        {
+          "file": "references/schemas.md",
+          "lines": [
+            297
+          ]
+        }
+      ],
+      "explanation": "SKILL.md stores existing-skill baselines under old_skill/, while benchmark configuration must be with_skill/without_skill — unclear how old_skill runs are labeled (overlaps X4's topic; pre-existing tension only)."
+    },
+    {
+      "confidence": "borderline",
+      "sides": [
+        {
+          "file": "references/asking-user-questions.md",
+          "lines": [
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51
+          ]
+        },
+        {
+          "file": "SKILL.md",
+          "lines": [
+            202,
+            402
+          ]
+        }
+      ],
+      "explanation": "Hardened pattern prescribes a MUST verb; SKILL.md writing style says prefer explaining why over heavy-handed MUSTs/ALWAYS/NEVER (arguably a scoped exception)."
+    },
+    {
+      "confidence": "borderline",
+      "sides": [
+        {
+          "file": "references/schemas.md",
+          "lines": [
+            221
+          ]
+        },
+        {
+          "file": "SKILL.md",
+          "lines": [
+            365,
+            366,
+            367,
+            368,
+            369
+          ]
+        }
+      ],
+      "explanation": "schemas.md places benchmark.json at benchmarks/<timestamp>/; SKILL.md's aggregation writes benchmark.json into <workspace>/iteration-N."
+    },
+    {
+      "confidence": "borderline",
+      "sides": [
+        {
+          "file": "references/asking-user-questions.md",
+          "lines": [
+            191
+          ]
+        },
+        {
+          "file": "references/asking-user-questions.md",
+          "lines": [
+            111,
+            169
+          ]
+        }
+      ],
+      "explanation": "Within-file: 'design with a reasonable default selection in mind' vs 'Do NOT silently default'."
+    },
+    {
+      "confidence": "borderline",
+      "sides": [
+        {
+          "file": "references/schemas.md",
+          "lines": [
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99,
+            100,
+            101,
+            102,
+            103,
+            104,
+            105,
+            106,
+            107,
+            108
+          ]
+        }
+      ],
+      "explanation": "grading.json example lists 2 expectations but summary says total 3 / passed 2 / failed 1 (example truncation; same in grader.md is consistent with 3 items)."
+    }
+  ]
+}

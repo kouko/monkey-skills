@@ -1,0 +1,62 @@
+{"findings": [
+  {"id": "F1",
+   "type": "conditional",
+   "confidence": "high",
+   "side_a": {"file": "references/iteration-automation.md", "lines": [51, 52, 53],
+     "quote": "Decide: fix or skip — If the defect is clearly caused by a skill instruction issue (not a test case edge case), fix the skill and rerun that specific test case."},
+   "side_b": {"file": "references/platform-adaptations.md", "lines": [39],
+     "quote": "After running tests, always present results to the human BEFORE revising the skill yourself. You want to get them in front of the human ASAP!"},
+   "steps": [
+     "SKILL.md:349-355 places the Self-Assessment Pass (Step 3.5) between run completion (Step 3) and grading/presenting results (Step 4), and delegates its protocol to references/iteration-automation.md.",
+     "references/iteration-automation.md:51-53 instructs: when a defect is clearly a skill-instruction issue, fix the skill and rerun that test case — i.e. revise the skill before the human has seen any results.",
+     "references/platform-adaptations.md's Cowork section (line 39) states the main eval workflow (which platform-adaptations.md itself says 'all works' in Cowork, including grading) must always present results to the human BEFORE revising the skill.",
+     "In a Cowork session that hits a self-assessment-detected, skill-caused defect, the agent cannot simultaneously fix-and-rerun before presenting (iteration-automation.md) and present-before-revising (platform-adaptations.md) — the two orderings are mutually exclusive for the same defect-handling action."
+   ],
+   "why": "When running the full eval path in Cowork and the Step 3.5 self-assessment pass finds a skill-caused defect, iteration-automation.md requires fixing the skill and rerunning before the human ever sees the run, while platform-adaptations.md's Cowork guidance requires showing the human the results before any skill revision — both cannot be honored for the same defect."
+  },
+  {"id": "F2",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "references/schemas.md", "lines": [297],
+     "quote": "`configuration`: Must be `\"with_skill\"` or `\"without_skill\"` (the viewer uses this exact string for grouping and color coding)"},
+   "side_b": {"file": "agents/analyzer.md", "lines": [208],
+     "quote": "When the skill under test is an existing one, its baseline runs are recorded in benchmark.json with `\"configuration\": \"old_skill\"` rather than `without_skill` — compare against that label"},
+   "steps": [
+     "SKILL.md:312-314 instructs that when improving an existing skill, the baseline run is saved under an 'old_skill' label rather than 'without_skill'.",
+     "agents/analyzer.md:208 confirms this is written into benchmark.json's `configuration` field as the literal string \"old_skill\" for such runs, and instructs the analyzer to compare against that label.",
+     "references/schemas.md:297 defines the same `configuration` field as a closed set of exactly two allowed values, \"with_skill\" or \"without_skill\", and schemas.md:305 warns that any field value/name deviation ('Using `config` instead of `configuration`...') 'will cause the viewer to show empty/zero values.'",
+     "Following analyzer.md's instruction to write `configuration: \"old_skill\"` for an existing-skill improvement run necessarily produces a benchmark.json that violates schemas.md's 'Must be with_skill or without_skill' constraint, and by schemas.md's own stated consequence, breaks the viewer's grouping/color-coding for that run."
+   ],
+   "why": "For the documented 'improving an existing skill' situation, agents/analyzer.md requires a `configuration` value (\"old_skill\") that references/schemas.md explicitly excludes from the only two values the field may take, with schemas.md itself stating that any non-conforming value breaks the benchmark viewer."
+  },
+  {"id": "F3",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "SKILL.md", "lines": [447, 448, 449],
+     "quote": "Disambiguate by positive specificity, NOT by \"ALWAYS invoke\" directives ... nor \"Do NOT use for X\" behavioral negation (LLMs handle negation unreliably). A light positive redirect (\"for X, use skill-Y\") is fine."},
+   "side_b": {"file": "references/description-design.md", "lines": [242, 243],
+     "quote": "If close skills exist: explicit negative trigger (\"Do NOT use for X — use other-skill instead\")"},
+   "steps": [
+     "SKILL.md:100-109 sends the agent to references/description-design.md before drafting any description, and separately (Description Optimization, line 437) makes the §House description standard the binding target for any description write/optimize.",
+     "SKILL.md:447-449 (house standard) explicitly forbids the 'Do NOT use for X' negative-trigger phrasing as unreliable, permitting only a positive redirect phrasing instead.",
+     "references/description-design.md's own Validation checklist (line 242-243) — the checklist an agent is meant to run before shipping a description — instructs including exactly that forbidden phrasing ('Do NOT use for X — use other-skill instead') whenever close skills exist.",
+     "An agent following description-design.md's validation checklist to completion would write a description containing the pattern the house standard bans, for the same object (the skill's frontmatter description) and the same purpose (disambiguating from a close/competing skill)."
+   ],
+   "why": "description-design.md's validation checklist tells the agent to add a \"Do NOT use for X\" negative trigger whenever close skills exist, but the house standard that SKILL.md designates as authoritative for descriptions explicitly forbids that exact phrasing pattern as unreliable."
+  },
+  {"id": "F4",
+   "type": "direct",
+   "confidence": "medium",
+   "side_a": {"file": "SKILL.md", "lines": [450, 451],
+     "quote": "No CJK / multilingual keyword redundancy — cross-lingual reasoning triggers non-English prompts without translated tails (A/B-verified); appended CJK is also truncated first."},
+   "side_b": {"file": "references/description-design.md", "lines": [160, 172, 173, 282],
+     "quote": "For repos that operate in mixed languages, a short keyword belt at the end is low-cost insurance ... include it if your repo's prompts are routinely non-English ... Triggers: commit / PR / merge / decision / 為什麼 / commit メモ / 決定記録."},
+   "steps": [
+     "description-design.md §6 (lines 160-173) recommends appending a multilingual/CJK keyword belt to a description when the repo's prompts are routinely non-English, and its own Validation checklist (line 241) repeats this as a checklist item.",
+     "description-design.md's worked 'After' example (lines 276-283), presented as the corrected, rule-compliant end state of a description rewrite, itself contains a CJK keyword belt ('為什麼 / commit メモ / 決定記録').",
+     "SKILL.md:450-451 (house standard) flatly states descriptions must carry 'No CJK / multilingual keyword redundancy', citing that appended CJK is truncated first and unnecessary because cross-lingual matching already works without it.",
+     "SKILL.md:108-109 states the house standard wins over description-design.md when they differ, which is the intended resolution — but an agent that only reads description-design.md's §6 / checklist / worked example (each reachable independently via SKILL.md's own reference pointers) receives an unqualified recommendation to do exactly what the house standard forbids, and the worked example demonstrates it being done as the 'good' outcome."
+   ],
+   "why": "description-design.md instructs and exemplifies adding a CJK/multilingual keyword belt to descriptions, while the house standard SKILL.md designates as authoritative forbids CJK/multilingual keyword redundancy outright; SKILL.md's precedence clause resolves the letter of the rule but the worked example still models the forbidden pattern as correct, so confidence is medium rather than high."
+  }
+]}

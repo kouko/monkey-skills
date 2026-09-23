@@ -1,0 +1,56 @@
+{"findings": [
+  {"id": "F1",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "SKILL.md", "lines": [521], "quote": "The packager depends on Claude Code's local toolchain, so on Claude.ai skip this step and point the user at the finished skill folder instead."},
+   "side_b": {"file": "references/platform-adaptations.md", "lines": [25], "quote": "The `package_skill.py` script works anywhere with Python and a filesystem. On Claude.ai, you can run it and the user can download the resulting `.skill` file."},
+   "why": "On Claude.ai, SKILL.md's Packaging section says the packager needs Claude Code's local toolchain and must be skipped, while platform-adaptations.md (the doc SKILL.md itself points to for Claude.ai adjustments) says the same script works anywhere and should be run there. An agent packaging a finished skill on Claude.ai cannot simultaneously skip the step and run it."},
+
+  {"id": "F2",
+   "type": "numeric",
+   "confidence": "high",
+   "side_a": {"file": "agents/analyzer.md", "lines": [208], "quote": "its baseline runs are recorded in benchmark.json with `\"configuration\": \"old_skill\"` rather than `without_skill` — compare against that label"},
+   "side_b": {"file": "references/schemas.md", "lines": [297], "quote": "`configuration`: Must be `\"with_skill\"` or `\"without_skill\"` (the viewer uses this exact string for grouping and color coding)"},
+   "why": "When benchmarking an improvement to an existing skill, analyzer.md instructs writing/reading the value \"old_skill\" in the same benchmark.json `configuration` field that schemas.md's canonical schema restricts to exactly \"with_skill\" or \"without_skill\", and warns that any other string breaks the viewer."},
+
+  {"id": "F3",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "agents/comparator.md", "lines": [81, 82], "quote": "1. **Primary**: Overall rubric score (content + structure)\n2. **Secondary**: Assertion pass rates (if applicable)"},
+   "side_b": {"file": "agents/comparator.md", "lines": [176], "quote": "when expectations are provided, this is the side with the higher assertion pass rate; rubric scores decide only when the pass rates are equal"},
+   "why": "Within the same file, Step 6 says the winner is chosen primarily by rubric score with assertion pass rate only as a secondary factor, while the Field Descriptions section for the identical `winner` field says pass rate decides first and rubric scores only break ties. A comparator with both A's rubric score higher and B's pass rate higher cannot follow both rules."},
+
+  {"id": "F4",
+   "type": "chain",
+   "confidence": "high",
+   "side_a": {"file": "references/asking-user-questions.md", "lines": [109, 110, 111], "quote": "If AskUserQuestion is unavailable in your environment (subagent context, web client, sandbox), inline the question as plain text with the same options. Do NOT silently default to any preset. Do NOT skip the step."},
+   "side_b": {"file": "references/iteration-automation.md", "lines": [33, 34, 35, 36], "quote": "a skill step that relies on an `AskUserQuestion` gate, where the with-skill transcript shows the question inlined as plain text instead of an actual `AskUserQuestion` tool call — treat that as an instruction violation, fix the skill, and rerun"},
+   "steps": [
+     "SKILL.md:297-299 — the full eval path's with-skill run for each test case is executed by a spawned subagent.",
+     "references/asking-user-questions.md:186-188 — AskUserQuestion is main-agent-only; subagents spawned via Agent/Task do not have access to it.",
+     "references/asking-user-questions.md:109-111 (mandatory Fallback contract, required by SKILL.md:174 for any skill with a user-input step) — when the tool is unavailable, the skill MUST inline the question as plain text rather than skip or silently default; this is the correct, required behavior in exactly the subagent context from step 1.",
+     "references/iteration-automation.md:33-36 — the self-assessment pass, run on that same with-skill subagent transcript, treats an inlined plain-text question as an 'instruction violation' and directs the agent to modify the skill and rerun."
+   ],
+   "why": "A with-skill eval run is executed in a subagent, where the skill's own mandatory fallback contract requires inlining the AskUserQuestion prompt as plain text. The self-assessment protocol then flags that exact required behavior as a defect to be fixed, so the agent cannot simultaneously honor the fallback contract and satisfy self-assessment's non-violation criterion for the same transcript."},
+
+  {"id": "F5",
+   "type": "conditional",
+   "confidence": "medium",
+   "side_a": {"file": "SKILL.md", "lines": [202], "quote": "Explain to the model why things matter instead of heavy-handed MUSTs."},
+   "side_b": {"file": "references/asking-user-questions.md", "lines": [44, 51], "quote": "### 1. MUST verb (not \"Use\")\n... You MUST call the AskUserQuestion tool to interview..."},
+   "why": "SKILL.md's Writing Style guidance (applies to all drafted skill prose) says to avoid heavy-handed MUSTs in favor of explaining why. But for any skill with a user-input step, SKILL.md:172-174 requires applying asking-user-questions.md's 'hardened pattern', whose load-bearing hardening #1 is to literally write 'You MUST call the AskUserQuestion tool' — the same heavy-handed MUST phrasing the Writing Style section tells the author to avoid."},
+
+  {"id": "F6",
+   "type": "direct",
+   "confidence": "low",
+   "side_a": {"file": "SKILL.md", "lines": [185], "quote": "ALWAYS use this exact template:"},
+   "side_b": {"file": "SKILL.md", "lines": [402], "quote": "If you find yourself writing ALWAYS or NEVER in all caps, that's a yellow flag — reframe and explain the reasoning so that the model understands why it matters."},
+   "why": "The Writing Patterns section's own worked example for defining output formats tells the author to write 'ALWAYS use this exact template:' verbatim into the drafted skill, while the improvement-loop guidance later in the same file flags exactly that all-caps ALWAYS/NEVER phrasing as a yellow flag needing rewording. Low confidence because the two sections address different moments (initial drafting vs. later revision) and it is arguable the example is illustrative rather than prescriptive."},
+
+  {"id": "F7",
+   "type": "numeric",
+   "confidence": "low",
+   "side_a": {"file": "agents/comparator.md", "lines": [89], "quote": "Save results to a JSON file at the path specified (or `comparison.json` if not specified)."},
+   "side_b": {"file": "references/schemas.md", "lines": [311], "quote": "Output from blind comparator. Located at `<grading-dir>/comparison-N.json`."},
+   "why": "The two files give different default filenames for the same comparator output (comparison.json vs comparison-N.json) when no explicit path is given. Low confidence because comparator.md's default only applies 'if not specified', so the two may not actually collide in practice."}
+]}
