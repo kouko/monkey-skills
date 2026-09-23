@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — library-level verification tool, no UI or user-facing changes
 evidence: [skills/skill-consistency-check/]
-status: confirmed 2026-09-22
+status: withdrawn — superseded by 2026-09-23-skill-consistency-check-llm-rewrite (Z3 approach failed blind testing)
 
 ## Problem
 The plugin lacked a systematic way to detect logical contradictions and inconsistencies within skill files. Each skill was validated manually, with no automated gate preventing contradictory rules from being merged.
