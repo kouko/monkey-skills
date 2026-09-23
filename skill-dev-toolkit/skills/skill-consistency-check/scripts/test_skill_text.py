@@ -87,6 +87,40 @@ def test_skill_md_matches_hardened_script_contract():
     assert "never present a verdict" in flat
 
 
+GATE_IDS = ("hard-rules", "plan-groups", "dispatch-detectors",
+            "model-record", "merge-report", "present-verdict")
+
+
+def test_operational_rules_are_registered_gates():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    opens = re.findall(r"<!-- gate: skill-consistency-check\.([a-z0-9-]+) -->",
+                       text)
+    for gid in GATE_IDS:
+        assert opens.count(gid) == 1, f"gate {gid!r} must open exactly once"
+    assert len(opens) == len(set(opens)), opens
+    closes = re.findall(r"<!-- /gate -->", text)
+    assert len(closes) == len(opens), "every gate needs a matching close tag"
+    # Gates open and close in order, never nested.
+    tags = re.findall(r"<!-- (gate: skill-consistency-check\.[a-z0-9-]+|/gate) -->",
+                      text)
+    for k, tag in enumerate(tags):
+        assert tag.startswith("gate:") == (k % 2 == 0), tags
+
+
+def test_model_recording_has_source_and_fallback():
+    flat = re.sub(r"\s+", " ", SKILL_MD.read_text(encoding="utf-8").lower())
+    assert "exact model identifier" in flat
+    assert "never paraphrase or shorten it" in flat
+    assert "`unknown`" in flat and "could not be observed" in flat
+
+
+def test_scope_and_plan_flags():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    flat = re.sub(r"\s+", " ", text.lower())
+    assert "only markdown files other than readme" in flat
+    assert "--limit" not in text and "--group-max" not in text
+
+
 def test_detectors_keep_validated_definitions():
     for path in (DETECT_READ, DETECT_SIM):
         text = path.read_text(encoding="utf-8")

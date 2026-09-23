@@ -24,11 +24,13 @@ Run every `python3 scripts/…` command from this skill's root directory
 
 ## Hard rules
 
+<!-- gate: skill-consistency-check.hard-rules -->
 - Never install anything (no pip, no package manager, no downloads).
 - Never create or modify any file inside the checked skill folder. All
   output goes to a run directory outside it; `scripts/merge_report.py`
   refuses an output path inside the target.
 - Never fix the findings. The check reports; the maintainer decides.
+<!-- /gate -->
 
 ## Procedure
 
@@ -41,6 +43,9 @@ stands for it. If it is inside the target, create another under a
 different parent directory.
 
 ### 2. Plan the groups
+
+<!-- gate: skill-consistency-check.plan-groups -->
+Run the planner with the target as its only argument:
 
 ```bash
 python3 scripts/plan_groups.py "<target>" > "<run>/plan.json"
@@ -61,10 +66,14 @@ Read `<run>/plan.json`:
   its own); the report then warns that the run is over the validated
   size.
 
-README files are left out of the package on purpose; they are for humans.
+Only Markdown files other than README*.md are checked: the package is
+every `*.md` file under the target except README files, which are for
+humans. Scripts and other non-Markdown files are not read.
+<!-- /gate -->
 
 ### 3. Dispatch the detectors
 
+<!-- gate: skill-consistency-check.dispatch-detectors -->
 Choose the model first (step 4). Then **dispatch N independent subagents
 in one message**, so the host runs them concurrently:
 
@@ -101,13 +110,24 @@ output file exists and parses as JSON with a `findings` list. Re-dispatch
 a detector whose file is missing or malformed once; if it fails again,
 tell the user which group went unchecked and stop — a run with an
 unchecked group has no verdict.
+<!-- /gate -->
 
 ### 4. Model
 
+<!-- gate: skill-consistency-check.model-record -->
 Use the host's mid-tier or stronger model for the detectors, never the
 smallest tier: in the experiments the smallest tier stopped after 1–3
-findings and missed most planted contradictions. Record the model name
-the detectors actually ran on; step 6 needs it.
+findings and missed most planted contradictions.
+
+Record the exact model identifier the detectors ran on, as the host
+exposes it to the running agent — the model id in your own system or
+environment information when the detectors run on your model, or the
+host's model setting you chose for the subagents. Copy it character for character; never paraphrase or shorten it
+(a shortened family name reads as a different model). If the exact id
+is not observable, record `unknown` — step 6 then prints the
+not-validated warning — and tell the user the model could not be
+observed. Step 6 needs this value.
+<!-- /gate -->
 
 ### 5. Thorough mode (opt-in only)
 
@@ -120,10 +140,11 @@ one run per method.
 
 ### 6. Merge and report
 
+<!-- gate: skill-consistency-check.merge-report -->
 ```bash
 python3 scripts/merge_report.py --target "<target>" --plan "<run>/plan.json" \
   --findings <run>/read-*.json <run>/simulate-*.json \
-  --model "<model name>" --out "<run>"
+  --model "<model id from step 4, or unknown>" --out "<run>"
 ```
 
 Pass every detector output file to `--findings`. The script merges
@@ -134,9 +155,11 @@ exit 2 = error: no report was written and there is no verdict. Relay the
 stderr message to the user; when it names missing groups or bad file
 names, re-dispatch those detectors with the correct output path and run
 this step again. On exit 2, never present a verdict.
+<!-- /gate -->
 
 ### 7. Present the result
 
+<!-- gate: skill-consistency-check.present-verdict -->
 Read `<run>/consistency-report.md` and present it in the user's language:
 
 - The verdict. Only high-confidence findings block ("needs revision");
@@ -154,6 +177,7 @@ Read `<run>/consistency-report.md` and present it in the user's language:
   validation reference.
 
 Give the report's path in the run directory. Do not edit the target.
+<!-- /gate -->
 
 ## Validated on
 
