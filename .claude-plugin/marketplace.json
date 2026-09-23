@@ -101,7 +101,7 @@
     },
     {
       "name": "skill-dev-toolkit",
-      "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
+      "description": "Self-contained toolkit to author Claude Agent Skills — create, score, check consistency, refactor, tune, dogfood.",
       "source": "./skill-dev-toolkit/"
     },
     {

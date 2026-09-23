@@ -12,6 +12,7 @@ distributed independently of loom-workflow's session/git/critique tools.
 |---|---|
 | `skill-creator-advance` | Create new skills, do major redesigns, run eval-driven development, optimize a description's triggering. |
 | `skill-judge` | Score a skill's design quality on an 8-dimension rubric (0–120 + grade). |
+| `skill-consistency-check` | Find rules inside a skill folder that contradict each other — independent LLM detectors read the files and walk through them; only high-confidence findings block. |
 | `dogfood-skill-testing` | Blind behavioral test of a drafted SKILL.md — does it fire when expected, does its workflow meet its contract. |
 | `skill-refactor` | Token / structure refactor of a skill, preserving output behavior. |
 | `skill-tuning` | Output-quality A/B for a skill — human-judged variant selection. |

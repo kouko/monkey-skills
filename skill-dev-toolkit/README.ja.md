@@ -12,6 +12,7 @@ skill オーサリングのライフサイクルを dev-workflow から独立し
 |---|---|
 | `skill-creator-advance` | 新規 skill 作成・大規模再設計・評価駆動開発・description の発火最適化。 |
 | `skill-judge` | skill の設計品質を 8 次元ルーブリックで採点（0–120 + グレード）。 |
+| `skill-consistency-check` | skill フォルダ内で互いに矛盾するルールを検出 — 独立した LLM 検出器が通読とウォークスルーを行い、高確信の指摘のみがブロック。 |
 | `dogfood-skill-testing` | 草案 SKILL.md の盲目的な挙動テスト — 期待通り発火するか、ワークフローが契約を満たすか。 |
 | `skill-refactor` | 出力挙動を保ったままの token / 構造リファクタ。 |
 | `skill-tuning` | skill 出力品質の A/B — 人間判定でバリアント選択。 |

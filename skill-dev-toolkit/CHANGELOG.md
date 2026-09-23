@@ -4,6 +4,24 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] — 2026-09-24
+
+### Added — `skill-consistency-check`
+
+- **Finds rules inside a skill folder that contradict each other** by LLM
+  direct detection: independent detectors read the text, with no formal
+  translation step.
+- **Two detection methods, one run each by default**: a read-through
+  detector reports conflicts between files; a walk-through detector acts as
+  the agent in 3–5 situations and reports where the next step cannot be
+  followed. A four-run thorough mode is opt-in only.
+- **Grouping above 30,000 estimated tokens**: larger packages are split into
+  groups, each read by its own detectors.
+- **High-confidence-only verdict**: only high-confidence findings block;
+  medium and low findings are reported as advisory.
+- The Z3 (SMT solver) prototype developed earlier on this branch was never
+  released and has been removed; detection is LLM-only.
+
 ## [0.4.1] — 2026-08-28
 
 ### Changed — `skill-refactor` test pins assert invariants, not wording

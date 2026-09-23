@@ -1,7 +1,7 @@
 {
   "name": "skill-dev-toolkit",
-  "version": "0.4.1",
-  "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
+  "version": "0.5.0",
+  "description": "Self-contained toolkit to author Claude Agent Skills — create, score, check consistency, refactor, tune, dogfood.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -15,6 +15,7 @@
     "skill-creator",
     "skill-judge",
     "skill-evaluation",
+    "skill-consistency-check",
     "skill-refactor",
     "skill-tuning",
     "dogfood-skill-testing",
