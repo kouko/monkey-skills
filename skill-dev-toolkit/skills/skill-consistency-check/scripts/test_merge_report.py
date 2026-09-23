@@ -26,12 +26,17 @@ def _plan(target, grouped=False, over_limit=False, uncovered_pairs=None):
             "uncovered_pairs": uncovered_pairs or []}
 
 
-def _setup(tmp_path, findings_by_file, plan_kwargs=None):
+def _setup(tmp_path, findings_by_file, plan_kwargs=None, fill=True):
+    """fill=True adds an empty output for every planned group not given."""
     target = tmp_path / "skill"
     target.mkdir()
     (target / "SKILL.md").write_text("x\n")
     plan = tmp_path / "plan.json"
     plan.write_text(json.dumps(_plan(target, **(plan_kwargs or {}))))
+    findings_by_file = dict(findings_by_file)
+    if fill:
+        for name in ("read-1.json", "simulate-1.json"):
+            findings_by_file.setdefault(name, [])
     paths = []
     for name, findings in findings_by_file.items():
         p = tmp_path / name
@@ -41,7 +46,7 @@ def _setup(tmp_path, findings_by_file, plan_kwargs=None):
 
 
 def _run(target, plan, findings, out, model="Claude Sonnet 4"):
-    cmd = [sys.executable, str(SCRIPT), "--target", str(target),
+    cmd = [sys.executable, "-B", str(SCRIPT), "--target", str(target),
            "--plan", str(plan), "--findings", *findings,
            "--model", model, "--out", str(out)]
     return subprocess.run(cmd, capture_output=True, text=True)
@@ -59,7 +64,7 @@ def _tree(path):
 # --- Acceptance 1 -----------------------------------------------------------
 
 def test_high_gives_needs_revision(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": [
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
         _finding("F1", "high", _side("SKILL.md", [3]), _side("a.md", [9])),
         _finding("F2", "low", _side("SKILL.md", [30]), _side("b.md", [1]))]})
     out = tmp_path / "out"
@@ -73,7 +78,7 @@ def test_high_gives_needs_revision(tmp_path):
 
 
 def test_medium_low_only_pass(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": [
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
         _finding("F1", "medium", _side("SKILL.md", [3]), _side("a.md", [9])),
         _finding("F2", "low", _side("SKILL.md", [30]), _side("b.md", [1]))]})
     out = tmp_path / "out"
@@ -85,7 +90,7 @@ def test_medium_low_only_pass(tmp_path):
 
 
 def test_findings_sorted_high_first_and_md_sections(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": [
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
         _finding("F1", "low", _side("SKILL.md", [50]), _side("c.md", [2])),
         _finding("F2", "high", _side("SKILL.md", [3], "must X"),
                  _side("a.md", [9], "never X"), why="X both required and banned")]})
@@ -102,9 +107,9 @@ def test_findings_sorted_high_first_and_md_sections(tmp_path):
 
 def test_duplicates_across_files_merge_keep_higher_confidence(tmp_path):
     target, plan, f = _setup(tmp_path, {
-        "read.json": [_finding("R1", "medium", _side("SKILL.md", [10]),
+        "read-1.json": [_finding("R1", "medium", _side("SKILL.md", [10]),
                                _side("a.md", [20]))],
-        "simulate.json": [_finding("S4", "high", _side("a.md", [22]),
+        "simulate-1.json": [_finding("S4", "high", _side("a.md", [22]),
                                    _side("SKILL.md", [8]))]})
     out = tmp_path / "out"
     r = _run(target, plan, f, out)
@@ -113,15 +118,15 @@ def test_duplicates_across_files_merge_keep_higher_confidence(tmp_path):
     m = data["findings"][0]
     assert m["confidence"] == "high"
     assert {(s["file"], s["id"]) for s in m["sources"]} == {
-        ("read.json", "R1"), ("simulate.json", "S4")}
+        ("read-1.json", "R1"), ("simulate-1.json", "S4")}
     assert r.returncode == 1
 
 
 def test_findings_three_lines_apart_stay_separate(tmp_path):
     target, plan, f = _setup(tmp_path, {
-        "read.json": [_finding("R1", "medium", _side("SKILL.md", [10]),
+        "read-1.json": [_finding("R1", "medium", _side("SKILL.md", [10]),
                                _side("a.md", [20]))],
-        "simulate.json": [_finding("S1", "medium", _side("SKILL.md", [13]),
+        "simulate-1.json": [_finding("S1", "medium", _side("SKILL.md", [13]),
                                    _side("a.md", [20]))]})
     out = tmp_path / "out"
     _run(target, plan, f, out)
@@ -130,7 +135,7 @@ def test_findings_three_lines_apart_stay_separate(tmp_path):
 
 
 def test_different_file_pair_not_merged(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": [
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
         _finding("R1", "medium", _side("SKILL.md", [10]), _side("a.md", [20])),
         _finding("R2", "medium", _side("SKILL.md", [10]), _side("b.md", [20]))]})
     out = tmp_path / "out"
@@ -142,7 +147,7 @@ def test_different_file_pair_not_merged(tmp_path):
 # --- Acceptance 4 -----------------------------------------------------------
 
 def test_limits_and_models_listed(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": []})
+    target, plan, f = _setup(tmp_path, {"read-1.json": []})
     out = tmp_path / "out"
     r = _run(target, plan, f, out, model="claude-sonnet-4-5")
     assert r.returncode == 0, r.stderr
@@ -161,7 +166,7 @@ def test_limits_and_models_listed(tmp_path):
 
 
 def test_model_mismatch_warning(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": []})
+    target, plan, f = _setup(tmp_path, {"read-1.json": []})
     out1, out2 = tmp_path / "o1", tmp_path / "o2"
     _run(target, plan, f, out1, model="gpt-5-codex")
     data, md = _report(out1)
@@ -175,7 +180,7 @@ def test_model_mismatch_warning(tmp_path):
 
 def test_uncovered_pairs_and_over_limit_reported(tmp_path):
     target, plan, f = _setup(
-        tmp_path, {"read.json": []},
+        tmp_path, {"read-1.json": []},
         {"grouped": True, "over_limit": True,
          "uncovered_pairs": [["references/a.md", "references/b.md"]]})
     out = tmp_path / "out"
@@ -189,7 +194,7 @@ def test_uncovered_pairs_and_over_limit_reported(tmp_path):
 
 
 def test_not_grouped_has_no_uncovered_section(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": []})
+    target, plan, f = _setup(tmp_path, {"read-1.json": []})
     out = tmp_path / "out"
     _run(target, plan, f, out)
     _, md = _report(out)
@@ -199,7 +204,7 @@ def test_not_grouped_has_no_uncovered_section(tmp_path):
 # --- Acceptance 5 -----------------------------------------------------------
 
 def test_out_outside_target_written(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": []})
+    target, plan, f = _setup(tmp_path, {"read-1.json": []})
     before = _tree(target)
     out = tmp_path / "reports" / "run1"
     r = _run(target, plan, f, out)
@@ -210,7 +215,7 @@ def test_out_outside_target_written(tmp_path):
 
 
 def test_out_inside_target_refused(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read.json": [
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
         _finding("F1", "high", _side("SKILL.md", [3]), _side("a.md", [9]))]})
     link = tmp_path / "link"
     os.symlink(target, link)
@@ -227,10 +232,89 @@ def test_out_inside_target_refused(tmp_path):
 
 
 def test_bad_findings_file_exit_2(tmp_path):
-    target, plan, _ = _setup(tmp_path, {})
-    bad = tmp_path / "bad.json"
-    bad.write_text("not json")
+    target, plan, f = _setup(tmp_path, {})
+    Path(f[0]).write_text("not json")
     out = tmp_path / "out"
-    r = _run(target, plan, [str(bad)], out)
+    r = _run(target, plan, f, out)
     assert r.returncode == 2
     assert not out.exists()
+
+
+def test_out_case_variant_refused(tmp_path):
+    target, plan, f = _setup(tmp_path, {})
+    variant = target.parent / target.name.upper()
+    if not variant.exists():
+        import pytest
+        pytest.skip("case-sensitive filesystem")
+    before = _tree(target)
+    r = _run(target, plan, f, variant / "run")
+    assert r.returncode == 2, r.stdout
+    assert _tree(target) == before
+
+
+# --- malformed findings -----------------------------------------------------
+
+def test_malformed_sides_exit_2(tmp_path):
+    good = _side("SKILL.md", [1])
+    bads = [
+        {"id": "X", "confidence": "high", "side_a": "SKILL.md:3", "side_b": good},
+        {"id": "X", "confidence": "high", "side_a": _side("SKILL.md", 3), "side_b": good},
+        {"id": "X", "confidence": "high", "side_a": {"lines": [1]}, "side_b": good},
+        {"id": "X", "confidence": "high", "side_a": good, "side_b": _side(5, [1])},
+        {"id": "X", "confidence": "high", "side_a": good, "side_b": _side("a.md", ["1"])},
+        {"id": "X", "confidence": "high", "side_a": good, "side_b": _side("a.md", [True])},
+    ]
+    for i, bad in enumerate(bads):
+        base = tmp_path / str(i)
+        base.mkdir()
+        ok = _finding("OK", "low", good, good)
+        target, plan, f = _setup(base, {"read-1.json": [ok, bad]})
+        out = base / "out"
+        r = _run(target, plan, f, out)
+        assert r.returncode == 2, (i, r.stderr)
+        assert "Traceback" not in r.stderr, i
+        assert not out.exists(), i
+
+
+# --- findings file naming and group coverage --------------------------------
+
+def test_missing_group_output_refused(tmp_path):
+    target, plan, f = _setup(tmp_path, {"read-1.json": []}, fill=False)
+    out = tmp_path / "out"
+    r = _run(target, plan, f, out)
+    assert r.returncode == 2
+    assert "simulate-1" in r.stderr
+    assert not out.exists()
+
+
+def test_bad_findings_names_refused(tmp_path):
+    for i, name in enumerate(["findings.json", "read-2.json", "read-0.json",
+                              "simulate-1-x.json", "write-1.json"]):
+        base = tmp_path / str(i)
+        base.mkdir()
+        target, plan, f = _setup(base, {name: []})
+        out = base / "out"
+        r = _run(target, plan, f, out)
+        assert r.returncode == 2, (name, r.stdout)
+        assert not out.exists(), name
+
+
+def test_thorough_mode_second_run_accepted(tmp_path):
+    target, plan, f = _setup(tmp_path, {"read-1-2.json": [], "simulate-1-2.json": []})
+    out = tmp_path / "out"
+    r = _run(target, plan, f, out)
+    assert r.returncode == 0, r.stderr
+
+
+# --- model match ------------------------------------------------------------
+
+def test_model_match_whole_token_and_not_1m(tmp_path):
+    target, plan, f = _setup(tmp_path, {})
+    cases = {"claude-sonnet-4-5": True, "Claude Sonnet 4": True,
+             "notsonnet": False, "claude-sonnet-4-5[1m]": False,
+             "sonnet 1M": False, "opus": False}
+    for i, (model, want) in enumerate(cases.items()):
+        out = tmp_path / f"o{i}"
+        _run(target, plan, f, out, model=model)
+        data, _ = _report(out)
+        assert data["model_matches_reference"] is want, model
