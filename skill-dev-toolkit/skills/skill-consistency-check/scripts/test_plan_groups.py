@@ -168,6 +168,12 @@ def test_T_validated_package_reads_whole():
     assert len(data["files"]) == 13
     assert 22000 <= data["total_tokens"] <= 28000
     assert data["grouped"] is False
+    assert data["over_limit"] is False
+
+
+def test_cjk_splits_words(tmp_path):
+    write(tmp_path, "SKILL.md", "abc漢def")  # 1 CJK + ceil(1.33 * 2) = 4
+    assert tokens_of(plan(tmp_path), "SKILL.md") == 4
 
 
 def test_bad_path_exits_2(tmp_path):

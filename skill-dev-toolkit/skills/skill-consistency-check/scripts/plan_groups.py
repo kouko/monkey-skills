@@ -35,7 +35,7 @@ def estimate_tokens(text):
     # CJK chars count one each; the rest is words x 1.33, the estimator that
     # produced the agreed 30k / 25k thresholds.
     cjk = len(CJK_RE.findall(text))
-    words = len(CJK_RE.sub("", text).split())
+    words = len(CJK_RE.sub(" ", text).split())
     return cjk + math.ceil(1.33 * words)
 
 
@@ -108,7 +108,7 @@ def build_plan(root, limit, group_max):
         "total_tokens": total,
         "core_tokens": core_tokens,
         "grouped": grouped,
-        "over_limit": core_tokens > group_max,
+        "over_limit": grouped and core_tokens > group_max,
         "groups": {"read": read, "simulate": simulate},
         "uncovered_pairs": uncovered,
     }
