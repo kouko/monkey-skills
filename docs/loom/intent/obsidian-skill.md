@@ -4,6 +4,7 @@ kind: engineering
 needs-design: no — 更新 skill 文件與參考指南；無需設計變更
 evidence: []  # 將在審核過程中填入
 status: confirmed 2026-09-22
+> **已由 obsidian 3.20.4 取代**：本 intent（未標日期的重複副本）與 `docs/loom/2026-09-22-obsidian-viz-decision-guide/attestation.json` 記錄的是初版指引，內容已改寫，見 `obsidian/CHANGELOG.md` 的 3.20.4 與 intent `2026-09-22-obsidian-viz-guide-ownership`。
 
 ## Problem
 Obsidian Flavored Markdown skill 需要統一的視覺化選擇指引，以幫助使用者和代理人在筆記中選擇適當的視覺化格式（Mermaid diagram、表格、callout 等）。目前缺乏明確的決策邏輯，導致視覺化選擇不一致。

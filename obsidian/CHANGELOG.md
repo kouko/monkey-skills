@@ -4,6 +4,30 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.20.4] — 2026-09-22 visualization guide ownership
+
+### Changed — `obsidian-markdown` visualization decision guide
+
+- `references/viz-decision-guide.md` rewritten to decide only the
+  presentation form (diagram / table / callout / list / prose) via
+  ordered yes/no questions. Mermaid type choice and inline-vs-delegate
+  now stay with SKILL.md §Diagrams and `obsidian-mermaid-visualizer`;
+  callout type stays with §Callouts. The previous version restated those
+  rules and contradicted them (state machines routed to flowchart,
+  timeline/quadrant not delegated, "list > 10 items → TOC", unbacked
+  numeric thresholds, a reversed scenario × lever layout).
+- SKILL.md: single advisory entry point in workflow step 3; duplicate
+  "Visual Choice Guide" section removed; `quadrant-chart` corrected to
+  the Mermaid keyword `quadrantChart`.
+
+### Added
+
+- `tests/test_obsidian_markdown_viz_guide.py` — fails if the guide names
+  a Mermaid diagram keyword, if SKILL.md points to the guide more than
+  once, or if a local guide link points to a missing file or heading
+  (headings inside code fences do not count; external URLs are skipped).
+  Prose restatements such as "sequence diagram" are not caught.
+
 ## [3.20.2] — 2026-07-30 description diet
 
 ### Changed — `wiki-update` / `daily-news-digest` descriptions
