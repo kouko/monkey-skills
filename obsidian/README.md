@@ -70,6 +70,7 @@ edits — and asks before reorganizing when the destination is ambiguous.
 | `obsidian-daily` | Read or create today's daily note, sweep `inbox/`, surface the top 3 priorities. |
 | `obsidian-vault-setup` | Interactive first-time vault configurator — infers role and scope from free-text answers. |
 | `obsidian-tldr` | Save a conversation summary to the vault and update `memory.md`. |
+| `obsidian-research` | Research a topic on the web (English + Japanese, plus the topic's own language) and write a readable research note with a TOC to `research/`. |
 | `obsidian-file-intel` | Extract content from PDF / PPTX / XLSX / DOCX / CSV / JSON via Gemini and produce Obsidian-ready summaries. |
 | `dashboard-design` | Guide dashboard design from requirements to layout, grounded in Japan Digital Agency dashboard guidelines. |
 

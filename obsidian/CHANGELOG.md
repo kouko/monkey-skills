@@ -4,6 +4,37 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.21.0] — 2026-09-24 obsidian-research
+
+### Added — `obsidian-research` skill
+
+- Researches a topic the user names and writes one human-readable note to
+  `research/YYYY-MM-DD <title>.md`.
+- Web search runs by default (skipped only when the user says to use only
+  their own material). Sources: English + Japanese; a topic that leans to
+  one language (culture, history, a specific country's market) adds that
+  language as the primary one. User-named languages override.
+- The question is split into 3-6 angles, a framework gap check (on by
+  default) adds missing ones, and each angle is researched by its own
+  subagent. Claims the conclusion depends on are each checked by a fresh
+  subagent that tries to refute them; confidence High / Medium / Low
+  follows from source independence and that check.
+- Frameworks are used at four layers (`references/frameworks.md`): the
+  question type picks a chapter skeleton, which is a suggestion rather
+  than a template; in-chapter tools break down single issues; principles
+  and checks cover the whole note. Includes history, culture and society
+  frameworks.
+- The note must pass nine checkpoints: vault frontmatter (`type:
+  research`, `status`, `source_count`, `source_languages`), conclusion first, a
+  `[[#heading]]` table of contents, chapters by skeleton or topic
+  dimensions, numbered citations with confidence, disagreements / refuted
+  claims, method and limitations, next actions, and a source list.
+- Self-contained: uses only host tools (`WebSearch`, `WebFetch`,
+  subagents) and this plugin's skills; does not invoke skills from other
+  plugins. Without `WebSearch` it works from user-supplied material only,
+  or stops.
+- Registered in `using-obsidian` and the plugin READMEs.
+
 ## [3.20.4] — 2026-09-22 visualization guide ownership
 
 ### Changed — `obsidian-markdown` visualization decision guide

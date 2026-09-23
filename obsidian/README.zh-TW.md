@@ -65,6 +65,7 @@ file processing、圖表、清理 vault）將請求 routing 至正確的 skill�
 | `obsidian-daily` | 讀取或建立今日 daily note，整理 `inbox/`，列出今日 top 3 priority |
 | `obsidian-vault-setup` | 互動式 vault 首次設定 —— 從自由文字回答推測 role 與 scope |
 | `obsidian-tldr` | 把對話摘要寫入 vault，並更新 `memory.md` |
+| `obsidian-research` | 上網研究指定主題（英文＋日文，主題有特定語言時再加該語言並以它為主），在 `research/` 產出附目錄的研究筆記 |
 | `obsidian-file-intel` | 透過 Gemini 從 PDF / PPTX / XLSX / DOCX / CSV / JSON 萃取內容並產出 Obsidian-ready 摘要 |
 | `dashboard-design` | 依日本數位廳 dashboard 設計指引，從需求釐清引導到 layout |
 
