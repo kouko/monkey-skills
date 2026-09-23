@@ -1,107 +1,151 @@
 ---
 name: skill-consistency-check
 description: |
-  Checks logical consistency within a skill or group of text files. Detects contradictions, circular dependencies, contract violations, and undefined references. Use for 'validate this skill' or 'check these files for internal conflicts'.
-version: 0.1.0
+  Finds rules that contradict each other inside a skill folder. Use for 'check this skill for contradictions' or 'do these instructions conflict?'.
 ---
-# Skill Consistency Checker
+# Skill Consistency Check
 
-This skill verifies that a skill (or a set of text files) is logically consistent internally. It checks for:
+Finds places where a skill package contradicts itself — one file requires
+what another forbids, two limits disagree, or following one rule forces a
+step another rule bans — so an agent obeying every line literally cannot
+succeed. Detection is done by independent LLM detectors reading the text
+directly; two stdlib-only Python scripts do the deterministic parts
+(grouping, merging, verdict, report).
 
-- **Direct contradictions**: e.g., `MUST do X` and `NEVER do X` in the same context.
-- **Circular dependencies**: e.g., Phase A requires Phase B's output, and Phase B requires Phase A's output.
-- **Contract violations**: the declared behavior (in description, agent prompts, or gates) does not match the actual implementation (scripts, agent definitions, workflow).
-- **Undefined references**: references to non-existent sections, files, or variables.
-- **Mechanical consistency**: all referenced files exist and are used as declared.
+Two detectors, each validated in blind experiments:
 
-The skill uses a layered verification approach:
-1. **Static rule engine** (fast, deterministic): extracts rules and builds dependency graphs.
-2. **SMT formal verification** (strong guarantees): encodes hard constraints (MUST/NEVER/ALWAYS) into SMT-LIB and checks with Z3.
-3. **LLM cross-verification** (broad coverage): uses multiple models to vote on semantic consistency and detect implicit assumption conflicts.
+| Detector | Spec | What it does |
+|---|---|---|
+| Read-through | `references/detector-read.md` | Reads the files and reports conflicts |
+| Walk-through | `references/detector-simulate.md` | Acts as the agent through 3–5 situations and reports where the next step cannot be followed |
 
-Input: a path to a skill directory (containing SKILL.md and bundled resources) or a list of text files.
-Output: a structured report (JSONL and Markdown) listing conflicts with location, severity, and suggested fixes.
+Run every `python3 scripts/…` command from this skill's root directory
+(the directory holding this SKILL.md). The scripts need only Python 3.
 
-## How It Works
+## Hard rules
 
-### Stage 1: Parse and Extract
-- Reads SKILL.md and all bundled files (references/, scripts/, assets/, agents/).
-- Extracts frontmatter, section headers, code blocks, and natural language statements.
-- Identifies rule-like statements (MUST, NEVER, ALWAYS, SHOULD, prohibited, required).
-- Builds a symbol table of all defined entities (sections, files, agents, scripts, variables).
+- Never install anything (no pip, no package manager, no downloads).
+- Never create or modify any file inside the checked skill folder. All
+  output goes to a run directory outside it; `scripts/merge_report.py`
+  refuses an output path inside the target.
+- Never fix the findings. The check reports; the maintainer decides.
 
-### Stage 2: Build Dependency Graph
-- Constructs a directed graph where nodes are rules, phases, agents, scripts, and files.
-- Edges represent dependencies (e.g., "Phase A runs before Phase B", "Script X is invoked in Phase Y", "Rule R1 depends on Rule R2").
-- Checks for circular dependencies using graph algorithms (Tarjan's SCC).
+## Procedure
 
-### Stage 3: Check for Conflicts
-- **Layer 1 (Static Rules)**: Uses regex and tree-sitter to find known anti-patterns (nested folders, overlong description, missing MUST list).
-- **Layer 2 (SMT)**: Encodes MUST/NEVER/ALWAYS statements into SMT-LIB and checks for satisfiability with Z3.
-- **Layer 3 (LLM)**: Uses multiple LLMs (Sonnet, Opus, Haiku) to vote on semantic consistency and detect implicit assumption conflicts via adversarial probing.
+### 1. Target and run directory
 
-### Stage 4: Generate Report
-- Outputs a JSONL report machine-readable for other skills to consume.
-- Outputs a human-readable Markdown report with severity levels (Critical/High/Medium/Low) and suggested fixes.
+The target is one skill folder path (the folder holding its SKILL.md);
+resolve it to an absolute path. Create a fresh run directory outside it
+(for example with `mktemp -d`) and note its absolute path; `<run>` below
+stands for it. If it is inside the target, create another under a
+different parent directory.
 
-## Usage
+### 2. Plan the groups
 
-Invoke this skill with a path to a skill directory:
-
-```
-/skill-consistency-check /path/to/skill
+```bash
+python3 scripts/plan_groups.py "<target>" > "<run>/plan.json"
 ```
 
-Or check multiple files:
+Exit 2 means the path is bad — tell the user and stop. Read
+`<run>/plan.json`:
 
+- `groups.read` — the file lists for read-through detectors.
+- `groups.simulate` — the file lists for walk-through detectors.
+- `grouped` — `false` means each list is the whole package (at or under
+  30,000 estimated tokens); `true` means the package was split into
+  groups of at most 25,000 tokens, each carrying SKILL.md, agents/ files
+  and the files SKILL.md cites, with the two groupings offset.
+
+README files are left out of the package on purpose; they are for humans.
+
+### 3. Dispatch the detectors
+
+Choose the model first (step 4). Then **dispatch N independent subagents
+in one message**, so the host runs them concurrently:
+
+- one read-through detector per entry in `groups.read`, output
+  `<run>/read-<k>.json` (k = 1, 2, …);
+- one walk-through detector per entry in `groups.simulate`, output
+  `<run>/simulate-<k>.json`.
+
+Describe and dispatch this abstractly as "dispatch N subagents" — the
+wording maps onto whatever concurrent-subagent facility the host
+provides (Claude Code, Codex, …). If the host cannot run them in
+parallel, run each as a fresh subagent one after another. Each detector
+must have its own fresh context: detections produced in your own context
+are not independent and are not what was validated; if the host has no
+subagents at all, say so to the user and stop.
+
+Each detector gets, as paths (not file contents):
+
+1. Its spec: the absolute path of `references/detector-read.md` or
+   `references/detector-simulate.md`, with the instruction "Read this
+   spec and follow it exactly."
+2. The target path (the package root that `file` fields are relative to).
+3. Its exact file list, copied from the plan entry — nothing added or
+   removed. Reading order is not specified; leave it to the detector.
+4. Its output JSON path in the run directory.
+
+Detectors write only their output file. After all return, confirm each
+output file exists and parses as JSON with a `findings` list. Re-dispatch
+a detector whose file is missing or malformed once; if it fails again,
+tell the user which group went unchecked.
+
+### 4. Model
+
+Use the host's mid-tier or stronger model for the detectors, never the
+smallest tier: in the experiments the smallest tier stopped after 1–3
+findings and missed most planted contradictions. Record the model name
+the detectors actually ran on; step 6 needs it.
+
+### 5. Thorough mode (opt-in only)
+
+Run it only when the user asks for a thorough check. Each method runs
+twice: dispatch two read-through detectors per `groups.read` entry and
+two walk-through detectors per `groups.simulate` entry, all independent,
+writing `read-<k>-a.json` / `read-<k>-b.json` and
+`simulate-<k>-a.json` / `simulate-<k>-b.json`. The default is one run
+per method.
+
+### 6. Merge and report
+
+```bash
+python3 scripts/merge_report.py --target "<target>" --plan "<run>/plan.json" \
+  --findings <run>/read-*.json <run>/simulate-*.json \
+  --model "<model name>" --out "<run>"
 ```
-/skill-consistency-check file1.md file2.py file3.txt
-```
 
-The skill will automatically detect if the input is a skill directory (by looking for SKILL.md) or treat it as a list of files.
+Pass every detector output file to `--findings`. The script merges
+duplicate findings, sets the verdict and writes
+`<run>/consistency-report.md` and `<run>/consistency-report.json`.
+Exit 0 = pass, exit 1 = needs revision (a result, not an error),
+exit 2 = error — relay the stderr message and stop.
 
-## Output Format
+### 7. Present the result
 
-The report includes:
-- **Location**: file path and line number (or section) of the conflict.
-- **Type**: contradiction, circular_dependency, contract_violation, undefined_reference, etc.
-- **Severity**: Critical, High, Medium, Low (based on impact and likelihood).
-- **Evidence**: the conflicting statements or context.
-- **Suggested Fix**: a concrete edit to resolve the conflict.
+Read `<run>/consistency-report.md` and present it in the user's language:
 
-## Examples
+- The verdict. Only high-confidence findings block ("needs revision");
+  medium and low findings are advisory.
+- Each finding with both sides as file:line, the quoted text, and the
+  one-sentence reason — high first, then medium and low marked advisory.
+- The "Not checked together" list when the package was grouped: those
+  file pairs were never read in the same group, so contradictions
+  between them could be missed.
+- The over-limit warning when present: the core files alone exceed the
+  validated size.
+- The known limits: conditional and multi-step contradictions may be
+  missed.
+- The model line, and the warning when the model differs from the
+  validation reference.
 
-### Direct Contradiction
-```markdown
-## Workflow
-**MUST**: Validate the input before processing.
-**NEVER**: validate the input (it is always valid).
-```
-→ Report: Contradiction between MUST and NEVER on validation.
+Give the report's path in the run directory. Do not edit the target.
 
-### Circular Dependency
-```markdown
-### Phase A: Generate Plan
-Read the output from Phase B to create the plan.
+## Validated on
 
-### Phase B: Execute Plan
-Use the plan generated in Phase A to execute.
-```
-→ Report: Circular dependency between Phase A and Phase B.
+Validated on: Claude Sonnet (200k context) on skill packages of about 25,000 tokens; other models are unvalidated until they pass the regression corpus.
 
-### Contract Violation
-```markdown
-description: "Validates user input and returns a clean dataset."
-```
-But the actual script does no validation and assumes clean input.
-→ Report: Contract violation - description promises validation but implementation does not perform it.
-
-## Notes
-
-- This skill is **advisory** — it points out potential issues but does not automatically fix them.
-- For mechanical fixes (e.g., missing files), the skill will suggest the exact path to create or correct.
-- For logical fixes (e.g., removing a contradiction), the skill will suggest removing or rephrasing the conflicting statement.
-- The skill is safe to run on any text file, but is most effective on skill files (SKILL.md and bundled resources).
-- To skip certain checks (e.g., if you know a reference is intentionally missing), use the `--skip-mechanical` flag.
-
----
+The regression corpus (planted contradictions with answer keys and a
+scoring helper) lives in this plugin's `tests/consistency-check-corpus/`
+folder. Before relying on a different model, run the check on the corpus
+and score it there.
