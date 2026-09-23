@@ -19,7 +19,7 @@ Wave 1 clears the old implementation and imports the corpus; wave 2 builds the t
 **W2-01 Grouping planner script**  after: W1-01  acceptance: 3, 5
 - Files: skill-consistency-check/scripts/plan_groups.py, skill-consistency-check/scripts/test_plan_groups.py
 - Test: A3 positive: T-small-package-single-group; boundary: T-large-package-offset-groups-core-and-uncovered-pairs. A5 positive: T-target-tree-unchanged; boundary: T-core-over-limit-flagged.
-- Risk: token estimate is heuristic (CJK one each, else chars/4), agent-decided per spec REQ-3 Design decision; thresholds stay conservative.
+- Risk: token estimate is heuristic (CJK one each, else words x 1.33, the estimator behind the agreed thresholds), agent-decided per spec REQ-3 Design decision.
 
 **W2-02 Merge and report script**  after: W1-01  acceptance: 1, 4, 5
 - Files: skill-consistency-check/scripts/merge_report.py, skill-consistency-check/scripts/test_merge_report.py
