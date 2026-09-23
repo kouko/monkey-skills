@@ -46,3 +46,4 @@ Wave 1 clears the old implementation and imports the corpus; wave 2 builds the t
 3. Validation evidence is small (six skills, 27 plants); the report states the reference model and size rather than claiming general accuracy.
 4. user-decided — model is not hardcoded and the skill must run on Codex; accuracy is validated only on the reference model.
 5. agent-decided — not authorised, took the conservative option: default check runs two detectors; the four-run thorough mode is opt-in only.
+6. user-decided — second-vendor selection-confirmed: codex
