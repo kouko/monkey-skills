@@ -76,6 +76,17 @@ def test_validation_note_is_the_only_exempt_line():
     assert "sonnet" in exempt[0].lower()
 
 
+def test_skill_md_matches_hardened_script_contract():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    for name in ("read-<i>.json", "simulate-<i>.json",
+                 "read-<i>-2.json", "simulate-<i>-2.json"):
+        assert name in text, f"SKILL.md lacks binding output name {name!r}"
+    flat = re.sub(r"\s+", " ", text.lower())
+    assert "at most 25,000" not in flat, \
+        "a single large file can push a group over 25,000; do not claim a hard cap"
+    assert "never present a verdict" in flat
+
+
 def test_detectors_keep_validated_definitions():
     for path in (DETECT_READ, DETECT_SIM):
         text = path.read_text(encoding="utf-8")

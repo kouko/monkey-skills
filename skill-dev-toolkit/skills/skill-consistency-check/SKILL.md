@@ -46,15 +46,20 @@ different parent directory.
 python3 scripts/plan_groups.py "<target>" > "<run>/plan.json"
 ```
 
-Exit 2 means the path is bad — tell the user and stop. Read
-`<run>/plan.json`:
+Exit 0 = plan written. Exit 2 = the path is bad or the folder has no
+SKILL.md at its root — relay the stderr message to the user and stop.
+Read `<run>/plan.json`:
 
 - `groups.read` — the file lists for read-through detectors.
 - `groups.simulate` — the file lists for walk-through detectors.
 - `grouped` — `false` means each list is the whole package (at or under
   30,000 estimated tokens); `true` means the package was split into
-  groups of at most 25,000 tokens, each carrying SKILL.md, agents/ files
-  and the files SKILL.md cites, with the two groupings offset.
+  groups aimed at 25,000 tokens each, each carrying SKILL.md, agents/
+  files and the files SKILL.md cites, with the two groupings offset.
+- `over_limit` — `true` when some group still exceeds 25,000 tokens
+  (the core alone is too large, or a single large file needs a group of
+  its own); the report then warns that the run is over the validated
+  size.
 
 README files are left out of the package on purpose; they are for humans.
 
@@ -64,9 +69,14 @@ Choose the model first (step 4). Then **dispatch N independent subagents
 in one message**, so the host runs them concurrently:
 
 - one read-through detector per entry in `groups.read`, output
-  `<run>/read-<k>.json` (k = 1, 2, …);
+  `<run>/read-<i>.json`;
 - one walk-through detector per entry in `groups.simulate`, output
-  `<run>/simulate-<k>.json`.
+  `<run>/simulate-<i>.json`.
+
+`<i>` is the 1-based position of the group in its list (first group = 1).
+These names are binding: `scripts/merge_report.py` matches each file to
+its planned group by name and refuses a run with a missing group or an
+unexpected name.
 
 Describe and dispatch this abstractly as "dispatch N subagents" — the
 wording maps onto whatever concurrent-subagent facility the host
@@ -89,7 +99,8 @@ Each detector gets, as paths (not file contents):
 Detectors write only their output file. After all return, confirm each
 output file exists and parses as JSON with a `findings` list. Re-dispatch
 a detector whose file is missing or malformed once; if it fails again,
-tell the user which group went unchecked.
+tell the user which group went unchecked and stop — a run with an
+unchecked group has no verdict.
 
 ### 4. Model
 
@@ -102,10 +113,10 @@ the detectors actually ran on; step 6 needs it.
 
 Run it only when the user asks for a thorough check. Each method runs
 twice: dispatch two read-through detectors per `groups.read` entry and
-two walk-through detectors per `groups.simulate` entry, all independent,
-writing `read-<k>-a.json` / `read-<k>-b.json` and
-`simulate-<k>-a.json` / `simulate-<k>-b.json`. The default is one run
-per method.
+two walk-through detectors per `groups.simulate` entry, all independent.
+The first run writes `read-<i>.json` / `simulate-<i>.json` as usual; the
+second writes `read-<i>-2.json` / `simulate-<i>-2.json`. The default is
+one run per method.
 
 ### 6. Merge and report
 
@@ -119,7 +130,10 @@ Pass every detector output file to `--findings`. The script merges
 duplicate findings, sets the verdict and writes
 `<run>/consistency-report.md` and `<run>/consistency-report.json`.
 Exit 0 = pass, exit 1 = needs revision (a result, not an error),
-exit 2 = error — relay the stderr message and stop.
+exit 2 = error: no report was written and there is no verdict. Relay the
+stderr message to the user; when it names missing groups or bad file
+names, re-dispatch those detectors with the correct output path and run
+this step again. On exit 2, never present a verdict.
 
 ### 7. Present the result
 
@@ -132,7 +146,7 @@ Read `<run>/consistency-report.md` and present it in the user's language:
 - The "Not checked together" list when the package was grouped: those
   file pairs were never read in the same group, so contradictions
   between them could be missed.
-- The over-limit warning when present: the core files alone exceed the
+- The over-limit warning when present: at least one group exceeded the
   validated size.
 - The known limits: conditional and multi-step contradictions may be
   missed.

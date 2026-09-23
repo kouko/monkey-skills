@@ -44,9 +44,10 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 - **兩種偵測器**，各自是獨立的 subagent：通讀（read-through）與模擬
   執行（walk-through）。規格在 [`references/`](references/)。
 - **分組**：估計 30,000 tokens 以內的套件整包一次讀完；超過就分組，
-  每組不超過 25,000 tokens。每組都放 SKILL.md、agents/ 檔和 SKILL.md
+  每組以 25,000 tokens 為目標。每組都放 SKILL.md、agents/ 檔和 SKILL.md
   直接引用的檔案，其餘檔案在兩種方法間用不同方式分配。從沒被放在同一
-  組讀過的檔案組合會列在報告裡。
+  組讀過的檔案組合會列在報告裡；若仍有某組超過 25,000 tokens（核心檔
+  太大，或單一檔案很大），報告會發出警告。
 - **判定**：只要有一個 high 的發現就是「需要修改」；medium 和 low
   只是提示。
 - **副作用**：沒有。不安裝任何東西，也不在被檢查的資料夾裡寫任何檔案；

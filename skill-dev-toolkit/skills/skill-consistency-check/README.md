@@ -49,10 +49,11 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 - **Two detectors**, each an independent subagent: a read-through and an
   execution walk-through. Their specs are in [`references/`](references/).
 - **Grouping**: packages up to 30,000 estimated tokens are read whole.
-  Larger ones are split into groups of at most 25,000 tokens; every group
-  carries SKILL.md, agents/ files and the files SKILL.md cites, and the
-  two methods group the rest differently. The report lists file pairs
-  that were never read together.
+  Larger ones are split into groups aimed at 25,000 tokens each; every
+  group carries SKILL.md, agents/ files and the files SKILL.md cites, and
+  the two methods group the rest differently. The report lists file pairs
+  that were never read together, and warns when a group still exceeds
+  25,000 tokens (a large core, or one large file).
 - **Verdict**: "needs revision" only when a high-confidence finding
   exists; medium and low findings are advisory.
 - **Side effects**: none. Nothing is installed and nothing is written
