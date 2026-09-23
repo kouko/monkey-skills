@@ -22,6 +22,8 @@ BLIND_SPOTS = [
     "conditional contradictions (conflict only under a shared condition)",
     "multi-step contradictions (need several inference hops or unstated background knowledge)",
 ]
+COVERAGE_NOTE = ("Only Markdown files other than README*.md are checked; "
+                 "rules in other file types are not.")
 
 
 class InputError(Exception):
@@ -140,6 +142,7 @@ def build_report(plan, merged, model):
         "reference": dict(REFERENCE),
         "model_matches_reference": _model_matches(model),
         "blind_spots": list(BLIND_SPOTS),
+        "coverage_note": COVERAGE_NOTE,
     }
 
 
@@ -160,9 +163,10 @@ def _finding_md(n, m):
 def render_md(r):
     out = ["# Consistency report", "", f"Verdict: **{r['verdict']}**", ""]
     if r["over_limit"]:
-        out += ["> Warning: the core files alone are over the group size limit "
-                f"({REFERENCE['max_validated_tokens']:,} tokens); every group "
-                "still carries the whole core, so results are less reliable.", ""]
+        out += ["> Warning: At least one group exceeds the validated size "
+                f"({REFERENCE['max_validated_tokens']:,} estimated tokens) "
+                "because the core files or a single large file are too big; "
+                "results for this run are less reliable.", ""]
     high = [m for m in r["findings"] if m["confidence"] == "high"]
     rest = [m for m in r["findings"] if m["confidence"] != "high"]
     out += ["## High-confidence findings (blocking)", ""]
@@ -174,7 +178,8 @@ def render_md(r):
         out += ["## Not checked together", ""]
         out += [f"- {a} ↔ {b}" for a, b in r["uncovered_pairs"]] or ["None."]
         out.append("")
-    out += ["## Known limits", ""] + [f"- {b}" for b in r["blind_spots"]] + [""]
+    out += ["## Known limits", ""] + [f"- {b}" for b in r["blind_spots"]]
+    out += [f"- {r['coverage_note']}", ""]
     ref = r["reference"]
     out.append(f"Model used: {r['model']} — validated on: {ref['model']}, "
                f"packages up to {ref['max_validated_tokens']:,} tokens")

@@ -190,7 +190,7 @@ def test_uncovered_pairs_and_over_limit_reported(tmp_path):
     assert data["uncovered_pairs"] == [["references/a.md", "references/b.md"]]
     assert "Not checked together" in md
     assert "references/a.md" in md and "references/b.md" in md
-    assert "over" in md.lower() and "limit" in md.lower()
+    assert "exceeds the validated size" in md
 
 
 def test_not_grouped_has_no_uncovered_section(tmp_path):
@@ -306,13 +306,37 @@ def test_thorough_mode_second_run_accepted(tmp_path):
     assert r.returncode == 0, r.stderr
 
 
+def test_over_limit_warning_is_cause_neutral(tmp_path):
+    target, plan, f = _setup(tmp_path, {}, {"grouped": True, "over_limit": True})
+    out = tmp_path / "out"
+    _run(target, plan, f, out)
+    _, md = _report(out)
+    assert "core files alone" not in md
+    assert ("At least one group exceeds the validated size (25,000 estimated "
+            "tokens) because the core files or a single large file are too "
+            "big; results for this run are less reliable.") in md
+
+
+def test_markdown_only_coverage_note(tmp_path):
+    target, plan, f = _setup(tmp_path, {})
+    out = tmp_path / "out"
+    _run(target, plan, f, out)
+    data, md = _report(out)
+    note = ("Only Markdown files other than README*.md are checked; "
+            "rules in other file types are not.")
+    assert data["coverage_note"] == note
+    assert len(data["blind_spots"]) == 2 and note not in data["blind_spots"]
+    assert note in md[md.index("Known limits"):]
+
+
 # --- model match ------------------------------------------------------------
 
 def test_model_match_whole_token_and_not_1m(tmp_path):
     target, plan, f = _setup(tmp_path, {})
     cases = {"claude-sonnet-4-5": True, "Claude Sonnet 4": True,
              "notsonnet": False, "claude-sonnet-4-5[1m]": False,
-             "sonnet 1M": False, "opus": False}
+             "sonnet 1M": False, "opus": False,
+             "unknown": False, "UNKNOWN": False}
     for i, (model, want) in enumerate(cases.items()):
         out = tmp_path / f"o{i}"
         _run(target, plan, f, out, model=model)
