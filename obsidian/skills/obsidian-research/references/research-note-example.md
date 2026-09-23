@@ -1,6 +1,6 @@
 # Example research note (obsidian-research)
 
-One finished note, shown to illustrate the checkpoints in SKILL.md Step 5. It is **not** a structure to copy: the chapters here follow this topic's dimensions (a market topic with a comparison), and another topic would get different chapters. Heading style follows the vault's recent notes (plain, numbered); a vault with a different style gets that style. The claims, figures, and URLs are placeholders, not research results.
+One finished note, shown to illustrate the checkpoints in SKILL.md Step 5. It is **not** a structure to copy: the chapters here follow this topic's dimensions (a market topic with a comparison), and another topic would get different chapters. Heading style follows the vault's recent notes (plain, numbered); a vault with a different style gets that style. The claims, figures, and URLs are placeholders, not research results, and the chapters and source list are abbreviated (`…`).
 
 Topic leaning: a Taiwan market → 繁中 primary + English + 日本語. The user wrote in 繁中, so the note is in 繁中.
 

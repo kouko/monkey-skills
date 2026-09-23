@@ -29,7 +29,7 @@ Frameworks are used at four layers; [references/frameworks.md](references/framew
 ## Step 1 — Scope and structure
 
 1. Restate the core question and what is out of scope in one or two lines. Ask the user only when the topic has two readings that would produce different notes; otherwise pick the plain reading and state it.
-2. **Triage (layer 0)**: match the question type in the frameworks reference's Layer 0 table. If a skeleton fits, use it to order the chapters; if none fits, order chapters by the topic's own dimensions.
+2. **Triage (layer 0)**: match the question type in the frameworks reference's question-type table. If a skeleton fits, use it to order the chapters; if none fits, order chapters by the topic's own dimensions — the aspects a reader would ask about (e.g. for a hobby or product topic: what it is → how people use it → costs → problems → where it is heading).
 3. **Source languages**:
 
 | Topic | Languages searched | Primary |
@@ -42,8 +42,8 @@ Examples: 台灣半導體補助政策 → 繁中 primary + EN + JA. 江戸時代
 
 ## Step 2 — Expand into angles
 
-1. Split the question into 3–6 distinct research angles, written freely for this topic.
-2. **Gap check (on by default)**: walk the frameworks reference's Layer 3 blind-spot list and the cells of the Layer 2 tools named for this question type. Add an angle only for a cell that is relevant and uncovered. Finding no gap is a valid result — do not pad.
+1. Split the question into 3–6 distinct research angles — each angle is one sub-question researched on its own — written freely for this topic.
+2. **Gap check (on by default)**: walk the frameworks reference's blind-spot list and the tools named for this question type in its question-type table. Add an angle only for a cell that is relevant and uncovered. Finding no gap is a valid result — do not pad.
 3. Tell the user, one line each: the angles, the skeleton (or "by topic dimensions"), the languages. Then continue without waiting; the user may interrupt to change them.
 
 ## Step 3 — Research each angle
@@ -52,7 +52,7 @@ Examples: 台灣半導體補助政策 → 繁中 primary + EN + JA. 江戸時代
 - **Web search** runs by default, even when the user gave material. The user can narrow it ("only verify key claims", "fill gaps only") or turn it off ("use only my material") — follow their scope. An angle the material already covers well needs no new search; Step 4 still runs.
 - **Dispatch one subagent per angle, all in the same message.** Each gets: the question, its angle, the languages (primary first), and these instructions — write queries natively in each language (not translations of the English query); read 2–4 pages with `WebFetch` (or this plugin's `defuddle` skill when its CLI is installed); return each claim with a supporting quote, fact/opinion tag, and the source's title, URL, publisher, language, and date; do not dispatch further subagents. If subagents are unavailable, follow the same instructions yourself, one angle after another, and say so in the method section.
 - If a required language yields no usable source, record it for the limitations section instead of dropping it silently.
-- Aim for roughly 8–15 read sources overall; stop when new sources stop changing the conclusions.
+- Stop searching an angle when new sources stop changing its conclusions.
 
 **Merge**: remove duplicate URLs. Sources from the same origin — a syndicated press release, several articles quoting one report — count as one source.
 
@@ -64,25 +64,26 @@ Examples: 台灣半導體補助政策 → 繁中 primary + EN + JA. 江戸時代
    - **High** — at least two independent sources and it survived the refutation check.
    - **Medium** — one good source, or the check was inconclusive.
    - **Low** — weak or single secondary source.
+   - A source whose publisher or funder benefits from the result, or whose sample is non-random or undisclosed, caps the claim at **Medium** unless an independent source agrees.
    - **Refuted / outdated** — moves to the disagreements section; never silently dropped.
 
 ## Step 5 — Write the note
 
-Write in the **user's conversation language**, whatever the source languages were. Quotes may stay in the original language with a translation. Match the style of the vault's recent research notes: open the two or three newest files in `research/` and follow their heading style (e.g. plain or numbered headings) and tone; write plainly, define terms on first use.
+Write in the **user's conversation language**, whatever the source languages were. Quotes may stay in the original language with a translation. Match the style of the vault's recent research notes: open the two or three newest files in `research/` and follow their heading style and tone (if `research/` is empty, use plain numbered headings); write plainly, define terms on first use.
 
 **Reading order differs from research order**: the conclusion and TOC come first; the chapters after them follow the skeleton from Step 1 (or the topic's dimensions). Drop skeleton steps that have nothing to say — never write an empty chapter. Inside a chapter, use a layer-2 tool when it makes the material clearer (options × criteria → a comparison table; causes → a fishbone-style breakdown).
 
 The note must pass these checkpoints (layer 3 — they play the role a reporting checklist plays in science writing):
 
-1. **Frontmatter** (vault convention): `title`, `type: research`, `date`, `tags`, `status: completed`, plus `source_count: <n>` and `source_languages: [en, ja, …]`. `aliases` optional. `related_notes` only for notes confirmed to exist in the vault.
+1. **Frontmatter** (these fields; if the vault's CLAUDE.md defines more required fields, add them too): `title`, `type: research`, `date`, `tags`, `status: completed`, plus `source_count: <n>` and `source_languages: [en, ja, …]`. `aliases` optional. `related_notes` only for notes confirmed to exist in the vault.
 2. **Conclusion first**: a one-line `> 📌` bottom line, then one paragraph of 2–3 sentences. Anything longer belongs in a chapter.
 3. **Table of contents** right after the summary: one line per `##` section except the TOC itself, written as `[[#<exact heading text>|<label>]]`. After writing, check that every link target matches a heading character for character.
 4. **Chapters follow the skeleton or the topic's dimensions**. A comparison gets a comparison table.
-5. **Citations**: every non-obvious claim cites a numbered source `[n]`; key claims show their confidence.
+5. **Citations**: every non-obvious claim cites a numbered source `[n]`; key claims show their confidence. Before saving, check every figure and quoted claim against the passage its `[n]` points to (one subagent can do this pass); fix, re-source, or remove anything that does not match.
 6. **Disagreements and open questions**: where sources disagree, which claims were refuted or outdated, and what remains unresolved (omit only if none).
 7. **Method and limitations**: the angles, the skeleton used, how many claims were checked and refuted, languages searched and any that yielded nothing, source bias, time sensitivity.
 8. **Next actions**: concrete recommendations for the reader, most important first. When the note recommends something, add the key assumptions it rests on and a pre-mortem line (if this turns out wrong, the most likely reason).
-9. **Source list**: a numbered list matching the `[n]` citations — `1. Title — publisher — URL — language — accessed YYYY-MM-DD`.
+9. **Source list**: a numbered list matching the `[n]` citations — `1. Title — publisher — URL — language — accessed YYYY-MM-DD`, one URL per entry (a mirror may follow as `; mirror: URL`).
 
 Use `obsidian-markdown` for Obsidian syntax (callouts, wikilinks). Link other vault notes only if they exist.
 

@@ -18,7 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   default) adds missing ones, and each angle is researched by its own
   subagent. Claims the conclusion depends on are each checked by a fresh
   subagent that tries to refute them; confidence High / Medium / Low
-  follows from source independence and that check.
+  follows from source independence and that check, capped at Medium for
+  interested publishers or non-random samples. Before saving, every figure
+  is checked against the passage its citation points to.
 - Frameworks are used at four layers (`references/frameworks.md`): the
   question type picks a chapter skeleton, which is a suggestion rather
   than a template; in-chapter tools break down single issues; principles
