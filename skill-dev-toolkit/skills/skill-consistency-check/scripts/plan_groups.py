@@ -32,8 +32,11 @@ README_RE = re.compile(r"^README(\..+)?\.md$")
 
 
 def estimate_tokens(text):
+    # CJK chars count one each; the rest is words x 1.33, the estimator that
+    # produced the agreed 30k / 25k thresholds.
     cjk = len(CJK_RE.findall(text))
-    return cjk + math.ceil((len(text) - cjk) / 4)
+    words = len(CJK_RE.sub("", text).split())
+    return cjk + math.ceil(1.33 * words)
 
 
 def package_files(root):

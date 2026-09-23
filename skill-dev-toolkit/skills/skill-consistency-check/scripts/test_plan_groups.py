@@ -57,12 +57,12 @@ def test_T_small_package_single_group(tmp_path):
 
 
 def test_T_large_package_offset_groups_core_and_uncovered_pairs(tmp_path):
-    # ~3000 tokens each; 12 periphery files -> ~36k + core > 30k limit.
-    write(tmp_path, "SKILL.md", "Always follow references/named.md.\n" + "x" * 4000)
-    write(tmp_path, "agents/worker.md", "y" * 4000)
-    write(tmp_path, "references/named.md", "z" * 4000)
+    # ~4000 tokens each; 12 periphery files -> ~48k + core > 30k limit.
+    write(tmp_path, "SKILL.md", "Always follow references/named.md.\n" + "x " * 1000)
+    write(tmp_path, "agents/worker.md", "y " * 1000)
+    write(tmp_path, "references/named.md", "z " * 1000)
     for i in range(12):
-        write(tmp_path, f"references/p{i:02d}.md", "p" * 12000)
+        write(tmp_path, f"references/p{i:02d}.md", "p " * 3000)
     data = plan(tmp_path)
     assert data["grouped"] is True
     assert data["over_limit"] is False
@@ -109,10 +109,10 @@ def tree_hash(root):
 
 
 def test_T_target_tree_unchanged(tmp_path):
-    write(tmp_path, "SKILL.md", "Core text.\n" + "x" * 40000)
-    write(tmp_path, "agents/a.md", "a" * 400)
+    write(tmp_path, "SKILL.md", "Core text.\n" + "x " * 10000)
+    write(tmp_path, "agents/a.md", "a " * 100)
     for i in range(10):
-        write(tmp_path, f"references/r{i}.md", "r" * 20000)
+        write(tmp_path, f"references/r{i}.md", "r " * 5000)
     before = tree_hash(tmp_path)
     count_before = sum(len(f) for _, _, f in os.walk(tmp_path))
     plan(tmp_path)
@@ -121,10 +121,10 @@ def test_T_target_tree_unchanged(tmp_path):
 
 
 def test_T_core_over_limit_flagged(tmp_path):
-    write(tmp_path, "SKILL.md", "s" * 80000)  # 20k tokens
-    write(tmp_path, "agents/big.md", "b" * 40000)  # 10k tokens
+    write(tmp_path, "SKILL.md", "s " * 15000)  # ~20k tokens
+    write(tmp_path, "agents/big.md", "b " * 7500)  # ~10k tokens
     for i in range(3):
-        write(tmp_path, f"references/q{i}.md", "q" * 4000)
+        write(tmp_path, f"references/q{i}.md", "q " * 1000)
     data = plan(tmp_path)
     assert data["over_limit"] is True
     assert data["grouped"] is True
@@ -149,12 +149,25 @@ def test_readme_files_excluded(tmp_path):
 
 def test_cjk_counted_one_token_each(tmp_path):
     # 4 kanji + 2 hiragana + 2 katakana + 2 hangul + 1 fullwidth + 1 CJK punct
-    # = 12 CJK tokens, plus "abcdefgh" (8 chars) -> 2 tokens.
-    write(tmp_path, "SKILL.md", "漢字漢字ひらカタ한국！。abcdefgh")
+    # = 12 CJK tokens, plus 3 words in the rest -> ceil(1.33 * 3) = 4.
+    write(tmp_path, "SKILL.md", "漢字漢字ひらカタ한국！。 alpha beta gamma")
     data = plan(tmp_path)
-    assert tokens_of(data, "SKILL.md") == 14
-    write(tmp_path, "SKILL.md", "abcde")  # ceil(5/4) = 2
-    assert tokens_of(plan(tmp_path), "SKILL.md") == 2
+    assert tokens_of(data, "SKILL.md") == 16
+    write(tmp_path, "SKILL.md", "a b c d e f")  # ceil(1.33 * 6) = 8
+    assert tokens_of(plan(tmp_path), "SKILL.md") == 8
+
+
+VALIDATED_PKG = (
+    Path(__file__).resolve().parents[3]
+    / "tests" / "consistency-check-corpus" / "multi" / "pkg"
+)
+
+
+def test_T_validated_package_reads_whole():
+    data = plan(VALIDATED_PKG)
+    assert len(data["files"]) == 13
+    assert 22000 <= data["total_tokens"] <= 28000
+    assert data["grouped"] is False
 
 
 def test_bad_path_exits_2(tmp_path):
