@@ -176,6 +176,25 @@ def test_cjk_splits_words(tmp_path):
     assert tokens_of(plan(tmp_path), "SKILL.md") == 4
 
 
+def test_missing_skill_md_exits_2(tmp_path):
+    write(tmp_path, "notes.md", "just notes")
+    proc = run(tmp_path)
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+    assert "SKILL.md" in proc.stderr
+
+
+def test_oversize_periphery_group_flagged(tmp_path):
+    write(tmp_path, "SKILL.md", "see references/a.md\n")
+    write(tmp_path, "references/a.md", "x\n")
+    write(tmp_path, "references/big.md", "w " * 24000)  # ~31.9k tokens
+    write(tmp_path, "references/other.md", "w " * 2000)
+    data = plan(tmp_path)
+    assert data["grouped"] is True
+    assert data["core_tokens"] <= 25000
+    assert data["over_limit"] is True
+
+
 def test_bad_path_exits_2(tmp_path):
     proc = run(tmp_path / "missing")
     assert proc.returncode == 2

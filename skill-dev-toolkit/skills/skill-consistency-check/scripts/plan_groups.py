@@ -108,7 +108,8 @@ def build_plan(root, limit, group_max):
         "total_tokens": total,
         "core_tokens": core_tokens,
         "grouped": grouped,
-        "over_limit": grouped and core_tokens > group_max,
+        "over_limit": grouped
+        and any(sum(tokens[p] for p in g) > group_max for g in read + simulate),
         "groups": {"read": read, "simulate": simulate},
         "uncovered_pairs": uncovered,
     }
@@ -123,6 +124,9 @@ def main(argv=None):
     root = Path(args.skill_dir).resolve()
     if not root.is_dir():
         print(f"plan_groups: not a directory: {args.skill_dir}", file=sys.stderr)
+        return 2
+    if not (root / "SKILL.md").is_file():
+        print(f"plan_groups: no SKILL.md in {args.skill_dir}; not a skill folder", file=sys.stderr)
         return 2
     print(json.dumps(build_plan(root, args.limit, args.group_max), ensure_ascii=False, indent=2))
     return 0
