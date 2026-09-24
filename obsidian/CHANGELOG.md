@@ -41,6 +41,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   subagents) and this plugin's skills; does not invoke skills from other
   plugins. Without `WebSearch` it works from user-supplied material only,
   or stops.
+- Inside an Obsidian vault, any request to research a topic triggers it
+  even without the word "note"; chat-only requests, debugging and code
+  work do not. Outside a vault it still needs a note or vault to be meant.
+- Paraphrase checks: the citation check also keeps the source's
+  qualifiers and how each figure was obtained (measured / reported /
+  vendor claim / estimate / not stated, recorded by the research
+  subagents); estimates cannot raise a claim above Low on their own;
+  "only / does not exist" claims need a source; comparison tables state
+  differing conditions.
 - Registered in `using-obsidian` and the plugin READMEs.
 
 ## [3.20.4] — 2026-09-22 visualization guide ownership
