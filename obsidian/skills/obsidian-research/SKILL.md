@@ -16,11 +16,11 @@ Frameworks are used at four layers; [references/frameworks.md](references/framew
 | 0 Triage | Pick the note's structure from the question type | Step 1 |
 | 1 Skeleton | A step sequence that orders the chapters — a suggestion, not a template | Step 1, Step 5 |
 | 2 In-chapter tools | Matrices and checklists that break down one chapter's issue | Step 5 |
-| 3 Principles and checks | Rules that hold throughout, plus checks run on the whole note | Steps 2, 4, 5 |
+| 3 Principles and checks | Rules that hold throughout, plus checks run on the whole note | Steps 2, 4, 5, 6 |
 
 ## Pre-flight
 
-1. **Vault root** = the current directory if it contains `.obsidian/`. Otherwise ask the user for the vault path.
+1. **Vault root** = the nearest directory containing `.obsidian/`, starting from the current directory and walking up. If none is found, ask the user for the vault path.
 2. **Web tools**: check that the host's web search tool (`WebSearch` in Claude Code) is in this session's tool list.
    - Missing and the user gave material → continue with that material only; say so in the chat reply and in the note's limitations.
    - Missing and no material → stop: "obsidian-research needs the WebSearch tool, which this session does not have (e.g. a Cowork sandbox). Run it from Claude Code CLI, or give me the sources to work from."
@@ -36,7 +36,9 @@ Frameworks are used at four layers; [references/frameworks.md](references/framew
 |---|---|---|
 | Default (no language leaning) | English + Japanese | — (both searched in full) |
 | Leans to one language — culture, history, or a specific country's market, law, society, or companies | English + Japanese + that language | That language: most queries and most cited sources in it |
-| User named the languages | Exactly those | As the user says |
+| User names languages | English + Japanese + the named ones | As the user says |
+
+English or Japanese is dropped only when the user explicitly excludes it.
 
 Examples: 台灣半導體補助政策 → 繁中 primary + EN + JA. 江戸時代の貨幣制度 → JA primary + EN. US 401(k) rules → EN primary + JA.
 
@@ -54,7 +56,7 @@ Examples: 台灣半導體補助政策 → 繁中 primary + EN + JA. 江戸時代
 - If a required language yields no usable source, record it for the limitations section instead of dropping it silently.
 - Stop searching an angle when new sources stop changing its conclusions.
 
-**Merge**: remove duplicate URLs. Sources from the same origin — a syndicated press release, several articles quoting one report — count as one source.
+**Merge**: remove duplicate URLs. Sources from the same origin — a syndicated press release, several articles quoting one report, several works by the same author or organization — count as one source when judging independence (Step 4); each still gets its own source-list entry.
 
 ## Step 4 — Verify key claims
 
@@ -66,6 +68,7 @@ Examples: 台灣半導體補助政策 → 繁中 primary + EN + JA. 江戸時代
    - **Low** — weak or single secondary source.
    - A source whose publisher or funder benefits from the result, or whose sample is non-random or undisclosed, caps the claim at **Medium** unless an independent source agrees.
    - **Refuted / outdated** — moves to the disagreements section; never silently dropped.
+4. Write every subagent's full report from Steps 3 and 4 into one scratch file outside the vault — the **source packet** Step 6 checks against.
 
 ## Step 5 — Write the note
 
@@ -75,24 +78,36 @@ Write in the **user's conversation language**, whatever the source languages wer
 
 The note must pass these checkpoints (layer 3 — they play the role a reporting checklist plays in science writing):
 
-1. **Frontmatter** (these fields; if the vault's CLAUDE.md defines more required fields, add them too): `title`, `type: research`, `date`, `tags`, `status: completed`, plus `source_count: <n>` and `source_languages: [en, ja, …]`. `aliases` optional. `related_notes` only for notes confirmed to exist in the vault.
+1. **Frontmatter**: follow the vault's frontmatter convention when its CLAUDE.md defines one; otherwise use `title`, `type: research`, `date`, `tags`, `status: completed`. Always add `source_count: <n>` and `source_languages: [en, ja, …]`. `related_notes` only for notes confirmed to exist in the vault.
 2. **Conclusion first**: a one-line `> 📌` bottom line, then one paragraph of 2–3 sentences. Anything longer belongs in a chapter.
 3. **Table of contents** right after the summary: one line per `##` section except the TOC itself, written as `[[#<exact heading text>|<label>]]`. After writing, check that every link target matches a heading character for character.
 4. **Chapters follow the skeleton or the topic's dimensions**. A comparison gets a comparison table.
-5. **Citations**: every non-obvious claim cites a numbered source `[n]`; key claims show their confidence. Before saving, check every figure and quoted claim against the passage its `[n]` points to (one subagent can do this pass); fix, re-source, or remove anything that does not match.
+5. **Citations**: every non-obvious claim cites a numbered source `[n]`; key claims show their confidence.
 6. **Disagreements and open questions**: where sources disagree, which claims were refuted or outdated, and what remains unresolved (omit only if none).
-7. **Method and limitations**: the angles, the skeleton used, how many claims were checked and refuted, languages searched and any that yielded nothing, source bias, time sensitivity.
+7. **Method and limitations**: the angles, the skeleton used, how many claims were checked and refuted, the Step 6 counts copied from its table (never claim a check that has no table), languages searched and any that yielded nothing, source bias, time sensitivity.
 8. **Next actions**: concrete recommendations for the reader, most important first. When the note recommends something, add the key assumptions it rests on and a pre-mortem line (if this turns out wrong, the most likely reason).
 9. **Source list**: a numbered list matching the `[n]` citations — `1. Title — publisher — URL — language — accessed YYYY-MM-DD`, one URL per entry (a mirror may follow as `; mirror: URL`).
 
 Use `obsidian-markdown` for Obsidian syntax (callouts, wikilinks). Link other vault notes only if they exist.
 
-[references/research-note-example.md](references/research-note-example.md) shows one finished note. It illustrates the checkpoints; it is not a structure to copy.
+[references/research-note-example.md](references/research-note-example.md) shows the exact form of the frontmatter, TOC, a claim with confidence, the method section, and source entries. It is not a structure to copy.
 
-## Step 6 — Save and report
+Save to `<vault-root>/research/YYYY-MM-DD <title>.md`. In the filename, replace `/` and `:` with full-width `／` and `：`. If that file exists, append ` (2)`, ` (3)`, … — never overwrite.
 
-- Path: `<vault-root>/research/YYYY-MM-DD <title>.md`. In the filename, replace `/` and `:` with full-width `／` and `：`. If that file exists, append ` (2)`, ` (3)`, … — never overwrite.
-- Reply in chat with: the file path, the one-line conclusion, source counts per language, claims checked / refuted, and anything skipped (a language with no results, web search unavailable, subagents unavailable).
+## Step 6 — Check citations (required)
+
+Dispatch one fresh subagent (a cheaper model when the host lets you choose) with the note path and the source packet path. It must:
+
+1. List every checkable item in the note: each number, date, percentage, rank, attribution ("X showed…"), causal claim, and quote, with its line and `[n]`.
+2. Tier 1, text only: find the supporting passage in the packet under the same URL as the item's `[n]`. For a causal claim, the passage must state the cause, not only the dates.
+3. Tier 2, only for items that fail tier 1: open the cited URL and check there.
+4. Return a table — item, line, `[n]`, verdict, fix — with counts: items checked, passed, failed.
+
+Apply every fix to the saved note (correct, re-cite, or remove), keep the source list and `source_count` in step, run tier 1 again on the items you changed, then fill checkpoint 7's counts from the table. If subagents are unavailable, run tiers 1–2 yourself and write "self-checked" in the method section.
+
+## Step 7 — Report
+
+- Reply in chat with: the file path, the one-line conclusion, source counts per language, claims checked / refuted, citation-check counts, and anything skipped (a language with no results, web search unavailable, subagents unavailable).
 
 ## Related skills
 

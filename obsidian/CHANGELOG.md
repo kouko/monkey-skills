@@ -19,8 +19,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   subagent. Claims the conclusion depends on are each checked by a fresh
   subagent that tries to refute them; confidence High / Medium / Low
   follows from source independence and that check, capped at Medium for
-  interested publishers or non-random samples. Before saving, every figure
-  is checked against the passage its citation points to.
+  interested publishers or non-random samples; several works by one
+  author or organization count as one source.
+- A required citation check (Step 6): a separate subagent lists every
+  figure, date, attribution, causal claim and quote, matches each against
+  the saved subagent reports (text only), opens the cited page only for
+  items that fail, and returns a table; the note's method section copies
+  its counts. On a real note it checked 137 items for US$1.52 (Sonnet)
+  and found 15 failures, including 3 of 4 an auditor had found.
 - Frameworks are used at four layers (`references/frameworks.md`): the
   question type picks a chapter skeleton, which is a suggestion rather
   than a template; in-chapter tools break down single issues; principles

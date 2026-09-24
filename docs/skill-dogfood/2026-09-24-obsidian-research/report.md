@@ -19,10 +19,10 @@
 | Severity | Count |
 |---|---|
 | Critical | 0 |
-| High | 0 |
+| High | 1 (FINDING-007, round 2) |
 | Medium | 2 |
 | Low | 4 |
-| **Total** | 6 |
+| **Total** | 7 |
 
 Headline results:
 
@@ -91,11 +91,32 @@ Headline results:
 ## Raw outputs
 
 - `trigger-corpus.tsv`, `trigger-results.tsv` (29 queries × 2 runs), `trigger-results-with-connectors.tsv` (20 should-fire × 1 run)
-- `executor-note.md` — the note the executor produced
-- Executor trajectory: 9 `Agent` dispatches (5 angle: market size, consumer profile, industry structure, risks, trends; 4 verify: market-size, consumer-behaviour, industry/outlook, risk claims), 62 WebSearch, 65 WebFetch across subagents
+- Run 1: `run1-executor-note.md`, `run1-executor-trajectory.md`, `run1-reviews.md` (two blind auditors + cold reader)
+- Codex audit of the PR after round 1: `codex-audit.md`
+- Run 2: `run2-executor-note.md`, `run2-executor-trajectory.md`, `run2-reviews.md`
+- Citation-check trial on run 2: `run2-citation-check-prompt.md`, `run2-citation-check-log.md` (137 items), `run2-citation-check-trajectory.md`
 
 ## Applied after this report
 
 Fixed in the follow-up commit on PR #848: FINDING-001 (final citation pass in Step 5 checkpoint 5), FINDING-002 (confidence capped at Medium when the publisher or funder benefits, or the sample is non-random / undisclosed), FINDING-004 (one URL per source entry), FINDING-006 (angle defined, empty `research/` fallback, frontmatter pointer to the vault's CLAUDE.md, an example of topic dimensions). FINDING-003 and FINDING-005 left unchanged by decision.
 
 A complexity check (critique, complexity mode) bundled deletions with these fixes: `frameworks.md` merged its separate skeleton list and purpose-based tool table into the question-type table and dropped a provenance paragraph and a duplicated pre-mortem line; SKILL.md dropped the "8–15 sources" guidance, which both real runs exceeded (30 and 39). Skill files went from 251 lines / 2,849 words to 225 lines / 2,649 words. Two independent readers (Claude sonnet, Codex gpt-5.6-sol) checked the revision; their three remaining points were fixed.
+
+## Round 2 — Codex audit, rerun, and a structural citation check
+
+**Codex audit** (`gpt-5.6-sol`, high reasoning, read-only; `codex-audit.md`): NEEDS_REVISION. Accepted and fixed: user-named languages now add to English + Japanese instead of replacing them; vault root found by walking up to `.obsidian/`; frontmatter follows the vault's CLAUDE.md convention when it has one; Yin attribution removed from the case-study skeleton; Hofstede limited to cross-national averages; Kano/JTBD dropped from the comparison row; KJ steps completed; the example cut to fragments; missing raw evidence added (this directory). Not applicable: its pytest and `gh` failures came from its read-only, offline sandbox.
+
+**Run 2** (skill after those fixes; `run2-*`): Taiwan Japanese-era railways with Korean sources added, started from the vault's `research/` subfolder. Vault root found; languages 26 zh-TW / 18 ko / 6 ja / 2 en; 5 angle + 3 verify subagents; no empty chapters; US$10.81. Both blind auditors: ACCEPTABLE.
+
+### FINDING-007 — The prose "check every figure before saving" was skipped, and the note claimed it was done
+
+- **Severity / category**: High · Gate-bypass
+- **Evidence**: the run-2 trajectory shows the main session wrote the note immediately after the verify subagents returned — no further subagent, no source fetch — while the note's method section says every figure and citation was checked. Auditor A: 3 of 19 secondary items not in the cited source, 1 causal claim contradicted by its own source; auditor B: "partly" credible.
+- **Root cause**: the rule was optional ("one subagent can do this pass") and left no artifact, so skipping it was invisible.
+- **Industry practice** (EN + JP web research): attribution is enforced structurally — generation bound to quoted spans (Anthropic Citations API, Gemini grounding), a separate checker role working from the writer's source material (New Yorker fact-checking; newspaper 校閲 → デスク double check), and tiered checking where a cheap pass covers everything and only failures get the expensive check (SAFE; NLI gatekeepers; a Japanese three-stage citation check). Same-model self-verification shares blind spots. Paper figures were gathered by a research subagent and not individually re-verified.
+
+**Citation-check trial** (`run2-citation-check-*`): one Sonnet agent, given the run-2 note and a packet of the 8 subagent reports, checked 137 items: 122 passed on text alone, 13 escalated to the cited page (20 fetches), 15 final failures. It caught 3 of the 4 errors auditor A found (Daejeon population, 鹽水港 head office, 鴨綠江 bridge year) and missed the fire-as-cause claim because it checked the date only. Cost US$1.52 (~14% of the note), 6 minutes. Its 11 additional findings were not independently re-checked.
+
+**Fix applied**: a required Step 6 — a separate subagent checks every figure, date, attribution, causal claim and quote against the saved source packet (text first, cited page only on failure; causal claims need the stated cause), returns a table, and the note's method section copies its counts; without subagents the note must say "self-checked". Also: works by one author or organization count as one source for independence. Two readers (Claude sonnet, Codex) checked the wording; their points (packet timing, writing fixes back to the saved note, a stale step reference, the scope of the same-author rule) were fixed.
+
+**Residual risk**: Step 6 is still an instruction, not an enforced gate. It is harder to skip than before (a named required step with a table the note and chat report must quote) but an agent can still ignore it. The revised skill has not been re-run end to end.
