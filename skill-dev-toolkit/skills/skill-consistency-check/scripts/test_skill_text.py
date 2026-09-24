@@ -1,0 +1,134 @@
+"""Tests for the skill text (task W3-01, acceptance 8).
+
+The skill must run unchanged on any host (Claude Code or Codex), so the
+orchestrator and detector texts may not name host-only tools or model ids.
+"""
+
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+SKILL_DIR = Path(__file__).resolve().parents[1]
+REPO_ROOT = SKILL_DIR.parents[2]
+SKILL_MD = SKILL_DIR / "SKILL.md"
+DETECT_READ = SKILL_DIR / "references" / "detector-read.md"
+DETECT_SIM = SKILL_DIR / "references" / "detector-simulate.md"
+SKILL_TEXTS = (SKILL_MD, DETECT_READ, DETECT_SIM)
+
+HOST_ONLY_TOOLS = ("workflow tool", "subagent_type", "task tool", "agent tool",
+                   "spawn_agent")
+MODEL_IDS = ("claude-", "sonnet", "haiku", "opus", "gpt-")
+EXEMPT_PREFIX = "Validated on:"
+
+
+def _env():
+    env = dict(os.environ)
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    return env
+
+
+def test_structure_and_description_checks_pass():
+    proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "check-skill-structure.py"),
+         str(REPO_ROOT / "skill-dev-toolkit")],
+        capture_output=True, text=True, env=_env(),
+    )
+    lines = proc.stdout.splitlines()
+    assert "PASS  skill-consistency-check" in lines, proc.stdout
+    assert not any(
+        "skills/skill-consistency-check/" in line and "[CHK-SKL-" in line
+        for line in lines
+    ), proc.stdout
+
+    desc = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider",
+         str(REPO_ROOT / "skill-dev-toolkit" / ".claude-plugin"
+             / "test_skill_description_standard.py")],
+        capture_output=True, text=True, env=_env(),
+    )
+    assert desc.returncode == 0, desc.stdout + desc.stderr
+
+
+def _scannable_lines(path):
+    assert path.is_file(), f"missing {path}"
+    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if line.lstrip().startswith(EXEMPT_PREFIX):
+            continue
+        yield n, line.lower()
+
+
+def test_no_host_only_tool_or_model_id_in_skill_text():
+    hits = []
+    for path in SKILL_TEXTS:
+        for n, line in _scannable_lines(path):
+            for token in HOST_ONLY_TOOLS + MODEL_IDS:
+                if token in line:
+                    hits.append(f"{path.name}:{n}: {token!r}")
+    assert not hits, hits
+
+
+def test_validation_note_is_the_only_exempt_line():
+    exempt = [line for line in SKILL_MD.read_text(encoding="utf-8").splitlines()
+              if line.lstrip().startswith(EXEMPT_PREFIX)]
+    assert len(exempt) == 1, exempt
+    assert "sonnet" in exempt[0].lower()
+
+
+def test_skill_md_matches_hardened_script_contract():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    for name in ("read-<i>.json", "simulate-<i>.json",
+                 "read-<i>-2.json", "simulate-<i>-2.json"):
+        assert name in text, f"SKILL.md lacks binding output name {name!r}"
+    flat = re.sub(r"\s+", " ", text.lower())
+    assert "at most 25,000" not in flat, \
+        "a single large file can push a group over 25,000; do not claim a hard cap"
+    assert "never present a verdict" in flat
+
+
+GATE_IDS = ("hard-rules", "plan-groups", "dispatch-detectors",
+            "model-record", "merge-report", "present-verdict")
+
+
+def test_operational_rules_are_registered_gates():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    opens = re.findall(r"<!-- gate: skill-consistency-check\.([a-z0-9-]+) -->",
+                       text)
+    for gid in GATE_IDS:
+        assert opens.count(gid) == 1, f"gate {gid!r} must open exactly once"
+    assert len(opens) == len(set(opens)), opens
+    closes = re.findall(r"<!-- /gate -->", text)
+    assert len(closes) == len(opens), "every gate needs a matching close tag"
+    # Gates open and close in order, never nested.
+    tags = re.findall(r"<!-- (gate: skill-consistency-check\.[a-z0-9-]+|/gate) -->",
+                      text)
+    for k, tag in enumerate(tags):
+        assert tag.startswith("gate:") == (k % 2 == 0), tags
+
+
+def test_model_recording_has_source_and_fallback():
+    flat = re.sub(r"\s+", " ", SKILL_MD.read_text(encoding="utf-8").lower())
+    assert "exact model identifier" in flat
+    assert "never paraphrase or shorten it" in flat
+    assert "`unknown`" in flat and "could not be observed" in flat
+
+
+def test_scope_and_plan_flags():
+    text = SKILL_MD.read_text(encoding="utf-8")
+    flat = re.sub(r"\s+", " ", text.lower())
+    assert "only markdown files other than readme" in flat
+    assert "--limit" not in text and "--group-max" not in text
+
+
+def test_detectors_keep_validated_definitions():
+    for path in (DETECT_READ, DETECT_SIM):
+        text = path.read_text(encoding="utf-8")
+        for heading in ("## Counts as a contradiction", "## Does NOT count",
+                        "## Output"):
+            assert re.search(rf"^{re.escape(heading)}\s*$", text, re.M), \
+                f"{path.name} lacks {heading!r}"
+        assert "Precision matters as much as recall" in text
+    sim = DETECT_SIM.read_text(encoding="utf-8")
+    assert "## Method: execution walk-through (follow this procedure)" in sim
+    assert "## Method" not in DETECT_READ.read_text(encoding="utf-8")

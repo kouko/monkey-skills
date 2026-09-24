@@ -1,0 +1,77 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-09-23-skill-consistency-check-llm-rewrite",
+  "content_digest": "1e04e8a34ff771198029697c98733026fe5c6a53",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_out_case_variant.py -q -p no:cacheprovider",
+      "artifact": "docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_out_case_variant.py",
+      "result": "pass",
+      "command_digest": "361a29eb20fe8f3146c961bdeff19326684c3d61e5c36f07a4adf4b682c47ae2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_malformed_side_exit.py -q -p no:cacheprovider",
+      "artifact": "docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_malformed_side_exit.py",
+      "result": "pass",
+      "command_digest": "dcae298a9c667bd6b8f17882ee83bd75a01068126b2871bbfced28f1bc44c2e9"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_plan_no_skill_md.py -q -p no:cacheprovider",
+      "artifact": "docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_plan_no_skill_md.py",
+      "result": "pass",
+      "command_digest": "270092e354eb70aa5f256a1f81255dd0e50d3e53a67d3c17070c3d82bc2cf808"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_missing_group_output.py -q -p no:cacheprovider",
+      "artifact": "docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_missing_group_output.py",
+      "result": "pass",
+      "command_digest": "02a94b69108dc3dcd3ab464252e0ddd781402852be5c3c664ecf2b9dd1a969f8"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_oversize_group.py -q -p no:cacheprovider",
+      "artifact": "docs/loom/2026-09-23-skill-consistency-check-llm-rewrite/evidence/probes/test_adversarial_oversize_group.py",
+      "result": "pass",
+      "command_digest": "fafc2f5b0a31f1e76615001fe5d1c77363a29aaae9acf6d63ae4cbe939288ccf"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "claude-code-lens",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "correctness",
+          "anchor": "skill-dev-toolkit/skills/skill-consistency-check/scripts/plan_groups.py:69",
+          "text": "nitpick (non-blocking): boundary regex rejects a ./references/a.md citation, so such a file is treated as periphery rather than core",
+          "fix": "allow an optional ./ prefix before the path and add a test case"
+        }
+      ]
+    },
+    {
+      "reviewer": "codex-skill-lens",
+      "vendor": "openai",
+      "model": "gpt-5.5",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [],
+  "selection": null
+}

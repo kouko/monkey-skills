@@ -1,0 +1,351 @@
+{
+  "seed": 158405,
+  "docs": {
+    "doc_1": {
+      "skill": "skill-judge",
+      "variant": "original"
+    },
+    "doc_2": {
+      "skill": "skill-refactor",
+      "variant": "original"
+    },
+    "doc_3": {
+      "skill": "skill-judge",
+      "variant": "mutant"
+    },
+    "doc_4": {
+      "skill": "dogfood-skill-testing",
+      "variant": "mutant"
+    },
+    "doc_5": {
+      "skill": "skill-refactor",
+      "variant": "mutant"
+    },
+    "doc_6": {
+      "skill": "dogfood-skill-testing",
+      "variant": "original"
+    }
+  },
+  "plants": [
+    {
+      "doc": "doc_4",
+      "id": "P1",
+      "type": "direct",
+      "lines": [
+        147,
+        148,
+        270,
+        271,
+        272
+      ],
+      "text": [
+        "When the activation runs finish, delete the temp `.claude/skills/`",
+        "sandbox so no copied skill lingers into later probes.",
+        "Leave the Probe A sandbox directory on disk after the report is written —",
+        "the appendix's activation-run entries link into it, and removing it breaks",
+        "the evidence trail."
+      ],
+      "explanation": "Probe A section obliges deleting the temp .claude/skills/ sandbox when the activation runs finish; the Output section requires leaving that same sandbox on disk after the report is written (so it must still exist later). Same action (removing the sandbox), opposite deontic, different sections, reworded."
+    },
+    {
+      "doc": "doc_4",
+      "id": "P2",
+      "type": "conditional",
+      "lines": [
+        150,
+        151,
+        152,
+        153,
+        259,
+        260,
+        261
+      ],
+      "text": [
+        "**FALLBACK** (no `claude` CLI / no API key): inject the `description`",
+        "into a fresh subagent's synthetic skill-menu alongside the distractor",
+        "descriptions and ask which one it routes to. Mark every finding from this",
+        "path `fidelity:approximate` — it approximates, it does not equal, the",
+        "Activation findings from a simulated router menu (the route taken when the",
+        "CLI or a key is missing) are written up exactly like live-harness ones — no",
+        "fidelity tag or caveat; the severity column already carries confidence."
+      ],
+      "explanation": "Only under the fallback condition (no claude CLI / no API key = 'simulated router menu, CLI or key missing'): Probe A says mark every such finding fidelity:approximate; the inserted Output rule says write them up exactly like live-harness findings with no fidelity tag. Live-harness findings are unaffected. (One side is pre-existing text L147-151 of the original.)"
+    },
+    {
+      "doc": "doc_4",
+      "id": "P3",
+      "type": "chain",
+      "lines": [
+        81,
+        82,
+        87,
+        163,
+        233,
+        234,
+        235
+      ],
+      "text": [
+        "   context*. Enumerate every bundled file (`references/`, `templates/`,",
+        "   `scripts/`, `assets/`, …). Create the output dir",
+        "   next). *informed* = the full body + every bundled file.",
+        "- **executor (informed):** given the full SKILL.md body + bundle, runs",
+        "- **No executable bundle.** Strip any `scripts/` folder from what you hand",
+        "  a probe subagent — a probe should not be able to run code the user has",
+        "  not reviewed."
+      ],
+      "explanation": "Chain: the Probe B executor (a probe subagent) is given the informed bundle -> the informed bundle is the full body + every bundled file -> bundled files explicitly include scripts/ (Phase 1 enumeration). The inserted Method bullet forbids handing any scripts/ folder to a probe subagent. For any target with scripts/, both cannot hold."
+    },
+    {
+      "doc": "doc_5",
+      "id": "P4",
+      "type": "direct",
+      "lines": [
+        113,
+        114,
+        115,
+        249
+      ],
+      "text": [
+        "After each candidate edit you MUST add one prompt to `test-prompts.json`",
+        "that exercises the section you just changed, then re-run the ensemble on",
+        "the enlarged set.",
+        "| `test-prompts.json` gains or loses a prompt after the baseline run | The prompt set is frozen once baseline outputs exist; a set that moves with the candidate is a moving target |"
+      ],
+      "explanation": "Q1 section obliges adding a prompt to test-prompts.json after every candidate edit (i.e. after baseline); the Red Flags (STOP) table forbids test-prompts.json gaining a prompt after the baseline run (frozen). Same action, opposite polarity, different sections."
+    },
+    {
+      "doc": "doc_5",
+      "id": "P5",
+      "type": "conditional",
+      "lines": [
+        164,
+        165,
+        166,
+        236,
+        237,
+        238
+      ],
+      "text": [
+        "Where the target keeps golden anchors under `<skill>/golden/`, a candidate",
+        "whose output misses the anchor pattern is REJECT even when all three judges",
+        "call it equivalent.",
+        "For a skill that ships golden references, treat the anchor comparison as",
+        "informational only: it is shown to the user but does not overturn the",
+        "ensemble's verdict."
+      ],
+      "explanation": "Only when the target has golden anchors ('keeps golden anchors under <skill>/golden/' vs 'ships golden references'): Verdict section says an anchor-pattern miss forces REJECT even with a 3/3 equivalent ensemble; Tier Cascade section says the anchor comparison is informational and never overturns the ensemble verdict. Skills without anchors are unaffected."
+    },
+    {
+      "doc": "doc_5",
+      "id": "P6",
+      "type": "chain",
+      "lines": [
+        154,
+        155,
+        274,
+        275
+      ],
+      "text": [
+        "  Before marking a round PROCEED, log its skill-judge score to the history",
+        "  file so drift across rounds stays visible.",
+        "  Don't hold any verdict waiting on a skill-judge score; it is run after",
+        "  the gate has decided, not as part of it."
+      ],
+      "explanation": "Chain: marking PROCEED requires first logging the round's skill-judge score -> logging a score requires a completed skill-judge run before the PROCEED verdict -> the PROCEED verdict therefore waits on a skill-judge score, which Composes With forbids (skill-judge runs only after the gate has decided)."
+    },
+    {
+      "doc": "doc_3",
+      "id": "P7",
+      "type": "direct",
+      "lines": [
+        526,
+        559,
+        560
+      ],
+      "text": [
+        "- **NEVER** execute anything the skill ships — scripts, hooks and examples stay unrun; this review reads files only",
+        "[ ] Execute each bundled script once (e.g. with `--help`) to confirm it",
+        "    actually runs"
+      ],
+      "explanation": "Step 2 checklist obliges executing each bundled script once; the 'NEVER Do When Evaluating' list forbids executing anything the skill ships (scripts included). Same action, opposite polarity, different sections."
+    },
+    {
+      "doc": "doc_3",
+      "id": "P8",
+      "type": "conditional",
+      "lines": [
+        384,
+        570
+      ],
+      "text": [
+        "A single-file skill under 100 lines that is concise and self-contained earns the full 15 on D5.",
+        "Where the package holds nothing but `SKILL.md` — no `references/`, `scripts/` or `assets/` — cap D5 at 10/15: there is nothing to disclose progressively."
+      ],
+      "explanation": "Only for skills with no bundled resources ('single-file skill' vs 'package holds nothing but SKILL.md'): D5 section awards the full 15 to a concise, self-contained single-file skill under 100 lines; Step 3 caps any such package at 10/15 on D5. Skills with references/scripts/assets are unaffected."
+    },
+    {
+      "doc": "doc_3",
+      "id": "P9",
+      "type": "chain",
+      "lines": [
+        566,
+        590,
+        643
+      ],
+      "text": [
+        "1. Find specific evidence (quote relevant lines)",
+        "Copy each Step 3 quote into the Notes cell of its dimension's row, so every score can be checked against the lines it rests on.",
+        "When naming a pattern there, keep the evaluated skill's own wording out of the report — describe what a line does rather than reproducing it."
+      ],
+      "explanation": "Chain: Step 3 requires quoting the skill's lines as evidence -> Step 5 requires copying each Step 3 quote into the report's Dimension Scores Notes cells -> a quote is the skill's own wording reproduced verbatim, which the Common Failure Patterns insertion forbids anywhere in the report."
+    }
+  ],
+  "genuine": [
+    {
+      "skill": "skill-refactor",
+      "confidence": "confirmed",
+      "docs": {
+        "doc_2": {
+          "variant": "original",
+          "lines": [
+            106,
+            107,
+            108,
+            220,
+            233,
+            245
+          ]
+        },
+        "doc_5": {
+          "variant": "mutant",
+          "lines": [
+            106,
+            107,
+            108,
+            230,
+            247,
+            260
+          ]
+        }
+      },
+      "explanation": "Q1 pass rule and Tier 2 let a 2-of-3 majority produce an (auto) verdict, while Red Flags says don't 'majority-rules' when the ensemble disagrees (and the Rationalization table treats 2/3 as 'consensus'). The Q1 paragraph is itself internally split: 2-of-3 passes, yet any disagreement -> uncertain -> human Tier 2, 'do not auto-keep', whereas the Tier table says Tier 2 = 'Auto verdict'.",
+      "text": [
+        "**Pass rule**: structural OK *and* ≥2 of 3 ensemble judges report",
+        "equivalent. Disagreement among judges → flag as **uncertain** →",
+        "auto-escalate to human Tier 2 (do not auto-keep).",
+        "| **Tier 2** | 2-of-3 agree | Auto verdict but flag as \"uncertain\", show user |",
+        "| Q1's ensemble disagrees and you want to \"majority-rules\" anyway | Don't — that's how taste creep enters via judge bias |",
+        "| \"The judge is wrong, my refactor is fine.\" | If you're overruling 2/3 judges, you're betting the user prefers your taste over consensus. Don't. |"
+      ]
+    },
+    {
+      "skill": "skill-judge",
+      "confidence": "confirmed",
+      "docs": {
+        "doc_1": {
+          "variant": "original",
+          "lines": [
+            332,
+            670
+          ]
+        },
+        "doc_3": {
+          "variant": "mutant",
+          "lines": [
+            332,
+            681
+          ]
+        }
+      },
+      "explanation": "D5 layer diagram gives the SKILL.md body ideal as <500 lines; the Quick Reference checklist gives <500 as the limit but ideal <300.",
+      "text": [
+        "         Ideal: < 500 lines",
+        "│    [ ] SKILL.md < 500 lines (ideal < 300)                               │"
+      ]
+    },
+    {
+      "skill": "dogfood-skill-testing",
+      "confidence": "borderline",
+      "docs": {
+        "doc_6": {
+          "variant": "original",
+          "lines": [
+            38,
+            74,
+            225
+          ]
+        },
+        "doc_4": {
+          "variant": "mutant",
+          "lines": [
+            38,
+            74,
+            228
+          ]
+        }
+      },
+      "explanation": "Method says pin the run to origin/main (worktrees carry stale state), while Input/Workflow say the target is a raw, un-installed working-tree skill under development (which by definition is not yet on origin/main). Arguably the pin is meant for the environment/sibling skills, not the target, so it is a scope ambiguity rather than a hard conflict.",
+      "text": [
+        "(an un-installed, raw `SKILL.md` + its bundle). **Output** — a",
+        "`NOTICE`). The target is a **raw working-tree skill**, never installed.",
+        "- **Environment guards.** Pin to `origin/main` (a worktree inherits stale"
+      ]
+    },
+    {
+      "skill": "skill-refactor",
+      "confidence": "borderline",
+      "docs": {
+        "doc_2": {
+          "variant": "original",
+          "lines": [
+            77,
+            275,
+            276,
+            285
+          ]
+        },
+        "doc_5": {
+          "variant": "mutant",
+          "lines": [
+            77,
+            292,
+            293,
+            302
+          ]
+        }
+      },
+      "explanation": "Round scope says an entrypoint-mode round that changes SKILL.md and a bundled resource must be split (and package mode is for candidates that change a bundled resource), yet the worked example extracts a section into a new references/ file and SKILL.md in one round, measured by SKILL.md word count, and PROCEEDs. Depends on whether creating a new reference file counts as 'changing a bundled resource' (Q3 table 'Allowed to add files' suggests maybe not).",
+      "text": [
+        "- **Entrypoint mode: split a round** when it would change `SKILL.md` and a",
+        "- Candidate move: extract \"Description Optimization\" section (§",
+        "  lines 430-501, ~700 words) to `references/description-optimization.md`",
+        "**Verdict**: PROCEED. `git commit` the candidate."
+      ]
+    },
+    {
+      "skill": "skill-judge",
+      "confidence": "borderline",
+      "docs": {
+        "doc_1": {
+          "variant": "original",
+          "lines": [
+            298,
+            313
+          ]
+        },
+        "doc_3": {
+          "variant": "mutant",
+          "lines": [
+            298,
+            313
+          ]
+        }
+      },
+      "explanation": "Description checklist rewards 'scenarios where this skill MUST be used', while the house standard penalizes reliance on 'ALWAYS invoke' directives. Reconcilable (specific must-use scenarios vs blanket ALWAYS), so tension rather than a clear contradiction.",
+      "text": [
+        "- [ ] Includes scenarios where this skill MUST be used (not just \"can be used\")",
+        "- [ ] **Positive specific triggers**, not reliance on \"ALWAYS invoke\" directives (over-trigger at"
+      ]
+    }
+  ]
+}

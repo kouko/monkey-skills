@@ -11,6 +11,7 @@
 |---|---|
 | `skill-creator-advance` | 建立新 skill、大幅重設計、評估驅動開發、優化 description 觸發。 |
 | `skill-judge` | 以 8 維 rubric 評 skill 設計品質(0–120 + 等第)。 |
+| `skill-consistency-check` | 找出 skill 資料夾內互相矛盾的規則 —— 獨立的 LLM 偵測者通讀檔案並模擬執行,只有高信心的發現會擋下。 |
 | `dogfood-skill-testing` | 對草稿 SKILL.md 做盲測行為驗證 —— 該觸發時會不會觸發、workflow 是否符合自己的 contract。 |
 | `skill-refactor` | 保留輸出行為的 token / 結構重構。 |
 | `skill-tuning` | skill 輸出品質 A/B —— 人類判定挑選變體。 |

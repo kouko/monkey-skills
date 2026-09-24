@@ -1,0 +1,732 @@
+{
+  "seed": 3023780525,
+  "docs": {
+    "doc_1": {
+      "skill": "skill-tuning",
+      "variant": "original"
+    },
+    "doc_2": {
+      "skill": "skill-creator-advance",
+      "variant": "original"
+    },
+    "doc_3": {
+      "skill": "skill-tuning",
+      "variant": "mutant"
+    },
+    "doc_4": {
+      "skill": "skill-creator-advance",
+      "variant": "mutant"
+    },
+    "doc_5": {
+      "skill": "fact-check",
+      "variant": "mutant"
+    },
+    "doc_6": {
+      "skill": "fact-check",
+      "variant": "original"
+    }
+  },
+  "plants": [
+    {
+      "doc": "doc_3",
+      "skill": "skill-tuning",
+      "type": "chain",
+      "subtypes": [
+        "ordinary-knowledge",
+        "three-hop"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            133,
+            134,
+            135,
+            136
+          ],
+          "text": "Survivors go forward to Phase 3 with the editor's one-line dimension note ('warmer tone', 'list-first') printed under each output, so the user can judge each variant against what it set out to change."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            98,
+            99,
+            100,
+            101
+          ],
+          "text": "> - Differ from baseline in at least one *named* dimension (state >   what's different) > > Generate the variant SKILL.md edit; explain the dimension being"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            164,
+            165,
+            166
+          ],
+          "text": "The user's identity (which variant was the baseline, which were new) is **withheld** until after the user picks. Reveal only after the choice is locked."
+        }
+      ],
+      "steps": [
+        "Inserted Phase-2 text: every surviving output is shown in Phase 3 with the editor's dimension note printed under it.",
+        "Phase 1: dimension notes are produced by the editor only for variants, and they state how the variant differs FROM the baseline; the baseline run (Before You Begin #4) has no such note.",
+        "Unstated ordinary knowledge: if every new variant carries a 'what changed vs baseline' note and one output carries none, the unannotated output is identifiably the baseline.",
+        "Phase 3 requires which output is the baseline to be withheld until the pick is locked -> the inserted display rule reveals it before the pick."
+      ],
+      "explanation": "Printing the editor's per-variant dimension notes in the blind A/B de-blinds it: the baseline is the only output without a note.",
+      "id": "Q1"
+    },
+    {
+      "doc": "doc_3",
+      "skill": "skill-tuning",
+      "type": "chain",
+      "subtypes": [
+        "ordering",
+        "three-hop"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            168,
+            169,
+            170
+          ],
+          "text": "Append the round's preference-log entry as soon as the outputs are on screen, before the question is asked — if the session dies mid-round, the log still shows that the round ran."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            193
+          ],
+          "text": "{\"timestamp\": \"...\", \"skill\": \"...\", \"round\": N, \"test_prompt_id\": M, \"variants_shown\": [\"baseline\", \"variant_a\", \"variant_b\"], \"user_pick\": \"variant_a\", \"rejected_by_constitution\": [], \"evaluator\": \"human-1\", \"notes\": \"...\"}"
+        },
+        {
+          "role": "hop",
+          "lines": [
+            427,
+            428
+          ],
+          "text": "- `scripts/preference_log.py` — append / query / aggregate preference log entries"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            438
+          ],
+          "text": "The ratchet here is the preference log — it only grows."
+        }
+      ],
+      "steps": [
+        "Inserted Phase-3 text: append the round's log entry when outputs are shown, BEFORE asking for the pick.",
+        "Phase 4 defines the one entry per round and its schema includes `user_pick` (and rejected/variants) — the pick is part of the entry.",
+        "The pick does not exist yet at append time, so the entry cannot be complete (ordering: entry must precede the pick but needs the pick's output).",
+        "The log can't be fixed afterwards: it is append-only (preference_log.py only appends/queries/aggregates; 'it only grows'), so the entry can't be amended, and appending a second entry would break the one-entry-per-round schema."
+      ],
+      "explanation": "Log-before-pick ordering vs a per-round entry that must contain user_pick, in an append-only log.",
+      "id": "Q2"
+    },
+    {
+      "doc": "doc_3",
+      "skill": "skill-tuning",
+      "type": "direct",
+      "subtypes": [],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            185
+          ],
+          "text": "| User picks baseline | **DROP** (variants drop) | Discard variant edits; log \"no preference for variants this round\" |"
+        },
+        {
+          "role": "obligation",
+          "lines": [
+            187
+          ],
+          "text": "| User picks \"None\" | **DROP** | Discard all variants; log \"all variants worse\"; consider this a signal that the variant-generation prompt may be too narrow |"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            243,
+            244,
+            245
+          ],
+          "text": "When a round ends in DROP, never append to the preference log — a round where nothing beat the baseline carries no preference for a future judge to learn from."
+        }
+      ],
+      "steps": [
+        "Phase 4 table: DROP rounds are logged ('no preference for variants this round' / 'all variants worse').",
+        "Inserted text: on DROP, do not append to the preference log."
+      ],
+      "explanation": "Direct control: log on DROP vs never log on DROP.",
+      "id": "Q3"
+    },
+    {
+      "doc": "doc_3",
+      "skill": "skill-tuning",
+      "type": "chain",
+      "subtypes": [
+        "ordinary-knowledge"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            215,
+            216,
+            217,
+            218
+          ],
+          "text": "When several reviewers take part, run the A/B as one live session: they talk the outputs through together first, then each states a pick — the discussion surfaces reasons worth keeping in the log's `notes` field."
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            172,
+            173,
+            174,
+            175,
+            176
+          ],
+          "text": "For multi-evaluator setups (rare; only when multiple humans review together), each evaluator picks independently; aggregate via inter-rater agreement; if agreement <70%, escalate as `skill-dev-toolkit:skill-refactor`-style \"uncertain\" → don't ratchet without resolution."
+        }
+      ],
+      "steps": [
+        "Inserted Verdict-Vocabulary text: multiple reviewers discuss the outputs together first, then each states a pick.",
+        "Unstated ordinary knowledge: reviewers who talk the options through together before choosing are no longer picking independently; their agreement is inflated by the discussion.",
+        "Phase 3 requires each evaluator to pick independently and uses inter-rater agreement (<70% -> escalate) as the decision signal, which presupposes independent picks."
+      ],
+      "explanation": "Group discussion before picking destroys the independence the multi-evaluator agreement gate relies on.",
+      "id": "Q4"
+    },
+    {
+      "doc": "doc_4",
+      "skill": "skill-creator-advance",
+      "type": "chain",
+      "subtypes": [
+        "ordering",
+        "three-hop"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            320
+          ],
+          "text": "The most useful descriptive name is the assertion the eval will be graded on — e.g. `asserts-heading-order/` — so a failing row in the benchmark names its own cause."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            310
+          ],
+          "text": "- Save outputs to: <workspace>/iteration-<N>/eval-<ID>/with_skill/outputs/"
+        },
+        {
+          "role": "hop",
+          "lines": [
+            210
+          ],
+          "text": "Save test cases to `evals/evals.json`. Don't write assertions yet — just the prompts. You'll draft assertions in the next step while the runs are in progress."
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            333
+          ],
+          "text": "Use the wait productively: draft quantitative assertions for each test case and explain them to the user. If assertions already exist in `evals/evals.json`, review them and explain what they check."
+        }
+      ],
+      "steps": [
+        "Inserted Step-1 text: name each eval directory after the assertion it will be graded on.",
+        "Step 1: the directory is fixed when runs are spawned — each subagent is told to save outputs to <workspace>/iteration-N/eval-<ID>/..., so the name is needed at spawn time.",
+        "Test Cases: at that point assertions are deliberately not written yet ('just the prompts').",
+        "Step 2: assertions are drafted only while the runs are already in progress -> the name depends on an artifact produced after the directory must exist (renaming later would break the running subagents' save paths)."
+      ],
+      "explanation": "Directory named after an assertion that, by the prescribed order, is only drafted after the directory is in use.",
+      "id": "Q5"
+    },
+    {
+      "doc": "doc_4",
+      "skill": "skill-creator-advance",
+      "type": "direct",
+      "subtypes": [],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            390
+          ],
+          "text": "6. **Save a markdown report** to `<workspace>/iteration-N/review.md` containing all test case results and benchmark data, persisting them for cross-iteration comparison."
+        },
+        {
+          "role": "obligation",
+          "lines": [
+            416
+          ],
+          "text": "3. Present results inline and save to `review.md`, noting changes from previous iteration"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            291
+          ],
+          "text": "Whichever path you take, the conversation is the record: don't write result summaries out to markdown files in the workspace — they drift from the live outputs as soon as the next iteration runs."
+        }
+      ],
+      "steps": [
+        "Step 4 / iteration loop: save a markdown report review.md per iteration.",
+        "Inserted text: don't write result summaries to markdown files in the workspace, on either path."
+      ],
+      "explanation": "Direct control: save review.md vs don't write markdown result files.",
+      "id": "Q6"
+    },
+    {
+      "doc": "doc_4",
+      "skill": "skill-creator-advance",
+      "type": "chain",
+      "subtypes": [
+        "ordering",
+        "ordinary-knowledge"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            471
+          ],
+          "text": "For the should-not-trigger half, the sharpest near-misses come from the optimizer itself: take the prompts the current description wrongly fires on in `run_loop`'s first iteration and add them to the set."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            484
+          ],
+          "text": "Ask the user to confirm, edit, add, or remove queries before proceeding. Save the final eval set to `<workspace>/trigger-eval.json`."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            492
+          ],
+          "text": "Save the eval set to the workspace, then run in the background:"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            496
+          ],
+          "text": "--eval-set <path-to-trigger-eval.json> \\"
+        }
+      ],
+      "steps": [
+        "Inserted Step-1 text: build the should-not-trigger queries from the prompts the description wrongly fires on in run_loop's first iteration.",
+        "Step 2/3: the eval set is reviewed, confirmed and saved BEFORE the loop runs, and the loop takes it as input (--eval-set).",
+        "Unstated ordinary knowledge: 'wrongly fires' can only be measured on queries already labeled should_trigger=false in the input set; the loop cannot report misfires on prompts that aren't in it.",
+        "So the eval set needs the loop's output, and the loop needs the finished eval set -> circular ordering."
+      ],
+      "explanation": "Near-miss negatives sourced from a run that requires the completed, labeled eval set as its input.",
+      "id": "Q7"
+    },
+    {
+      "doc": "doc_4",
+      "skill": "skill-creator-advance",
+      "type": "chain",
+      "subtypes": [
+        "ordinary-knowledge"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            503
+          ],
+          "text": "Send the loop's stdout and stderr to `/dev/null` (append `> /dev/null 2>&1`) — with `--verbose` on, it would otherwise pour hundreds of lines into the session."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            507
+          ],
+          "text": "While it runs, periodically tail the output to update the user on which iteration it's on and the scores."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            509
+          ],
+          "text": "The script handles the full optimization loop automatically (train/held-out-test methodology and its rationale: `references/eval-methodology.md`). When done, it opens an HTML report in the browser and returns JSON with `best_description` — selected by test score rather than train score to avoid overfitting."
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            517
+          ],
+          "text": "Take `best_description` from the JSON output and update the skill's SKILL.md frontmatter. Show the user before/after and report the scores."
+        }
+      ],
+      "steps": [
+        "Inserted Step-3 text: redirect run_loop's stdout+stderr to /dev/null.",
+        "Unstated ordinary knowledge: /dev/null discards everything; nothing written to stdout/stderr is kept or can be read later.",
+        "The workflow depends on that output: 'periodically tail the output' for progress and scores, and the script 'returns JSON with best_description' on completion.",
+        "Step 4 takes best_description from that JSON output -> it no longer exists."
+      ],
+      "explanation": "Discarding the loop's output removes both the progress to tail and the returned JSON that Step 4 consumes.",
+      "id": "Q8"
+    },
+    {
+      "doc": "doc_5",
+      "skill": "fact-check",
+      "type": "chain",
+      "subtypes": [
+        "three-hop"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            86,
+            87,
+            88,
+            89
+          ],
+          "text": "A claim stated with an absolute (*always*, *all*, *none*) MUST first be restated in the narrower, conditional form the evidence can actually settle — \"all swans are white\" becomes \"swans in Europe are white\" — and that restatement is the claim under check from here through Stage C."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            187,
+            188
+          ],
+          "text": "quote}`. Collapse the pool to **one** object: set `claim` to the claim under check, and `sourceUrl` / `sourceQuality` / `quote` to the **single strongest"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            273,
+            274,
+            275,
+            276,
+            277
+          ],
+          "text": "the claim uses an absolute quantifier (*never / always / all / none*) but the evidence only supports a **conditional** version, cap each voter's `confidence` at `medium` — \"honey *never* spoils\" is over-stated even when \"sealed honey is shelf-stable\" is well-sourced (`factcheck.py` cannot see claim scope, so this is the voter's call)."
+        }
+      ],
+      "steps": [
+        "Inserted Stage-A text: an absolute claim is restated in a conditional form, and that restatement is the claim under check through Stage C.",
+        "Stage B: the object handed to all voters sets `claim` to the claim under check -> voters see only the conditional version.",
+        "Stage C calibration: the medium-confidence cap fires only when the claim uses an absolute quantifier and evidence supports only a conditional version; factcheck.py cannot see scope, so it is solely the voter's call — and the voter never sees the absolute.",
+        "Result: the over-stated original claim can come back supported at high confidence, exactly what the caveat says is wrong ('over-stated even when the conditional is well-sourced')."
+      ],
+      "explanation": "Pre-narrowing absolute claims removes the only trigger for the absolute-quantifier confidence cap.",
+      "id": "Q9"
+    },
+    {
+      "doc": "doc_5",
+      "skill": "fact-check",
+      "type": "chain",
+      "subtypes": [
+        "ordering",
+        "ordinary-knowledge"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            114,
+            115,
+            116
+          ],
+          "text": "Grade `relevance` from the full page, not the search snippet: `high` only when the page's body squarely addresses the claim; a matching title or snippet is not enough."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            96
+          ],
+          "text": "2. Rank/filter the raw hits into structured results. Treat the claim as a"
+        },
+        {
+          "role": "hop",
+          "lines": [
+            133
+          ],
+          "text": "4. For each novel source — **highest-`relevance` first, up to the ≤6 budget**;"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            136
+          ],
+          "text": "that blows the budget) — fetch it with host `WebFetch` and extract a"
+        }
+      ],
+      "steps": [
+        "Inserted step-2 text: relevance is graded from the full page body, not the search snippet.",
+        "Unstated ordinary knowledge: a search hit gives only title/URL/snippet; reading the page body requires fetching it.",
+        "Step 2 ranks the RAW hits (before any fetch), and step 4 decides which sources get fetched — highest relevance first, capped at 6 — from that relevance.",
+        "So relevance must exist before fetching but can only be computed after fetching -> ordering conflict (and grading every hit by full page would also blow the ≤6 fetch budget)."
+      ],
+      "explanation": "Relevance that needs page bodies vs relevance that selects which pages get fetched.",
+      "id": "Q10"
+    },
+    {
+      "doc": "doc_5",
+      "skill": "fact-check",
+      "type": "chain",
+      "subtypes": [
+        "ordinary-knowledge",
+        "three-hop"
+      ],
+      "sides": [
+        {
+          "role": "obligation",
+          "lines": [
+            180,
+            181,
+            182
+          ],
+          "text": "Spawn each voter as a fork of this conversation rather than a blank agent — it then already holds the Stage-A pool and your own reading of the claim, so the per-voter prompt can stay short."
+        },
+        {
+          "role": "hop",
+          "lines": [
+            56
+          ],
+          "text": "parallel by dispatching 3 independent subagents: one fresh subagent per"
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77
+          ],
+          "text": "**Independence is a GATE, not a nicety.** The quorum only means something if the three votes come from **independent** contexts — separate parallel subagents, or (if the host cannot parallelize) three **fresh sequential** subagent contexts. Reasoning out three \"votes\" in your **own single context** is **not** a quorum: the votes echo each other and `factcheck.py` cannot tell them from one opinion copied three times. If you genuinely cannot achieve independent fan-out and have to vote in one shared context, you **MUST** pass `--solo` to Stage C — the verdict will be forced to `inconclusive` (`reason: no-quorum`). Faking three same-context votes without `--solo` is the gate-bypass this rule exists to forbid. Prefer real fan-out; `--solo` is a"
+        }
+      ],
+      "steps": [
+        "Inserted Stage-B text: each voter is a fork of the current conversation, holding the Stage-A pool and your own reading of the claim.",
+        "Unstated ordinary knowledge: a fork inherits the parent's context — it is not a fresh, independent context.",
+        "Fan-out convention: voters are fresh, independent contexts; votes reasoned from your own context echo each other and are not a quorum.",
+        "Hence forked votes fail the independence gate; per the gate they would need --solo (forced inconclusive), yet the insert presents forking as the normal quorum path."
+      ],
+      "explanation": "Forked voters share the orchestrator's context, violating the quorum independence gate.",
+      "id": "Q11"
+    },
+    {
+      "doc": "doc_5",
+      "skill": "fact-check",
+      "type": "direct",
+      "subtypes": [],
+      "sides": [
+        {
+          "role": "prohibition",
+          "lines": [
+            218,
+            219,
+            220
+          ],
+          "text": "`confidence` ∈ {`high`, `medium`, `low`}. A voter that fails or returns nothing is an **abstention** — record its vote as `null`, not as a non-refutation."
+        },
+        {
+          "role": "prohibition",
+          "lines": [
+            306,
+            307
+          ],
+          "text": "- **A single voter subagent fails** — that vote is an **abstention** (`null`), per Stage B; do not retry forever or substitute a non-refutation."
+        },
+        {
+          "role": "obligation",
+          "lines": [
+            242,
+            243,
+            244
+          ],
+          "text": "A voter that never comes back still gets a slot: fill it with a non-refuting verdict (`refuted: false`, `confidence: low`) so `factcheck.py` always receives three well-formed votes."
+        }
+      ],
+      "steps": [
+        "Stage B / When a step fails: a failed voter is an abstention recorded as null, not a non-refutation.",
+        "Inserted Stage-C text: fill a missing voter with a non-refuting verdict (refuted: false)."
+      ],
+      "explanation": "Direct control: null abstention vs substituting a non-refutation.",
+      "id": "Q12"
+    }
+  ],
+  "genuine": [
+    {
+      "skill": "skill-tuning",
+      "confidence": "borderline",
+      "docs": {
+        "doc_1": {
+          "lines": [
+            181,
+            322,
+            323,
+            324
+          ]
+        },
+        "doc_3": {
+          "lines": [
+            190,
+            340,
+            341,
+            342
+          ]
+        }
+      },
+      "explanation": "Log is one entry per round (single test_prompt_id), but the worked example counts 9 entries as 3 prompts x 3 rounds."
+    },
+    {
+      "skill": "skill-tuning",
+      "confidence": "borderline",
+      "docs": {
+        "doc_1": {
+          "lines": [
+            175,
+            319,
+            320
+          ]
+        },
+        "doc_3": {
+          "lines": [
+            184,
+            337,
+            338
+          ]
+        }
+      },
+      "explanation": "Table: a non-baseline pick is ADOPT immediately; worked example has user pick A in round 2 without adopting until round 3 'confirms'."
+    },
+    {
+      "skill": "skill-tuning",
+      "confidence": "borderline",
+      "docs": {
+        "doc_1": {
+          "lines": [
+            104,
+            138,
+            314
+          ]
+        },
+        "doc_3": {
+          "lines": [
+            104,
+            143,
+            332
+          ]
+        }
+      },
+      "explanation": "2-3 variants plus baseline gives 3-4 outputs, but the A/B template has only A/B/C ('Three variants'); worked example shows baseline + A + B + C."
+    },
+    {
+      "skill": "skill-tuning",
+      "confidence": "borderline",
+      "docs": {
+        "doc_1": {
+          "lines": [
+            44,
+            67,
+            68
+          ]
+        },
+        "doc_3": {
+          "lines": [
+            44,
+            67,
+            68
+          ]
+        }
+      },
+      "explanation": "Iron Law requires constitution honored for any ship, while Before You Begin allows proceeding with no constitution."
+    },
+    {
+      "skill": "skill-creator-advance",
+      "confidence": "borderline",
+      "docs": {
+        "doc_2": {
+          "lines": [
+            274,
+            411
+          ]
+        },
+        "doc_4": {
+          "lines": [
+            274,
+            415
+          ]
+        }
+      },
+      "explanation": "Case (c) says the baseline should be the original version; the iteration loop leaves original vs previous iteration to judgment."
+    },
+    {
+      "skill": "skill-creator-advance",
+      "confidence": "borderline",
+      "docs": {
+        "doc_2": {
+          "lines": [
+            274,
+            287
+          ]
+        },
+        "doc_4": {
+          "lines": [
+            274,
+            287
+          ]
+        }
+      },
+      "explanation": "Case (c) allows the quick path yet requires a baseline comparison against the original; the quick path skips baseline comparison."
+    },
+    {
+      "skill": "fact-check",
+      "confidence": "borderline",
+      "docs": {
+        "doc_6": {
+          "lines": [
+            109,
+            125
+          ]
+        },
+        "doc_5": {
+          "lines": [
+            118,
+            134
+          ]
+        }
+      },
+      "explanation": "Hard ≤6 fetch cap vs text permitting (optional) high-relevance fetches past the budget."
+    },
+    {
+      "skill": "fact-check",
+      "confidence": "borderline",
+      "docs": {
+        "doc_6": {
+          "lines": [
+            159,
+            287,
+            288
+          ]
+        },
+        "doc_5": {
+          "lines": [
+            168,
+            304,
+            305
+          ]
+        }
+      },
+      "explanation": "insufficient-evidence is defined as 'topic is real, coverage thin', but a missing web tool (topic reality unknown) is also mapped to insufficient-evidence."
+    }
+  ]
+}

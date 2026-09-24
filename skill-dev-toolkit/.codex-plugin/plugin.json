@@ -1,7 +1,7 @@
 {
   "name": "skill-dev-toolkit",
-  "version": "0.4.1",
-  "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
+  "version": "0.5.0",
+  "description": "Self-contained toolkit to author Claude Agent Skills — create, score, check consistency, refactor, tune, dogfood.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -15,6 +15,7 @@
     "skill-creator",
     "skill-judge",
     "skill-evaluation",
+    "skill-consistency-check",
     "skill-refactor",
     "skill-tuning",
     "dogfood-skill-testing",
@@ -23,7 +24,7 @@
   "interface": {
     "displayName": "skill-dev-toolkit",
     "shortDescription": "Author, score, and refine Claude Agent Skills end-to-end",
-    "longDescription": "A self-contained toolkit for building high-quality Agent Skills: skill-creator-advance scaffolds or redesigns a skill, skill-judge scores it on an 8-dimension rubric, dogfood-skill-testing runs a blind behavioral test of whether it fires and meets its contract, skill-refactor cuts tokens while preserving behavior, and skill-tuning runs blind output A/B to tune voice and quality. Use it to take a skill from idea to ship.",
+    "longDescription": "A self-contained toolkit for building high-quality Agent Skills: skill-creator-advance scaffolds or redesigns a skill, skill-judge scores it on an 8-dimension rubric, skill-consistency-check finds rules inside a skill package that contradict each other, dogfood-skill-testing runs a blind behavioral test of whether it fires and meets its contract, skill-refactor cuts tokens while preserving behavior, and skill-tuning runs blind output A/B to tune voice and quality. Use it to take a skill from idea to ship.",
     "developerName": "kouko",
     "category": "Coding",
     "capabilities": [

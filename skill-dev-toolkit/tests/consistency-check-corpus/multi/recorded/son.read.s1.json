@@ -1,0 +1,45 @@
+{"findings": [
+  {"id": "F1",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "agents/comparator.md", "lines": [79, 81, 82],
+     "quote": "Compare A and B based on (in priority order): 1. **Primary**: Overall rubric score (content + structure) 2. **Secondary**: Assertion pass rates (if applicable)"},
+   "side_b": {"file": "agents/comparator.md", "lines": [176],
+     "quote": "**winner**: \"A\", \"B\", or \"TIE\" — when expectations are provided, this is the side with the higher assertion pass rate; rubric scores decide only when the pass rates are equal"},
+   "steps": [],
+   "why": "Step 6 says the rubric (content+structure) score is the primary decision factor and assertion pass rate only secondary; the Field Descriptions entry for `winner` says the opposite — when expectations are provided, assertion pass rate is decisive and rubric scores only break ties. When A has the higher rubric score but B has the higher assertion pass rate, the comparator cannot follow both rules to pick a winner. (Also reinforced by Step 5 line 75 'Use expectation scores as secondary evidence (not the primary decision factor)' and the Guidelines line 199 'Assertion scores are secondary to overall task completion', both agreeing with Step 6 against line 176.)"},
+
+  {"id": "F2",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "SKILL.md", "lines": [521],
+     "quote": "The packager depends on Claude Code's local toolchain, so on Claude.ai skip this step and point the user at the finished skill folder instead."},
+   "side_b": {"file": "references/platform-adaptations.md", "lines": [25],
+     "quote": "**Packaging**: The `package_skill.py` script works anywhere with Python and a filesystem. On Claude.ai, you can run it and the user can download the resulting `.skill` file."},
+   "steps": [],
+   "why": "Both statements are specifically about what to do for the packaging step when running on Claude.ai. SKILL.md says the packager needs Claude Code's local toolchain and to skip packaging entirely on Claude.ai; platform-adaptations.md — the very file SKILL.md points to for Claude.ai-specific adjustments — says the packager works anywhere with Python and should be run on Claude.ai so the user can download the .skill file. An agent following SKILL.md would refuse to package on Claude.ai; one following platform-adaptations.md would package it — they cannot both be right for the same situation."},
+
+  {"id": "F3",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "SKILL.md", "lines": [287],
+     "quote": "Run 2-3 test cases manually (no subagent spawning); review outputs inline with the user; skip grading, benchmarking, and baseline comparison; iterate on direct user feedback"},
+   "side_b": {"file": "references/eval-methodology.md", "lines": [24, 25, 26],
+     "quote": "This is why the baseline is not reserved for the full eval path: even on the quick path, each manually run test case is paired with a baseline run so the user can review the two outputs side by side."},
+   "steps": [],
+   "why": "SKILL.md's Choosing Your Eval Path table explicitly lists 'skip ... baseline comparison' as part of the Quick eval path's method. eval-methodology.md explicitly states the opposite: baseline runs are NOT reserved for the full path, and even the quick path pairs every manually run test case with a baseline run. Both describe the same Quick eval path; an agent cannot both skip and perform the baseline run for the same quick-path test case."},
+
+  {"id": "F4",
+   "type": "conditional",
+   "confidence": "medium",
+   "side_a": {"file": "SKILL.md", "lines": [202],
+     "quote": "Explain to the model why things matter instead of heavy-handed MUSTs."},
+   "side_b": {"file": "references/asking-user-questions.md", "lines": [44, 51],
+     "quote": "### 1. MUST verb (not \"Use\") ... You MUST call the AskUserQuestion tool to interview..."},
+   "steps": [
+     "SKILL.md line 174 requires authors to apply the hardened AskUserQuestion pattern from references/asking-user-questions.md verbatim when a skill has a user-input step.",
+     "That hardened pattern's hardening #1 (asking-user-questions.md lines 44-59) mandates writing 'You MUST call the AskUserQuestion tool...' and the copy-paste 'Mandatory-gate template' (lines 131-170) is saturated with 'MUST' and 'mandatory'.",
+     "SKILL.md's own Writing Style section (line 202), which governs how skill instructions should be phrased while drafting the same SKILL.md, says to explain why instead of using heavy-handed MUSTs — with no stated exception for the AskUserQuestion step."
+   ],
+   "why": "When drafting the user-input STEP of a new skill, an agent is simultaneously told (a) to copy the hardened pattern's MUST/mandatory language verbatim because softer phrasing empirically fails, and (b) to avoid heavy-handed MUSTs in favor of explaining why. Unlike the CJK/negative-trigger cases in the House description standard, no precedence clause resolves this pair."}
+]}
