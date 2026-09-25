@@ -10,10 +10,17 @@
 # silently disables the hook (see machine memory
 # feedback_hook_specific_output_requires_hookeventname).
 #
-# DEFENSIVE keys (belt-and-suspenders, emitted for cross-version/host
-# portability): additional_context (top-level snake_case), additionalContext
-# (bare top-level camelCase). Mirrors loom-code/hooks/session-start's
-# 3-key shape.
+# ONLY top-level key: hookSpecificOutput. Codex CLI's session-start
+# schema (codex-rs/hooks/src/schema.rs
+# `SessionStartCommandOutputWire`) is `#[serde(deny_unknown_fields)]` —
+# the allowed top-level keys are only `continue`, `stopReason`,
+# `suppressOutput`, `systemMessage`, `hookSpecificOutput`. Any other
+# top-level key (this script used to also emit `additional_context` and
+# `additionalContext` defensively) makes Codex reject the WHOLE
+# session-start output ("hook returned invalid session start JSON
+# output"), so the card never loads there. Claude Code only ever reads
+# hookSpecificOutput.additionalContext, so dropping the extra keys is
+# safe on both hosts.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -21,9 +28,9 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 CARD_PATH="${PLUGIN_ROOT}/hooks/trigger-card.md"
 
 # Card file missing → fail open with empty context (do not crash the
-# session). Same 3-key shape as the populated case.
+# session). Same single-top-level-key shape as the populated case.
 if [ ! -f "${CARD_PATH}" ]; then
-  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""}}\n'
   exit 0
 fi
 
@@ -41,6 +48,6 @@ escape_for_json() {
 }
 escaped="$(escape_for_json "${content}")"
 
-# Emit canonical nested key + both defensive top-level keys (same content).
-printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
-  "${escaped}" "${escaped}" "${escaped}"
+# Emit only the canonical nested key (see the top-level-key comment above).
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' \
+  "${escaped}"

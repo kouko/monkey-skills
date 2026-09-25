@@ -14,7 +14,9 @@ A/B-refuted).
 
 import json
 import re
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +41,13 @@ def test_session_start_emits_trigger_card():
       - hookSpecificOutput.additionalContext must contain "ascii-graph",
         "CJK", and the trivial-ASCII exemption phrase
         ("Trivial all-ASCII sketches")
+      - print ONLY the top-level key "hookSpecificOutput" (Codex CLI's
+        SessionStartCommandOutputWire uses #[serde(deny_unknown_fields)]
+        — see codex-rs/hooks/src/schema.rs —
+        so any other top-level key makes Codex reject the whole
+        session-start output)
+      - print ONLY "hookEventName" and "additionalContext" inside
+        hookSpecificOutput
 
     Also asserts hooks.json parses as JSON and wires the SessionStart
     matcher "startup|clear|compact" to hooks/session-start.
@@ -56,7 +65,16 @@ def test_session_start_emits_trigger_card():
     assert result.returncode == 0, f"session-start exited non-zero: {result.stderr}"
 
     payload = json.loads(result.stdout)
+    assert set(payload.keys()) == {"hookSpecificOutput"}, (
+        f"expected exactly the top-level key 'hookSpecificOutput', "
+        f"got {sorted(payload.keys())}"
+    )
+
     hook_output = payload["hookSpecificOutput"]
+    assert set(hook_output.keys()) == {"hookEventName", "additionalContext"}, (
+        f"expected exactly hookEventName+additionalContext inside "
+        f"hookSpecificOutput, got {sorted(hook_output.keys())}"
+    )
     assert hook_output["hookEventName"] == "SessionStart"
 
     context = hook_output["additionalContext"]
@@ -75,6 +93,45 @@ def test_session_start_emits_trigger_card():
     )
     commands = [h["command"] for h in matched_entry["hooks"]]
     assert any("hooks/session-start" in cmd for cmd in commands)
+
+
+def test_session_start_missing_card_fails_open():
+    """
+    When hooks/trigger-card.md is absent, hooks/session-start must still
+    exit 0 and fail open with empty context, using the SAME shape as the
+    populated case: top-level key ONLY "hookSpecificOutput", and inside
+    it ONLY "hookEventName"+"additionalContext" (Codex's
+    deny_unknown_fields schema — see test_session_start_emits_trigger_card).
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_plugin_root = Path(tmp) / "ascii-graph-toolkit"
+        shutil.copytree(PLUGIN_ROOT, tmp_plugin_root)
+        (tmp_plugin_root / "hooks" / "trigger-card.md").unlink()
+
+        result = subprocess.run(
+            [str(tmp_plugin_root / "hooks" / "session-start")],
+            cwd=str(tmp_plugin_root),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert result.returncode == 0, (
+            f"session-start exited non-zero on missing card: {result.stderr}"
+        )
+
+        payload = json.loads(result.stdout)
+        assert set(payload.keys()) == {"hookSpecificOutput"}, (
+            f"expected exactly the top-level key 'hookSpecificOutput', "
+            f"got {sorted(payload.keys())}"
+        )
+
+        hook_output = payload["hookSpecificOutput"]
+        assert set(hook_output.keys()) == {"hookEventName", "additionalContext"}, (
+            f"expected exactly hookEventName+additionalContext inside "
+            f"hookSpecificOutput, got {sorted(hook_output.keys())}"
+        )
+        assert hook_output["hookEventName"] == "SessionStart"
+        assert hook_output["additionalContext"] == ""
 
 
 def test_card_carries_generative_trigger():
