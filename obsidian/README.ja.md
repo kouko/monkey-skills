@@ -68,6 +68,7 @@ move か edit のみ。振り分け先が曖昧な場合は確認を取る。
 | `obsidian-daily` | 今日の daily note を読み込み or 作成、`inbox/` を sweep、上位 3 priority を提示 |
 | `obsidian-vault-setup` | 対話型 vault 初期設定 — 自由記述の回答から role と scope を推定 |
 | `obsidian-tldr` | 会話の要約を vault に保存し、`memory.md` を更新 |
+| `obsidian-research` | トピックを web 調査（英語＋日本語、テーマ固有の言語があればそれを主に追加）し、目次付きの研究ノートを `research/` に保存 |
 | `obsidian-file-intel` | PDF / PPTX / XLSX / DOCX / CSV / JSON を Gemini で抽出し、Obsidian-ready な要約を生成 |
 | `dashboard-design` | デジタル庁ダッシュボード設計ガイドラインに基づき、要件整理から layout までを引導 |
 

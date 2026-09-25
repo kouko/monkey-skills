@@ -16,6 +16,7 @@
 | dashboard-design | 本プロジェクト | — |
 | obsidian-daily | 本プロジェクト | — |
 | obsidian-file-intel | 本プロジェクト | — |
+| obsidian-research | 本プロジェクト | — |
 | obsidian-tldr | 本プロジェクト | — |
 | obsidian-vault-setup | 本プロジェクト | — |
 | using-obsidian | 本プロジェクト | — |

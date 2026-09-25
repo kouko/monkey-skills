@@ -1,0 +1,58 @@
+1	1	fire	obsidian-research	研究一下 Obsidian Bases 和 Dataview 的差異，寫成筆記放進我的 vault
+1	2	fire	obsidian-research	研究一下 Obsidian Bases 和 Dataview 的差異，寫成筆記放進我的 vault
+2	1	fire	obsidian-research	幫我研究台灣半導體補助政策，整理成研究筆記
+2	2	fire	obsidian-research	幫我研究台灣半導體補助政策，整理成研究筆記
+3	1	fire	obsidian-research	把「遠端工作對生產力的影響」研究清楚，存到 research 資料夾
+3	2	fire	obsidian-research	把「遠端工作對生產力的影響」研究清楚，存到 research 資料夾
+4	1	fire	obsidian-research	我想要一篇關於 RAG 評估指標的研究筆記
+4	2	fire	obsidian-research	我想要一篇關於 RAG 評估指標的研究筆記
+5	1	fire	obsidian-research	研究 Notion 和 Obsidian 的優缺點，寫一篇筆記給我
+5	2	fire	obsidian-research	研究 Notion 和 Obsidian 的優缺點，寫一篇筆記給我
+6	1	fire	obsidian-research	調查一下江戶時代的貨幣制度，寫成 Obsidian 筆記
+6	2	fire	obsidian-research	調查一下江戶時代的貨幣制度，寫成 Obsidian 筆記
+7	1	fire	obsidian-research	幫我做一份 LLM 量化技術的研究筆記，要有來源和目錄
+7	2	fire	obsidian-research	幫我做一份 LLM 量化技術的研究筆記，要有來源和目錄
+8	1	fire	obsidian-research	研究一下韓國的外送平台市場，整理成筆記存進 vault
+8	2	fire	obsidian-research	研究一下韓國的外送平台市場，整理成筆記存進 vault
+9	1	fire	obsidian-research	寫一篇研究筆記：電動機車換電網路在台灣的普及現況
+9	2	fire	obsidian-research	寫一篇研究筆記：電動機車換電網路在台灣的普及現況
+10	1	fire	obsidian-research	研究一下日本的推し活經濟，然後寫成我 vault 裡的研究筆記
+10	2	fire	obsidian-research	研究一下日本的推し活經濟，然後寫成我 vault 裡的研究筆記
+11	1	fire	obsidian-research	日本の推し活市場を調べて、研究ノートにまとめて
+11	2	fire	obsidian-research	日本の推し活市場を調べて、研究ノートにまとめて
+12	1	fire	obsidian-research	生成AIの著作権問題を調べてノートにまとめてください
+12	2	fire	obsidian-research	生成AIの著作権問題を調べてノートにまとめてください
+13	1	fire	obsidian-research	Obsidianの研究ノートとして、国内SaaS市場の動向を調査して保存して
+13	2	fire	obsidian-research	Obsidianの研究ノートとして、国内SaaS市場の動向を調査して保存して
+14	1	fire	obsidian-research	ローカルLLMの実行環境を比較調査して、Vaultにノートを作って
+14	2	fire	obsidian-research	ローカルLLMの実行環境を比較調査して、Vaultにノートを作って
+15	1	fire	obsidian-research	台湾のコンビニ業界を調べてリサーチノートにして
+15	2	fire	obsidian-research	台湾のコンビニ業界を調べてリサーチノートにして
+16	1	fire	obsidian-research	Research the history of the Pomodoro technique and save it as a note in my vault
+16	2	fire	obsidian-research	Research the history of the Pomodoro technique and save it as a note in my vault
+17	1	fire	obsidian-research	Write a research note in my Obsidian vault comparing Rust and Go for CLI tools
+17	2	fire	obsidian-research	Write a research note in my Obsidian vault comparing Rust and Go for CLI tools
+18	1	fire	obsidian-research	Research EU AI Act obligations for startups into a note with sources
+18	2	fire	obsidian-research	Research EU AI Act obligations for startups into a note with sources
+19	1	fire	obsidian-research	Can you research how public libraries are adapting to e-books and turn it into a research note?
+19	2	fire	obsidian-research	Can you research how public libraries are adapting to e-books and turn it into a research note?
+20	1	fire	obsidian-research	Investigate the evidence on intermittent fasting and write it up as a note in research/
+20	2	fire	obsidian-research	Investigate the evidence on intermittent fasting and write it up as a note in research/
+21	1	not:deep-deep-research	deep-deep-research	徹底研究量子運算的商業化進展，給我一份多來源交叉查證的完整報告就好，不用存筆記
+21	2	not:deep-deep-research	deep-deep-research	徹底研究量子運算的商業化進展，給我一份多來源交叉查證的完整報告就好，不用存筆記
+22	1	not:deep-deep-research	deep-deep-research	Do an exhaustive multi-source verified report on lithium supply chains; just give me the report here
+22	2	not:deep-deep-research	deep-deep-research	Do an exhaustive multi-source verified report on lithium supply chains; just give me the report here
+23	1	not:fact-check	fact-check	「日本人平均每年喝 400 杯咖啡」這個說法是真的嗎？
+23	2	not:fact-check	fact-check	「日本人平均每年喝 400 杯咖啡」這個說法是真的嗎？
+24	1	not:wiki-auto-research	wiki-auto-research	掃描我 wiki 裡的 Open Questions，上網把缺口補齊
+24	2	not:wiki-auto-research	wiki-auto-research	掃描我 wiki 裡的 Open Questions，上網把缺口補齊
+25	1	not:obsidian-tldr	obsidian-tldr	把我們這次對話的結論存到 vault
+25	2	not:obsidian-tldr	obsidian-tldr	把我們這次對話的結論存到 vault
+26	1	not:none	NONE	簡單跟我說一下 RAG 是什麼就好
+26	2	not:none	NONE	簡單跟我說一下 RAG 是什麼就好
+27	1	ambiguous	research-team	研究一下 Tailwind CSS v5 有什麼新功能
+27	2	ambiguous	research-team	研究一下 Tailwind CSS v5 有什麼新功能
+28	1	ambiguous	research-team	日本の少子化対策について調べて
+28	2	ambiguous	research-team	日本の少子化対策について調べて
+29	1	ambiguous	research-team	Look into the pros and cons of SQLite for mobile apps
+29	2	ambiguous	research-team	Look into the pros and cons of SQLite for mobile apps
