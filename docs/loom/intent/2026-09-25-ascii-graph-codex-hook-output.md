@@ -9,7 +9,7 @@ publication: automatic — authorized 2026-09-25 by kouko
 ## Problem
 在 Codex CLI 0.157.0 啟用 ascii-graph-toolkit 之後，每次開 Codex 都會先跳出「Hook failed — hook returned invalid session start JSON output」，而且這個外掛的圖表觸發提示卡在 Codex 上完全不會載入。
 
-原因是開場 hook 除了標準的 `hookSpecificOutput` 之外，最外層還多印了兩個備用欄位 `additional_context` 與 `additionalContext`。Codex 在 openai/codex PR #24962 把開場 hook 的輸出改成嚴格檢查（`codex-rs/hooks/src/schema.rs` 的 `deny_unknown_fields`），最外層多出任何欄位，整段輸出就判定無效。
+原因是開場 hook 除了標準的 `hookSpecificOutput` 之外，最外層還多印了兩個備用欄位 `additional_context` 與 `additionalContext`。Codex 對開場 hook 的輸出採嚴格檢查（`codex-rs/hooks/src/schema.rs` 的 `deny_unknown_fields`），最外層多出任何欄位，整段輸出就判定無效。
 
 ## Proposed outcome
 這個開場 hook 的輸出在 Codex 與 Claude Code 上都被接受，而且兩邊都讀得到提示卡的內容。

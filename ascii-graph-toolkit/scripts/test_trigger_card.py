@@ -43,7 +43,7 @@ def test_session_start_emits_trigger_card():
         ("Trivial all-ASCII sketches")
       - print ONLY the top-level key "hookSpecificOutput" (Codex CLI's
         SessionStartCommandOutputWire uses #[serde(deny_unknown_fields)]
-        — see openai/codex PR #24962, codex-rs/hooks/src/schema.rs —
+        — see codex-rs/hooks/src/schema.rs —
         so any other top-level key makes Codex reject the whole
         session-start output)
       - print ONLY "hookEventName" and "additionalContext" inside

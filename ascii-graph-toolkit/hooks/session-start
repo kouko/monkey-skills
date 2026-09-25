@@ -11,7 +11,7 @@
 # feedback_hook_specific_output_requires_hookeventname).
 #
 # ONLY top-level key: hookSpecificOutput. Codex CLI's session-start
-# schema (openai/codex PR #24962, codex-rs/hooks/src/schema.rs
+# schema (codex-rs/hooks/src/schema.rs
 # `SessionStartCommandOutputWire`) is `#[serde(deny_unknown_fields)]` —
 # the allowed top-level keys are only `continue`, `stopReason`,
 # `suppressOutput`, `systemMessage`, `hookSpecificOutput`. Any other
