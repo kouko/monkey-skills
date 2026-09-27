@@ -224,7 +224,7 @@ Each skill should also have a corresponding **slash command** entry point in the
 
 #### Progressive Disclosure
 
-Skills use three-level loading — metadata (always in context), SKILL.md body (loaded on trigger; keep under ~6,000 tokens / ~4,500 words, extracting detail into reference files when approaching the limit), bundled resources (as needed). Details: `references/plugin-conventions.md` (§Progressive Disclosure, §SKILL.md Token Budget).
+Skills use three-level loading — metadata (always in context), SKILL.md body (loaded on trigger; keep under ~5,000 tokens / ~3,750 words, extracting detail into reference files when approaching the limit), bundled resources (as needed). Details: `references/plugin-conventions.md` (§Progressive Disclosure, §SKILL.md Token Budget).
 
 **Key patterns:**
 - Reference files clearly from SKILL.md with guidance on when to read them
