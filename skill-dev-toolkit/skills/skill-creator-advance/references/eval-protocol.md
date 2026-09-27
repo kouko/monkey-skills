@@ -69,7 +69,7 @@ Use the wait productively: draft quantitative assertions for each test case and 
 
 Good assertions are objectively verifiable, with descriptive names that read clearly in the benchmark report — someone glancing at the results should immediately understand what each one checks. Subjective skills (writing style, design quality) are better evaluated qualitatively — don't force assertions onto things that need human judgment.
 
-**Important:** Update `eval_metadata.json` with assertions BEFORE the grader runs in Step 4. The grader reads `eval_metadata.json` directly for its assertion list. If assertions are drafted after runs spawn, ensure they are written to `eval_metadata.json` before Step 4 begins. Also sync to `evals/evals.json` (where the field is named `expectations`) for the master eval record.
+**Important:** Update `eval_metadata.json` with assertions BEFORE the grader runs in Step 4. The grader reads `eval_metadata.json` directly for its assertion list. If assertions are drafted after runs spawn, ensure they are written to `eval_metadata.json` before Step 4 begins. Also sync to `evals/evals.json` (where the field is named `expectations`) for the master eval record **after grading is complete but before aggregation**.
 
 ### Step 3: As runs complete, capture timing data
 
@@ -135,7 +135,7 @@ Once all runs are done:
 
 Proceed to the next iteration only if the skill's eval pass rate exceeds the baseline by at least **15%** (i.e., `pass_rate ≥ baseline + 15%`). If not met, refine the eval cases or the skill and rerun.
 
-**For new skills on the quick path:** no baseline is needed. Run 2-3 test cases manually and iterate on direct user feedback.
+**For new skills on the quick path:** no baseline is needed. Run 3+ test cases manually and iterate on direct user feedback.
 
 ## Iteration Loop
 
