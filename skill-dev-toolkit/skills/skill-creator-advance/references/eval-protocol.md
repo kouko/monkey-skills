@@ -133,7 +133,7 @@ Once all runs are done:
 
 ### Minimum Improvement Threshold
 
-Proceed to the next iteration only if the skill's eval pass rate exceeds the baseline by at least **15%**. If not met, refine the eval cases or the skill and rerun.
+Proceed to the next iteration only if the skill's eval pass rate exceeds the baseline by at least **15%** (i.e., `pass_rate ≥ baseline + 15%`). If not met, refine the eval cases or the skill and rerun.
 
 **For new skills on the quick path:** no baseline is needed. Run 2-3 test cases manually and iterate on direct user feedback.
 

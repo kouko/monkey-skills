@@ -4,6 +4,24 @@ Utility functions for skill iteration workflow including regression detection, t
 
 These are documented procedures that agents follow during evaluation — not an importable Python module. The function signatures describe the expected inputs and outputs for each analysis step.
 
+## Self-Assessment Protocol (Step 3.5)
+
+Before grading, perform a quick automated check on each output:
+
+1. **Read each test case's output** and check for obvious defects:
+   - Empty output
+   - Format violations
+   - Crash artifacts (stack traces, error messages in output)
+
+2. **If a defect is clearly caused by a skill instruction issue**:
+   - Fix the skill
+   - Rerun that test case once
+   - Capture timing data for the rerun and save to `timing-rerun.json` in the run directory (NOT to the original `timing.json` — keep original for baseline comparison)
+
+3. **Log results** to `self_assessment.json` in each test case directory
+
+4. **One pass only** — no infinite repair loops
+
 ## Regression Detection
 
 Detects skill regressions by comparing pass rates between versions.

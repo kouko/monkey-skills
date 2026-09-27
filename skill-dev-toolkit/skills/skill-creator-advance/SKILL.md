@@ -153,7 +153,7 @@ Based on the user interview, fill in these components:
    - Score outputs against assertions (if any) or qualitative criteria
    - Compute pass rate as fraction of eval cases where skill output meets criteria
 
-5. **Proceed only if eval pass rate > baseline + 15%**
+5. **Proceed only if eval pass rate ≥ baseline + 15%**
    - If not met, refine the eval cases or the skill and rerun
    - Document baseline metrics for future comparison
 
@@ -178,11 +178,10 @@ Based on the user interview, fill in these components:
 Before drafting the description, read
 [references/description-design.md](references/description-design.md) —
 it owns the design patterns: WHAT+WHEN (not WHAT+WORKFLOW),
-"about-to-violate" symptoms, third-person voice, natural keywords the
-user would type, length guidance, a validation checklist, and a worked
-git-memory before/after case study. The house standard for descriptions
-is defined in description-design.md §Principles (Principles 1–4).
-Principle 4 specifically covers length requirements.
+third-person voice, length guidance, a validation checklist, and
+examples. The house standard for descriptions is defined in
+description-design.md §Principles (Principles 1–4). Principle 4
+specifically covers length requirements.
 
 ### Skill Writing Guide
 
@@ -442,9 +441,10 @@ After all runs complete, compute statistics (mean, stddev, min, max) across all 
 
 ### Step 3.5: Self-assessment pass
 
-Before grading and presenting results to the human, perform a quick automated check on each output. Read `references/iteration-automation.md` for the full protocol. In brief:
+Before grading and presenting results to the human, perform a quick automated check on each output. This self-assessment step uses the procedures in `references/iteration-automation.md`:
 - Read each test case's output and check for obvious defects (empty output, format violations, crash artifacts)
-- If a defect is clearly caused by a skill instruction issue, fix the skill and rerun that test case once **and capture timing data for the rerun** (save to `timing-rerun.json` in the run directory — NOT to the original `timing.json`; keep original for baseline comparison)
+- If a defect is clearly caused by a skill instruction issue, fix the skill and rerun that test case once
+- Capture timing data for the rerun and save to `timing-rerun.json` in the run directory (NOT to the original `timing.json` — keep original for baseline comparison)
 - Log results to `self_assessment.json` in each test case directory
 - One pass only — no infinite repair loops
 
