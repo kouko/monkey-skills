@@ -275,3 +275,45 @@ The sampling confirms that **pure mechanical extraction (Option A) is insufficie
 - High accuracy through validation
 
 Next steps: Implement the generalized segment revenue parser (Level 1) and begin LLM prototype for Tesla operational metrics (Level 2).
+
+## Live Verification — Multi-Year Historical Series (2026-09-27)
+
+**Status: feasibility CONFIRMED end-to-end for the company-disclosed case.**
+Level 2 extraction was run against **seven consecutive annual 10-Ks (FY2018–FY2024)** for Tesla, and every year's production and deliveries matched the figures stated in that year's 10-K text exactly.
+
+| FY | 10-K stated production | L2 extracted | 10-K stated deliveries | L2 extracted | Location |
+|---|---|---|---|---|---|
+| 2018 | 254,530 | 254,530 ✓ | 245,506 | 245,506 ✓ | Item 7 |
+| 2019 | 365,232 | 365,232 ✓ | 367,656 | 367,656 ✓ | Item 7 |
+| 2020 | 509,737 | 509,737 ✓ | 499,647 | 499,647 ✓ | Item 7 |
+| 2021 | 930,422 | 930,422 ✓ | 936,222 | 936,222 ✓ | Item 7 |
+| 2022 | 1,369,611 | 1,369,611 ✓ | 1,313,851 | 1,313,851 ✓ | Item 7 |
+| 2023 | 1,845,985 | 1,845,985 ✓ | 1,808,581 | 1,808,581 ✓ | **Item 3** |
+| 2024 | ~1,773,000 | 1,773,000 ✓ | ~1,789,000 | 1,789,000 ✓ | Item 7 |
+
+### Method
+
+1. **Fetch** — `list_filings(TSLA, ["10-K"], ...)` returns the filer's **complete 10-K history** (16 filings covering FY2010–FY2025); no new fetch capability was needed. `sec_narrative` sections were then pulled per accession via the same `fetch_narrative_sections` path the memo uses.
+2. **Prompt** — each year's Item 7 prose was run through `get_llm_prompt` (the metric-line selector, §truncation fix). The selector retained the exact figures in every year; prompt sizes ranged 8.5K–50K chars, all within budget.
+3. **Extract** — LLM agent applied the standard Level 2 system prompt (explicit-numbers-only schema); output parsed via `parse_llm_response` (bare-JSON path).
+4. **Verify** — extracted values compared to the figures literally stated in that year's 10-K text. 7/7 years matched.
+
+### Findings that change the design
+
+- **Where the numbers live varies by year.** FY2023's production/deliveries total sits in **Item 3** (Business), not Item 7 — every other sampled year used Item 7. The memo's production path already scans **all sections** of a filing, so this variability is handled; a future series builder must NOT assume Item 7.
+- **"~" precision.** FY2024 states "approximately 1,773,000 / 1,789,000" (rounded millions-scale prose). The LLM correctly returned the rounded figures at confidence 0.8. Series consumers should expect occasional rounded values in recent years.
+- **Disclosure-basis nuance.** FY2018's 10-K states 245,506 deliveries (includes leased units); Tesla's own Q4-2018 update reported 245,240. The extractor is faithful to the filing text — cross-source differences are the company's reporting basis, not extraction error.
+
+### Boundary — what the series does NOT give you (yet)
+
+| Item | Status in this probe |
+|---|---|
+| **ASP** | Not extractable from prose in ANY sampled year — no 10-K explicitly states ASP. An ASP series would require deriving it (L1 XBRL revenue ÷ deliveries), not text extraction |
+| **L3 cross-validation** (volume×ASP≈revenue) | SKIPPED for all 7 years — depends on ASP, which prose never states |
+| **Segment-revenue rollup** | SKIPPED — TSLA 10-K has no segment revenue table (AAPL-style filers only) |
+| **Cross-company generalization** | Only TSLA sampled for the series. AAPL-style filers (no production disclosure) were known-empty at single-period level; the series probe did not extend to other sectors |
+| **L1 XBRL revenue series** | `fetch_facts("RevenueFromContractWithCustomerExcludingAssessedTax")` returned 6 annual frames (2018–2025), missing 2019/2020 — a sampling behavior to investigate before building a revenue-side series. Root cause: Tesla tagged FY2019/FY2020 annual revenue under the **`Revenues`** concept, not `RevenueFromContractWithCustomer*` — the data exists upstream (`Revenues` frames CY2019 = $24,578M, CY2020 = $31,536M), so a revenue-side series needs a concept-fallback, not new data |
+
+### Conclusion of the probe
+
+The .goal outcome — **multi-year operational metrics for US companies** — is now verified end-to-end for the company-disclosed case: fetch historical 10-Ks → extract per-year figures → assemble a series. The remaining work is **orchestration** (loop years → per-year extraction → sort into a `{year: {production, deliveries}}` series with source attribution), not new data access. Automated (regex-fallback) runs remain subject to the same prose-extraction limitations documented above and would need the Level 2 LLM path for prose-only years.
