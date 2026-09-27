@@ -126,7 +126,7 @@ Based on the user interview, fill in these components:
 
 ### Step 0: Evaluation-First (full eval path)
 
-**Do NOT Load:** Skip this section if you selected the quick eval path. Load only when doing full benchmark with baseline comparison. The basic baseline running instructions are included above; this reference contains the detailed protocol for multiple runs, timing capture, and advanced features.
+**Do NOT Load:** Skip this section if you selected the quick eval path. Load only when doing full benchmark with baseline comparison. The basic baseline running instructions are included above; see [references/eval-protocol.md](references/eval-protocol.md) for the detailed protocol for multiple runs, timing capture, and advanced features.
 
 > **Note:** This section describes the full Evaluation-First path (Step 0). The Quick eval path is described in the Choosing Your Eval Path section above — it is an alternative to this full path, used only for simple skills, when success criteria are already documented, or for one-off prototypes.
 
@@ -159,7 +159,7 @@ Based on the user interview, fill in these components:
 
 > **Why this step**: Skills built without validation often solve imagined needs rather than real problems. Evaluation-first ensures every skill addresses a documented gap.
 
-> **Reference**: Full evaluation protocol is in [references/eval-protocol.md](references/eval-protocol.md)
+> **Reference**: Full evaluation protocol (including the 15% improvement threshold and iteration loop) is in [references/eval-protocol.md](references/eval-protocol.md)
 
 #### Step 1: Write the SKILL.md
 
@@ -369,119 +369,11 @@ Not every skill needs the full benchmark treatment. Choose based on complexity:
 > **Note:** The "when in doubt, start with quick path" guidance applies only AFTER you have determined the skill is simple enough for the quick path (see the Choosing Your Eval Path section for details). After making that determination, if still uncertain, start with the quick path — you can always escalate if it isn't giving enough signal.
 
 
-For the full eval protocol, see [references/eval-protocol.md](references/eval-protocol.md).
+For the full eval protocol (Steps 1-4: spawn runs, draft assertions, capture timing, grade/aggregate/present), see [references/eval-protocol.md](references/eval-protocol.md) — it owns the complete sequence including directory structure, baseline runs, timing capture, self-assessment pass, and the 15% improvement threshold.
 
 Put results in `<skill-name>-workspace/`, a sibling of the skill directory, organized by iteration (`iteration-1/`, `iteration-2/`, etc.) and, within that, a directory per test case (`eval-0/`, `eval-1/`, etc.). Create directories as you go, not upfront.
 
-### Step 1: Spawn all runs (with-skill AND baseline) in the same turn
-
-For each test case, spawn multiple subagent runs per configuration to enable statistical aggregation. Default: **3 runs per configuration** (with-skill and baseline each). Launch all runs in the same turn so they complete around the same time.
-
-**With-skill runs (repeat for runs 1..N):**
-
-```
-Execute this task:
-- Skill path: <path-to-skill>
-- Task: <eval prompt>
-- Input files: <eval files if any, or "none">
-- Save outputs to: <workspace>/iteration-<N>/eval-<ID>/with_skill/run-<R>/outputs/
-- Outputs to save: <what the user cares about — e.g., "the .docx file", "the final CSV">
-```
-
-**Baseline runs** (same prompt, repeat for runs 1..N, baseline depends on context):
-- **Creating a new skill**: no skill at all. Same prompt, no skill path, save to `<workspace>/iteration-<N>/eval-<ID>/without_skill/run-<R>/outputs/`.
-- **Improving an existing skill**: the old version. Before editing, snapshot the skill (`cp -r <skill-path> <workspace>/skill-snapshot/`), then point the baseline subagent at the snapshot. Save to `<workspace>/iteration-<N>/eval-<ID>/old_skill/run-<R>/outputs/`.
-
-Write an `eval_metadata.json` per test case (assertions can be empty for now — you'll draft them while runs are in progress) in the test case directory: `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json`. Give each eval a descriptive name based on what it's testing (e.g., "csv-conversion" or "eval-0" for numeric IDs) and use it for the directory name. If this iteration uses new or modified eval prompts, create these files for each new eval directory — they don't carry over from previous iterations.
-
-```json
-{
-  "eval_id": 0,
-  "eval_name": "descriptive-name-here",
-  "prompt": "The user's task prompt",
-  "assertions": []
-}
-```
-
-### Step 2: While runs are in progress, draft assertions
-
-Use the wait productively: draft quantitative assertions for each test case and explain them to the user. If assertions already exist in `evals/evals.json`, review them and explain what they check.
-
-Good assertions are objectively verifiable, with descriptive names that read clearly in the benchmark report — someone glancing at the results should immediately understand what each one checks. Subjective skills (writing style, design quality) are better evaluated qualitatively — don't force assertions onto things that need human judgment.
-
-Update `eval_metadata.json` and `evals/evals.json` with assertions. Explain to the user what they'll see — both the qualitative outputs and the quantitative benchmark.
-
-### Step 3: As runs complete, capture timing data
-
-When each subagent task completes, you receive a notification containing `total_tokens` and `duration_ms`. **While runs are in progress, draft assertions for each test case.** Save the timing data from notifications immediately to a run-specific timing file:
-
-**For with-skill run <R>:**
-```json
-{
-  "total_tokens": 84852,
-  "duration_ms": 23332,
-  "total_duration_seconds": 23.3
-}
-```
-Saved to: `<workspace>/iteration-<N>/eval-<ID>/with_skill/run-<R>/timing.json`
-
-**Note:** The task notification provides `total_tokens` and `duration_ms` as base fields. `total_duration_seconds` is computed as `duration_ms / 1000`. The complete timing.json schema includes additional fields like `executor_start`, `executor_end`, `grader_start`, and `grader_end` that are captured from other sources during execution — see [references/schemas.md](references/schemas.md) for the full schema.
-
-**For baseline run <R>:**
-```json
-{
-  "total_tokens": 45210,
-  "duration_ms": 12105,
-  "total_duration_seconds": 12.1
-}
-```
-Saved to: `<workspace>/iteration-<N>/eval-<ID>/<baseline_type>/run-<R>/timing.json`
-
-After all runs complete, compute statistics (mean, stddev, min, max) across all runs for each metric (pass rate, time, tokens) to populate the benchmark.json structure.
-
-### Step 3.5: Self-assessment pass
-
-Before grading and presenting results to the human, perform a quick automated check on each output. This self-assessment step uses the procedures in `references/iteration-automation.md`:
-- Read each test case's output and check for obvious defects (empty output, format violations, crash artifacts)
-- If a defect is clearly caused by a skill instruction issue, fix the skill and rerun that test case once
-- Capture timing data for the rerun and save to `timing-rerun.json` in the run directory (NOT to the original `timing.json` — keep original for baseline comparison)
-- Log results to `self_assessment.json` in each test case directory
-- One pass only — no infinite repair loops
-
-### Step 4: Grade, aggregate, and present results
-
-Once all runs are done:
-
-1. **Grade each run** — spawn a grader subagent (or grade inline) that reads `agents/grader.md` and evaluates each assertion against the outputs. Save results to `grading.json` in each run directory. The grading.json expectations array must use the fields `text`, `passed`, and `evidence` (not `name`/`met`/`details` or other variants). For the full grading.json schema including additional fields, see [references/schemas.md](references/schemas.md). Check programmatically-checkable assertions with a script rather than eyeballing — faster, more reliable, reusable across iterations.
-
-2. **Check for regressions** (iteration 2+) — compare results against the previous iteration (`references/iteration-automation.md` has the full protocol); lead with any regressions when reporting to the user.
-
-3. **Aggregate into benchmark** — run the aggregation script from the skill-creator-advance directory:
-   ```bash
-   python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <name>
-   ```
-   This produces `benchmark.json` and `benchmark.md` with pass_rate, time, and tokens for each configuration, with mean +/- stddev and the delta. If generating benchmark.json manually, see `references/schemas.md` for the exact schema.
-Put each with_skill version before its baseline counterpart.
-
-4. **Do an analyst pass** — read the benchmark data and surface patterns the aggregate stats might hide. See `agents/analyzer.md` (the "Analyzing Benchmark Results" section) for what to look for — non-discriminating assertions, high-variance (possibly flaky) evals, time/token tradeoffs.
-
-5. **Present results inline** — For each test case, show the results directly in the conversation:
-
-   ```markdown
-   ### Test Case: {eval_name}
-   **Prompt:** {the task prompt}
-   **Output:** {summary of key output files or inline content}
-   **Grades:** {assertion pass/fail results with evidence, if graded}
-   **Previous:** {what changed from last iteration, if iteration 2+}
-   ```
-
-   After presenting all test cases, show the benchmark summary (pass rates, timing, token usage).
-
-6. **Save a markdown report** to `<workspace>/iteration-N/review.md` containing all test case results and benchmark data, persisting them for cross-iteration comparison.
-
-7. **Ask for feedback** — ask the user for feedback on each test case; focus on specific complaints — no comment means it looked fine.
-
----
+**Do NOT Load:** Do not load `references/eval-protocol.md` until you have decided on Full eval path and prepared eval_metadata.json for each test case. Quick path users skip this section entirely.
 
 ## Improving the skill
 
