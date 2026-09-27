@@ -141,7 +141,7 @@ Proceed to the next iteration only if the skill's eval pass rate exceeds the bas
 
 ## Iteration Loop
 
-After improving the skill:
+Applies to the **Full eval path** (this reference is only loaded for the full path — quick path users stop after Phase 1). After improving the skill:
 
 1. Apply your improvements to the skill
 2. Rerun all test cases into a new `iteration-<N+1>/` directory, including baseline runs. If you're creating a new skill, the baseline is always `without_skill` (no skill) — that stays the same across iterations. If you're improving an existing skill, use the snapshot of the current version (taken before editing) as the baseline for all iterations. This ensures consistent comparison against the version being improved.
@@ -153,6 +153,8 @@ Keep going until:
 - The user says they're happy
 - The feedback is all empty (everything looks good)
 - You're not making meaningful progress
+
+(For the Quick eval path, the iteration loop is in SKILL.md's "Quick eval path: Testing" section — manual reruns of 2-3 test cases with direct user feedback, no subagent spawning.)
 
 ---
 

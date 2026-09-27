@@ -28,7 +28,7 @@ These anti-patterns recur across skill creation sessions. Each has a WHY clause 
 
 2. **Never use first/second person in the description.** The description is injected into the system prompt; pronoun inconsistency causes selection problems. [WHY: Anthropic best-practices doc has an explicit Warning block; "I can help you" confuses the matcher.]
 
-3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check) — except on the quick eval path, where the gates are replaced by the quick-path criteria (simple skill, documented success criteria, or one-off prototype). [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
+3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check) — except on the quick eval path, where only Gate 2 (smallest-end-state) is answered inline and the full reference protocol is skipped. [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
 
 4. **Never spawn baselines after with-skill runs.** Always launch baseline runs BEFORE or WITH with-skill runs in the same workflow turn. Spawning baselines after with-skill causes straggler waits and uneven timing data. [WHY: parallel execution ensures comparable conditions; baseline must match with-skill runtime environment. Evaluation-first workflows should run baselines first to establish ground truth before testing skill effectiveness. Exception: new skills on the quick eval path need no baseline.]
 
@@ -48,7 +48,7 @@ Users range from non-technical to expert. Gauge familiarity from context cues: "
 
 ## Creating a skill
 
-> **Evaluation-first is the default path for new skills.** Quick path (2-3 test cases, no baseline) is permitted ONLY for simple skills (formatters, templates, single-step workflows), when success criteria are already documented, or for one-off prototypes — document the skip reason in evals/evals.json. **Determine simplicity first; then if still uncertain, start with the quick path.**
+> **Evaluation-first is the default path for new skills.** Quick path (2-3 test cases, no baseline) is permitted ONLY for simple skills (formatters, templates, single-step workflows), when success criteria are already documented, or for one-off prototypes — document the skip reason in evals/evals.json. **Determine simplicity first; only after confirming the skill is simple enough, if still uncertain, start with the quick path — you can always escalate.**
 
 ### Pre-Creation Gates (recommended; skip only with stated reason)
 
@@ -153,7 +153,7 @@ specifically covers length requirements.
 
 For the anatomy of a skill, flat-structure rules (no nested subdirectories), progressive disclosure, plugin ecosystem conventions, user-input patterns (AskUserQuestion), and writing patterns — see [references/skill-writing-guide.md](references/skill-writing-guide.md).
 
-### Quick eval path: Testing (Phase 2/3)
+### Quick eval path: Testing
 
 For skills on the quick eval path (see the eval-path note at the top of this section), skip Step 0 and test the draft directly: come up with 2-3 realistic test prompts — the kind of thing a real user would actually say — and share them with the user: "Here are a few test cases I'd like to try. Do these look right, or do you want to add more?" (not necessarily verbatim). Then run them. **For improvements to an existing skill, also run the old skill version on the same test cases as the baseline comparison** (snapshot before editing: `cp -r <skill-path> <workspace>/skill-snapshot/`); for brand-new skills, no baseline is needed.
 
@@ -232,14 +232,11 @@ cp -r <skill-path> <workspace>/skill-snapshot/
 
 ---
 
-**Do NOT Load:** Do not load `references/eval-protocol.md` until you have decided on Full eval path and prepared eval_metadata.json for each test case. Quick path users stop after Phase 1 (Choosing Your Eval Path).
-
-**Phase 3/3: Evaluation** — Choose your eval path based on complexity:
+**Do NOT Load:** Do not load `references/eval-protocol.md` beyond its Phase 1 decision table until you have decided on the Full eval path (quick path users read only Phase 1, then stop — see that reference's guard notes).
 
 ### Choosing Your Eval Path
 
 Not every skill needs the full benchmark treatment. Choose based on complexity:
-
 | | Quick eval path | Full eval path |
 |---|---|---|
 | **For** | Simple skills (formatters, templates, single-step workflows) whose quality is best judged by looking at the output | Complex skills (multi-step workflows, objective criteria, many moving parts) needing quantitative comparison |
