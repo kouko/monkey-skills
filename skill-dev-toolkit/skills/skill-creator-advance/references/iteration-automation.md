@@ -15,12 +15,18 @@ Before grading, perform a quick automated check on each output:
 
 2. **If a defect is clearly caused by a skill instruction issue**:
    - Fix the skill
-   - Rerun that test case once
+   - Rerun that test case once (quick rerun within the same iteration directory — this is an inline fix, not a new iteration)
    - Capture timing data for the rerun and save to `timing-rerun.json` in the run directory (NOT to the original `timing.json` — keep original for baseline comparison)
+   - Log results to `self_assessment.json` in each test case directory
+   - **Important:** This is a mid-iteration inline repair, not a new iteration. The self-assessment fix does NOT create a new iteration-<N+1> directory and does NOT require a new baseline snapshot. Only proceed to a new iteration (Step 4) if the self-assessment reveals a deeper skill design issue that requires a full rerun.
 
 3. **Log results** to `self_assessment.json` in each test case directory
 
 4. **One pass only** — no infinite repair loops
+
+5. **After self-assessment, proceed to Step 4 (Grade, aggregate)** — the iteration loop handles reruns of all test cases in a new directory when the full rerun is needed.
+
+6. **One pass only** — no infinite repair loops
 
 ## Regression Detection
 
