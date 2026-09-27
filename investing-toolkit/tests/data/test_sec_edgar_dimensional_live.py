@@ -174,8 +174,15 @@ def test_extract_dimensional_revenue_multifiling_live_aapl():
         assert _FACT_PACK_KEYS <= set(fact), (
             f"fact missing a declared fact-pack key: {sorted(fact)}"
         )
-        assert fact["dimensions"], (
-            f"expected a non-null dimensional signature: {fact}"
+        # Two-lane contract (docs/loom/plans/2026-07-25-company-total-revenue.md):
+        # the producer emits BOTH dimensioned facts AND the flat top-line total
+        # (a `dimensions == {}` fact whose concept is in `_TOP_LINE_REVENUE_CONCEPTS`).
+        # A fact with empty `dimensions` is only valid when it is that top-line
+        # lane fact; any OTHER empty-dimensions fact is a regression (a
+        # dimensioned fact that lost its axes). Keep the guard sharp, not loose.
+        concept_local = fact["concept"].rsplit(":", 1)[-1]
+        assert fact["dimensions"] or concept_local in sec_edgar_client._TOP_LINE_REVENUE_CONCEPTS, (
+            f"fact has empty dimensions but is not a flat top-line total: {fact}"
         )
 
     accessions = {f["accession"] for f in facts}
