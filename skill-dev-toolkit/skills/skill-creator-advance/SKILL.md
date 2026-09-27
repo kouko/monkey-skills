@@ -48,9 +48,11 @@ Users range from non-technical to expert. Gauge familiarity from context cues: "
 
 ## Creating a skill
 
+> **Evaluation-first is the default path for new skills.** Quick path (2-3 test cases, no baseline) is permitted ONLY for simple skills (formatters, templates, single-step workflows), when success criteria are already documented, or for one-off prototypes — document the skip reason in evals/evals.json. **Determine simplicity first; then if still uncertain, start with the quick path.**
+
 ### Pre-Creation Gates (recommended; skip only with stated reason)
 
-**Do NOT Load:** Skip this reference if you selected the quick eval path. Load only when starting a full skill creation workflow.
+**Do NOT Load:** Skip this reference if the skill qualifies for the quick eval path (see the eval-path note above). Load only when starting a full skill creation workflow.
 
 The full Pre-Creation Gates protocol (Gate 1 Worth-it check, Gate 2 Smallest-end-state check, Gate 3 User-input check) is in [references/pre-creation-gates.md](references/pre-creation-gates.md).
 
@@ -86,13 +88,11 @@ Before writing any file, decide the target skill's file layout. Progressive disc
 
 Layout follows the flat-structure and progressive-disclosure conventions in [references/skill-writing-guide.md](references/skill-writing-guide.md). For improvements to existing skills, reuse the existing structure unless the redesign justifies a new one.
 
-> **Evaluation-first is the default path for new skills.** Quick path (2-3 test cases, no baseline) is permitted ONLY for simple skills (formatters, templates, single-step workflows), when success criteria are already documented, or for one-off prototypes — document the skip reason in evals/evals.json. **Determine simplicity first; then if still uncertain, start with the quick path.**
-
 ### Step 0: Evaluation-First (full eval path)
 
 **Do NOT Load:** Skip this section if you selected the quick eval path. Load only when doing full benchmark with baseline comparison. The basic baseline running instructions are included above; see [references/eval-protocol.md](references/eval-protocol.md) for the detailed protocol for multiple runs, timing capture, and advanced features.
 
-> **Note:** This section describes the full Evaluation-First path (Step 0). The Quick eval path is described in the Choosing Your Eval Path section above — it is an alternative to this full path, used only for simple skills, when success criteria are already documented, or for one-off prototypes.
+> **Note:** This section describes the full Evaluation-First path (Step 0). The Quick eval path is an alternative to this full path, used only for simple skills (when success criteria are already documented, or for one-off prototypes). The two paths are compared in the Choosing Your Eval Path section below.
 
 **Before writing the skill draft, build and validate evaluation cases:**
 

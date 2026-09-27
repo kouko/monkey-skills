@@ -20,13 +20,9 @@ Before grading, perform a quick automated check on each output:
    - Log results to `self_assessment.json` in each test case directory
    - **Important:** This is a mid-iteration inline repair, not a new iteration. The self-assessment fix does NOT create a new iteration-<N+1> directory and does NOT require a new baseline snapshot. Only proceed to a new iteration (Step 4) if the self-assessment reveals a deeper skill design issue that requires a full rerun.
 
-3. **Log results** to `self_assessment.json` in each test case directory
+3. **One pass only** — no infinite repair loops.
 
-4. **One pass only** — no infinite repair loops
-
-5. **After self-assessment, proceed to Step 4 (Grade, aggregate)** — the iteration loop handles reruns of all test cases in a new directory when the full rerun is needed.
-
-6. **One pass only** — no infinite repair loops
+4. **After self-assessment, proceed to Step 4 (Grade, aggregate)** — the iteration loop handles reruns of all test cases in a new directory when the full rerun is needed.
 
 ## Regression Detection
 
