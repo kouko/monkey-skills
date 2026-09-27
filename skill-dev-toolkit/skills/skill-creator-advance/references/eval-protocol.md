@@ -154,7 +154,7 @@ Keep going until:
 - The feedback is all empty (everything looks good)
 - You're not making meaningful progress
 
-(For the Quick eval path, the iteration loop is in SKILL.md's "Quick eval path: Testing" section — manual reruns of 2-3 test cases with direct user feedback, no subagent spawning.)
+(For the Quick eval path, the iteration loop is in `references/improvement-workflows.md` §Quick eval path: Testing — manual reruns of 2-3 test cases with direct user feedback, no subagent spawning.)
 
 ---
 

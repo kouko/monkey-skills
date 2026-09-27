@@ -18,6 +18,8 @@ Lead with what the skill enables, not how it works.
 Include clear triggers and negative triggers.
 - **Do use for**: X, Y, Z (positive triggers)
 - **Do NOT use for**: A, B — use other-skill instead (negative triggers)
+- **Disambiguate by positive specificity** — prefer naming what triggers the skill. When multiple skills could match similar queries, add explicit negative triggers to prevent mis-routing. **Limit to 2-3 negative triggers** — a long exclusion list buries the positives. A light positive redirect ("for X, use skill-Y") is also fine.
+- Third person, no XML tags — the description is injected into the system prompt, so it must read as neutral third-person text without markup.
 
 ### Principle 3: Concrete Over Abstract
 Use specific verbs and nouns users recognize from their work.
@@ -43,6 +45,14 @@ This section is the repo's number authority for description length.
   - "Firing evidence: [specific metric] from [corpus/live A/B test]"
   - A NEW router/CONDITIONAL skill with no evidence yet stays in the normal band (≤250 with YAML justification if needed)
   - Audit via YAML parse, not source lines
+
+### Multilingual keyword belt (optional)
+
+For repos with mixed-language prompts, append a short keyword belt (≤50 chars) at the end of the description: `Triggers: commit / PR / merge / コミット / 決定記録`. Zero of 14 superpowers skills use this pattern; include it if the repo's prompts are routinely non-English, skip it otherwise.
+
+### Context-listing budget note
+
+Descriptions share a context-listing budget — over-long ones silently evict OTHER skills from what Claude sees. This is why Principle 4's numbers are hard rules, not style preferences.
 
 ## Validation Checklist
 Rendered length per Principle 4 two-tier standard:

@@ -155,27 +155,7 @@ For the anatomy of a skill, flat-structure rules (no nested subdirectories), pro
 
 ### Quick eval path: Testing
 
-For skills on the quick eval path (see the eval-path note at the top of this section), skip Step 0 and test the draft directly: come up with 2-3 realistic test prompts — the kind of thing a real user would actually say — and share them with the user: "Here are a few test cases I'd like to try. Do these look right, or do you want to add more?" (not necessarily verbatim). Then run them. **For improvements to an existing skill, also run the old skill version on the same test cases as the baseline comparison** (snapshot before editing: `cp -r <skill-path> <workspace>/skill-snapshot/`); for brand-new skills, no baseline is needed.
-
-Save test cases to `evals/evals.json`. Don't write assertions yet — just the prompts. You'll draft assertions in the next step while the runs are in progress.
-
-```json
-{
-  "skill_name": "example-skill",
-  "evals": [
-    {
-      "id": 1,
-      "prompt": "User's task prompt",
-      "expected_output": "Description of expected result",
-      "files": [],
-      "expectations": [],
-      "skip_reason": null
-    }
-  ]
-}
-```
-
-See `references/schemas.md` for the full schema (including the `expectations` field, which you'll add later).
+**Do NOT Load:** Read [references/improvement-workflows.md](references/improvement-workflows.md) §Quick eval path: Testing only when running the Quick eval path. It holds the test-prompt workflow, the evals.json starter schema, and the quick-path iteration loop.
 
 ---
 
@@ -198,37 +178,9 @@ If the user's intent is unclear, ask them to clarify which of (a), (b), (c), or 
 
 ### Case (c): Structural Rewrite Flow
 
-For case (c), use this flow (steps 1–4). **Skip Step 0 (Evaluation-First)** — the skill already has eval cases from its original creation or previous improvements; reuse those. Cases (a) and (b) hand off to the dedicated sibling skills above and do **not** use these steps. Case (d) is handled internally using the Description Optimization section below.
+**Do NOT Load:** Read [references/improvement-workflows.md](references/improvement-workflows.md) §Case (c): Structural Rewrite Flow only when the router above identified case (c) — a structural change (add/split/merge phases, change agent decomposition, change input/output contract).
 
-#### 1. Assess the Current State
-
-Read the existing SKILL.md and all bundled files. Understand:
-- What the skill does and how it's structured
-- What conventions it follows (check the parent plugin's style)
-- Known issues the user reports or you observe
-
-#### 2. Diagnose Improvement Areas
-
-Look at these dimensions (these apply to **structural** rewrites; they are not the right lens for token refactor or output A/B):
-- **Triggering**: Is the description specific enough? Does it undertrigger or overtrigger?
-- **Instructions**: Are they clear? Do they explain the "why"? Are there gaps?
-- **Structure**: Is the directory organization appropriate for the skill's complexity?
-- **Coverage**: Are edge cases handled? Are there missing workflows?
-- **Bundled files**: Are reference files up to date? Are scripts working?
-
-#### 3. Propose Changes
-
-Present a concise improvement plan to the user before making changes. Group changes by impact:
-- **High impact**: Changes that affect the skill's core behavior or triggering
-- **Low impact**: Cleanup, reorganization, wording improvements
-
-#### 4. Evaluate
-
-Use the eval workflow (quick or full path, depending on complexity) to verify improvements. When improving an existing skill, the baseline should be the original version — snapshot it before editing:
-
-```bash
-cp -r <skill-path> <workspace>/skill-snapshot/
-```
+For case (c), use that flow (steps 1–4). **Skip Step 0 (Evaluation-First)** — the skill already has eval cases from its original creation or previous improvements; reuse those. Cases (a) and (b) hand off to the dedicated sibling skills above and do **not** use these steps. Case (d) is handled internally using the Description Optimization section below.
 
 ---
 
@@ -249,45 +201,15 @@ For the full eval protocol (Steps 1-4: spawn runs, draft assertions, capture tim
 
 Put results in `<skill-name>-workspace/`, a sibling of the skill directory, organized by iteration (`iteration-1/`, `iteration-2/`, etc.) and, within that, a directory per test case (`eval-0/`, `eval-1/`, etc.). Create directories as you go, not upfront.
 
-**Do NOT Load:** Do not load `references/eval-protocol.md` until you have decided on Full eval path and prepared eval_metadata.json for each test case. Quick path users skip this section entirely.
-
 ## Improving the skill
 
-The heart of the loop: turn the user's feedback on the test results into a better skill.
-
-### How to think about improvements
-
-1. **Generalize from the feedback.** You're creating a skill to be used a million times across many prompts; you iterate on a few examples only for speed — a skill that works only for those examples is useless. Rather than fiddly overfitty changes or oppressively constrictive MUSTs, when an issue is stubborn try branching out — different metaphors, different patterns of working. It's cheap to try and you might land on something great.
-
-2. **Keep the prompt lean.** Remove things that aren't pulling their weight. Read the **transcripts**, not just the final outputs — outputs tell you *what* happened, transcripts *how*. If the skill makes the model waste time on unproductive work, remove the parts causing it.
-
-3. **Explain the why.** Today's LLMs have good theory of mind and, given a good harness, go beyond rote instructions. Even if the user's feedback is terse or frustrated, understand why they wrote what they wrote and transmit that understanding into the instructions. If you find yourself writing ALWAYS or NEVER in all caps, that's a yellow flag — reframe and explain the reasoning so that the model understands why it matters.
-
-4. **Look for repeated work across test cases.** If the transcripts show subagents independently writing similar helper scripts or taking the same multi-step approach (all 3 test cases wrote a `create_docx.py`), that's a strong signal the skill should bundle that script: write it once, put it in `scripts/`, and tell the skill to use it.
-
-### The iteration loop
-
-After improving the skill:
-
-1. Apply your improvements to the skill
-2. **For Full eval path:** Rerun all test cases into a new `iteration-<N+1>/` directory, including baseline runs. If you're creating a new skill, the baseline is always `without_skill` (no skill) — that stays the same across iterations. If you're improving an existing skill, use the snapshot of the current version (taken before editing) as the baseline for all iterations. This ensures consistent comparison against the version being improved.
-3. **For Quick eval path:** Rerun the 2-3 test cases manually. **For improvements, include baseline comparison (run the old skill version on the same test cases)**; iterate on direct user feedback as in the original Quick eval path.
-4. Present results inline and save to `review.md`, noting changes from previous iteration
-5. Wait for the user to review and tell you they're done
-6. Read the new feedback, improve again, repeat
-
-Keep going until:
-- The user says they're happy
-- The feedback is all empty (everything looks good)
-- You're not making meaningful progress
+**Do NOT Load:** Read [references/improvement-workflows.md](references/improvement-workflows.md) §Improving the skill (the iteration loop) only after presenting eval results, when turning user feedback into skill changes. It holds the improvement principles (generalize, keep lean, explain why, bundle repeated work) and the full-path iteration loop; the quick-path loop is in its Quick eval path section.
 
 ---
 
 ## Advanced: Blind comparison
 
-For a more rigorous comparison between two versions of a skill (the user asks "is the new version actually better?"), read `agents/comparator.md` and `agents/analyzer.md`: give two outputs to an independent agent without telling it which is which, let it judge quality, then analyze why the winner won. Optional, requires subagents; the human review loop is usually sufficient.
-
-> **Boundary note vs `skill-dev-toolkit:skill-tuning`**: the blind comparator uses an LLM subagent as judge — fast and cheap, but inherits LLM-as-judge limitations (verbosity bias, position bias, weak signal on taste-sensitive output dimensions like voice / tone / creative quality). For taste-sensitive A/B that needs reliable preference signal, use `skill-tuning` instead — it uses **human** judgment per iteration and accumulates a preference log. Rule of thumb: blind comparator for objective / structured outputs (file transforms, code generation, fixed-format generators); `skill-tuning` for subjective / creative outputs (writing style, design feel, persuasive copy).
+**Do NOT Load:** Read [references/improvement-workflows.md](references/improvement-workflows.md) §Advanced: Blind comparison only when the user asks whether the new version is actually better. It holds the comparator workflow and the boundary note vs `skill-dev-toolkit:skill-tuning`. Optional — the human review loop is usually sufficient.
 
 ---
 
@@ -303,21 +225,7 @@ For the full description optimization workflow, see [references/description-opti
 
 ### House description standard (the optimization target)
 
-Any description you write or optimize MUST follow the house standard defined in:
-[references/description-design.md](references/description-design.md) §Principles (Principles 1-4), with Principle 4 covering length requirements
-
-- **Length: two-tier** (normal vs router/CONDITIONAL) — number authority:
-  [references/description-design.md](references/description-design.md) §Principles (Principles 1-4), with Principle 4 covering length requirements. Descriptions
-  share a context-listing budget; over-long ones silently evict OTHER skills from what Claude sees.
-  Normal skills: target ≤150 chars; 250 is a SOFT lint line; YAML justification may exceed 250 (with a
-  colocated justification comment). Router/CONDITIONAL skills: exception band ≤500 with firing evidence.
-- **Content: what it does + when to use it** — positive, specific triggers front-loaded (real
-  user phrasings). Keep the step-by-step **procedure / workflow / grounding citations OUT of the
-  description**; those live in the body (the body loads in full on activation, so a what+when
-  summary does NOT cause the body to be skipped — that fear is unverified).
-- **Disambiguate by positive specificity** — prefer naming what triggers the skill. When multiple skills could match similar queries, add explicit negative triggers to prevent mis-routing (e.g., "Do NOT use for CSV files — use csv-processing instead"). Limit to 2-3 negative triggers. A light positive redirect ("for X, use skill-Y") is also fine.
-- **Multilingual keyword belt (optional)** — for repos with mixed-language prompts, append a short keyword belt (≤50 chars) at the end: `Triggers: commit / PR / merge / コミット / 決定記録`. Zero of 14 superpowers skills use this; include it if your repo's prompts are routinely non-English; skip it otherwise.
-- Third person, no XML tags. The optimization loop must keep `best_description` within these rules.
+Any description you write or optimize MUST follow the house standard in [references/description-design.md](references/description-design.md): §Principles 1–4 (Principle 4 owns the length numbers: normal ≤150 target / 250 soft lint line; router/CONDITIONAL ≤500 with firing evidence), plus §Multilingual keyword belt and the context-listing-budget note. The optimization loop must keep `best_description` within these rules.
 
 For the full step-by-step workflow, see [references/description-optimization.md](references/description-optimization.md) — it owns the complete sequence including eval query generation, user review, the optimization loop, and result application.
 
@@ -359,6 +267,7 @@ The references/ directory has additional documentation:
 - `references/platform-adaptations.md` — Claude.ai and Cowork platform-specific adjustments
 - `references/mermaid-usage-guidelines.md` — When to use Mermaid diagrams vs prose in skill authoring, syntax conventions, cost-benefit framework
 - `references/eval-protocol.md` — Complete evaluation workflow (full eval path detail)
+- `references/improvement-workflows.md` — Quick-path testing, structural rewrite flow, iteration loop, blind comparison
 - `references/description-optimization.md` — Description optimization workflow
 - `references/description-design.md` — Description design patterns and best practices
 - `references/evaluation-design.md` — Evaluation case design template
