@@ -1103,16 +1103,18 @@ def _is_compliant_identity(identity: str) -> bool:
 
 
 def _ensure_edgar_identity(identity: str | None = None) -> dict | None:
-    """Configure edgartools' SEC identity from USER_AGENT BEFORE any network request.
+    """Configure edgartools' SEC identity from USER_AGENT before any network request.
 
     Returns a loud ``{"error": ...}`` slot — rejecting before send — when no
-    compliant `<name> <email>` identity is configured; otherwise sets the identity
-    on edgartools and returns None.
+    compliant ``<name> <email>`` identity is configured; otherwise sets the
+    identity on edgartools and returns None.
 
     This pre-send guard is load-bearing: edgartools does NOT fail-fast on an unset
-    identity (``get_identity()`` prompts interactively, then raises ``TimeoutError``
-    after ~60s), so the SEC fair-access identity requirement is enforced here, not
-    by the library default.
+    identity (``get_identity()`` prompts interactively, then raises
+    ``IdentityNotSetException`` after a network attempt), so the SEC fair-access
+    identity requirement is enforced here, not by the library default. The
+    User-Agent header at line 113 covers our own httpx requests; the
+    ``set_identity()`` call covers edgartools' internal requests.
     """
     ident = (USER_AGENT if identity is None else identity or "").strip()
     if not _is_compliant_identity(ident):

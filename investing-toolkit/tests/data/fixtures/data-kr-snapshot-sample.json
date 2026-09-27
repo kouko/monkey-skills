@@ -156,5 +156,12 @@
     "primary_source_status": "deferred",
     "primary_source_note": "Korea has no primary-source equity client wired in data-kr yet. Tier A would be DART (전자공시시스템, dart.fss.or.kr) — integration deferred to a future minor version. Snapshot fields are yfinance-derived (Tier 2).",
     "exchange_suffix": "KS"
+  },
+  "_status": {
+    "status": "ok",
+    "market": "kr",
+    "pack": "snapshot",
+    "failed_sections": [],
+    "warnings": []
   }
 }

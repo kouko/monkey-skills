@@ -437,9 +437,11 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
         run_client("mops_client.py", ["--ticker", code, "--action", "dividends",
                                        "--first-year", str(roc_5y_ago), "--last-year", str(roc_year)]))
     out["mops"]["director_holdings"] = wrap("A", "mops", "director-holdings",
-        run_client("mops_client.py", ["--ticker", code, "--action", "director-holdings"]))
+        run_client("mops_client.py", ["--ticker", code, "--action", "director-holdings",
+                                       "--year", str(rev_year), "--month", str(rev_month)]))
     out["mops"]["insider_trades"] = wrap("A", "mops", "insider-trades",
-        run_client("mops_client.py", ["--ticker", code, "--action", "insider-trades"]))
+        run_client("mops_client.py", ["--ticker", code, "--action", "insider-trades",
+                                       "--year", str(rev_year), "--month", str(rev_month)]))
     out["mops"]["announcements"] = wrap("A", "mops", "realtime-announcements",
         run_client("mops_client.py", ["--action", "realtime-announcements",
                                        "--market", market, "--count", "10"]))

@@ -36,6 +36,12 @@ SKILLS = ROOT / "skills"
 SCHEMAS = SKILLS / "data-markets" / "schemas"
 FIXTURES = ROOT / "tests" / "data" / "fixtures"
 
+# pack.py is a ZERO-DEPENDENCY facade (no PEP 723 deps), so the inner `uv run`
+# build cannot see the project venv; the SEC/US packs need their client deps on
+# the invocation. Other markets' clients run as their own `uv run` subprocesses
+# with their own deps, so extra `--with` here is harmless.
+PACK_UV_WITH = ["--with", "edgartools", "--with", "requests", "--with", "httpx"]
+
 COUNTRIES = ["us", "jp", "tw", "kr", "cn"]
 PACKS = ["snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack"]
 
@@ -220,7 +226,7 @@ def test_pack_live_output_matches_schema(country, pack, ticker):
 
     try:
         proc = subprocess.run(
-            ["uv", "run", *args],
+            ["uv", "run", *PACK_UV_WITH, *args],
             capture_output=True,
             text=True,
             timeout=300,

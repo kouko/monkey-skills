@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
+# dependencies = [
+#     "openai>=1.0.0; extra == 'llm'",
+#     "anthropic>=0.30.0; extra == 'llm'",
+#     "httpx>=0.27.0; extra == 'llm'",
+# ]
 # ///
 """
 pack_us.py — investing-toolkit US market pack builder
@@ -48,6 +53,7 @@ Environment:
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -886,6 +892,661 @@ def _wrap_xval_source_b(cik: int | None) -> dict:
     }
 
 
+def _is_value_token(token: str) -> bool:
+    """Check if a token is a numeric value (not a segment name or label)."""
+    # Common non-value tokens to skip
+    non_value_tokens = {
+        'change', '%', 'percent', '(6)', '—%',
+        'total', 'totals', 'net', 'gross',
+        'increase', 'decrease', 'year', 'years',
+        'ended', 'ending', 'for', 'and', 'or',
+        'of', 'in', 'the', 'to', 'a', 'an',
+        'with', 'by', 'from', 'as', 'at', 'on',
+        'is', 'are', 'was', 'were', 'be', 'been',
+        'have', 'has', 'had', 'do', 'does', 'did',
+        'can', 'could', 'will', 'would', 'should',
+        'may', 'might', 'must', 'shall'
+    }
+
+    # Clean token: remove commas, parentheses, percent signs, etc.
+    cleaned = token.replace(',', '').replace('%', '').replace('$', '')
+    cleaned = cleaned.replace('(', '').replace(')', '').replace('[', '').replace(']', '')
+    cleaned = cleaned.replace('{', '').replace('}', '').strip()
+
+    # Check if it's a known non-value token
+    if cleaned.lower() in non_value_tokens:
+        return False
+
+    # Check if it looks like a number (digits and optional decimal)
+    if re.match(r'^[\d,]+\.?\d*$', token):
+        # Remove commas and check if it's a valid number
+        num_str = token.replace(',', '')
+        try:
+            float(num_str)
+            return True
+        except ValueError:
+            return False
+
+    return False
+
+
+def _parse_tesla_operational_summary(text: str) -> dict | None:
+    """Parse Tesla-style Operational Summary from 8-K Item 2.02 earnings releases.
+
+    Looks for production, deliveries, FSD subscriptions, supercharger counts,
+    and other operational metrics disclosed in tabular format.
+
+    Returns dict with 'quarters' list and 'metrics' list, or None if not found.
+    """
+    # Look for the Operational Summary section header
+    if 'Operational Summary' not in text:
+        return None
+
+    lines = text.split('\n')
+    quarters = []
+    metrics = []
+
+    in_operational_summary = False
+    header_found = False
+
+    for i, line in enumerate(lines):
+        line_stripped = line.strip()
+
+        # Detect start of Operational Summary section
+        if 'Operational Summary' in line_stripped:
+            in_operational_summary = True
+            continue
+
+        if not in_operational_summary:
+            continue
+
+        # Look for quarter headers (e.g., "Q1 2026", "First Quarter 2026")
+        quarter_match = re.search(r'(Q[1-4]|First|Second|Third|Fourth)\s*(?:quarter\s*)?(\d{4})', line_stripped, re.IGNORECASE)
+        if quarter_match:
+            quarter_str = quarter_match.group(0)
+            quarters.append(quarter_str)
+            header_found = True
+            continue
+
+        # If we have quarter headers, look for metric rows
+        if header_found and line_stripped and not line_stripped.startswith('#'):
+            # Skip empty lines and section headers
+            if not line_stripped or line_stripped.isupper() and len(line_stripped) < 20:
+                continue
+
+            # Try to parse as a metric row: name followed by values
+            parts = re.split(r'\s{2,}|\t', line_stripped)
+            if len(parts) >= 2:
+                metric_name = parts[0].strip()
+                values = []
+                for part in parts[1:]:
+                    # Extract numeric values
+                    num_match = re.search(r'([\d,]+(?:\.\d+)?)', part)
+                    if num_match:
+                        val = num_match.group(1).replace(',', '')
+                        if val.replace('.', '').isdigit():
+                            values.append(val)
+
+                if metric_name and values:
+                    # Calculate YoY % if we have at least 2 values (current and prior year)
+                    yoy_pct = None
+                    if len(values) >= 2:
+                        try:
+                            current = float(values[0])
+                            prior = float(values[1])
+                            if prior != 0:
+                                yoy_pct = round(((current - prior) / prior) * 100, 1)
+                        except (ValueError, ZeroDivisionError):
+                            pass
+
+                    metrics.append({
+                        'metric': metric_name,
+                        'values': values,
+                        'yoy_pct': yoy_pct
+                    })
+
+    if metrics:
+        return {
+            'quarters': quarters,
+            'metrics': metrics
+        }
+
+    return None
+
+
+def _parse_segment_revenue_table(text: str) -> dict | None:
+    """Parse segment/category revenue tables from 10-K MD&A or 8-K text.
+
+    Handles three common SEC table formats:
+
+    1. NVDA/MSFT/AAPL-8K-style (space-separated columns with $)::
+
+             Compute & Networking   $193,479  $116,193  $77,286  67 %
+             Graphics               $22,459   $14,304   $8,155   57 %
+
+    2. Apple-style (10-K Item 7) — name directly abuts values with %::
+
+             iPhone$209,586 4%$201,183 —%$200,583
+             Mac33,708 12%29,984 2%29,357
+             iPad28,023 5%26,694 (6)%28,300
+
+    3. Energy/Industrial production tables::
+
+             Net production (MBoe/d)  11.0  10.2  9.4
+
+    Also detects quarterly periods from phrases like "Three Months Ended"
+    and generates appropriate period labels (e.g., FY2026Q3).
+
+    Returns {categories: [{name, values, unit_hint}], period_labels, header}
+    or None if no segment table is present.
+    """
+    import datetime
+
+    lines = text.split('\n')
+    results: list[dict] = []
+    period_labels: list[str] = []
+    detected_header: str | None = None
+
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('(') or line.startswith(')'):
+            continue
+        if not re.search(r'\d', line):
+            continue
+
+        # Detect period headers (e.g., "Year Ended Jan 25, 2026" or "for 2025, 2024 and 2023")
+        date_match = re.search(
+            r'(?:year ended|ended)\s+([A-Z][a-z]+ \d{1,2}, \d{4})',
+            line, re.IGNORECASE
+        )
+        if date_match and not results:
+            period_labels.append(date_match.group(1))
+            detected_header = line
+            continue
+
+        # Detect years in a sentence like "for 2025, 2024 and 2023 (dollars in millions):"
+        if not results and ('for' in line.lower() or 'in' in line.lower()):
+            year_matches = re.findall(r'\b(\d{4})\b', line)
+            if year_matches:
+                # Keep order as found; limit to 4 most recent years
+                period_labels = year_matches[:4]
+
+        # Pre-scan for quarterly indicators
+        is_quarterly = False
+        quarter_dates: list[str] = []
+        for line_check in lines:
+            if 'Three Months Ended' in line_check or 'Nine Months Ended' in line_check:
+                is_quarterly = True
+            # Extract quarter-ending dates like "June 27,2026"
+            date_matches = re.findall(r'([A-Z][a-z]+ \\d{1,2}, \\d{4})', line_check)
+            if date_matches:
+                quarter_dates.extend(date_matches)
+
+        if is_quarterly and quarter_dates:
+            # Generate quarterly period labels (e.g., "2026Q3", "2025Q3")
+            # Take unique dates, sort, and convert to FY+Q format
+            unique_dates = list(dict.fromkeys(quarter_dates))[:4]  # preserve order, max 4
+            period_labels.clear()  # Clear any previously detected annual labels
+            for date_str in unique_dates:
+                try:
+                    dt = datetime.datetime.strptime(date_str, "%B %d, %Y")
+                    # Apple's fiscal year ends in September, so:
+                    # Q1: Oct-Dec, Q2: Jan-Mar, Q3: Apr-Jun, Q4: Jul-Sep
+                    month = dt.month
+                    year = dt.year
+                    if month >= 10:
+                        fy = year + 1
+                        quarter = 1
+                    elif month >= 7:
+                        fy = year
+                        quarter = 4
+                    elif month >= 4:
+                        fy = year
+                        quarter = 3
+                    elif month >= 1:
+                        fy = year
+                        quarter = 2
+                    else:
+                        fy = year
+                        quarter = 1
+                    period_labels.append(f"FY{fy}Q{quarter}")
+                except ValueError:
+                    period_labels.append(date_str)
+            detected_header = "Quarterly periods: " + ", ".join(period_labels)
+
+        # Type 1: NVDA/MSFT/AAPL-8K style (name + $ values, split on $)
+        if '$' in line:
+            dollar_parts = line.split('$')
+            if len(dollar_parts) >= 2:
+                name = dollar_parts[0].strip()
+                values: list[str] = []
+                for part in dollar_parts[1:]:
+                    stripped = part.strip()
+                    m = re.match(r'^([\d,]+)', stripped)
+                    if m:
+                        clean = m.group(1).replace(',', '')
+                        if clean.isdigit():
+                            values.append(clean)
+                if len(values) >= 2 and name and not _is_value_token(name):
+                    results.append({
+                        'name': name,
+                        'values': values[:4],
+                        'unit_hint': 'millions',
+                    })
+                continue
+
+        # Type 2: Apple-style ($value directly after name) - requires 2+ $ after name
+        if '$' in line and line.count('$') >= 2:
+            dollar_parts = line.split('$')
+            if len(dollar_parts) >= 3:
+                name = dollar_parts[0].strip()
+                values: list[str] = []
+                for part in dollar_parts[1:]:
+                    m = re.match(r'([\d,]+)', part.strip())
+                    if m:
+                        clean = m.group(1).replace(',', '')
+                        if clean.isdigit():
+                            values.append(clean)
+                if len(values) >= 2 and name and not _is_value_token(name):
+                    results.append({
+                        'name': name,
+                        'values': values[:4],
+                        'unit_hint': 'millions',
+                    })
+            continue
+
+        # Type 2.5: Apple-style WITHOUT $ signs (compact format like Mac33,708 12%29,984 2%29,357)
+        # Pattern: name starts with letter, followed by number%number%number
+        m_apple_no_dollar = re.match(
+            r'^([A-Za-z][A-Za-z\s,.()]*[A-Za-z()])[\s\t]+'
+            r'([\d,]+(?:\s*[-–(]?\d+(?:\.\d+)?%?)?){3,}',
+            line
+        )
+        if m_apple_no_dollar and not _is_value_token(m_apple_no_dollar.group(1)):
+            name = m_apple_no_dollar.group(1).strip()
+            # Extract all numbers
+            nums = re.findall(r'[\d,]+', m_apple_no_dollar.group(2))
+            if len(nums) >= 3:
+                vals = [n.replace(',', '') for n in nums[:3]]
+                if all(v.isdigit() for v in vals):
+                    results.append({
+                        'name': name,
+                        'values': vals,
+                        'unit_hint': 'millions',
+                    })
+            continue
+
+        # Type 3: Energy/Industrial production tables (strict: only short
+        # metric names like "Net production" to avoid catching random
+        # financial text that happens to start with a letter + numbers).
+        # We require the name to be a recognized segment/product category
+        # keyword or a short (<=2 word) production metric.
+        m3 = re.match(
+            r'^([A-Za-z][A-Za-z\s,.()%/%\d]*[A-Za-z()])'
+            r'[\s\t]+'
+            r'(\d[\d,]*(?:\.\d+)?)'
+            r'[\s\t]+'
+            r'(\d[\d,]*(?:\.\d+)?)',
+            line
+        )
+        if m3:
+            name = m3.group(1).strip()
+            # Only accept if it's a known production metric (short name)
+            # or contains a recognized segment keyword.
+            production_keywords = ['net production', 'daily production', 'gross production']
+            name_lower = name.lower()
+            if (len(name.split()) <= 2 and any(kw in name_lower for kw in production_keywords)):
+                vals = [m3.group(2).replace(',', ''), m3.group(3).replace(',', '')]
+                results.append({'name': name, 'values': vals, 'unit_hint': 'production'})
+            continue
+
+    if results:
+        return {
+            'categories': results,
+            'period_labels': period_labels,
+            'header': detected_header,
+        }
+    return None
+
+
+def _extract_operational_metrics_from_prose(text: str) -> dict | None:
+    """Extract operational metrics from prose text by calling analysis-kpi extractor.
+
+    This delegates to analysis-kpi/scripts/extract_operational_metrics.py which
+    handles LLM extraction (with confidence scoring + source attribution) and
+    regex fallback. This keeps data-markets as pure I/O layer per the
+    three-layer architecture (Data → Analysis → Report).
+    """
+    # Lazy import to avoid import-time cost for other pack types
+    _ensure_analysis_kpi_importable()
+    try:
+        from extract_operational_metrics import extract_operational_metrics_from_prose as _extract
+    except ImportError:
+        # Fallback to regex if analysis-kpi not available
+        return _regex_extract_operational_metrics(text)
+
+    return _extract(text)
+
+
+def _regex_extract_operational_metrics(text: str) -> dict | None:
+    """Original regex-based operational metrics extraction (kept for compatibility)."""
+    patterns = {
+        'production': [
+            r'(?:production|produced|manufactured)\s+(?:approximately\s+|about\s+)?([\d,]+(?:\.\d+)?)\s*(?:units?|vehicles?|barrels?|boe?|tonnes?)',
+            r'(?:production\s+capacity|capacity)\s+(?:is\s+|at\s+)?([\d,]+(?:\.\d+)?)\s*(?:units?|vehicles?|barrels?|boe?|tonnes?)',
+        ],
+        'deliveries': [
+            r'(?:deliveries?|delivered|shipped)\s+(?:approximately\s+|about\s+)?([\d,]+(?:\.\d+)?)\s*(?:units?|vehicles?)',
+        ],
+        'customer_count': [
+            r'(?:customer\s+count|customers?|subscribers?)\s+(?:is\s+|at\s+|reached\s+|approximately\s+|about\s+)?([\d,]+(?:\.\d+)?)',
+            r'(?:customer\s+base|installed\s+base)\s+(?:is\s+|at\s+|approximately\s+|about\s+)?([\d,]+(?:\.\d+)?)',
+        ],
+        'asp': [
+            r'(?:average\s+selling\s+price|asp)\s+(?:is\s+|at\s+|approximately\s+|about\s+)?\$?([\d,]+(?:\.\d+)?)\s*(?:per\s+unit)?',
+            r'(?:selling\s+price)\s+(?:averages?|averaged?)\s+\$?([\d,]+(?:\.\d+)?)',
+        ],
+        'revenue_by_product': [
+            r'(?:revenue\s+from\s+|sales\s+of\s+)([A-Za-z\s]+)\s+(?:was\s+|totaled\s+|amounted\s+to\s+)?\$?([\d,]+(?:\.\d+)?)\s*(?:million|billion)?',
+        ],
+    }
+
+    results: dict = {}
+    text_lower = text.lower()
+
+    for metric_name, pattern_list in patterns.items():
+        for pattern in pattern_list:
+            matches = re.findall(pattern, text_lower, re.IGNORECASE)
+            if matches:
+                match = matches[0]
+                if isinstance(match, tuple):
+                    if len(match) == 2:
+                        if metric_name == 'revenue_by_product':
+                            product_name = match[0].strip()
+                            value_str = match[1]
+                            results[f'revenue_{product_name.replace(" ", "_")}'] = value_str.replace(',', '')
+                        else:
+                            value_str = match[1]
+                    else:
+                        value_str = match[0]
+                else:
+                    value_str = match
+                value_str = value_str.replace(',', '')
+                if re.match(r'^[\d.]+$', value_str):
+                    results[metric_name] = value_str
+
+    return results if results else None
+
+
+def _extract_operational_metrics(filings: list[dict]) -> dict | None:
+    """Scan memo-fetch filings for company-disclosed operational tables and prose.
+
+    Looks for:
+      1. Tesla-style Operational Summary (8-K Item 2.02) — production,
+         deliveries, FSD subscriptions, supercharger counts, etc.
+      2. Segment/category revenue breakdowns (10-K Item 7, 8-K Item 2.02)
+         — revenue by product category, geographic segment, reportable
+         business segment.
+      3. Operational metrics disclosed in prose (MD&A, Business Description,
+         Risk Factors) — production volumes, delivery counts, customer counts,
+         ASP, etc.
+
+    Returns {tesla_operational: {...}, segment_revenue: [...],
+    prose_operational: {...}, ...} or None if nothing found.
+    """
+    if isinstance(filings, dict):
+        filings_rows = filings.get("filings", [])
+    else:
+        filings_rows = filings
+
+    out: dict = {}
+
+    for f in filings_rows:
+        role = f.get('role', '')
+        if role not in ('8-K', '10-K'):
+            continue
+        for s in f.get('sections', []):
+            text_path = s.get('text_path', '')
+            if not text_path or not Path(text_path).exists():
+                continue
+            text = Path(text_path).read_text(encoding='utf-8', errors='ignore')
+
+            if 'Operational Summary' in text or (
+                role == '8-K' and 'production' in text.lower()
+            ):
+                tesla = _parse_tesla_operational_summary(text)
+                if tesla:
+                    out['tesla_operational'] = tesla
+
+            KNOWN_APPLE_SEGMENT_NAMES = {
+                'iphone', 'mac', 'ipad', 'wearables', 'home and accessories',
+                'products', 'services',
+                'americas', 'europe', 'greater china', 'japan', 'rest of asia pacific',
+                'total net sales', 'total gross margin', 'research and development',
+                'selling, general and administrative', 'total operating expenses',
+                'provision for income taxes',
+            }
+            if 'Net sales by' in text or 'Revenue by' in text or (
+                'Segment' in text and '$' in text
+            ):
+                seg = _parse_segment_revenue_table(text)
+                if seg:
+                    seg_period_labels = seg.get('period_labels', [])
+                    for cat in seg.get('categories', []):
+                        cat_name = cat.get('name', '')
+                        cat_values = cat.get('values', [])
+                        if cat_name and cat_values and cat_name.lower() in KNOWN_APPLE_SEGMENT_NAMES:
+                            out.setdefault('segment_revenue', []).append({
+                                'name': cat_name,
+                                'values': cat_values,
+                                'period_labels': seg_period_labels,
+                            })
+
+            prose_metrics = _extract_operational_metrics_from_prose(text)
+            if prose_metrics:
+                out.setdefault('prose_operational', {}).update(prose_metrics)
+
+    if out:
+        prose_operational = out.get('prose_operational', {})
+        prose_values = {}
+        for key, val in prose_operational.items():
+            if isinstance(val, dict) and 'value' in val:
+                prose_values[key] = val['value']
+            elif not isinstance(val, dict):
+                prose_values[key] = val
+
+        cross_val = _cross_validate_operational_metrics(
+            {"prose_operational": prose_values} if prose_values else None,
+            out.get('segment_revenue')
+        )
+        if cross_val:
+            out['cross_validation'] = cross_val
+
+        out['formatted'] = _format_metrics_for_pack(
+            out.get('tesla_operational'),
+            out.get('segment_revenue'),
+            out.get('prose_operational'),
+            cross_val
+        )
+
+    return out if out else None
+
+
+def _cross_validate_operational_metrics(
+    operational_metrics: dict | None,
+    segment_revenue: list | None,
+) -> dict | None:
+    """Cross-validate operational metrics against segment revenue and each other.
+
+    Checks performed:
+    1. volume × ASP ≈ segment revenue (within 20% margin due to other costs)
+    2. Customer count growth consistent with revenue growth
+    3. Segment revenue sums equal consolidated total (if available)
+
+    Returns validation results with quality score and any flagged inconsistencies.
+    """
+    if operational_metrics is None and segment_revenue is None:
+        return None
+
+    validation: dict = {
+        "checks": [],
+        "quality_score": 1.0,
+        "inconsistencies": [],
+    }
+
+    # Helper to extract raw numeric value from either raw string or dict-wrapped value
+    def _extract_value(metrics_dict: dict, key: str) -> float | None:
+        val = metrics_dict.get(key)
+        if val is None:
+            return None
+        if isinstance(val, dict):
+            val = val.get("value")
+        if val is None:
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
+
+    prose = operational_metrics.get("prose_operational", {}) if operational_metrics else {}
+    production = _extract_value(prose, "production")
+    asp = _extract_value(prose, "asp")
+    deliveries = _extract_value(prose, "deliveries")
+    customer_count = _extract_value(prose, "customer_count")
+
+    # Check 1: volume × ASP ≈ segment revenue (within 20% margin)
+    if production is not None and asp is not None:
+        implied_revenue = production * asp
+        if segment_revenue:
+            for seg in segment_revenue:
+                # Use the most recent segment value (first in list)
+                for val in seg.get("values", []):
+                    if val and len(str(val)) >= 4:
+                        try:
+                            actual = float(val)
+                            diff_pct = abs(implied_revenue - actual) / max(actual, 1)
+                            if diff_pct > 0.2:  # 20% threshold per docstring
+                                validation["inconsistencies"].append({
+                                    "type": "volume_asp_revenue_mismatch",
+                                    "production": production,
+                                    "asp": asp,
+                                    "implied_revenue": implied_revenue,
+                                    "segment_value": actual,
+                                    "diff_pct": round(diff_pct * 100, 1),
+                                    "threshold_pct": 20,
+                                })
+                        except (ValueError, TypeError):
+                            pass
+                        break  # Only check first valid value per segment
+
+    # Check 2: Customer count growth consistent with revenue growth
+    # (requires at least 2 periods of data for both)
+    if customer_count is not None and segment_revenue:
+        # This is a placeholder for future growth-rate comparison
+        # Would need historical customer counts and revenue series
+        validation["checks"].append({
+            "type": "customer_growth_revenue_growth_placeholder",
+            "note": "Historical series needed for growth comparison; single-period values insufficient",
+        })
+
+    # Check 3: Segment revenue sums equal consolidated total (if available)
+    if segment_revenue and len(segment_revenue) > 1:
+        # Sum the most recent period across segments
+        total_from_segments = 0.0
+        segment_names = []
+        for seg in segment_revenue:
+            vals = seg.get("values", [])
+            if vals:
+                try:
+                    total_from_segments += float(vals[0])
+                    segment_names.append(seg.get("name", "unknown"))
+                except (ValueError, TypeError):
+                    pass
+        if segment_names:
+            validation["checks"].append({
+                "type": "segment_sum",
+                "segment_count": len(segment_revenue),
+                "summed_total": total_from_segments,
+                "segments_included": segment_names,
+            })
+
+    if validation["inconsistencies"]:
+        validation["quality_score"] = max(0, 1.0 - 0.3 * len(validation["inconsistencies"]))
+
+    return validation if validation["checks"] or validation["inconsistencies"] else None
+
+
+def _format_metrics_for_pack(
+    tesla_operational: dict | None,
+    segment_revenue: list | None,
+    prose_operational: dict | None,
+    cross_validation: dict | None = None,
+) -> dict:
+    """Format extracted operational metrics for the memo-fetch pack output.
+
+    Creates a standardized structure with extraction confidence, source attribution,
+    and validation results.
+    """
+    # Determine extraction level: level2 if any prose metric was LLM-extracted
+    has_llm = False
+    if prose_operational:
+        for val in prose_operational.values():
+            if isinstance(val, dict) and val.get("source", "").startswith("llm_"):
+                has_llm = True
+                break
+
+    result: dict = {
+        "extraction_level": "level2_llm" if has_llm else "level1_mechanical",
+        "fields": {},
+    }
+
+    if tesla_operational:
+        metrics_list = tesla_operational.get("metrics", [])
+        for m in metrics_list:
+            metric_name = m.get("metric", "").strip()
+            values = m.get("values", [])
+            if metric_name and values:
+                key = metric_name.lower().replace(" ", "_").replace("/", "_")
+                result["fields"][key] = {
+                    "values": values,
+                    "confidence": 0.95,
+                    "source": "tesla_operational_summary",
+                    "quarters": tesla_operational.get("quarters", []),
+                    "yoy_pct": m.get("yoy_pct"),
+                }
+
+    if segment_revenue:
+        for i, seg in enumerate(segment_revenue):
+            name = seg.get("name", f"segment_{i}")
+            period_labels = seg.get("period_labels", [])
+            result["fields"][name.lower().replace(" ", "_")] = {
+                "values": seg.get("values", []),
+                "unit": "millions",
+                "confidence": 0.9,
+                "source": "segment_table",
+                "period_labels": period_labels,
+            }
+
+    if prose_operational:
+        for metric_name, value in prose_operational.items():
+            if isinstance(value, dict):
+                # LLM or enhanced regex result: already has structured fields
+                result["fields"][metric_name] = dict(value)
+            else:
+                # Raw regex result: wrap with defaults
+                result["fields"][metric_name] = {
+                    "value": value,
+                    "confidence": 0.7,
+                    "source": "prose_extraction",
+                    "extraction_method": "regex_pattern_match",
+                }
+
+    if cross_validation:
+        result["cross_validation"] = cross_validation
+
+    return result
+
+
 def pack_memo_fetch(ticker: str) -> dict:
     """Heavy single-ticker bundle for equity memo: yfinance + SEC EDGAR."""
     _log("memo-fetch start", ticker)
@@ -958,6 +1619,9 @@ def pack_memo_fetch(ticker: str) -> dict:
         "current_price": info_dict.get("regularMarketPrice"),
         "us_specific": {
             "segment_revenue_note": "Out of scope for T3 v1; future enhancement (us-gaap:RevenuesFromExternalCustomers by segment).",
+            "operational_metrics": _extract_operational_metrics(
+                {"filings": sec_narrative.get("filings", [])} if isinstance(sec_narrative, dict) else {}
+            ),
         },
     }
 

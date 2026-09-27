@@ -4,7 +4,7 @@
   "title": "data-kr snapshot pack",
   "description": "Output of `pack.py --pack snapshot --ticker <KR ticker>`. Quick-overview card combining yfinance `info` + 1-year `history` for a single Korean equity. **Tier 2 only** — Korean primary-source equity (DART) is not wired in this skill; `_provenance.primary_source_status` is always 'deferred'.",
   "type": "object",
-  "required": ["pack", "country", "ticker", "info", "price_history", "_provenance"],
+  "required": ["pack", "country", "ticker", "info", "price_history", "_provenance", "_status"],
   "properties": {
     "pack": {"type": "string", "const": "snapshot"},
     "country": {"type": "string", "const": "kr"},
@@ -113,6 +113,21 @@
           "items": {"type": "string"},
           "description": "Present only when the user-supplied ticker did not match the canonical 6-digit or .KS/.KQ patterns. Each entry is a stderr-style warning string."
         }
+      },
+      "additionalProperties": true
+    },
+    "_status": {
+      "type": "object",
+      "description": "Injected at the top level by pack.py's fail-loud contract (exit code + `_status.status` on stdout): `ok` (all sections ok), `partial` (some sections failed), `failed` (exception), or `usage_error`. See pack.py module docstring for the exit-code mapping.",
+      "required": ["status", "market", "pack", "failed_sections", "warnings"],
+      "properties": {
+        "status": {"type": "string", "enum": ["ok", "partial", "failed", "usage_error"]},
+        "market": {"type": ["string", "null"]},
+        "pack": {"type": ["string", "null"]},
+        "failed_sections": {"type": "array", "items": {"type": "string"}},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "message": {"type": "string"},
+        "traceback": {"type": "string"}
       },
       "additionalProperties": true
     }

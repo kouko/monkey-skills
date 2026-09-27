@@ -84,10 +84,16 @@ ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "skills" / "data-markets" / "scripts" / "pack.py"
 SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 
+# pack.py is a ZERO-DEPENDENCY facade (PEP 723 metadata declares no deps), so its
+# inner `uv run` build cannot see the project venv. The SEC/US packs need these on
+# the invocation. The KR/TW/JP/CN market clients run as their OWN `uv run <client>.py`
+# subprocesses (each carrying its own PEP 723 deps), so extra `--with` here is harmless.
+PACK_UV_WITH = ["--with", "edgartools", "--with", "requests", "--with", "httpx"]
+
 
 def _run_pack(args: list[str], extra_env: dict | None = None, timeout: int = 900) -> dict:
     """Invoke the unified pack.py facade and return parsed JSON. Asserts exit 0."""
-    cmd = ["uv", "run", str(PACK), *args]
+    cmd = ["uv", "run", *PACK_UV_WITH, str(PACK), *args]
     env = {**os.environ}
     if extra_env is not None:
         for k, v in extra_env.items():
