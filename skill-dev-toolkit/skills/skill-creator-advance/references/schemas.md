@@ -22,7 +22,8 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
         "The skill used script Y"
       ]
     }
-  ]
+  ],
+  "skip_reason": "Quick path: skill is a simple format conversion with clear success criteria"
 }
 ```
 
@@ -33,59 +34,40 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 - `evals[].expected_output`: Human-readable description of success
 - `evals[].files`: Optional list of input file paths (relative to skill root)
 - `evals[].expectations`: List of verifiable statements
+- `skip_reason`: Optional string explaining why the quick eval path was chosen instead of the full path (e.g., "simple skill with clear success criteria", "one-off prototype")
 
 ---
 
-## history.json
+## eval_metadata.json
 
-Tracks version progression in Improve mode. Located at workspace root.
+Metadata for a single evaluation case during a run. Located at `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json`.
 
 ```json
 {
-  "started_at": "2026-01-15T10:30:00Z",
-  "skill_name": "pdf",
-  "current_best": "v2",
-  "iterations": [
-    {
-      "version": "v0",
-      "parent": null,
-      "expectation_pass_rate": 0.65,
-      "grading_result": "baseline",
-      "is_current_best": false
-    },
-    {
-      "version": "v1",
-      "parent": "v0",
-      "expectation_pass_rate": 0.75,
-      "grading_result": "won",
-      "is_current_best": false
-    },
-    {
-      "version": "v2",
-      "parent": "v1",
-      "expectation_pass_rate": 0.85,
-      "grading_result": "won",
-      "is_current_best": true
-    }
-  ]
+  "eval_id": 0,
+  "eval_name": "descriptive-name-here",
+  "prompt": "The user's task prompt",
+  "assertions": []
 }
 ```
 
 **Fields:**
-- `started_at`: ISO timestamp of when improvement started
-- `skill_name`: Name of the skill being improved
-- `current_best`: Version identifier of the best performer
-- `iterations[].version`: Version identifier (v0, v1, ...)
-- `iterations[].parent`: Parent version this was derived from
-- `iterations[].expectation_pass_rate`: Pass rate from grading
-- `iterations[].grading_result`: "baseline", "won", "lost", or "tie"
-- `iterations[].is_current_best`: Whether this is the current best version
+- `eval_id`: Integer identifier for this eval case within the iteration
+- `eval_name`: Human-readable descriptive name (used as directory name)
+- `prompt`: The exact task prompt to execute
+- `assertions`: Array of string assertions to verify (can be empty initially, filled during evaluation)
+
+**Relationship to evals.json:** eval_metadata.json is per-test-case metadata for a specific run iteration. evals.json is the master list of all eval cases for the skill. The `assertions` field in eval_metadata.json corresponds to `expectations` in evals.json — use `assertions` during active evaluation runs and sync to `expectations` in evals.json when finalizing.
+
+**Relationship to grading.json:** The grader reads `assertions` from eval_metadata.json and produces `expectations` (array of objects with `text`, `passed`, `evidence`) in grading.json. The assertion text from eval_metadata.json becomes the `text` field in grading.json expectations.
 
 ---
 
 ## grading.json
 
 Output from the grader agent. Located at `<run-dir>/grading.json`.
+
+**Source of assertions:** The grader reads `assertions` from `<run-dir>/eval_metadata.json`. The assertion text strings become the `text` field in the grading.json `expectations` array. After grading, each expectation object has `text` (the original assertion), `passed` (boolean), and `evidence` (supporting detail).
 
 ```json
 {
@@ -294,7 +276,7 @@ Output from Benchmark mode. Located at `benchmarks/<timestamp>/benchmark.json`.
 - `runs[]`: Individual run results
   - `eval_id`: Numeric eval identifier
   - `eval_name`: Human-readable eval name (used as section header in the viewer)
-  - `configuration`: Must be `"with_skill"` or `"without_skill"` (the viewer uses this exact string for grouping and color coding)
+  - `configuration`: Must be `"with_skill"`, `"without_skill"`, or `"old_skill"` (the viewer uses this exact string for grouping and color coding: with_skill, without_skill, and old_skill)
   - `run_number`: Integer run number (1, 2, 3...)
   - `result`: Nested object with `pass_rate`, `passed`, `total`, `time_seconds`, `tokens`, `errors`
 - `run_summary`: Statistical aggregates per configuration
