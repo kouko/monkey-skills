@@ -8,10 +8,12 @@ Purpose: The complete evaluation workflow for skill-creator-advance, extracted f
 
 **SKILL.md embedding instructions include explicit guards at these points:**
 
-- **After Step 1 (Choosing Your Eval Path)**: "Only read this reference if you selected the Full eval path. Quick path users stop here."
-- **Before Step 1 (Spawn all runs)**: "Do NOT load this reference until you have decided on Full eval path and prepared eval_metadata.json for each test case."
+- **After Choosing Your Eval Path**: "Only read the rest of this reference if you selected the Full eval path. Quick path users read only Phase 1, then stop."
+- **Before Step 1 (Spawn all runs)**: "Read Phase 2 only after you have decided on Full eval path. The eval_metadata.json example below is part of Phase 2 — you do not need it before spawning runs, and can draft an empty assertions array first."
 - **Before Step 3 (Self-assessment pass)**: "Do NOT load `references/iteration-automation.md` until all runs have completed and you have timing data captured."
 - **Before Step 4 (Grade, aggregate)**: "Do NOT load `agents/grader.md` or `agents/analyzer.md` until Step 4 — premature loading burns context on instructions not yet needed."
+
+**Note on the loading order:** The eval-path decision table (Phase 1) is readable by everyone — you need it to make the decision. The guards apply to the rest of the file (Phase 2 onward): once you have chosen the Full eval path, continue from Phase 2. For eval_metadata.json, an empty `assertions` array is valid at spawn time; the structure below tells you what fields to fill in when you have it.
 
 ---
 

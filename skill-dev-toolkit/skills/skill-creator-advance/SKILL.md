@@ -28,7 +28,7 @@ These anti-patterns recur across skill creation sessions. Each has a WHY clause 
 
 2. **Never use first/second person in the description.** The description is injected into the system prompt; pronoun inconsistency causes selection problems. [WHY: Anthropic best-practices doc has an explicit Warning block; "I can help you" confuses the matcher.]
 
-3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check). Skipping these produces skills that solve imagined needs rather than real problems. [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
+3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check) — except on the quick eval path, where the gates are replaced by the quick-path criteria (simple skill, documented success criteria, or one-off prototype). [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
 
 4. **Never spawn baselines after with-skill runs.** Always launch baseline runs BEFORE or WITH with-skill runs in the same workflow turn. Spawning baselines after with-skill causes straggler waits and uneven timing data. [WHY: parallel execution ensures comparable conditions; baseline must match with-skill runtime environment. Evaluation-first workflows should run baselines first to establish ground truth before testing skill effectiveness. Exception: new skills on the quick eval path need no baseline.]
 
@@ -52,7 +52,7 @@ Users range from non-technical to expert. Gauge familiarity from context cues: "
 
 ### Pre-Creation Gates (recommended; skip only with stated reason)
 
-**Do NOT Load:** Skip this reference if the skill qualifies for the quick eval path (see the eval-path note above). Load only when starting a full skill creation workflow.
+**Do NOT Load:** Skip this reference if the skill qualifies for the quick eval path (see the eval-path note above) — in that case, still answer the Gate 2 questions inline (they are short); the full reference protocol is only for the full creation workflow. Load only when starting a full skill creation workflow.
 
 The full Pre-Creation Gates protocol (Gate 1 Worth-it check, Gate 2 Smallest-end-state check, Gate 3 User-input check) is in [references/pre-creation-gates.md](references/pre-creation-gates.md).
 
@@ -153,9 +153,9 @@ specifically covers length requirements.
 
 For the anatomy of a skill, flat-structure rules (no nested subdirectories), progressive disclosure, plugin ecosystem conventions, user-input patterns (AskUserQuestion), and writing patterns — see [references/skill-writing-guide.md](references/skill-writing-guide.md).
 
-**Note:** This section describes the Quick eval path approach as an alternative to the full Evaluation-First path (Step 0). Use the Quick path only for simple skills (formatters, templates, single-step workflows), when success criteria are already documented, or for one-off prototypes — otherwise, follow the full Evaluation-First path starting at Step 0 below.
+### Quick eval path: Testing (Phase 2/3)
 
-**Phase 2/3: Testing** — After writing the skill draft, come up with 2-3 realistic test prompts — the kind of thing a real user would actually say — and share them with the user: "Here are a few test cases I'd like to try. Do these look right, or do you want to add more?" (not necessarily verbatim). Then run them.
+For skills on the quick eval path (see the eval-path note at the top of this section), skip Step 0 and test the draft directly: come up with 2-3 realistic test prompts — the kind of thing a real user would actually say — and share them with the user: "Here are a few test cases I'd like to try. Do these look right, or do you want to add more?" (not necessarily verbatim). Then run them. **For improvements to an existing skill, also run the old skill version on the same test cases as the baseline comparison** (snapshot before editing: `cp -r <skill-path> <workspace>/skill-snapshot/`); for brand-new skills, no baseline is needed.
 
 Save test cases to `evals/evals.json`. Don't write assertions yet — just the prompts. You'll draft assertions in the next step while the runs are in progress.
 
@@ -224,7 +224,11 @@ Present a concise improvement plan to the user before making changes. Group chan
 
 #### 4. Evaluate
 
-Use the eval workflow (quick or full path, depending on complexity) to verify improvements. When improving an existing skill, the baseline should be the original version — snapshot it before editing (see Step 0's baseline-run instructions for the command: `cp -r <skill-path> <workspace>/skill-snapshot/`).
+Use the eval workflow (quick or full path, depending on complexity) to verify improvements. When improving an existing skill, the baseline should be the original version — snapshot it before editing:
+
+```bash
+cp -r <skill-path> <workspace>/skill-snapshot/
+```
 
 ---
 

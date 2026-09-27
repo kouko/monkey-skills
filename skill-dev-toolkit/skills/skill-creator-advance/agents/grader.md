@@ -18,8 +18,8 @@ When grading, follow these exact steps:
 
 ### Step 1: Read Assertions
 - Load eval_metadata.json from the test case directory
-- Extract the assertions array (list of assertion objects)
-- Each assertion should have: text (description), type (optional), threshold (optional)
+- Extract the assertions array (list of assertion strings)
+- Each assertion is a string description of a check; the grader may apply its own threshold interpretation per assertion
 
 ### Step 2: Evaluate Each Assertion
 For each assertion in the array:
