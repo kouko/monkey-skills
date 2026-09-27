@@ -293,7 +293,7 @@ Level 2 extraction was run against **seven consecutive annual 10-Ks (FY2018–FY
 
 ### Method
 
-1. **Fetch** — `list_filings(TSLA, ["10-K"], ...)` returns the filer's **complete 10-K history** (16 filings, FY2011–FY2025); no new fetch capability was needed. `sec_narrative` sections were then pulled per accession via the same `fetch_narrative_sections` path the memo uses.
+1. **Fetch** — `list_filings(TSLA, ["10-K"], ...)` returns the filer's **complete 10-K history** (16 filings covering FY2010–FY2025); no new fetch capability was needed. `sec_narrative` sections were then pulled per accession via the same `fetch_narrative_sections` path the memo uses.
 2. **Prompt** — each year's Item 7 prose was run through `get_llm_prompt` (the metric-line selector, §truncation fix). The selector retained the exact figures in every year; prompt sizes ranged 8.5K–50K chars, all within budget.
 3. **Extract** — LLM agent applied the standard Level 2 system prompt (explicit-numbers-only schema); output parsed via `parse_llm_response` (bare-JSON path).
 4. **Verify** — extracted values compared to the figures literally stated in that year's 10-K text. 7/7 years matched.
@@ -312,7 +312,7 @@ Level 2 extraction was run against **seven consecutive annual 10-Ks (FY2018–FY
 | **L3 cross-validation** (volume×ASP≈revenue) | SKIPPED for all 7 years — depends on ASP, which prose never states |
 | **Segment-revenue rollup** | SKIPPED — TSLA 10-K has no segment revenue table (AAPL-style filers only) |
 | **Cross-company generalization** | Only TSLA sampled for the series. AAPL-style filers (no production disclosure) were known-empty at single-period level; the series probe did not extend to other sectors |
-| **L1 XBRL revenue series** | `fetch_facts` returned 6 annual frames (2018–2025), missing 2019/2020 — a sampling behavior to investigate before building a revenue-side series |
+| **L1 XBRL revenue series** | `fetch_facts("RevenueFromContractWithCustomerExcludingAssessedTax")` returned 6 annual frames (2018–2025), missing 2019/2020 — a sampling behavior to investigate before building a revenue-side series. Root cause: Tesla tagged FY2019/FY2020 annual revenue under the **`Revenues`** concept, not `RevenueFromContractWithCustomer*` — the data exists upstream (`Revenues` frames CY2019 = $24,578M, CY2020 = $31,536M), so a revenue-side series needs a concept-fallback, not new data |
 
 ### Conclusion of the probe
 
