@@ -52,6 +52,7 @@ KPI_BREAK_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_break.py"
 KPI_SERIES_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_series.py"
 KPI_MEMO_FEED_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_memo_feed.py"
 KPI_XBRL_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_xbrl.py"
+KPI_OP_METRICS_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "extract_operational_metrics.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
