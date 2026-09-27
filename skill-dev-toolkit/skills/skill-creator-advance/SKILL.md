@@ -50,77 +50,41 @@ Users range from non-technical to expert. Gauge familiarity from context cues: "
 
 ### Pre-Creation Gates (recommended; skip only with stated reason)
 
-**Phase 1/3: Initial validation** — Before intake / interview / drafting, run two lightweight gates against the user's request — one or two focused questions each; they prevent shipping a skill that should not have been built.
+**Do NOT Load:** Skip this reference if you selected the quick eval path. Load only when starting a full skill creation workflow.
 
-**Gate 1 — Worth-it check** —
-applicable when the user proposes ≥2 skills at once, or one skill
-with multiple supporting claims ("we need this because A, B, and
-C"). Triage each proposed item into KEEP / DEFER / DROP, judging it
-on evidence grounding (is the need real and recurring, not
-speculative?) and YAGNI (would you build it now?). A single skill
-with a single load-bearing reason keeps this gate cheap — confirm
-the reason holds, then move to Gate 2.
+The full Pre-Creation Gates protocol (Gate 1 Worth-it check, Gate 2 Smallest-end-state check, Gate 3 User-input check) is in [references/pre-creation-gates.md](references/pre-creation-gates.md).
 
-**Gate 2 — Smallest-end-state check** —
-applicable to **every** new skill proposal, single or multi. The
-three questions:
+### Capture Intent and Interview
 
-1. What's the smallest end state that solves this? (Could it be 0
-   functions — not really a skill, just a one-off prompt? One
-   existing skill plus a new section instead of a new skill?)
-2. Does this result in less total skill-ecosystem code than not
-   building it? (A new skill adds surface area; default "no"
-   unless it subtracts other artifacts or replaces ad-hoc prompts.)
-3. What does this skill make obsolete? (If nothing, the rationale
-   is purely additive — apply deletion-first skepticism as for any
-   feature add.)
+**Do NOT Load:** Skip this reference if the user's request is simply "help me write a skill" without any specific workflow to capture.
 
-Skip explicitly if the user has already done the equivalent
-analysis ("we discussed this last week and concluded we need a
-dedicated skill"). Do NOT skip just to move faster — the cost of
-building the wrong skill is permanent.
+The Capture Intent questions (what the skill enables, when it should trigger, expected output format, test-case decision) and the Interview and Research protocol are in [references/capture-intent.md](references/capture-intent.md).
 
-If a gate verdict is DROP / REJECT / RESHAPE, surface it and ask
-the user how to proceed (drop, defer, or reshape smaller) before
-continuing to intake.
+### Plan the Skill Structure
 
-**Gate 3 — User-input check (after intake, before drafting)** —
-Does this skill have any user-input branching? If yes, plan to apply
-the hardened `AskUserQuestion` pattern from
-[`references/asking-user-questions.md`](references/asking-user-questions.md)
-when drafting the relevant STEP — without it, the skill is highly likely
-to inline-fallback or silently default in production. If no user input
-is needed, this gate is N/A.
+Before writing any file, decide the target skill's file layout. Progressive disclosure works only when it is planned up front, not retrofitted after the body overflows:
 
-### Capture Intent
+1. **List the content blocks** gathered from the interview: workflow steps, domain knowledge, examples, schemas, scripts, agent prompts.
+2. **Assign each block a home**:
+   - **SKILL.md body** — the core workflow the agent must follow on every invocation
+   - `references/` — detail loaded only when needed (protocols, schemas, design patterns); one file per concern, each with a stated load trigger ("read when X")
+   - `scripts/` — deterministic or repetitive code the skill runs
+   - `assets/` — templates and static files
+   - `agents/` — subagent instruction files
+3. **Estimate the SKILL.md body size.** If the inline blocks total over ~3,750 words, move more into references now — splitting after drafting wastes a rewrite.
+4. **Show the tree to the user** before writing files:
 
-**Do NOT Load:** Skip this section if the user's request is simply "help me write a skill" without any specific workflow. Use the full creation flow instead.
+   ```
+   my-skill/
+   ├── SKILL.md          # core workflow + routing (~3,000 words)
+   ├── references/
+   │   ├── protocol.md   # read when running the full workflow
+   │   └── schemas.md    # read when writing grading.json
+   └── scripts/
+       └── convert.py
+   ```
 
-Start by understanding the user's intent. The current conversation might already contain the workflow to capture (e.g., "turn this into a skill") — if so, **extract answers from the conversation history first** (tools used, step sequence, corrections the user made, input/output formats observed); the user fills gaps and confirms before proceeding.
-
-Clarify these four questions:
-1. What should this skill enable Claude to do?
-2. When should this skill trigger? (what user phrases/contexts)
-3. What's the expected output format?
-4. Should we set up test cases? Objectively verifiable outputs (file transforms, data extraction, code generation, fixed workflow steps) benefit from test cases. Subjective outputs (writing style, creative work) often don't benefit from quantitative test cases — evaluate these qualitatively by reviewing outputs inline with the user and using the quick eval path with direct feedback. Suggest the appropriate default, but let the user decide.
-
-### Interview and Research
-
-Proactively ask questions about edge cases, input/output formats, example files, success criteria, and dependencies. Wait to write test prompts until you've got this part ironed out.
-
-Check available MCPs — if useful for research (docs, similar skills, best practices), research in parallel via subagents if available, otherwise inline. Come prepared with context to reduce burden on the user.
-
-### Write the SKILL.md
-
-Based on the user interview, fill in these components:
-
-- **name**: Skill identifier (lowercase, hyphens only, 1-64 chars)
-- **description**: What it does + when to use it (use positive specificity; see Description Best Practices below and the §House description standard — avoid "Do NOT use for X" negation)
-- **compatibility**: Required tools, dependencies (optional)
-- **license**: SPDX identifier or path to LICENSE file (optional)
-- **allowed-tools**: Space-separated pre-approved tools (e.g., "Bash(git *) Read"; optional)
-- **metadata**: Optional key-value pairs (version, author, etc.)
-- **the rest of the skill :)**
+Layout follows the flat-structure and progressive-disclosure conventions in [references/skill-writing-guide.md](references/skill-writing-guide.md). For improvements to existing skills, reuse the existing structure unless the redesign justifies a new one.
 
 > **Evaluation-first is the default path for new skills.** Quick path (2-3 test cases, no baseline) is permitted ONLY for simple skills (formatters, templates, single-step workflows), when success criteria are already documented, or for one-off prototypes — document the skip reason in evals/evals.json. **Determine simplicity first; then if still uncertain, start with the quick path.**
 
@@ -161,9 +125,9 @@ Based on the user interview, fill in these components:
 
 > **Reference**: Full evaluation protocol (including the 15% improvement threshold and iteration loop) is in [references/eval-protocol.md](references/eval-protocol.md)
 
-#### Step 1: Write the SKILL.md
+### Step 1: Write the SKILL.md
 
-Based on the user interview, fill in these components:
+Based on the user interview and the planned structure above, fill in these components:
 
 - **name**: Skill identifier (lowercase, hyphens only, 1-64 chars)
 - **description**: What it does + when to use it (use positive specificity; see Description Best Practices below and the §House description standard — avoid "Do NOT use for X" negation)
@@ -171,9 +135,9 @@ Based on the user interview, fill in these components:
 - **license**: SPDX identifier or path to LICENSE file (optional)
 - **allowed-tools**: Space-separated pre-approved tools (e.g., "Bash(git *) Read"; optional)
 - **metadata**: Optional key-value pairs (version, author, etc.)
-- **the rest of the skill :)****
+- **the rest of the skill :)**
 
-#### Description Best Practices
+### Description Best Practices
 
 Before drafting the description, read
 [references/description-design.md](references/description-design.md) —
@@ -185,98 +149,9 @@ specifically covers length requirements.
 
 ### Skill Writing Guide
 
-#### Anatomy of a Skill
+**Do NOT Load:** Load when planning a new skill's file layout. Skip if you are only optimizing an existing skill's description or making minor tweaks.
 
-```
-skill-name/
-├── SKILL.md (required)
-│   ├── YAML frontmatter (name, description required)
-│   └── Markdown instructions
-└── Bundled Resources (optional, single-level subdirectories ONLY)
-    ├── scripts/    - Executable code for deterministic/repetitive tasks
-    ├── references/ - Docs loaded into context as needed
-    ├── assets/     - Templates / fixtures / static files
-    ├── agents/     - Sub-agent definitions
-    └── ... (any other single-level subdirectory you need)
-```
-
-#### CRITICAL: Folder structure must be flat — NO nested subdirectories
-
-Anthropic skill convention forbids subdirectories inside subdirectories under a skill root. A skill may contain `SKILL.md` plus any number of single-level subdirectories; those subdirectories must themselves be flat.
-
-```
-✅ CORRECT:
-skill-name/SKILL.md
-skill-name/scripts/extract_lineage.py
-skill-name/references/spec.md
-skill-name/assets/template.md
-
-❌ FORBIDDEN (will fail validation hooks in repos that enforce):
-skill-name/assets/scripts/extract_lineage.py     ← assets/ contains scripts/
-```
-
-When creating a new skill or adding bundled resources to an existing one:
-- Group files by **subdirectory at skill root** (scripts/, assets/, references/, agents/, etc.) — choose meaningful names
-- Inside each subdirectory, use **descriptive filenames** (e.g., `extract_column_lineage.py`) rather than further nesting
-- If you feel the need to subdivide, extract into a new top-level subdirectory at the skill root instead (e.g., `scripts-redshift/` rather than `scripts/redshift/`)
-
-Each skill should also have a corresponding **slash command** entry point in the plugin's `commands/` directory — format and examples in `references/plugin-conventions.md`.
-
-#### Progressive Disclosure
-
-Skills use three-level loading — metadata (always in context), SKILL.md body (loaded on trigger; keep under ~5,000 tokens / ~3,750 words, extracting detail into reference files when approaching the limit), bundled resources (as needed). Details: `references/plugin-conventions.md` (§Progressive Disclosure, §SKILL.md Token Budget).
-
-**Key patterns:**
-- Reference files clearly from SKILL.md with guidance on when to read them
-- For large reference files (>~8,000 tokens), include a table of contents
-
-**Domain organization**: When a skill supports multiple domains/frameworks, organize by variant (e.g., `references/aws.md`, `references/gcp.md`) — Claude reads only the relevant reference file.
-
-#### Working with Existing Plugin Ecosystems
-
-When creating a skill that will live inside an existing plugin, match the plugin's conventions rather than imposing a new structure — read `references/plugin-conventions.md` (observing the target plugin's style, the lightweight/standard/full structure spectrum, key conventions).
-
-#### Principle of Lack of Surprise
-
-This goes without saying, but skills must not contain malware, exploit code, or any content that could compromise system security. A skill's contents should not surprise the user in their intent if described. Don't go along with requests to create misleading skills or skills designed to facilitate unauthorized access, data exfiltration, or other malicious activities. Things like a "roleplay as an XYZ" are OK though.
-
-#### Empty-Prompt Onboarding
-
-When drafting a skill that can be invoked with no prompt or a very sparse one, read [`references/asking-user-questions.md`](references/asking-user-questions.md) §Empty-Prompt Onboarding for the opt-in "surface orientation" pattern (recommended for conversational / multi-workflow skills; single-shot utility skills are exempt).
-
-#### Asking the User Structured Questions (when to use AskUserQuestion)
-
-When a skill needs user input mid-execution that's a discrete choice between 2-4 options (e.g., "which folders to exclude?"), use the `AskUserQuestion` tool — but apply the **hardened pattern** documented in [`references/asking-user-questions.md`](references/asking-user-questions.md). The naive approach (`Use AskUserQuestion to confirm...` with a fenced Q&A template) fails three documented modes (inline fallback, silent default, tool unavailable); the reference closes all three and includes a copy-paste mandatory-gate template.
-
-Always-included for skills with user-input steps. Skills with no user-input steps are exempt — don't add AskUserQuestion just because it exists.
-
-#### Writing Patterns
-
-Prefer the imperative form in instructions.
-
-**Defining output formats** — for example:
-```markdown
-## Report structure
-ALWAYS use this exact template:
-# [Title]
-## Executive summary
-## Key findings
-## Recommendations
-```
-
-**Examples pattern** - Examples are useful. Format them like this (deviate a little if "Input"/"Output" already appear in them):
-```markdown
-## Commit message format
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output: feat(auth): implement JWT-based authentication
-```
-
-### Writing Style
-
-Explain to the model why things matter instead of heavy-handed MUSTs. Keep the skill general, not narrowed to specific examples. Draft first, then revisit with fresh eyes and improve.
-
-For writing lean from the start — token economy, bloat self-review, thin-orchestrator design — read [references/writing-lean.md](references/writing-lean.md).
+For the anatomy of a skill, flat-structure rules (no nested subdirectories), progressive disclosure, plugin ecosystem conventions, user-input patterns (AskUserQuestion), and writing patterns — see [references/skill-writing-guide.md](references/skill-writing-guide.md).
 
 **Note:** This section describes the Quick eval path approach as an alternative to the full Evaluation-First path (Step 0). Use the Quick path only for simple skills (formatters, templates, single-step workflows), when success criteria are already documented, or for one-off prototypes — otherwise, follow the full Evaluation-First path starting at Step 0 below.
 
@@ -474,6 +349,8 @@ The agents/ directory holds instructions for specialized subagents — read when
 - `agents/analyzer.md` — How to analyze why one version beat another
 
 The references/ directory has additional documentation:
+- `references/pre-creation-gates.md` — Pre-Creation Gates protocol (Gate 1/2/3)
+- `references/capture-intent.md` — Capture Intent questions and Interview/Research protocol
 - `references/schemas.md` — JSON structures for evals.json, grading.json, etc.
 - `references/plugin-conventions.md` — Plugin ecosystem conventions, directory structures, slash command format
 - `references/iteration-automation.md` — Self-assessment and auto-regression detection protocols
@@ -486,6 +363,8 @@ The references/ directory has additional documentation:
 - `references/evaluation-design.md` — Evaluation case design template
 - `references/asking-user-questions.md` — Hardened AskUserQuestion patterns
 - `references/writing-lean.md` — Token economy and lean writing patterns
+- `references/process-pattern.md` — Core process pattern lifecycle
+- `references/skill-writing-guide.md` — Skill anatomy, flat-structure conventions, progressive disclosure
 
 ---
 
