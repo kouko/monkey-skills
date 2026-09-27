@@ -13,9 +13,12 @@ treatment without a control group. The control shows what happens *without*
 the intervention, so any difference can be attributed to the treatment.
 
 **In skill-creator-advance:** Step 1 spawns both a with-skill run and a
-baseline run (without-skill or old-skill) for every test case. Without
-the baseline, you can't tell if the skill actually helped — maybe Claude
-would have produced the same output on its own.
+baseline run (without-skill or old-skill) for every test case in the full
+eval path. For the quick eval path (simple skills with clear, inspectable
+outputs), direct human verification of outputs against expected results
+serves as validation. Without some form of comparison (either baseline or
+direct inspection), you can't tell if the skill actually helped — maybe
+Claude would have produced the same output on its own.
 
 **When it matters most:** When the skill is subtle (formatting conventions,
 style guidance) rather than structural (multi-step workflows). Subtle skills
