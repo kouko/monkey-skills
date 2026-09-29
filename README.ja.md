@@ -62,7 +62,7 @@ opencode plugin add 'github:kouko/monkey-skills#main::path:investing-toolkit'
 利用可能なプラグイン（21 種）:
 - briefing-toolkit, domain-teams, obsidian, philosophers-toolkit, investing-toolkit, copywriting-toolkit, gws-toolkit, translation-toolkit, tsundoku, four-dx-coach, repo-wiki, dbt-wiki, deconstruct-toolkit, systems-thinking-toolkit, legal-toolkit, collab-toolkit, salesforce-toolkit, research-toolkit, ascii-graph-toolkit, skill-dev-toolkit, think-orbit
 
-Skills are loaded via the plugin loader; placeholder tokens like `CLAUDE_SKILL_DIR` are not substituted by OpenCode — see [docs/opencode.md](docs/opencode.md).
+スキルはプラグインローダー経由で読み込まれます。`CLAUDE_SKILL_DIR` のようなプレースホルダートークンは OpenCode では置換されません — 詳細は [docs/opencode.md](docs/opencode.md) を参照してください。
 
 Tested with OpenCode v2.0.18.
 
