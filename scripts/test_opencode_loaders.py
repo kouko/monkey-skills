@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -11,6 +12,74 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
+
+
+def _setup_test_plugin(tmp_path: Path, plugin_name: str) -> Path:
+    """Create a minimal isolated plugin structure in tmp_path for testing.
+
+    Copies the loader file from the real plugin to the temp location.
+    Returns the path to the temp plugin directory.
+    """
+    real_plugin_dir = REPO_ROOT / plugin_name
+    real_loader = real_plugin_dir / ".opencode-plugin" / "index.js"
+
+    # Create temp plugin dir structure
+    temp_plugin_dir = tmp_path / plugin_name
+    temp_opencode_dir = temp_plugin_dir / ".opencode-plugin"
+    temp_opencode_dir.mkdir(parents=True)
+
+    # Copy loader file
+    shutil.copy2(real_loader, temp_opencode_dir / "index.js")
+
+    return temp_plugin_dir
+
+
+def _run_loader(temp_plugin_dir: Path, plugin_name: str, extra_script: str = "") -> dict:
+    """Run the loader in a temp plugin directory and return parsed JSON output."""
+    loader_path = temp_plugin_dir / ".opencode-plugin" / "index.js"
+
+    test_script = f"""
+    const ctx = {{
+        registeredSkills: [],
+        skill: {{
+            transform: (fn) => {{
+                const draft = {{
+                    add: (skill) => {{
+                        ctx.registeredSkills.push(skill);
+                    }}
+                }};
+                fn(draft);
+            }}
+        }}
+    }};
+
+    // Import and run the loader
+    (async () => {{
+        const loader = await import('file://' + {repr(str(loader_path.absolute()))});
+        await loader.default.setup(ctx);
+        {extra_script}
+        console.log(JSON.stringify({{
+            success: true,
+            skillCount: ctx.registeredSkills.length,
+            skills: ctx.registeredSkills.map(s => ({{
+                id: s.id,
+                name: s.name,
+                description: s.description
+            }}))
+        }}));
+    }})();
+    """
+
+    result = subprocess.run(
+        ["node", "-e", test_script],
+        cwd=temp_plugin_dir,
+        capture_output=True,
+        text=True,
+        timeout=10
+    )
+
+    assert result.returncode == 0, f"Loader failed: {result.stderr}"
+    return json.loads(result.stdout.strip())
 
 
 def get_all_plugins():
@@ -124,140 +193,46 @@ def test_loader_runs_without_error(plugin_name):
         pytest.fail(f"Invalid output from loader for {plugin_name}: {e}\nStdout: {result.stdout}\nStderr: {result.stderr}")
 
 
-def test_loader_handles_missing_skills_dir(plugin_name):
+def test_loader_handles_missing_skills_dir(tmp_path, plugin_name):
     """Test that loader handles missing skills directory gracefully"""
-    plugin_dir = REPO_ROOT / plugin_name
-    loader_path = plugin_dir / ".opencode-plugin" / "index.js"
-    skills_dir = plugin_dir / "skills"
+    # Create isolated plugin structure with no skills directory
+    temp_plugin_dir = _setup_test_plugin(tmp_path, plugin_name)
+    # Don't create skills directory - leave it missing
 
-    # Temporarily rename skills directory
-    if skills_dir.exists():
-        skills_dir.rename(skills_dir.with_suffix(".skills.bak"))
-
-    try:
-        test_script = f"""
-        const ctx = {{
-            registeredSkills: [],
-            skill: {{
-                transform: (fn) => {{
-                    const draft = {{
-                        add: (skill) => {{
-                            ctx.registeredSkills.push(skill);
-                        }}
-                    }};
-                    fn(draft);
-                }}
-            }}
-        }};
-
-        // Import and run the loader
-        (async () => {{
-            const loader = await import('file://' + {repr(str(loader_path.absolute()))});
-            await loader.default.setup(ctx);
-
-            console.log(JSON.stringify({{
-                success: true,
-                skillCount: ctx.registeredSkills.length
-            }}));
-        }})();
-        """
-
-        result = subprocess.run(
-            ["node", "-e", test_script],
-            cwd=plugin_dir,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        assert result.returncode == 0, f"Loader failed on missing skills dir: {result.stderr}"
-        output = json.loads(result.stdout.strip())
-        assert output["success"] is True
-        assert output["skillCount"] == 0
-    finally:
-        # Restore skills directory
-        if skills_dir.with_suffix(".skills.bak").exists():
-            skills_dir.with_suffix(".skills.bak").rename(skills_dir)
+    output = _run_loader(temp_plugin_dir, plugin_name)
+    assert output["success"] is True
+    assert output["skillCount"] == 0
 
 
-def test_loader_skips_hidden_directories(plugin_name):
+def test_loader_skips_hidden_directories(tmp_path, plugin_name):
     """Test that loader skips hidden directories (starting with .)"""
-    plugin_dir = REPO_ROOT / plugin_name
-    loader_path = plugin_dir / ".opencode-plugin" / "index.js"
-    skills_dir = plugin_dir / "skills"
+    temp_plugin_dir = _setup_test_plugin(tmp_path, plugin_name)
 
-    if not skills_dir.exists():
-        pytest.skip(f"No skills directory for {plugin_name}")
-
-    # Create a hidden directory
+    # Create skills directory with hidden subdirectory
+    skills_dir = temp_plugin_dir / "skills"
+    skills_dir.mkdir()
     hidden_dir = skills_dir / ".hidden-skill"
     hidden_dir.mkdir()
     (hidden_dir / "SKILL.md").write_text("---\nname: hidden-skill\n---\nHidden content")
 
-    try:
-        test_script = f"""
-        const ctx = {{
-            registeredSkills: [],
-            skill: {{
-                transform: (fn) => {{
-                    const draft = {{
-                        add: (skill) => {{
-                            ctx.registeredSkills.push(skill);
-                        }}
-                    }};
-                    fn(draft);
-                }}
-            }}
-        }};
+    output = _run_loader(temp_plugin_dir, plugin_name)
+    assert output["success"] is True
 
-        // Import and run the loader
-        (async () => {{
-            const loader = await import('file://' + {repr(str(loader_path.absolute()))});
-            await loader.default.setup(ctx);
-
-            console.log(JSON.stringify({{
-                success: true,
-                skillIds: ctx.registeredSkills.map(s => s.id)
-            }}));
-        }})();
-        """
-
-        result = subprocess.run(
-            ["node", "-e", test_script],
-            cwd=plugin_dir,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        assert result.returncode == 0, f"Loader failed: {result.stderr}"
-        output = json.loads(result.stdout.strip())
-        assert output["success"] is True
-
-        # None of the skills should be from hidden directory
-        skill_ids = output["skillIds"]
-        hidden_skills = [sid for sid in skill_ids if ".hidden-skill" in sid]
-        assert len(hidden_skills) == 0, f"Hidden skill was not skipped: {hidden_skills}"
-    finally:
-        # Clean up
-        if hidden_dir.exists():
-            import shutil
-            shutil.rmtree(hidden_dir)
+    # None of the skills should be from hidden directory
+    skill_ids = [s["id"] for s in output["skills"]]
+    hidden_skills = [sid for sid in skill_ids if ".hidden-skill" in sid]
+    assert len(hidden_skills) == 0, f"Hidden skill was not skipped: {hidden_skills}"
 
 
-def test_loader_handles_block_scalar_description(plugin_name):
+def test_loader_handles_block_scalar_description(tmp_path, plugin_name):
     """Test that loader correctly extracts YAML block scalar (| or >) descriptions"""
-    plugin_dir = REPO_ROOT / plugin_name
-    loader_path = plugin_dir / ".opencode-plugin" / "index.js"
-    skills_dir = plugin_dir / "skills"
+    temp_plugin_dir = _setup_test_plugin(tmp_path, plugin_name)
 
-    if not skills_dir.exists():
-        pytest.skip(f"No skills directory for {plugin_name}")
-
-    # Create a temporary skill with block-scalar description
+    # Create skills directory with test skill using block scalar
+    skills_dir = temp_plugin_dir / "skills"
+    skills_dir.mkdir()
     test_skill_dir = skills_dir / "test-block-scalar-skill"
     test_skill_dir.mkdir()
-    # Use a block scalar with multiple lines
     (test_skill_dir / "SKILL.md").write_text(
         "---\n"
         "name: test-block-scalar-skill\n"
@@ -269,66 +244,20 @@ def test_loader_handles_block_scalar_description(plugin_name):
         "Body content here.\n"
     )
 
-    try:
-        test_script = f"""
-        const ctx = {{
-            registeredSkills: [],
-            skill: {{
-                transform: (fn) => {{
-                    const draft = {{
-                        add: (skill) => {{
-                            ctx.registeredSkills.push(skill);
-                        }}
-                    }};
-                    fn(draft);
-                }}
-            }}
-        }};
+    output = _run_loader(temp_plugin_dir, plugin_name)
+    assert output["success"] is True
 
-        // Import and run the loader
-        (async () => {{
-            const loader = await import('file://' + {repr(str(loader_path.absolute()))});
-            await loader.default.setup(ctx);
+    # Find our test skill
+    test_skill = None
+    for s in output["skills"]:
+        if s["id"].endswith(":test-block-scalar-skill"):
+            test_skill = s
+            break
 
-            console.log(JSON.stringify({{
-                success: true,
-                skills: ctx.registeredSkills.map(s => ({{
-                    id: s.id,
-                    name: s.name,
-                    description: s.description
-                }}))
-            }}));
-        }})();
-        """
-
-        result = subprocess.run(
-            ["node", "-e", test_script],
-            cwd=plugin_dir,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        assert result.returncode == 0, f"Loader failed: {result.stderr}"
-        output = json.loads(result.stdout.strip())
-        assert output["success"] is True
-
-        # Find our test skill
-        test_skill = None
-        for s in output["skills"]:
-            if s["id"].endswith(":test-block-scalar-skill"):
-                test_skill = s
-                break
-
-        assert test_skill is not None, "Test skill was not registered"
-        assert test_skill["description"] is not None, "Block-scalar description was omitted"
-        assert "multi-line" in test_skill["description"], f"Description content not captured: {test_skill['description']}"
-        assert "block scalar" in test_skill["description"], f"Description content not captured: {test_skill['description']}"
-    finally:
-        # Clean up
-        if test_skill_dir.exists():
-            import shutil
-            shutil.rmtree(test_skill_dir)
+    assert test_skill is not None, "Test skill was not registered"
+    assert test_skill["description"] is not None, "Block-scalar description was omitted"
+    assert "multi-line" in test_skill["description"], f"Description content not captured: {test_skill['description']}"
+    assert "block scalar" in test_skill["description"], f"Description content not captured: {test_skill['description']}"
 
 
 def test_loaders_match_template():
@@ -473,64 +402,54 @@ def test_loader_fidelity_against_yaml():
     assert not mismatches, f"Loader fidelity mismatches: {'; '.join(mismatches[:5])}{'...' if len(mismatches) > 5 else ''}"
 
 
-def test_loader_handles_missing_skills_dir_silent():
+def test_loader_handles_missing_skills_dir_silent(tmp_path, plugin_name):
     """Test that loader doesn't log misleading 'Loader failed' when skills dir missing"""
-    plugin_name = "investing-toolkit"  # Test with one plugin
-    plugin_dir = REPO_ROOT / plugin_name
-    loader_path = plugin_dir / ".opencode-plugin" / "index.js"
-    skills_dir = plugin_dir / "skills"
+    # Create isolated plugin structure with no skills directory
+    temp_plugin_dir = _setup_test_plugin(tmp_path, plugin_name)
 
-    # Temporarily rename skills directory
-    if skills_dir.exists():
-        skills_dir.rename(skills_dir.with_suffix(".skills.bak"))
-
-    try:
-        test_script = f"""
-        const ctx = {{
-            registeredSkills: [],
-            skill: {{
-                transform: (fn) => {{
-                    const draft = {{
-                        add: (skill) => {{
-                            ctx.registeredSkills.push(skill);
-                        }}
-                    }};
-                    fn(draft);
-                }}
+    loader_path = temp_plugin_dir / ".opencode-plugin" / "index.js"
+    test_script = f"""
+    const ctx = {{
+        registeredSkills: [],
+        skill: {{
+            transform: (fn) => {{
+                const draft = {{
+                    add: (skill) => {{
+                        ctx.registeredSkills.push(skill);
+                    }}
+                }};
+                fn(draft);
             }}
-        }};
+        }}
+    }};
 
-        // Import and run the loader
-        (async () => {{
-            const loader = await import('file://' + {repr(str(loader_path.absolute()))});
-            await loader.default.setup(ctx);
+    // Import and run the loader
+    (async () => {{
+        const loader = await import('file://' + {repr(str(loader_path.absolute()))});
+        await loader.default.setup(ctx);
 
-            console.log(JSON.stringify({{
-                success: true,
-                skillCount: ctx.registeredSkills.length
-            }}));
-        }})();
-        """
+        console.log(JSON.stringify({{
+            success: true,
+            skillCount: ctx.registeredSkills.length
+        }}));
+    }})();
+    """
 
-        result = subprocess.run(
-            ["node", "-e", test_script],
-            cwd=plugin_dir,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
+    result = subprocess.run(
+        ["node", "-e", test_script],
+        cwd=temp_plugin_dir,
+        capture_output=True,
+        text=True,
+        timeout=10
+    )
 
-        assert result.returncode == 0, f"Loader failed: {result.stderr}"
-        output = json.loads(result.stdout.strip())
-        assert output["success"] is True
-        assert output["skillCount"] == 0
+    assert result.returncode == 0, f"Loader failed: {result.stderr}"
+    output = json.loads(result.stdout.strip())
+    assert output["success"] is True
+    assert output["skillCount"] == 0
 
-        # Should not have logged "Loader failed" to stderr
-        assert "Loader failed" not in result.stderr, f"Loader incorrectly logged failure when skills dir missing: {result.stderr}"
-    finally:
-        # Restore skills directory
-        if skills_dir.with_suffix(".skills.bak").exists():
-            skills_dir.with_suffix(".skills.bak").rename(skills_dir)
+    # Should not have logged "Loader failed" to stderr
+    assert "Loader failed" not in result.stderr, f"Loader incorrectly logged failure when skills dir missing: {result.stderr}"
 
 
 if __name__ == "__main__":
