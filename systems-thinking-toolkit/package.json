@@ -1,0 +1,8 @@
+{
+  "name": "monkey-skills-systems-thinking-toolkit",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./.opencode-plugin/index.js"
+  }
+}
