@@ -42,18 +42,23 @@ function extractFrontmatter(raw) {
         if (indicator === "|") {
           // Literal: preserve newlines
           value = content.join("\n");
-          // Apply chomping
+          // Apply chomping (compensate for regex consuming the newline before `---`)
           if (chomping === "-") {
             value = value.replace(/\n+$/, "");
           } else if (chomping === "+") {
-            // '+': keep all trailing newlines; frontmatter delimiter consumed one, add it back
+            // keep: add back the consumed delimiter newline
             value += "\n";
           } else {
-            // Clip: ensure exactly one trailing newline
+            // clip (default): ensure exactly one trailing newline
             value = value.replace(/\n+$/, "") + "\n";
           }
         } else {
-          // Folded: compute common indent, then apply YAML 1.2 folded scalar rules
+          // Folded: apply YAML 1.2 folded scalar rules
+          // - Line breaks folded to spaces, except:
+          //   * blank line → single newline (paragraph break)
+          //   * more-indented line → newline + preserve extra indent
+          //   * line after more-indented → newline
+          // - chomping: strip (-) / clip (default, strips) / keep (+)
           const foldedLines = [];
           const len = content.length;
           for (let k = 0; k < len; k++) {
@@ -65,29 +70,30 @@ function extractFrontmatter(raw) {
               continue;
             }
             const text = line;
-            // Determine separator before this line
             if (k === 0) {
-              // First non-empty line after possible leading blank lines: no prefix
+              // First non-empty line
               foldedLines.push(text);
             } else {
               const prev = content[k-1];
               const prevEmpty = prev === "";
               const prevMore = !prevEmpty && (rawLines[k-1].length - rawLines[k-1].trimStart().length > commonIndent);
-              if (prevEmpty || prevMore || indentMore) {
+              if (prevMore || indentMore) {
                 foldedLines.push("\n" + text);
               } else {
-                foldedLines.push(" " + text);
+                // prevEmpty: the blank line already contributed its newline
+                foldedLines.push(prevEmpty ? text : " " + text);
               }
             }
           }
           value = foldedLines.join("");
-          // Apply chomping for folded
+          // Apply chomping for folded (compensate for regex consuming the newline before `---`)
           if (chomping === "-") {
             value = value.replace(/\n+$/, "");
           } else if (chomping === "+") {
-            // '+': keep all trailing newlines; frontmatter delimiter consumed one, add it back
+            // keep: add back the consumed delimiter newline
             value += "\n";
           } else {
+            // clip (default): ensure exactly one trailing newline
             value = value.replace(/\n+$/, "") + "\n";
           }
         }
