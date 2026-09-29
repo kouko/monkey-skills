@@ -53,3 +53,4 @@ charter: 1.1
 2. `plugin-version-bump` CI gate may require version bumps for new files; if it fires, agent-decided: bump only plugins whose packaging changes, with reason in PR body.
 3. Token substitution in OpenCode is undocumented; if the W2-01 probe fails, the documented-fallback path keeps acceptance 4 satisfiable without touching skill bodies.
 4. OpenCode versions move fast (v1 vs v2 plugin APIs differ); loader targets v2 only per intent Constraints, and docs must state the minimum tested version (v2.0.18).
+5. user-decided — second-vendor selection-confirmed: codex (2026-09-29, user accepted the suggest-mode recommendation)
