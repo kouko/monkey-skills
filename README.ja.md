@@ -45,6 +45,27 @@ Extension manifest は [`gemini-extension.json`](gemini-extension.json)。
 
 Symlink 方式と plugin 方式の手順は [`.codex/INSTALL.md`](.codex/INSTALL.md) を参照。
 
+### OpenCode v2
+
+OpenCode v2 は git repository から subdirectory selector 付きでプラグインをインストールします。
+
+```bash
+opencode plugin add 'github:kouko/monkey-skills#main::path:<plugin-name>'
+```
+
+例（investing-toolkit）:
+
+```bash
+opencode plugin add 'github:kouko/monkey-skills#main::path:investing-toolkit'
+```
+
+利用可能なプラグイン（21 種）:
+- briefing-toolkit, domain-teams, obsidian, philosophers-toolkit, investing-toolkit, copywriting-toolkit, gws-toolkit, translation-toolkit, tsundoku, four-dx-coach, repo-wiki, dbt-wiki, deconstruct-toolkit, systems-thinking-toolkit, legal-toolkit, collab-toolkit, salesforce-toolkit, research-toolkit, ascii-graph-toolkit, skill-dev-toolkit, think-orbit
+
+Skills are loaded via the plugin loader; placeholder tokens like `CLAUDE_SKILL_DIR` are not substituted by OpenCode — see [docs/opencode.md](docs/opencode.md).
+
+Tested with OpenCode v2.0.18.
+
 ## Repository 構成
 
 ```

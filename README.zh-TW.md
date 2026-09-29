@@ -45,6 +45,27 @@ Extension manifest 位於 [`gemini-extension.json`](gemini-extension.json)。
 
 Symlink 與 plugin 兩種安裝方式請見 [`.codex/INSTALL.md`](.codex/INSTALL.md)。
 
+### OpenCode v2
+
+OpenCode v2 從 git repository 透過 subdirectory selector 安裝插件。
+
+```bash
+opencode plugin add 'github:kouko/monkey-skills#main::path:<plugin-name>'
+```
+
+範例（investing-toolkit）：
+
+```bash
+opencode plugin add 'github:kouko/monkey-skills#main::path:investing-toolkit'
+```
+
+可用插件（21 種）：
+- briefing-toolkit, domain-teams, obsidian, philosophers-toolkit, investing-toolkit, copywriting-toolkit, gws-toolkit, translation-toolkit, tsundoku, four-dx-coach, repo-wiki, dbt-wiki, deconstruct-toolkit, systems-thinking-toolkit, legal-toolkit, collab-toolkit, salesforce-toolkit, research-toolkit, ascii-graph-toolkit, skill-dev-toolkit, think-orbit
+
+Skills 透過 plugin loader 載入；佔位符標記如 `CLAUDE_SKILL_DIR` 不會被 OpenCode 替換 — 請參見 [docs/opencode.md](docs/opencode.md)。
+
+已測試 OpenCode v2.0.18。
+
 ## Repository 結構
 
 ```
