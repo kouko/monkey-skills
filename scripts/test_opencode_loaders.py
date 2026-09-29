@@ -315,7 +315,7 @@ def test_loaders_match_template():
             mismatches.append(f"{plugin}: Loader file missing")
             continue
 
-        actual = actual_path.read_text()
+        actual = actual_path.read_bytes()
         if actual != expected:
             mismatches.append(f"{plugin}: Loader does not match template")
 
@@ -323,7 +323,7 @@ def test_loaders_match_template():
 
 
 def test_loader_fidelity_against_yaml():
-    """Test that each loader's description extraction matches yaml.safe_load"""
+    """Test that each loader's skill extraction matches yaml.safe_load for all skills in the plugin."""
     # Import yaml for comparison
     import yaml
 
@@ -337,106 +337,146 @@ def test_loader_fidelity_against_yaml():
         if not skills_dir.exists():
             continue
 
-        # Get all skill directories
-        for skill_dir in skills_dir.iterdir():
-            if not skill_dir.is_dir() or skill_dir.name.startswith("."):
-                continue
-
-            skill_file = skill_dir / "SKILL.md"
-            if not skill_file.exists():
-                continue
-
-            # Extract frontmatter using yaml.safe_load
-            try:
-                content = skill_file.read_text(encoding='utf-8')
-                # Simple frontmatter extraction (between --- lines)
-                if content.startswith('---\n'):
-                    parts = content.split('---\n', 2)
-                    if len(parts) >= 3:
-                        frontmatter = parts[1]
-                        skill_content = parts[2]
-                        data = yaml.safe_load(frontmatter)
-                        expected_description = data.get('description') if isinstance(data, dict) else None
-                    else:
-                        expected_description = None
-                else:
-                    expected_description = None
-            except Exception:
-                expected_description = None
-
-            # Run the loader to get actual description
-            loader_path = plugin_dir / ".opencode-plugin" / "index.js"
-            test_script = f"""
-            const ctx = {{
-                registeredSkills: [],
-                skill: {{
-                    transform: (fn) => {{
-                        const draft = {{
-                            add: (skill) => {{
-                                ctx.registeredSkills.push(skill);
-                            }}
-                        }};
-                        fn(draft);
-                    }}
+        # Run the loader once for the plugin to get all skills
+        loader_path = plugin_dir / ".opencode-plugin" / "index.js"
+        test_script = f"""
+        const ctx = {{
+            registeredSkills: [],
+            skill: {{
+                transform: (fn) => {{
+                    const draft = {{
+                        add: (skill) => {{
+                            ctx.registeredSkills.push(skill);
+                        }}
+                    }};
+                    fn(draft);
                 }}
-            }};
+            }}
+        }};
 
-            // Import and run the loader
-            (async () => {{
-                const loader = await import('file://' + {repr(str(loader_path.absolute()))});
-                await loader.default.setup(ctx);
+        // Import and run the loader
+        (async () => {{
+            const loader = await import('file://' + {repr(str(loader_path.absolute()))});
+            await loader.default.setup(ctx);
 
-                console.log(JSON.stringify({{
-                    success: true,
-                    skills: ctx.registeredSkills.map(s => ({{
-                        id: s.id,
-                        description: s.description
-                    }}))
-                }}));
-            }})();
-            """
+            console.log(JSON.stringify({{
+                success: true,
+                skills: ctx.registeredSkills.map(s => ({{
+                    id: s.id,
+                    name: s.name,
+                    description: s.description
+                }}))
+            }}));
+        }})();
+        """
 
-            result = subprocess.run(
-                ["node", "-e", test_script],
-                cwd=plugin_dir,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+        result = subprocess.run(
+            ["node", "-e", test_script],
+            cwd=plugin_dir,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
 
-            if result.returncode != 0:
-                mismatches.append(f"{plugin_name}:{skill_dir.name}: Loader crashed: {result.stderr}")
+        if result.returncode != 0:
+            mismatches.append(f"{plugin_name}: Loader crashed: {result.stderr}")
+            continue
+
+        try:
+            output = json.loads(result.stdout.strip())
+            if not output.get("success", False):
+                mismatches.append(f"{plugin_name}: Loader reported failure")
                 continue
 
-            try:
-                output = json.loads(result.stdout.strip())
-                if not output.get("success", False):
-                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Loader reported failure")
+            # Build a map from skill ID to skill data from loader output
+            loader_skills = {}
+            for skill in output.get("skills", []):
+                loader_skills[skill["id"]] = {
+                    "name": skill.get("name"),
+                    "description": skill.get("description")
+                }
+
+            # Now check each skill directory
+            for skill_dir in skills_dir.iterdir():
+                if not skill_dir.is_dir() or skill_dir.name.startswith("."):
                     continue
 
-                # Find our skill
-                actual_description = None
-                for skill in output.get("skills", []):
-                    if skill["id"].endswith(f":{skill_dir.name}"):
-                        actual_description = skill.get("description")
-                        break
+                skill_file = skill_dir / "SKILL.md"
+                if not skill_file.exists():
+                    continue
 
-                if actual_description is None:
+                # Extract frontmatter using yaml.safe_load
+                try:
+                    content = skill_file.read_text(encoding='utf-8')
+                    # Simple frontmatter extraction (between --- lines)
+                    if content.startswith('---\n'):
+                        parts = content.split('---\n', 2)
+                        if len(parts) >= 3:
+                            frontmatter = parts[1]
+                            data = yaml.safe_load(frontmatter)
+                            if isinstance(data, dict):
+                                expected_name = data.get('name')
+                                expected_description = data.get('description')
+                            else:
+                                expected_name = None
+                                expected_description = None
+                        else:
+                            expected_name = None
+                            expected_description = None
+                    else:
+                        expected_name = None
+                        expected_description = None
+                except Exception:
+                    expected_name = None
+                    expected_description = None
+
+                # Construct the expected skill ID as the loader would
+                expected_id = f"monkey-skills-{plugin_name}:{skill_dir.name}"
+
+                # Get actual from loader. Contract: a skill is advertised iff its
+                # description is non-empty (loader skips empty/missing descriptions).
+                actual = loader_skills.get(expected_id)
+                if not expected_description:
+                    if actual is not None:
+                        mismatches.append(f"{plugin_name}:{skill_dir.name}: Empty/missing description but skill was advertised")
+                    continue
+                if actual is None:
                     mismatches.append(f"{plugin_name}:{skill_dir.name}: Skill not found in loader output")
                     continue
 
-                # Compare descriptions (normalize both)
-                if expected_description is None and actual_description is None:
-                    continue  # Both None, OK
-                elif expected_description is None:
-                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected no description, got: {repr(actual_description)}")
-                elif actual_description is None:
-                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected {repr(expected_description)}, got no description")
-                elif str(expected_description) != str(actual_description):
-                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Description mismatch\nExpected: {repr(expected_description)}\nActual: {repr(actual_description)}")
+                # Compare name and description
+                if expected_name is None and actual["name"] is None:
+                    name_ok = True
+                elif expected_name is None:
+                    name_ok = False
+                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected no name, got: {repr(actual['name'])}")
+                elif actual["name"] is None:
+                    name_ok = False
+                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected {repr(expected_name)}, got no name")
+                else:
+                    name_ok = (str(expected_name) == str(actual["name"]))
+                    if not name_ok:
+                        mismatches.append(f"{plugin_name}:{skill_dir.name}: Name mismatch\nExpected: {repr(expected_name)}\nActual: {repr(actual['name'])}")
 
-            except (json.JSONDecodeError, KeyError) as e:
-                mismatches.append(f"{plugin_name}:{skill_dir.name}: Invalid loader output: {e}")
+                if expected_description is None and actual["description"] is None:
+                    desc_ok = True
+                elif expected_description is None:
+                    desc_ok = False
+                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected no description, got: {repr(actual['description'])}")
+                elif actual["description"] is None:
+                    desc_ok = False
+                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected {repr(expected_description)}, got no description")
+                else:
+                    desc_ok = (str(expected_description) == str(actual["description"]))
+                    if not desc_ok:
+                        mismatches.append(f"{plugin_name}:{skill_dir.name}: Description mismatch\nExpected: {repr(expected_description)}\nActual: {repr(actual['description'])}")
+
+                if not (name_ok and desc_ok):
+                    # Already added mismatch messages above
+                    pass
+
+        except (json.JSONDecodeError, KeyError) as e:
+            mismatches.append(f"{plugin_name}: Invalid loader output: {e}")
 
     assert not mismatches, f"Loader fidelity mismatches: {'; '.join(mismatches[:5])}{'...' if len(mismatches) > 5 else ''}"
 

@@ -102,17 +102,75 @@ def test_transform_is_awaited():
 
 
 def test_transform_returns_promise():
-    """Test that ctx.skill.transform() can return a promise and it's awaited."""
-    output = run_loader("investing-toolkit", """
-    // Check that the promise returned by transform was awaited
-    if (ctx.transformCompleted === false) {
-        console.error("transform promise not awaited");
-    }
-    """)
+    """Test that setup() waits for a transform whose Promise resolves on a later turn.
 
-    assert output["transformCalled"] is True
-    assert output["transformCompleted"] is True
-    assert output["skillCount"] == 1
+    The fake transform resolves the registration on a setTimeout — if the loader
+    does not await the returned Promise, setup() resolves before the skill lands.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        plugin_dir = tmp_path / "investing-toolkit"
+        opencode_dir = plugin_dir / ".opencode-plugin"
+        opencode_dir.mkdir(parents=True)
+
+        real_loader = Path(__file__).parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
+        shutil.copy2(real_loader, opencode_dir / "index.js")
+
+        skills_dir = plugin_dir / "skills"
+        skills_dir.mkdir()
+        test_skill_dir = skills_dir / "test-skill"
+        test_skill_dir.mkdir()
+        (test_skill_dir / "SKILL.md").write_text(
+            "---\n"
+            "name: test-skill\n"
+            "description: test\n"
+            "---\n"
+            "Body content\n"
+        )
+
+        loader_path = opencode_dir / "index.js"
+        test_script = f"""
+        const ctx = {{
+            registeredSkills: [],
+            skill: {{
+                transform: (fn) => {{
+                    // Resolve on a later event-loop turn — a loader that does not
+                    // await this Promise returns from setup() with 0 skills.
+                    return new Promise((resolve) => {{
+                        setTimeout(() => {{
+                            const draft = {{ add: (skill) => ctx.registeredSkills.push(skill) }};
+                            fn(draft);
+                            resolve();
+                        }}, 20);
+                    }});
+                }}
+            }}
+        }};
+
+        (async () => {{
+            const loader = await import('file://' + {repr(str(loader_path.absolute()))});
+            await loader.default.setup(ctx);
+            console.log(JSON.stringify({{
+                success: true,
+                skillCount: ctx.registeredSkills.length
+            }}));
+        }})();
+        """
+
+        result = subprocess.run(
+            ["node", "-e", test_script],
+            cwd=plugin_dir,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        assert result.returncode == 0, f"Loader crashed: {result.stderr}"
+        output = json.loads(result.stdout.strip())
+        assert output["skillCount"] == 1, (
+            f"setup() returned before the delayed transform completed — await is missing "
+            f"(got {output['skillCount']} skills, expected 1)"
+        )
 
     print("test_transform_returns_promise PASSED")
 

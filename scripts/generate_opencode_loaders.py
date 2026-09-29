@@ -45,12 +45,12 @@ PLUGINS = [
 PLACEHOLDER = "{{PLUGIN}}"
 
 
-def render_template(plugin: str) -> str:
-    """Render the template for a given plugin name."""
-    template = TEMPLATE_FILE.read_text()
-    if PLACEHOLDER not in template:
+def render_template(plugin: str) -> bytes:
+    """Render the template for a given plugin name (byte-exact)."""
+    template = TEMPLATE_FILE.read_bytes()
+    if PLACEHOLDER.encode() not in template:
         raise ValueError("Template is missing the {plugin} placeholder")
-    return template.replace(PLACEHOLDER, plugin)
+    return template.replace(PLACEHOLDER.encode(), plugin.encode())
 
 
 def get_loader_path(plugin: str) -> Path:
@@ -64,7 +64,7 @@ def generate() -> list[str]:
         rendered = render_template(plugin)
         path = get_loader_path(plugin)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(rendered)
+        path.write_bytes(rendered)
         written.append(str(path))
     return written
 
@@ -79,7 +79,7 @@ def check() -> bool:
             print(f"MISSING: {path}", file=sys.stderr)
             all_ok = False
             continue
-        actual = path.read_text()
+        actual = path.read_bytes()
         if actual != expected:
             print(f"OUT OF SYNC: {path}", file=sys.stderr)
             all_ok = False
