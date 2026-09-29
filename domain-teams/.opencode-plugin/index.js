@@ -21,9 +21,15 @@ function parseYAMLScalar(raw) {
 }
 
 // Strip a YAML trailing comment: `#` starts a comment when preceded by
-// whitespace and not inside a quoted scalar. Quotes in the middle of a value
-// (rare but valid) also protect their own `#`.
+// whitespace. Quote-awareness applies only when the scalar itself is quoted
+// (a leading quote opens a quoted scalar); quotes inside a plain scalar are
+// ordinary characters and do NOT protect a following `#`.
 function stripYAMLComment(s) {
+  if (s[0] !== '"' && s[0] !== "'") {
+    // Plain scalar: first whitespace-preceded `#` starts the comment.
+    const idx = s.search(/(^|\s)#/);
+    return idx === -1 ? s : s.slice(0, idx).trimEnd();
+  }
   let inDQ = false;
   let inSQ = false;
   let escaped = false;

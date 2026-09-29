@@ -299,6 +299,58 @@ def test_loader_block_scalar_yaml_semantics(tmp_path, plugin_name, block, expect
     )
 
 
+# (full frontmatter lines, expected name/description per yaml.safe_load)
+# Regression cases from closing review: comment stripping must be quote-aware
+# only for quoted scalars; plain scalars treat embedded quotes as ordinary
+# characters; double-quote escapes decode in one left-to-right pass.
+QUOTED_SCALAR_CASES = [
+    # name: quoted value with trailing comment
+    ("name: \"quoted name\" # note\ndescription: d\n", "quoted name", "d"),
+    # plain scalar with embedded quotes and trailing comment (R3 regression)
+    ("name: x\ndescription: foo \"bar # baz\" # tail\n", "x", "foo \"bar"),
+    ("name: x\ndescription: foo 'bar # baz' # tail\n", "x", "foo 'bar"),
+    # plain scalar, no comment: embedded quotes are ordinary characters
+    ("name: x\ndescription: foo \"bar\" baz\n", "x", "foo \"bar\" baz"),
+    # quoted scalar protects # inside quotes
+    ("name: x\ndescription: \"a # b\"\n", "x", "a # b"),
+    # single-quoted with trailing comment
+    ("name: x\ndescription: 'it''s fine' # c\n", "x", "it's fine"),
+    # double-quote escapes decode in one pass (R2 regression)
+    ("name: x\ndescription: \"a\\\\nb\"\n", "x", "a\\nb"),
+    ("name: x\ndescription: \"tab\\tline\\nnext\"\n", "x", "tab\tline\nnext"),
+    ("name: x\ndescription: \"a\\x41b\"\n", "x", "aAb"),
+]
+
+
+@pytest.mark.parametrize("fm,expected_name,expected_desc", QUOTED_SCALAR_CASES)
+def test_loader_quoted_scalar_yaml_semantics(tmp_path, plugin_name, fm, expected_name, expected_desc):
+    """Loader quoted/plain scalar extraction must match YAML spec byte-for-byte."""
+    import yaml as yaml_mod
+
+    temp_plugin_dir = _setup_test_plugin(tmp_path, plugin_name)
+    skills_dir = temp_plugin_dir / "skills"
+    skills_dir.mkdir()
+    test_skill_dir = skills_dir / "case-skill"
+    test_skill_dir.mkdir()
+    raw = f"---\n{fm}---\nBody.\n"
+
+    # Ground truth from a real YAML parser
+    frontmatter = raw.split("---\n", 2)[1]
+    data = yaml_mod.safe_load(frontmatter)
+    assert data["name"] == expected_name, f"Test expectation stale for {fm!r}"
+    assert data["description"] == expected_desc, f"Test expectation stale for {fm!r}"
+
+    (test_skill_dir / "SKILL.md").write_text(raw)
+    output = _run_loader(temp_plugin_dir, plugin_name)
+    test_skill = next(s for s in output["skills"] if s["id"].endswith(":case-skill"))
+    assert test_skill["name"] == expected_name, (
+        f"Scalar {fm!r}: expected name {expected_name!r}, got {test_skill['name']!r}"
+    )
+    assert test_skill["description"] == expected_desc, (
+        f"Scalar {fm!r}: expected {expected_desc!r}, got {test_skill['description']!r}"
+    )
+
+
 def test_loaders_match_template():
     """Test that all loaders match the template (consistency test)"""
     # Regenerate all loaders from template in memory
