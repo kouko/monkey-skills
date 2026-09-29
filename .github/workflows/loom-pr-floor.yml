@@ -1,0 +1,26 @@
+name: loom PR floor
+
+# The loom publication floor's CI check. Copy this file unchanged to
+# .github/workflows/loom-pr-floor.yml and land it on the trunk before the
+# trunk rule requires the check "loom-pr-floor / PR floor".
+#
+# pull_request_target runs this definition from the base branch, so a pull
+# request cannot rewrite its own required check. The called workflow reads
+# the PR body and git history only; it executes no code from the PR.
+#
+# To pin, replace both `main`s below with one commit SHA of kouko/loom-plugins:
+#   uses: kouko/loom-plugins/.github/workflows/loom-pr-floor-reusable.yml@<sha>
+#   loom-ref: <sha>
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  loom-pr-floor:
+    uses: kouko/loom-plugins/.github/workflows/loom-pr-floor-reusable.yml@main
+    with:
+      loom-ref: main
