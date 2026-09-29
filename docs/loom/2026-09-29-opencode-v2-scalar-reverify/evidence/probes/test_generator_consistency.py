@@ -7,6 +7,8 @@ This is an adversarial probe — it should FAIL if any loader deviates
 from the template.
 """
 
+concern: generated loaders may deviate from the single template (byte-identity check)
+
 import sys
 from pathlib import Path
 

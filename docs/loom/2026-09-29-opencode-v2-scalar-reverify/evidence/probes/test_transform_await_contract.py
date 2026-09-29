@@ -8,6 +8,8 @@ This is an adversarial probe — it should FAIL if the await is missing
 or if the transform contract is violated.
 """
 
+concern: loader may not properly await ctx.skill.transform() or violate transform contract
+
 import json
 import subprocess
 import tempfile
