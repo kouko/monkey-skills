@@ -1,5 +1,5 @@
 # OpenCode v2 acceptance report suite-label fix — plan
-intent: 2026-09-29-opencode-v2-report-mislabel-fix@48267532a
+intent: 2026-09-29-opencode-v2-report-mislabel-fix@8b938f8f0
 charter: 1.1
 
 ## Current State Evidence
