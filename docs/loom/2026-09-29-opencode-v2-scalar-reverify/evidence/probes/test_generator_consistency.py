@@ -12,7 +12,7 @@ from the template.
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).parent.parent.parent.parent
+REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent.parent
 TEMPLATE_FILE = REPO_ROOT / "scripts" / "opencode-loader.template.js"
 
 # All 21 plugins
