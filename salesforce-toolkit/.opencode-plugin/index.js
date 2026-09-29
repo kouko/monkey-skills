@@ -1,14 +1,51 @@
+// OpenCode v2 plugin loader for salesforce-toolkit
+// Registers all skills in ../skills/ via ctx.skill.transform
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = dirname(dirname(fileURLToPath(import.meta.url)));
+
+function extractFrontmatter(raw) {
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (!m) return { frontmatter: {}, content: raw };
+  const fm = m[1];
+  let name;
+  let description;
+  const lines = fm.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith("name:")) {
+      name = line.slice(5).trim();
+    } else if (line.startsWith("description:")) {
+      const rest = line.slice("description:".length);
+      // YAML block scalar indicator: | > |- |+ >- >+ — value continues on indented lines
+      if (/^\s*[|>][-+]?/.test(rest)) {
+        const parts = [];
+        let j = i + 1;
+        while (j < lines.length && /^\s/.test(lines[j])) {
+          parts.push(lines[j].replace(/^\s+/, "").trimEnd());
+          j++;
+        }
+        description = parts.filter(Boolean).join(" ");
+        i = j - 1;
+      } else {
+        description = rest.trim();
+        if ((description.startsWith("\"") && description.endsWith("\"")) ||
+            (description.startsWith("'") && description.endsWith("'"))) {
+          description = description.slice(1, -1);
+        }
+      }
+    }
+  }
+  return { frontmatter: { name, description }, content: raw.slice(m[0].length) };
+}
+
 export default {
   id: "monkey-skills-salesforce-toolkit",
   async setup(ctx) {
     try {
-      const { dirname, join } = await import('path');
-      const { fileURLToPath } = await import('url');
-      const { readFileSync, readdirSync, statSync } = await import('fs');
-
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = dirname(__filename);
-      const skillsPath = join(dirname(dirname(__filename)), 'skills');
+      const skillsPath = join(dirname(dirname(fileURLToPath(import.meta.url))), "skills");
 
       if (!statSync(skillsPath).isDirectory()) {
         return;
@@ -18,39 +55,22 @@ export default {
       const entries = readdirSync(skillsPath, { withFileTypes: true });
 
       for (const entry of entries) {
-        if (!entry.isDirectory() || entry.name.startsWith('.')) {
+        if (!entry.isDirectory() || entry.name.startsWith(".")) {
           continue;
         }
 
         const skillDir = join(skillsPath, entry.name);
-        const skillFile = join(skillDir, 'SKILL.md');
+        const skillFile = join(skillDir, "SKILL.md");
 
         try {
           if (!statSync(skillFile).isFile()) {
             continue;
           }
 
-          const content = readFileSync(skillFile, 'utf8');
-          const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-          let name = entry.name;
-          let description = undefined;
-          let skillContent = content;
-
-          if (frontmatterMatch) {
-            const frontmatter = frontmatterMatch[1];
-            const nameMatch = frontmatter.match(/^name:\s*(.+)$/m);
-            if (nameMatch) {
-              name = nameMatch[1].trim();
-            }
-            const descMatch = frontmatter.match(/^description:\s*(.+)$/m);
-            if (descMatch) {
-              const descValue = descMatch[1].trim();
-              if (!descValue.startsWith('|') && !descValue.startsWith('>')) {
-                description = descValue;
-              }
-            }
-            skillContent = content.substring(frontmatterMatch.index + frontmatterMatch[0].length);
-          }
+          const content = readFileSync(skillFile, "utf8");
+          const { frontmatter, content: skillContent } = extractFrontmatter(content);
+          const name = frontmatter.name || entry.name;
+          const description = frontmatter.description;
 
           skills.push({
             id: `monkey-skills-salesforce-toolkit:${entry.name}`,
