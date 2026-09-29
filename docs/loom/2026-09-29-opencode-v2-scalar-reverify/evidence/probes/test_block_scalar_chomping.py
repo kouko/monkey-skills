@@ -27,7 +27,7 @@ def run_loader_on_skill(skill_yaml: str, plugin_name: str = "investing-toolkit")
         opencode_dir.mkdir(parents=True)
 
         # Copy the real loader
-        real_loader = Path(__file__).parent.parent.parent.parent.parent.parent / plugin_name / ".opencode-plugin" / "index.js"
+        real_loader = Path(__file__).parent.parent.parent.parent.parent / plugin_name / ".opencode-plugin" / "index.js"
         shutil.copy2(real_loader, opencode_dir / "index.js")
 
         # Create skills dir with test skill

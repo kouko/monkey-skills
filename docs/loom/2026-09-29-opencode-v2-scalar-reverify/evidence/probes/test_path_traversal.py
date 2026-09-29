@@ -27,7 +27,7 @@ def create_fake_plugin(plugin_name: str, malicious_dir_name: str) -> Path:
     opencode_dir.mkdir()
 
     # Copy the loader from investing-toolkit (any plugin loader works)
-    real_loader = Path(__file__).parent.parent.parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
+    real_loader = Path(__file__).parent.parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
     shutil.copy2(real_loader, opencode_dir / "index.js")
 
     # Create skills dir
@@ -232,7 +232,7 @@ def test_skills_only_from_intended_location():
         opencode_dir = plugin_dir / ".opencode-plugin"
         opencode_dir.mkdir()
 
-        real_loader = Path(__file__).parent.parent.parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
+        real_loader = Path(__file__).parent.parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
         shutil.copy2(real_loader, opencode_dir / "index.js")
 
         # Create skills dir
