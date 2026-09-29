@@ -8,36 +8,87 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
 // Parse a YAML scalar value (quoted or unquoted) according to YAML 1.2 spec
 function parseYAMLScalar(raw) {
-  const s = raw.trim();
+  let s = stripYAMLComment(raw.trim());
   // Double-quoted: interpret escape sequences
-  if (s.startsWith("\"") && s.endsWith("\"")) {
-    const inner = s.slice(1, -1);
-    // YAML double-quote escapes: \\, \", \n, \t, \r, \b, \f, \/, \_, \xXX, \uXXXX, \UXXXXXXXX
-    return inner
-      .replace(/\\"/g, '"')
-      .replace(/\\n/g, '\n')
-      .replace(/\\t/g, '\t')
-      .replace(/\\r/g, '\r')
-      .replace(/\\b/g, '\b')
-      .replace(/\\f/g, '\f')
-      .replace(/\\\\/g, '\\')
-      .replace(/\\\//g, '/')
-      .replace(/\\_/g, '_')
-      .replace(/\\x([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
-      .replace(/\\u([0-9A-Fa-f]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
-      .replace(/\\U([0-9A-Fa-f]{8})/g, (_, h) => {
-        const cp = parseInt(h, 16);
-        return cp <= 0x10FFFF ? String.fromCodePoint(cp) : '�';
-      });
+  if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"') {
+    return decodeDoubleQuoted(s.slice(1, s.length - 1));
   }
   // Single-quoted: doubled quotes become single quote, no other escapes
-  if (s.startsWith("'") && s.endsWith("'")) {
-    return s.slice(1, -1).replace(/''/g, "'");
+  if (s.length >= 2 && s[0] === "'" && s[s.length - 1] === "'") {
+    return s.slice(1, s.length - 1).replace(/''/g, "'");
   }
-  // Unquoted plain scalar: strip a trailing inline comment (` #` starts a comment),
-  // preserve inner spacing. A `#` only starts a comment when preceded by whitespace
-  // (or at line start); a bare `a#b` keeps the `#`.
-  return s.replace(/^\s*#.*$/, "").replace(/\s#.*$/, "");
+  return s;
+}
+
+// Strip a YAML trailing comment: `#` starts a comment when preceded by
+// whitespace and not inside a quoted scalar. Quotes in the middle of a value
+// (rare but valid) also protect their own `#`.
+function stripYAMLComment(s) {
+  let inDQ = false;
+  let inSQ = false;
+  let escaped = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (escaped) { escaped = false; continue; }
+    if (inDQ) {
+      if (c === "\\") { escaped = true; continue; }
+      if (c === '"') inDQ = false;
+      continue;
+    }
+    if (inSQ) {
+      if (c === "'" && s[i + 1] === "'") { i++; continue; }
+      if (c === "'") inSQ = false;
+      continue;
+    }
+    if (c === '"') { inDQ = true; continue; }
+    if (c === "'") { inSQ = true; continue; }
+    if (c === '#' && (i === 0 || /\s/.test(s[i - 1]))) {
+      return s.slice(0, i).trimEnd();
+    }
+  }
+  return s.trimEnd();
+}
+
+// Decode a YAML double-quoted scalar's inner text in one left-to-right pass.
+// Covers the full YAML 1.2 escape table; unknown escapes keep the backslash.
+function decodeDoubleQuoted(inner) {
+  const out = [];
+  for (let i = 0; i < inner.length; i++) {
+    const c = inner[i];
+    if (c !== "\\" || i + 1 >= inner.length) { out.push(c); continue; }
+    const e = inner[i + 1];
+    const simple = {
+      "0": "\u0000", "a": "\u0007", "b": "\u0008", "t": "\u0009",
+      "n": "\u000A", "v": "\u000B", "f": "\u000C", "r": "\u000D",
+      "e": "\u001B", " ": " ", '"': '"', "/": "/", "\\": "\\",
+      "N": "\u0085", "_": "\u00A0", "L": "\u2028", "P": "\u2029"
+    };
+    if (Object.prototype.hasOwnProperty.call(simple, e)) {
+      out.push(simple[e]);
+      i += 1;
+      continue;
+    }
+    if (e === "x" && /^[0-9A-Fa-f]{2}$/.test(inner.slice(i + 2, i + 4))) {
+      out.push(String.fromCharCode(parseInt(inner.slice(i + 2, i + 4), 16)));
+      i += 3;
+      continue;
+    }
+    if (e === "u" && /^[0-9A-Fa-f]{4}$/.test(inner.slice(i + 2, i + 6))) {
+      out.push(String.fromCharCode(parseInt(inner.slice(i + 2, i + 6), 16)));
+      i += 5;
+      continue;
+    }
+    if (e === "U" && /^[0-9A-Fa-f]{8}$/.test(inner.slice(i + 2, i + 10))) {
+      const cp = parseInt(inner.slice(i + 2, i + 10), 16);
+      out.push(cp <= 0x10FFFF ? String.fromCodePoint(cp) : "\uFFFD");
+      i += 9;
+      continue;
+    }
+    // Unknown escape: preserve the backslash and the next character verbatim.
+    out.push("\\" + e);
+    i += 1;
+  }
+  return out.join("");
 }
 
 function extractFrontmatter(raw) {
