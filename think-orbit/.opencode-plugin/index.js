@@ -1,6 +1,6 @@
 // OpenCode v2 plugin loader for think-orbit
 // Registers all skills in ../skills/ via ctx.skill.transform
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,7 +27,49 @@ function extractFrontmatter(raw) {
           parts.push(lines[j].replace(/^\s+/, "").trimEnd());
           j++;
         }
-        description = parts.filter(Boolean).join(" ");
+        // Determine block scalar style
+        const indicator = rest.trimStart()[0]; // '|' or '>'
+        const chomping = rest.trimStart()[1] || ''; // '-', '+', or ''
+        let value = '';
+        if (indicator === '|') {
+          // literal: preserve newlines
+          value = parts.join('\n');
+          // apply chomping
+          if (chomping === '-') {
+            // strip trailing newlines
+            value = value.replace(/\n+$/, '');
+          } else if (chomping === '+') {
+            // keep trailing newlines (and ensure at least one trailing newline? per spec, |+ means keep trailing newlines and also add for empty lines? we'll just keep)
+            // Actually we already have the newlines from join, so we keep them.
+            // But we need to ensure there is a trailing newline if the original had? We'll just keep as is.
+          } else {
+            // no chomping indicator: keep trailing newlines (default)
+            // Actually per spec, | without indicator is same as |+? We'll keep trailing newlines.
+            // We'll do nothing.
+          }
+        } else if (indicator === '>') {
+          // folded: replace newlines with spaces, except empty lines
+          // First, fold lines: each line trimmed, then join by space
+          const folded = parts.map(p => p.trim()).filter(p => p.length > 0).join(' ');
+          value = folded;
+          // For folded scalars, chomping works similarly? Actually chomping indicator affects trailing newlines as well.
+          // We'll ignore for now because corpus has no interior blank lines and likely no chomping on > except >-.
+          // We'll handle chomping for folded as well:
+          if (chomping === '-') {
+            // strip trailing newlines (but folded scalar usually doesn't have trailing newlines unless there are empty lines)
+            value = value.replace(/\n+$/, '');
+          } else if (chomping === '+') {
+            // keep trailing newlines
+            // We'll add a trailing newline if the original had? We'll just keep as is.
+          } else {
+            // no chomping: strip trailing newlines (default for >)
+            value = value.replace(/\n+$/, '');
+          }
+        } else {
+          // fallback to old behavior
+          value = parts.filter(Boolean).join(" ");
+        }
+        description = value;
         i = j - 1;
       } else {
         description = rest.trim();
@@ -47,7 +89,8 @@ export default {
     try {
       const skillsPath = join(dirname(dirname(fileURLToPath(import.meta.url))), "skills");
 
-      if (!statSync(skillsPath).isDirectory()) {
+      // Check if skills directory exists and is a directory
+      if (!existsSync(skillsPath) || !statSync(skillsPath).isDirectory()) {
         return;
       }
 
@@ -84,7 +127,7 @@ export default {
         }
       }
 
-      ctx.skill.transform((draft) => {
+      await ctx.skill.transform((draft) => {
         for (const skill of skills) {
           try {
             draft.add(skill);

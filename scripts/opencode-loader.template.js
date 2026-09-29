@@ -1,4 +1,4 @@
-// OpenCode v2 plugin loader for obsidian
+// OpenCode v2 plugin loader for {{PLUGIN}}
 // Registers all skills in ../skills/ via ctx.skill.transform
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -84,7 +84,7 @@ function extractFrontmatter(raw) {
 }
 
 export default {
-  id: "monkey-skills-obsidian",
+  id: "monkey-skills-{{PLUGIN}}",
   async setup(ctx) {
     try {
       const skillsPath = join(dirname(dirname(fileURLToPath(import.meta.url))), "skills");
@@ -116,14 +116,14 @@ export default {
           const description = frontmatter.description;
 
           skills.push({
-            id: `monkey-skills-obsidian:${entry.name}`,
+            id: `monkey-skills-{{PLUGIN}}:${entry.name}`,
             name,
             ...(description ? { description } : {}),
             path: skillFile,
             content: skillContent
           });
         } catch (err) {
-          console.error(`[monkey-skills-obsidian] Failed to load skill ${entry.name}:`, err);
+          console.error(`[monkey-skills-{{PLUGIN}}] Failed to load skill ${entry.name}:`, err);
         }
       }
 
@@ -132,12 +132,12 @@ export default {
           try {
             draft.add(skill);
           } catch (err) {
-            console.error(`[monkey-skills-obsidian] Failed to register skill ${skill.id}:`, err);
+            console.error(`[monkey-skills-{{PLUGIN}}] Failed to register skill ${skill.id}:`, err);
           }
         }
       });
     } catch (err) {
-      console.error(`[monkey-skills-obsidian] Loader failed:`, err);
+      console.error(`[monkey-skills-{{PLUGIN}}] Loader failed:`, err);
     }
   }
 };
