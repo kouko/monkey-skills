@@ -393,8 +393,8 @@ def test_loader_fidelity_against_yaml():
                     mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected no description, got: {repr(actual_description)}")
                 elif actual_description is None:
                     mismatches.append(f"{plugin_name}:{skill_dir.name}: Expected {repr(expected_description)}, got no description")
-                elif str(expected_description).strip() != str(actual_description).strip():
-                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Description mismatch\\nExpected: {repr(expected_description)}\\nActual: {repr(actual_description)}")
+                elif str(expected_description) != str(actual_description):
+                    mismatches.append(f"{plugin_name}:{skill_dir.name}: Description mismatch\nExpected: {repr(expected_description)}\nActual: {repr(actual_description)}")
 
             except (json.JSONDecodeError, KeyError) as e:
                 mismatches.append(f"{plugin_name}:{skill_dir.name}: Invalid loader output: {e}")
