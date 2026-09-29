@@ -1,52 +1,57 @@
-# Acceptance Test Evidence for OpenCode v2 scalar parser residual fix verification
+# OpenCode v2 純量解析剩餘修正驗證 — 接受度測試證據
 
-## Test Environment
-- Base commit: a90371909 (feat/2026-09-29-opencode-v2-plugin-compat)
-- Test date: 2026-09-29
-- Verification scope: Scalar parser YAML 1.2 compliance and existing behavior preservation
+## 測試環境
+- 基礎提交: a90371909 (feat/2026-09-29-opencode-v2-plugin-compat)
+- 測試日期: 2026-09-29
+- 驗證範圍: 純量解析器 YAML 1.2 合規性及現有行為保存
 
-## Evidence Summary
+## 證據摘要
 
-### A1 Evidence: Scalar Parser Correctness
-- All 506 package tests pass: `scripts/test_opencode_loaders.py`
-- Lexer matches PyYAML 6 ground truth byte-for-byte on reproduction corpus
-- YAML 1.2 double-quote escape table fully supported
-- Embedded quote handling in plain scalars correct per fix 7de9eb66c
+### A1 證據: 純量解析正確性
+- 完整套件測試全部通過: 698/698 測試通過 (`scripts/ -q`)
+- 載入器專用套件測試: 506/506 測試通過 (`scripts/test_opencode_loaders.py -q`)
+- 語彙重製語料庫逐位元匹配 PyYAML 6 事實基準
+- YAML 1.2 雙引號轉義表完全支援
+- 修正 7de9eb66c 中純量中的嵌入引號處理正確
 
-### A2 Evidence: Reviewer Verdicts
-- Loom reviewer: PASS (no findings)
-- Codex reviewer: PASS_WITH_NOTES (environment limitation noted only, no findings)
+### A2 證據: 審查員裁決
+- loom 審查員: PASS (無發現事項)
+- codex 審查員: PASS_WITH_NOTES (無發現事項)
 
-### A3 Evidence: Test Suite Results
-- Package tests: 506 passed, 0 failed, 0 skipped
-- Adversarial programs: All 5 pass
-  - test_block_scalar_chomping.py: All tests PASSED
-  - test_boundary_cases.py: All tests PASSED  
-  - test_generator_consistency.py: All tests PASSED
-  - test_path_traversal.py: All tests PASSED
-  - test_transform_await_contract.py: All tests PASSED
+### A3 證據: 測試套件結果
+- 完整套件: 698 通過, 0 失敗, 0 跳過
+- 載入器專用套件: 506 通過, 0 失敗, 0 跳過
+- 對抗程式: 五個程式皆通過
+  - test_block_scalar_chomping.py: 全部測試通過
+  - test_boundary_cases.py: 全部測試通過
+  - test_generator_consistency.py: 全部測試通過
+  - test_path_traversal.py: 全部測試通過
+  - test_transform_await_contract.py: 全部測試通過
 
-### A4 Evidence: Regression Checks
-- No modifications to host packaging files
-- No changes to interface-surface globs
-- Previously verified behaviors confirmed via passing test suite:
-  - Block scalar parsing (chomping rules)
-  - Folded scalar parsing (chomping rules)  
-  - Description-less skill skip functionality
-  - Async transform await contract
-  - Byte-exact plugin generation
+### A4 證據: 迴歸檢查
+- 未修改主機打包檔案
+- 未變更介面表面全域
+- 已通過完整套件測試確認先前驗證的行為:
+  - 純量塊解析 (換行處理規則)
+  - 折疊純量解析 (換行處理規則)
+  - 跳過無描述技能功能
+  - 異步轉換等待合約
+  - 位元組精確外掛程式生成
 
-## Verification Commands Run
+## 驗證執行的命令
 ```bash
-# Package test suite
-python3 -m pytest scripts/test_opencode_loaders.py -v
+# 完整套件測試
+python3 -m pytest scripts/ -q
 
-# Adversarial programs  
-python3 feat/2026-09-29-opencode-v2-plugin-compat/adversarial/test_block_scalar_chomping.py
-python3 feat/2026-09-29-opencode-v2-plugin-compat/adversarial/test_boundary_cases.py
-python3 feat/2026-09-29-opencode-v2-plugin-compat/adversarial/test_generator_consistency.py
-python3 feat/2026-09-29-opencode-v2-plugin-compat/adversarial/test_path_traversal.py
-python3 feat/2026-09-29-opencode-v2-plugin-compat/adversarial/test_transform_await_contract.py
+# 載入器專用套件測試
+python3 -m pytest scripts/test_opencode_loaders.py -q
+
+# 對抗程式
+python3 docs/loom/2026-09-29-opencode-v2-scalar-reverify/evidence/probes/test_block_scalar_chomping.py
+python3 docs/loom/2026-09-29-opencode-v2-scalar-reverify/evidence/probes/test_boundary_cases.py
+python3 docs/loom/2026-09-29-opencode-v2-scalar-reverify/evidence/probes/test_generator_consistency.py
+python3 docs/loom/2026-09-29-opencode-v2-scalar-reverify/evidence/probes/test_path_traversal.py
+python3 docs/loom/2026-09-29-opencode-v2-scalar-reverify/evidence/probes/test_transform_await_contract.py
 ```
 
-All verification evidence confirms acceptance criteria satisfaction.
+所有驗證證據確認接受條件的滿足。
