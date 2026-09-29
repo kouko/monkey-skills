@@ -115,7 +115,7 @@ def test_transform_returns_promise():
         opencode_dir = plugin_dir / ".opencode-plugin"
         opencode_dir.mkdir(parents=True)
 
-        real_loader = Path(__file__).parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
+        real_loader = Path(__file__).parent.parent.parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
         shutil.copy2(real_loader, opencode_dir / "index.js")
 
         skills_dir = plugin_dir / "skills"
@@ -185,7 +185,7 @@ def test_multiple_skills_registered():
         opencode_dir = plugin_dir / ".opencode-plugin"
         opencode_dir.mkdir(parents=True)
 
-        real_loader = Path(__file__).parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
+        real_loader = Path(__file__).parent.parent.parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
         shutil.copy2(real_loader, opencode_dir / "index.js")
 
         skills_dir = plugin_dir / "skills"
@@ -254,7 +254,7 @@ def test_transform_error_handling():
         opencode_dir = plugin_dir / ".opencode-plugin"
         opencode_dir.mkdir(parents=True)
 
-        real_loader = Path(__file__).parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
+        real_loader = Path(__file__).parent.parent.parent.parent.parent.parent / "investing-toolkit" / ".opencode-plugin" / "index.js"
         shutil.copy2(real_loader, opencode_dir / "index.js")
 
         skills_dir = plugin_dir / "skills"
