@@ -6,6 +6,40 @@ import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
+// Parse a YAML scalar value (quoted or unquoted) according to YAML 1.2 spec
+function parseYAMLScalar(raw) {
+  const s = raw.trim();
+  // Double-quoted: interpret escape sequences
+  if (s.startsWith("\"") && s.endsWith("\"")) {
+    const inner = s.slice(1, -1);
+    // YAML double-quote escapes: \\, \", \n, \t, \r, \b, \f, \/, \_, \xXX, \uXXXX, \UXXXXXXXX
+    return inner
+      .replace(/\\"/g, '"')
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\r/g, '\r')
+      .replace(/\\b/g, '\b')
+      .replace(/\\f/g, '\f')
+      .replace(/\\\\/g, '\\')
+      .replace(/\\\//g, '/')
+      .replace(/\\_/g, '_')
+      .replace(/\\x([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+      .replace(/\\u([0-9A-Fa-f]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+      .replace(/\\U([0-9A-Fa-f]{8})/g, (_, h) => {
+        const cp = parseInt(h, 16);
+        return cp <= 0x10FFFF ? String.fromCodePoint(cp) : '�';
+      });
+  }
+  // Single-quoted: doubled quotes become single quote, no other escapes
+  if (s.startsWith("'") && s.endsWith("'")) {
+    return s.slice(1, -1).replace(/''/g, "'");
+  }
+  // Unquoted plain scalar: strip a trailing inline comment (` #` starts a comment),
+  // preserve inner spacing. A `#` only starts a comment when preceded by whitespace
+  // (or at line start); a bare `a#b` keeps the `#`.
+  return s.replace(/^\s*#.*$/, "").replace(/\s#.*$/, "");
+}
+
 function extractFrontmatter(raw) {
   const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!m) return { frontmatter: {}, content: raw };
@@ -16,7 +50,7 @@ function extractFrontmatter(raw) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line.startsWith("name:")) {
-      name = line.slice(5).trim();
+      name = parseYAMLScalar(line.slice(5));
     } else if (line.startsWith("description:")) {
       const rest = line.slice("description:".length);
       // YAML block scalar indicator: | > |- |+ >- >+ — value continues on indented lines
@@ -36,21 +70,26 @@ function extractFrontmatter(raw) {
           .map(l => l.length - l.trimStart().length);
         const commonIndent = indents.length > 0 ? Math.min(...indents) : 0;
         const content = rawLines.map(l =>
-          l.trim().length > 0 ? l.slice(commonIndent).trimEnd() : ""
+          l.trim().length > 0 ? l.slice(commonIndent) : ""
         );
         let value;
         if (indicator === "|") {
           // Literal: preserve newlines
-          value = content.join("\n");
-          // Apply chomping (compensate for regex consuming the newline before `---`)
-          if (chomping === "-") {
-            value = value.replace(/\n+$/, "");
-          } else if (chomping === "+") {
-            // keep: add back the consumed delimiter newline
-            value += "\n";
+          // Empty block scalar (no content lines) -> empty string (all chomping modes)
+          if (content.length === 0) {
+            value = "";
           } else {
-            // clip (default): ensure exactly one trailing newline
-            value = value.replace(/\n+$/, "") + "\n";
+            value = content.join("\n");
+            // Apply chomping (compensate for regex consuming the newline before `---`)
+            if (chomping === "-") {
+              value = value.replace(/\n+$/, "");
+            } else if (chomping === "+") {
+              // keep: add back the consumed delimiter newline
+              value += "\n";
+            } else {
+              // clip (default): ensure exactly one trailing newline
+              value = value.replace(/\n+$/, "") + "\n";
+            }
           }
         } else {
           // Folded: apply YAML 1.2 folded scalar rules
@@ -87,7 +126,10 @@ function extractFrontmatter(raw) {
           }
           value = foldedLines.join("");
           // Apply chomping for folded (compensate for regex consuming the newline before `---`)
-          if (chomping === "-") {
+          // Empty block scalar -> empty string (all chomping modes)
+          if (content.length === 0) {
+            value = "";
+          } else if (chomping === "-") {
             value = value.replace(/\n+$/, "");
           } else if (chomping === "+") {
             // keep: add back the consumed delimiter newline
@@ -100,11 +142,7 @@ function extractFrontmatter(raw) {
         description = value;
         i = j - 1;
       } else {
-        description = rest.trim();
-        if ((description.startsWith("\"") && description.endsWith("\"")) ||
-            (description.startsWith("'") && description.endsWith("'"))) {
-          description = description.slice(1, -1);
-        }
+        description = parseYAMLScalar(rest);
       }
     }
   }
@@ -143,10 +181,15 @@ export default {
           const name = frontmatter.name || entry.name;
           const description = frontmatter.description;
 
+          // Skill without a description is not advertised (negative acceptance case)
+          if (!description) {
+            continue;
+          }
+
           skills.push({
             id: `monkey-skills-tsundoku:${entry.name}`,
             name,
-            ...(description ? { description } : {}),
+            description,
             path: skillFile,
             content: skillContent
           });
