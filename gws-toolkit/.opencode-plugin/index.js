@@ -21,19 +21,74 @@ function extractFrontmatter(raw) {
       const rest = line.slice("description:".length);
       // YAML block scalar indicator: | > |- |+ >- >+ — value continues on indented lines
       if (/^\s*[|>][-+]?/.test(rest)) {
-        const parts = [];
+        const rawLines = [];
         let j = i + 1;
-        while (j < lines.length && /^\s/.test(lines[j])) {
-          parts.push(lines[j].replace(/^\s+/, "").trimEnd());
+        // Block scalar: collect lines that are empty or start with whitespace
+        while (j < lines.length && (lines[j] === "" || /^\s/.test(lines[j]))) {
+          rawLines.push(lines[j]);
           j++;
         }
-        // | preserves newlines; > folds to spaces
-        let value = rest.trimStart()[0] === "|" ? parts.join("\n") : parts.join(" ");
-        // Chomping: '-' strips trailing newline(s), default keeps one (clip), '+' keeps all
-        if (rest.trimStart()[1] !== "+") {
-          value = value.replace(/\s+$/, "");
-          if (rest.trimStart()[1] !== "-") {
+        const indicator = rest.trimStart()[0]; // '|' or '>'
+        const chomping = rest.trimStart()[1] || ''; // '-', '+', or ''
+        // Compute common indent of non-empty content lines, strip it from each
+        const indents = rawLines
+          .filter(l => l.trim().length > 0)
+          .map(l => l.length - l.trimStart().length);
+        const commonIndent = indents.length > 0 ? Math.min(...indents) : 0;
+        const content = rawLines.map(l =>
+          l.trim().length > 0 ? l.slice(commonIndent).trimEnd() : ""
+        );
+        let value;
+        if (indicator === "|") {
+          // Literal: preserve newlines
+          value = content.join("\n");
+          // Apply chomping
+          if (chomping === "-") {
+            value = value.replace(/\n+$/, "");
+          } else if (chomping === "+") {
+            // '+': keep all trailing newlines; frontmatter delimiter consumed one, add it back
             value += "\n";
+          } else {
+            // Clip: ensure exactly one trailing newline
+            value = value.replace(/\n+$/, "") + "\n";
+          }
+        } else {
+          // Folded: compute common indent, then apply YAML 1.2 folded scalar rules
+          const foldedLines = [];
+          const len = content.length;
+          for (let k = 0; k < len; k++) {
+            const line = content[k];
+            const isEmpty = line === "";
+            const indentMore = !isEmpty && (rawLines[k].length - rawLines[k].trimStart().length > commonIndent);
+            if (isEmpty) {
+              foldedLines.push("\n");
+              continue;
+            }
+            const text = line;
+            // Determine separator before this line
+            if (k === 0) {
+              // First non-empty line after possible leading blank lines: no prefix
+              foldedLines.push(text);
+            } else {
+              const prev = content[k-1];
+              const prevEmpty = prev === "";
+              const prevMore = !prevEmpty && (rawLines[k-1].length - rawLines[k-1].trimStart().length > commonIndent);
+              if (prevEmpty || prevMore || indentMore) {
+                foldedLines.push("\n" + text);
+              } else {
+                foldedLines.push(" " + text);
+              }
+            }
+          }
+          value = foldedLines.join("");
+          // Apply chomping for folded
+          if (chomping === "-") {
+            value = value.replace(/\n+$/, "");
+          } else if (chomping === "+") {
+            // '+': keep all trailing newlines; frontmatter delimiter consumed one, add it back
+            value += "\n";
+          } else {
+            value = value.replace(/\n+$/, "") + "\n";
           }
         }
         description = value;

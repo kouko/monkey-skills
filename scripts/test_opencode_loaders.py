@@ -260,6 +260,45 @@ def test_loader_handles_block_scalar_description(tmp_path, plugin_name):
     assert "block scalar" in test_skill["description"], f"Description content not captured: {test_skill['description']}"
 
 
+# (frontmatter block after "description:", expected description per yaml.safe_load of the same block)
+BLOCK_SCALAR_CASES = [
+    ("|-\n  alpha\n", "alpha"),                          # literal, strip chomp
+    ("|\n  alpha\n", "alpha\n"),                         # literal, clip (default)
+    ("|+\n  alpha\n", "alpha\n"),                        # literal, keep (no extra blank lines)
+    ("|+\n  alpha\n\n", "alpha\n\n"),                    # literal, keep with one blank line
+    (">-\n  alpha\n  beta\n", "alpha beta"),             # folded, strip
+    (">\n  alpha\n  beta\n", "alpha beta\n"),            # folded, clip
+    (">+\n  alpha\n  beta\n", "alpha beta\n"),           # folded, keep (no extra blank lines)
+    ("|\n  alpha\n\n  beta\n", "alpha\n\nbeta\n"),       # interior blank line must not terminate
+    (">\n  alpha\n    indented\n  beta\n", "alpha\n  indented\nbeta\n"),  # more-indented keeps indent+newlines
+]
+
+
+@pytest.mark.parametrize("block,expected", BLOCK_SCALAR_CASES)
+def test_loader_block_scalar_yaml_semantics(tmp_path, plugin_name, block, expected):
+    """Loader block-scalar extraction must match YAML spec byte-for-byte."""
+    import yaml as yaml_mod
+
+    temp_plugin_dir = _setup_test_plugin(tmp_path, plugin_name)
+    skills_dir = temp_plugin_dir / "skills"
+    skills_dir.mkdir()
+    test_skill_dir = skills_dir / "case-skill"
+    test_skill_dir.mkdir()
+    raw = f"---\nname: case-skill\ndescription: {block}---\nBody.\n"
+
+    # Ground truth from a real YAML parser (same extraction as fidelity test)
+    frontmatter = raw.split("---\n", 2)[1]
+    expected_yaml = yaml_mod.safe_load(frontmatter)["description"]
+    assert expected_yaml == expected, f"Test expectation stale for {block!r}: yaml gives {expected_yaml!r}"
+
+    (test_skill_dir / "SKILL.md").write_text(raw)
+    output = _run_loader(temp_plugin_dir, plugin_name)
+    test_skill = next(s for s in output["skills"] if s["id"].endswith(":case-skill"))
+    assert test_skill["description"] == expected_yaml, (
+        f"Block-scalar {block!r}: expected {expected_yaml!r}, got {test_skill['description']!r}"
+    )
+
+
 def test_loaders_match_template():
     """Test that all loaders match the template (consistency test)"""
     # Regenerate all loaders from template in memory
