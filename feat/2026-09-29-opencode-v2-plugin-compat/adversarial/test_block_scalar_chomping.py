@@ -12,6 +12,8 @@ import json
 import subprocess
 import tempfile
 from pathlib import Path
+import shutil
+import yaml
 
 
 def run_loader_on_skill(skill_yaml: str, plugin_name: str = "investing-toolkit") -> str:
@@ -23,7 +25,6 @@ def run_loader_on_skill(skill_yaml: str, plugin_name: str = "investing-toolkit")
         opencode_dir.mkdir(parents=True)
 
         # Copy the real loader
-        import shutil
         real_loader = Path(__file__).parent.parent.parent.parent / plugin_name / ".opencode-plugin" / "index.js"
         shutil.copy2(real_loader, opencode_dir / "index.js")
 
@@ -89,40 +90,67 @@ def run_loader_on_skill(skill_yaml: str, plugin_name: str = "investing-toolkit")
 
 
 def test_block_scalar_chomping():
-    """Test all 6 block scalar indicators match yaml.safe_load behavior."""
-    import yaml
+    """Test all 6 block scalar indicators match yaml.safe_load behavior.
 
-    # Each case: (yaml_indicator, expected_behavior_description)
-    # We compare loader output to yaml.safe_load for exact match
+    Uses the same format as real SKILL.md files: each content line ends with \n,
+    including the last line. This matches the existing test_loader_block_scalar_yaml_semantics.
+    """
+    import yaml
+    import re
+
+    # Each case: (indicator, content_lines, test_name)
+    # content_lines is a list of strings, each string is a line of content (without indentation)
+    # The format matches real SKILL.md: each line ends with \n in the block scalar
     test_cases = [
-        # (yaml_snippet_for_description, test_name)
-        ("description: |\n  line1\n  line2\n", "literal_clip"),
-        ("description: |-\n  line1\n  line2\n", "literal_strip"),
-        ("description: |+\n  line1\n  line2\n", "literal_keep"),
-        ("description: >\n  line1\n  line2\n", "folded_clip"),
-        ("description: >-\n  line1\n  line2\n", "folded_strip"),
-        ("description: >+\n  line1\n  line2\n", "folded_keep"),
-        # With trailing blank lines
-        ("description: |\n  line1\n  line2\n\n\n", "literal_clip_trailing_blanks"),
-        ("description: |-\n  line1\n  line2\n\n\n", "literal_strip_trailing_blanks"),
-        ("description: |+\n  line1\n  line2\n\n\n", "literal_keep_trailing_blanks"),
-        ("description: >\n  line1\n  line2\n\n\n", "folded_clip_trailing_blanks"),
-        ("description: >-\n  line1\n  line2\n\n\n", "folded_strip_trailing_blanks"),
-        ("description: >+\n  line1\n  line2\n\n\n", "folded_keep_trailing_blanks"),
+        # (indicator, content_lines, test_name)
+        ("|", ["line1", "line2"], "literal_clip"),  # No indicator = clip (default)
+        ("|-", ["line1", "line2"], "literal_strip"),
+        ("|+", ["line1", "line2"], "literal_keep"),
+        (">", ["line1", "line2"], "folded_clip"),  # No indicator = clip (default)
+        (">-", ["line1", "line2"], "folded_strip"),
+        (">+", ["line1", "line2"], "folded_keep"),
+        # With trailing blank lines (each blank line is an empty string in the list)
+        ("|", ["line1", "line2", "", "", ""], "literal_clip_trailing_blanks"),
+        ("|-", ["line1", "line2", "", "", ""], "literal_strip_trailing_blanks"),
+        ("|+", ["line1", "line2", "", "", ""], "literal_keep_trailing_blanks"),
+        (">", ["line1", "line2", "", "", ""], "folded_clip_trailing_blanks"),
+        (">-", ["line1", "line2", "", "", ""], "folded_strip_trailing_blanks"),
+        (">+", ["line1", "line2", "", "", ""], "folded_keep_trailing_blanks"),
         # Single line
-        ("description: |\n  single line\n", "literal_clip_single"),
-        ("description: |-\n  single line\n", "literal_strip_single"),
-        ("description: |+\n  single line\n", "literal_keep_single"),
-        ("description: >\n  single line\n", "folded_clip_single"),
-        ("description: >-\n  single line\n", "folded_strip_single"),
-        ("description: >+\n  single line\n", "folded_keep_single"),
+        ("|", ["single line"], "literal_clip_single"),
+        ("|-", ["single line"], "literal_strip_single"),
+        ("|+", ["single line"], "literal_keep_single"),
+        (">", ["single line"], "folded_clip_single"),
+        (">-", ["single line"], "folded_strip_single"),
+        (">+", ["single line"], "folded_keep_single"),
+        # Interior blank line
+        ("|", ["alpha", "", "beta"], "literal_interior_blank"),
+        (">", ["alpha", "", "beta"], "folded_interior_blank"),
+        # Indented continuation
+        ("|", ["alpha", "  indented", "beta"], "literal_indented_continuation"),
+        (">", ["alpha", "  indented", "beta"], "folded_indented_continuation"),
     ]
 
     failures = []
 
-    for yaml_snippet, test_name in test_cases:
-        # Get expected from yaml.safe_load
-        frontmatter = f"name: test\n{yaml_snippet}"
+    for indicator, content_lines, test_name in test_cases:
+        # Build the block string as in real SKILL.md: each content line indented by 2 spaces, each followed by \n
+        indented_lines = [f"  {line}" for line in content_lines]
+        # Join with \n and add final \n (each line ends with newline in SKILL.md)
+        block_content = "\n".join(indented_lines) + "\n"
+        block = f"{indicator}\n{block_content}"
+
+        # Build the full SKILL.md content as in the existing test
+        skill_content = f"---\nname: test-skill\ndescription: {block}---\nBody content\n"
+
+        # Extract frontmatter by splitting on "---" (same as existing test)
+        parts = skill_content.split("---\n", 2)
+        if len(parts) < 3:
+            failures.append(f"{test_name}: Failed to split frontmatter")
+            continue
+        frontmatter = parts[1]  # This is "name: test-skill\ndescription: {block}"
+
+        # Get expected from yaml.safe_load using the same method as fidelity test
         try:
             data = yaml.safe_load(frontmatter)
             expected = data.get("description") if isinstance(data, dict) else None
@@ -130,7 +158,9 @@ def test_block_scalar_chomping():
             failures.append(f"{test_name}: yaml.safe_load failed: {e}")
             continue
 
-        # Get actual from loader
+        # Get actual from loader - use the yaml_snippet format the loader expects
+        # The loader receives frontmatter with trailing newline after last content line
+        yaml_snippet = f"description: {indicator}\n{block_content}"
         try:
             actual = run_loader_on_skill(yaml_snippet)
         except Exception as e:
@@ -150,6 +180,8 @@ def test_block_scalar_chomping():
         if str(expected) != str(actual):
             failures.append(
                 f"{test_name}: MISMATCH\n"
+                f"  Indicator: {indicator!r}\n"
+                f"  Content lines: {content_lines}\n"
                 f"  Expected (yaml.safe_load): {repr(expected)}\n"
                 f"  Actual (loader):           {repr(actual)}"
             )
