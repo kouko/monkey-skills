@@ -36,7 +36,7 @@ def run_loader_on_skill(skill_yaml: str, plugin_name: str = "investing-toolkit")
         (test_skill_dir / "SKILL.md").write_text(
             f"---\n"
             f"name: test-skill\n"
-            f"{skill_yaml}\n"
+            f"{skill_yaml}"
             f"---\n"
             f"Body content\n"
         )
