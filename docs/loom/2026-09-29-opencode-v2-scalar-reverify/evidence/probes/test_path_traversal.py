@@ -6,7 +6,7 @@ skill directory names or SKILL.md paths.
 This is an adversarial probe — it should FAIL if path traversal is possible.
 """
 
-concern: loader may allow path traversal attacks via skill directory names or SKILL.md paths
+# concern: loader may allow path traversal attacks via skill directory names or SKILL.md paths
 
 import json
 import subprocess

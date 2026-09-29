@@ -8,7 +8,7 @@ This is an adversarial probe — it should FAIL if the loader's behavior
 deviates from the YAML spec.
 """
 
-concern: loader may mishandle YAML block scalar chomping indicators (|, |-, |+, >, >-, >+)
+# concern: loader may mishandle YAML block scalar chomping indicators (|, |-, |+, >, >-, >+)
 
 import json
 import subprocess

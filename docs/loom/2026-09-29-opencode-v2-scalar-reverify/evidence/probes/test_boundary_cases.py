@@ -11,7 +11,7 @@ This is an adversarial probe — it should FAIL if the loader crashes
 or behaves incorrectly on these edge cases.
 """
 
-concern: loader may crash or behave incorrectly on boundary cases (missing skills dir, empty skills dir, hidden dirs, malformed frontmatter, skills dir as file)
+# concern: loader may crash or behave incorrectly on boundary cases (missing skills dir, empty skills dir, hidden dirs, malformed frontmatter, skills dir as file)
 
 import json
 import subprocess
