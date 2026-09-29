@@ -25,7 +25,7 @@ def run_loader(plugin_name: str, extra_setup: str = "") -> dict:
         opencode_dir = plugin_dir / ".opencode-plugin"
         opencode_dir.mkdir(parents=True)
 
-        real_loader = Path(__file__).parent.parent.parent.parent.parent / plugin_name / ".opencode-plugin" / "index.js"
+        real_loader = Path(__file__).parent.parent.parent.parent.parent.parent / plugin_name / ".opencode-plugin" / "index.js"
         shutil.copy2(real_loader, opencode_dir / "index.js")
 
         # Create skills dir with test skill
