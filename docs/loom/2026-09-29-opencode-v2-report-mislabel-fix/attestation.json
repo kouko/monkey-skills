@@ -1,0 +1,69 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-09-29-opencode-v2-report-mislabel-fix",
+  "content_digest": "e148a1a97961cab98f1c6beaa6e56d6e6c71c868",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_block_scalar_chomping.py",
+      "artifact": "docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_block_scalar_chomping.py",
+      "result": "pass",
+      "command_digest": "bc7a369c8e5575553e8d77ea1c9004562608204be5ae3d773bbe1ce2d9f9a392"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_boundary_cases.py",
+      "artifact": "docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_boundary_cases.py",
+      "result": "pass",
+      "command_digest": "1b058fb86b4883e8613a74352da74de9dfebfa1b55ea183eda336ca6aa9a1b04"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_generator_consistency.py",
+      "artifact": "docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_generator_consistency.py",
+      "result": "pass",
+      "command_digest": "df6e0ddf175f7cdaa3d837eb96fbe7c9f91e58979084c260407867958aa8a327"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_path_traversal.py",
+      "artifact": "docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_path_traversal.py",
+      "result": "pass",
+      "command_digest": "f89141397dd977ca847442ad29fbe8535d4644864a5e896a91ec608226396d2c"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_transform_await_contract.py",
+      "artifact": "docs/loom/2026-09-29-opencode-v2-report-mislabel-fix/evidence/probes/test_transform_await_contract.py",
+      "result": "pass",
+      "command_digest": "e8fd5ea795e0becc8ca02e82a1c25c570bb688f7f12d6c7396903edfcf6a6aba"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "loom-sonnet",
+      "vendor": "loom",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "codex-gpt-5.6-sol",
+      "vendor": "codex",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [],
+  "selection": null
+}

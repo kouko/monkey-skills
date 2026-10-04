@@ -26,6 +26,7 @@ Stdlib only; no fixtures/ subdir (flat-folder repo convention).
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -77,11 +78,28 @@ def test_engine_parses_and_guards():
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_workflow_file_dry_parses():
+    """node --check the Workflow engine's parsed form of the script.
+
+    The engine strips ``export const meta = {...}`` (parsed with
+    ``allowReturnOutsideFunction``) and wraps the remaining body in
+    ``async function main() { ... }``.  Plain ``node --check`` on the raw
+    file fails on every Node that does module detection: ``export``
+    forces ESM parsing where the engine-style top-level ``return`` is
+    illegal.  Mirroring the engine's transform keeps the assertion
+    honest across Node versions and ``"type": "module"`` scopes.
+    """
     assert WORKFLOW.exists(), f"workflow script missing: {WORKFLOW}"
-    result = subprocess.run(
-        ["node", "--check", str(WORKFLOW)], capture_output=True, text=True
-    )
-    assert result.returncode == 0, f"node --check failed: {result.stderr}"
+    src = WORKFLOW.read_text(encoding="utf-8")
+    m = re.match(r"export const meta = \{.*?\n\}\n", src, re.DOTALL)
+    assert m, "script must begin with 'export const meta = {...}'"
+    body = "async function main() {\n" + src[m.end():] + "\n}\n"
+    with tempfile.TemporaryDirectory(prefix="wfcheck.") as tmp:
+        wrapped = Path(tmp) / "engine_form.js"
+        wrapped.write_text(body, encoding="utf-8")
+        result = subprocess.run(
+            ["node", "--check", str(wrapped)], capture_output=True, text=True
+        )
+        assert result.returncode == 0, f"node --check failed: {result.stderr}"
 
 
 def test_freeze_preflight_markers():
