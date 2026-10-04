@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v2",
   "change_id": "2026-09-29-opencode-v2-report-mislabel-fix",
-  "content_digest": "9f5ce85aa0ec6ec15f8b845ba18547fd0b776dc1",
+  "content_digest": "2ebd68388710c5e0372a93d61dacc73a422c1944",
   "executions": [
     {
       "kind": "package-tests",
