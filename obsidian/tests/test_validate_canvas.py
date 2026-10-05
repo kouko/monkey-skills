@@ -6,7 +6,6 @@ named, overlapping non-group nodes are named, and a group overlapping its own
 children is NOT flagged (groups are containers).
 """
 
-import importlib.util
 import json
 import subprocess
 import sys
@@ -19,10 +18,6 @@ SCRIPT = (
     / "scripts"
     / "validate_canvas.py"
 )
-
-_spec = importlib.util.spec_from_file_location("validate_canvas", SCRIPT)
-validate_canvas = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(validate_canvas)
 
 # A valid 16-character lowercase hex id, and a few distinct siblings.
 ID_A = "0123456789abcdef"
@@ -141,3 +136,48 @@ def test_group_overlapping_its_children_is_not_flagged(tmp_path):
     result = _run(path)
     assert result.returncode == 0
     assert result.stdout == ""
+
+
+def test_invalid_id_is_reported(tmp_path):
+    path = _write(
+        tmp_path,
+        "bad_id.canvas",
+        _canvas([_text_node("zzz", 0, 0)]),
+    )
+    result = _run(path)
+    assert result.returncode != 0
+    assert "invalid id" in result.stdout
+
+
+def test_non_utf8_file_is_reported_without_traceback(tmp_path):
+    path = tmp_path / "binary.canvas"
+    path.write_bytes(b'\xff\xfe{"nodes": []}')
+    result = _run(path)
+    assert result.returncode != 0
+    assert "cannot read" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_nan_geometry_is_rejected_as_invalid_json(tmp_path):
+    path = _write(
+        tmp_path,
+        "nan.canvas",
+        json.dumps(
+            {
+                "nodes": [
+                    {
+                        "id": ID_A,
+                        "type": "text",
+                        "x": float("nan"),
+                        "y": 0,
+                        "width": 100,
+                        "height": 50,
+                        "text": "content",
+                    }
+                ]
+            }
+        ),
+    )
+    result = _run(path)
+    assert result.returncode != 0
+    assert "invalid JSON" in result.stdout

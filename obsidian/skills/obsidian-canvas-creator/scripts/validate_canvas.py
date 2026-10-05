@@ -57,28 +57,16 @@ def _intersects(x1, y1, w1, h1, x2, y2, w2, h2) -> bool:
     return x1 < x2 + w2 and x2 < x1 + w1 and y1 < y2 + h2 and y2 < y1 + h1
 
 
-def validate_canvas_text(filename: str, text: str) -> list[str]:
-    """Return one violation message per problem, empty list when clean."""
+def _reject_constant(name: str) -> None:
+    """Reject NaN/Infinity constants that json.loads would otherwise accept."""
+    raise ValueError(f"invalid JSON constant: {name}")
+
+
+def _check_nodes(filename: str, nodes: list) -> tuple[list[str], set[str], set[str]]:
+    """Return (violations, seen ids, valid node ids) for the node array."""
     violations: list[str] = []
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError as exc:
-        return [f"{filename}: invalid JSON: {exc}"]
-    if not isinstance(data, dict):
-        return [f"{filename}: top level is not an object"]
-
-    nodes = data.get("nodes", [])
-    edges = data.get("edges", [])
-    if not isinstance(nodes, list):
-        violations.append(f"{filename}: nodes is not an array")
-        nodes = []
-    if not isinstance(edges, list):
-        violations.append(f"{filename}: edges is not an array")
-        edges = []
-
     seen_ids: set[str] = set()
     node_ids: set[str] = set()
-
     for index, node in enumerate(nodes):
         label = _node_label(node, index)
         if not isinstance(node, dict):
@@ -109,7 +97,14 @@ def validate_canvas_text(filename: str, text: str) -> list[str]:
                     f'{filename}: {label}: missing required field "{field}" '
                     f'for type "{node_type}"'
                 )
+    return violations, seen_ids, node_ids
 
+
+def _check_edges(
+    filename: str, edges: list, seen_ids: set[str], node_ids: set[str]
+) -> list[str]:
+    """Return violations for the edge array, sharing id state with nodes."""
+    violations: list[str] = []
     for index, edge in enumerate(edges):
         label = _edge_label(edge, index)
         if not isinstance(edge, dict):
@@ -135,8 +130,12 @@ def validate_canvas_text(filename: str, text: str) -> list[str]:
                     f'{filename}: {label}: {ref_name} "{ref}" references '
                     "missing node"
                 )
+    return violations
 
-    # Overlap: only non-group nodes with numeric geometry participate.
+
+def _check_overlaps(filename: str, nodes: list) -> list[str]:
+    """Return overlap violations for non-group nodes with numeric geometry."""
+    violations: list[str] = []
     positioned: list[tuple[str, float, float, float, float]] = []
     for index, node in enumerate(nodes):
         if not isinstance(node, dict) or node.get("type") == "group":
@@ -148,17 +147,39 @@ def validate_canvas_text(filename: str, text: str) -> list[str]:
             node.get("height"),
         )
         if all(isinstance(value, (int, float)) for value in (x, y, width, height)):
-            positioned.append(
-                (_node_label(node, index), x, y, width, height)
-            )
-
+            positioned.append((_node_label(node, index), x, y, width, height))
     for i in range(len(positioned)):
         label1, x1, y1, w1, h1 = positioned[i]
         for j in range(i + 1, len(positioned)):
             label2, x2, y2, w2, h2 = positioned[j]
             if _intersects(x1, y1, w1, h1, x2, y2, w2, h2):
                 violations.append(f"{filename}: {label1} overlaps {label2}")
+    return violations
 
+
+def validate_canvas_text(filename: str, text: str) -> list[str]:
+    """Return one violation message per problem, empty list when clean."""
+    violations: list[str] = []
+    try:
+        data = json.loads(text, parse_constant=_reject_constant)
+    except ValueError as exc:
+        return [f"{filename}: invalid JSON: {exc}"]
+    if not isinstance(data, dict):
+        return [f"{filename}: top level is not an object"]
+
+    nodes = data.get("nodes", [])
+    edges = data.get("edges", [])
+    if not isinstance(nodes, list):
+        violations.append(f"{filename}: nodes is not an array")
+        nodes = []
+    if not isinstance(edges, list):
+        violations.append(f"{filename}: edges is not an array")
+        edges = []
+
+    node_violations, seen_ids, node_ids = _check_nodes(filename, nodes)
+    violations.extend(node_violations)
+    violations.extend(_check_edges(filename, edges, seen_ids, node_ids))
+    violations.extend(_check_overlaps(filename, nodes))
     return violations
 
 
@@ -178,7 +199,7 @@ def main(argv: list[str] | None = None) -> int:
     for path in args.files:
         try:
             text = Path(path).read_text(encoding="utf-8")
-        except OSError as exc:
+        except (OSError, UnicodeDecodeError) as exc:
             print(f"{path}: cannot read: {exc}", file=sys.stderr)
             failed = True
             continue
