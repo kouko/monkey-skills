@@ -10,6 +10,10 @@ research map, or a moodboard.
 All rules from `references/canvas-spec.md` still apply: 16-character
 lowercase-hex IDs unique across nodes and edges, integer coordinates, groups
 listed first in the `nodes` array, and every edge referencing existing nodes.
+The four community patterns use their own per-pattern spacing — a 40px gap
+between groups and compact in-group stacks — and are exempt from the 320px
+horizontal / 200px vertical minimum between node centers that applies to the
+MindMap and freeform layouts.
 
 ## Pattern Selection
 
@@ -153,7 +157,7 @@ Full template: `assets/template-dashboard.canvas`.
 
 - Connect the root to each theme's anchor node (its first paper or overview
   text) with a labeled `explores` edge.
-- Connect papers across themes to show relationships:
+- Connect papers to show relationships:
   - unlabeled edge: cites
   - `extends` or `supports`
   - `contradicts`

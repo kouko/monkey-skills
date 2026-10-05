@@ -200,6 +200,7 @@ obsidian/
 │   ├── wiki-update/               # wiki layer maintenance (original)
 │   └── wiki-auto-research/        # gap-filling via web search (original)
 ├── tests/
+│   ├── wiki_ingest/             # wiki-ingest select-batch tests
 │   ├── test_validate_canvas.py  # canvas validator tests
 │   └── test_obsidian_markdown_viz_guide.py
 ├── README.md

@@ -1,6 +1,6 @@
 ---
 name: obsidian-canvas-creator
-description: Create Obsidian Canvas files with MindMap or freeform layouts. Use when visualizing content spatially, creating mind maps, or organizing information on a canvas. Canvas・マインドマップ。心智圖・畫布。
+description: Create Obsidian Canvas files with MindMap, freeform, or community layout patterns (kanban, dashboard / home page, research map, moodboard), with templates and a bundled .canvas validator. Use when visualizing content spatially, creating mind maps, or organizing information on a canvas. Canvas・マインドマップ。心智圖・畫布。
 ---
 
 # Obsidian Canvas Creator
@@ -122,8 +122,12 @@ Before outputting:
 After writing any `.canvas` file, run it through the bundled validator:
 
 ```bash
-python3 scripts/validate_canvas.py <path-to-canvas>
+python3 "$SKILL_DIR/scripts/validate_canvas.py" <path-to-canvas>
 ```
+
+`$SKILL_DIR` is this skill's base directory — the path shown as "Base
+directory for this skill:" in the runtime metadata header — so the command
+works from any working directory, including the user's vault root.
 
 The script exits `0` when the file is clean and non-zero when it is not,
 printing each violation (invalid JSON, duplicate or malformed IDs, edges
@@ -215,10 +219,13 @@ Use for brand consistency or specific themes. Always use uppercase format: `"#4A
    - Then subgroups
    - Finally text/link nodes (top layer)
 
-5. **Spacing Requirements:**
+5. **Spacing Requirements (MindMap / freeform layouts):**
    - Minimum horizontal: 320px between node centers
    - Minimum vertical: 200px between node centers
    - Account for node dimensions when calculating
+   - Community layout patterns (kanban, dashboard / home page, research map,
+     moodboard) use their own per-pattern spacing; they are exempt from these
+     minimums (see `references/layout-patterns.md`)
 
 6. **JSON Structure:**
    - Top level contains only `nodes` and `edges` arrays
