@@ -1,0 +1,183 @@
+{
+  "nodes": [
+    {
+      "id": "d7e8f90a1b2c3d4e",
+      "type": "text",
+      "x": 500,
+      "y": 0,
+      "width": 500,
+      "height": 110,
+      "text": "# Research question\n\nHow do layout templates affect canvas adoption?",
+      "color": "6"
+    },
+    {
+      "id": "e8f90a1b2c3d4e5f",
+      "type": "group",
+      "x": 0,
+      "y": 180,
+      "width": 460,
+      "height": 480,
+      "label": "Theme A - Layout practice"
+    },
+    {
+      "id": "f90a1b2c3d4e5f60",
+      "type": "group",
+      "x": 500,
+      "y": 180,
+      "width": 460,
+      "height": 480,
+      "label": "Theme B - Tooling"
+    },
+    {
+      "id": "0a1b2c3d4e5f6071",
+      "type": "group",
+      "x": 1000,
+      "y": 180,
+      "width": 460,
+      "height": 480,
+      "label": "Theme C - Open questions"
+    },
+    {
+      "id": "1b2c3d4e5f607182",
+      "type": "file",
+      "x": 20,
+      "y": 220,
+      "width": 420,
+      "height": 90,
+      "file": "Papers/Community Use Cases.md",
+      "subpath": "#Layouts",
+      "color": "4"
+    },
+    {
+      "id": "2c3d4e5f60718293",
+      "type": "file",
+      "x": 20,
+      "y": 340,
+      "width": 420,
+      "height": 90,
+      "file": "Papers/Visual Thinking Survey.md",
+      "subpath": "#Findings",
+      "color": "3"
+    },
+    {
+      "id": "3d4e5f60718293a4",
+      "type": "text",
+      "x": 20,
+      "y": 460,
+      "width": 420,
+      "height": 90,
+      "text": "Finding: boards win for linear states, maps win for networks"
+    },
+    {
+      "id": "4e5f60718293a4b5",
+      "type": "file",
+      "x": 520,
+      "y": 220,
+      "width": 420,
+      "height": 90,
+      "file": "Papers/Canvas Validator Study.md",
+      "subpath": "#Method",
+      "color": "4"
+    },
+    {
+      "id": "5f60718293a4b5c6",
+      "type": "file",
+      "x": 520,
+      "y": 340,
+      "width": 420,
+      "height": 90,
+      "file": "Papers/JSON Canvas at Scale.md",
+      "subpath": "#Results",
+      "color": "1"
+    },
+    {
+      "id": "60718293a4b5c6d7",
+      "type": "text",
+      "x": 520,
+      "y": 460,
+      "width": 420,
+      "height": 90,
+      "text": "Open: does validation change authoring behavior?"
+    },
+    {
+      "id": "718293a4b5c6d7e8",
+      "type": "text",
+      "x": 1020,
+      "y": 220,
+      "width": 420,
+      "height": 90,
+      "text": "Question: mobile editing constraints",
+      "color": "1"
+    },
+    {
+      "id": "8293a4b5c6d7e8f9",
+      "type": "file",
+      "x": 1020,
+      "y": 340,
+      "width": 420,
+      "height": 90,
+      "file": "Papers/Adoption Metrics 2026.md",
+      "color": "5"
+    },
+    {
+      "id": "93a4b5c6d7e8f90a",
+      "type": "text",
+      "x": 1020,
+      "y": 460,
+      "width": 420,
+      "height": 90,
+      "text": "Next step: survey vault structure conventions"
+    }
+  ],
+  "edges": [
+    {
+      "id": "9a2b3c4d5e6f7081",
+      "fromNode": "d7e8f90a1b2c3d4e",
+      "fromSide": "bottom",
+      "toNode": "1b2c3d4e5f607182",
+      "toSide": "top",
+      "label": "explores"
+    },
+    {
+      "id": "a1b2c3d4e5f60718",
+      "fromNode": "d7e8f90a1b2c3d4e",
+      "fromSide": "bottom",
+      "toNode": "4e5f60718293a4b5",
+      "toSide": "top",
+      "label": "explores"
+    },
+    {
+      "id": "b2c3d4e5f6071829",
+      "fromNode": "d7e8f90a1b2c3d4e",
+      "fromSide": "bottom",
+      "toNode": "718293a4b5c6d7e8",
+      "toSide": "top",
+      "label": "explores"
+    },
+    {
+      "id": "c3d4e5f60718293a",
+      "fromNode": "5f60718293a4b5c6",
+      "fromSide": "right",
+      "toNode": "8293a4b5c6d7e8f9",
+      "toSide": "left",
+      "label": "contradicts",
+      "color": "1"
+    },
+    {
+      "id": "d4e5f60718293a4b",
+      "fromNode": "2c3d4e5f60718293",
+      "fromSide": "right",
+      "toNode": "4e5f60718293a4b5",
+      "toSide": "left",
+      "label": "extends",
+      "color": "2"
+    },
+    {
+      "id": "e5f60718293a4b5c",
+      "fromNode": "1b2c3d4e5f607182",
+      "fromSide": "right",
+      "toNode": "2c3d4e5f60718293",
+      "toSide": "left"
+    }
+  ]
+}

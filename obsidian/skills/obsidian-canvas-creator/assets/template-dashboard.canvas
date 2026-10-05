@@ -1,0 +1,134 @@
+{
+  "nodes": [
+    {
+      "id": "3d4e5f60718293a4",
+      "type": "text",
+      "x": 500,
+      "y": 0,
+      "width": 460,
+      "height": 80,
+      "text": "# Home\n\nJump points for today",
+      "color": "6"
+    },
+    {
+      "id": "0a1b2c3d4e5f6071",
+      "type": "group",
+      "x": 0,
+      "y": 120,
+      "width": 460,
+      "height": 320,
+      "label": "Quick Capture",
+      "color": "3"
+    },
+    {
+      "id": "1b2c3d4e5f607182",
+      "type": "group",
+      "x": 500,
+      "y": 120,
+      "width": 460,
+      "height": 320,
+      "label": "Active Projects"
+    },
+    {
+      "id": "2c3d4e5f60718293",
+      "type": "group",
+      "x": 1000,
+      "y": 120,
+      "width": 460,
+      "height": 320,
+      "label": "Bookmarks",
+      "color": "5"
+    },
+    {
+      "id": "4e5f60718293a4b5",
+      "type": "text",
+      "x": 20,
+      "y": 160,
+      "width": 420,
+      "height": 70,
+      "text": "Capture idea",
+      "color": "3"
+    },
+    {
+      "id": "5f60718293a4b5c6",
+      "type": "text",
+      "x": 20,
+      "y": 250,
+      "width": 420,
+      "height": 70,
+      "text": "Morning reflection",
+      "color": "3"
+    },
+    {
+      "id": "60718293a4b5c6d7",
+      "type": "text",
+      "x": 20,
+      "y": 340,
+      "width": 420,
+      "height": 70,
+      "text": "Review tomorrow",
+      "color": "3"
+    },
+    {
+      "id": "718293a4b5c6d7e8",
+      "type": "file",
+      "x": 520,
+      "y": 160,
+      "width": 420,
+      "height": 70,
+      "file": "Projects/Project Alpha.md",
+      "color": "2"
+    },
+    {
+      "id": "8293a4b5c6d7e8f9",
+      "type": "file",
+      "x": 520,
+      "y": 250,
+      "width": 420,
+      "height": 70,
+      "file": "Projects/Project Beta.md",
+      "color": "4"
+    },
+    {
+      "id": "93a4b5c6d7e8f90a",
+      "type": "file",
+      "x": 520,
+      "y": 340,
+      "width": 420,
+      "height": 70,
+      "file": "Projects/Website Redesign.md",
+      "color": "4"
+    },
+    {
+      "id": "a4b5c6d7e8f90a1b",
+      "type": "link",
+      "x": 1020,
+      "y": 160,
+      "width": 420,
+      "height": 70,
+      "url": "https://obsidian.md",
+      "color": "5"
+    },
+    {
+      "id": "b5c6d7e8f90a1b2c",
+      "type": "link",
+      "x": 1020,
+      "y": 250,
+      "width": 420,
+      "height": 70,
+      "url": "https://github.com",
+      "color": "5"
+    },
+    {
+      "id": "c6d7e8f90a1b2c3d",
+      "type": "link",
+      "x": 1020,
+      "y": 340,
+      "width": 420,
+      "height": 70,
+      "url": "https://forum.obsidian.md",
+      "color": "5"
+    }
+  ],
+  "edges": []
+}

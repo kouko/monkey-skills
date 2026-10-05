@@ -1,0 +1,109 @@
+{
+  "nodes": [
+    {
+      "id": "a1b2c3d4e5f60718",
+      "type": "group",
+      "x": 0,
+      "y": 0,
+      "width": 300,
+      "height": 520,
+      "label": "To Do",
+      "color": "6"
+    },
+    {
+      "id": "b2c3d4e5f6071829",
+      "type": "group",
+      "x": 340,
+      "y": 0,
+      "width": 300,
+      "height": 520,
+      "label": "In Progress",
+      "color": "2"
+    },
+    {
+      "id": "c3d4e5f60718293a",
+      "type": "group",
+      "x": 680,
+      "y": 0,
+      "width": 300,
+      "height": 520,
+      "label": "Done",
+      "color": "4"
+    },
+    {
+      "id": "d4e5f60718293a4b",
+      "type": "text",
+      "x": 20,
+      "y": 40,
+      "width": 260,
+      "height": 90,
+      "text": "Finalize onboarding flow"
+    },
+    {
+      "id": "e5f60718293a4b5c",
+      "type": "text",
+      "x": 20,
+      "y": 150,
+      "width": 260,
+      "height": 90,
+      "text": "Draft release notes"
+    },
+    {
+      "id": "f60718293a4b5c6d",
+      "type": "file",
+      "x": 20,
+      "y": 260,
+      "width": 260,
+      "height": 110,
+      "file": "Projects/Project Alpha.md"
+    },
+    {
+      "id": "60718293a4b5c6d7",
+      "type": "text",
+      "x": 360,
+      "y": 40,
+      "width": 260,
+      "height": 90,
+      "text": "Refactor auth module",
+      "color": "1"
+    },
+    {
+      "id": "718293a4b5c6d7e8",
+      "type": "text",
+      "x": 360,
+      "y": 150,
+      "width": 260,
+      "height": 90,
+      "text": "Review PR #123"
+    },
+    {
+      "id": "8293a4b5c6d7e8f9",
+      "type": "text",
+      "x": 700,
+      "y": 40,
+      "width": 260,
+      "height": 90,
+      "text": "Ship v1.0 milestone"
+    },
+    {
+      "id": "93a4b5c6d7e8f90a",
+      "type": "text",
+      "x": 700,
+      "y": 150,
+      "width": 260,
+      "height": 90,
+      "text": "Update docs"
+    }
+  ],
+  "edges": [
+    {
+      "id": "a4b5c6d7e8f90a1b",
+      "fromNode": "60718293a4b5c6d7",
+      "fromSide": "left",
+      "toNode": "d4e5f60718293a4b",
+      "toSide": "right",
+      "label": "blocked by",
+      "color": "1"
+    }
+  ]
+}
