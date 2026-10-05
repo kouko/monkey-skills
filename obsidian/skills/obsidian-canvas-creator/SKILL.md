@@ -39,6 +39,19 @@ Ask user to choose or infer from context:
 - Multiple connection types
 - Good for: complex networks, non-hierarchical content, custom arrangements
 
+**Community Layout Patterns (Kanban, Dashboard / Home Page, Research Map, Moodboard):**
+- Each pattern has its own node composition, grouping, connection, and color
+  rules
+- Read `references/layout-patterns.md` for the rules and start from the
+  matching template under `assets/`:
+
+| Pattern | Template |
+|---------|----------|
+| Kanban board | `assets/template-kanban.canvas` |
+| Dashboard / home page | `assets/template-dashboard.canvas` |
+| Research map | `assets/template-research-map.canvas` |
+| Moodboard | `assets/template-moodboard.canvas` |
+
 ### 3. Plan Structure
 
 **For MindMap:**
@@ -103,6 +116,19 @@ Before outputting:
 - Groups (if any) have labels
 - Colors use consistent format (hex or preset numbers)
 - JSON is properly escaped (Chinese quotes: 『』 for double, 「」 for single)
+
+**Run the Validator:**
+
+After writing any `.canvas` file, run it through the bundled validator:
+
+```bash
+python3 scripts/validate_canvas.py <path-to-canvas>
+```
+
+The script exits `0` when the file is clean and non-zero when it is not,
+printing each violation (invalid JSON, duplicate or malformed IDs, edges
+referencing missing nodes, missing required fields, overlapping nodes). Fix
+every reported violation, re-run until it exits `0`, then present the file.
 
 **Output Format:**
 - Complete, valid JSON Canvas file
@@ -229,6 +255,7 @@ Process:
 
 - **Canvas Specification**: `references/canvas-spec.md` - Complete JSON Canvas format specification
 - **Layout Algorithms**: `references/layout-algorithms.md` - Detailed positioning algorithms for both layout types
+- **Layout Patterns**: `references/layout-patterns.md` - Community patterns (kanban, dashboard / home page, research map, moodboard) with their templates and color semantics
 - **Complete Examples**: `references/EXAMPLES.md` - Full canvas examples (mind maps, project boards, research canvases, flowcharts)
 - **JSON Canvas Spec 1.0**: https://jsoncanvas.org/spec/1.0/ — Official specification
 - **JSON Canvas GitHub**: https://github.com/obsidianmd/jsoncanvas

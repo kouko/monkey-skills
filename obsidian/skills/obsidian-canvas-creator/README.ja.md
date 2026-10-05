@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-テキストコンテンツから Obsidian Canvas ファイルを作成します。MindMap と freeform の両方のレイアウトに対応。
+テキストコンテンツから Obsidian Canvas ファイルを作成します。MindMap と freeform の両方のレイアウトに対応し、さらにカンバン／ダッシュボード（ホームページ）／研究マップ／ムードボードの 4 つのコミュニティパターンとテンプレート、出力検証スクリプト（`scripts/validate_canvas.py`）にも対応。
 
 ## Original Source
 

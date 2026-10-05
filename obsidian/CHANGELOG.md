@@ -4,6 +4,26 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.22.0] — 2026-10-05 canvas layout patterns + output validator
+
+### Added — `obsidian-canvas-creator` layout patterns and output validator
+
+- Four community layout patterns — kanban, dashboard / home page, research
+  map, moodboard — documented in
+  `skills/obsidian-canvas-creator/references/layout-patterns.md` (node
+  composition, grouping, connections, color semantics), each with a matching
+  importable template under `skills/obsidian-canvas-creator/assets/`.
+- `skills/obsidian-canvas-creator/scripts/validate_canvas.py` — a stdlib-only
+  validator that checks JSON validity, unique 16-char lowercase-hex IDs, edge
+  `fromNode`/`toNode` existence, per-type required fields, and node overlap
+  (AABB, groups excluded). Exits 0 on a clean file, non-zero naming each
+  violation. SKILL.md instructs the model to run it on every `.canvas` it
+  writes and act on the exit code / violation list.
+- `skills/obsidian-canvas-creator/SKILL.md` routes the four patterns to the
+  reference doc and templates; plugin README, skill READMEs, and the skill
+  attribution table list the new capability (derivative of axtonliu +
+  kepano json-canvas).
+
 ## [3.21.0] — 2026-09-24 obsidian-research
 
 ### Added — `obsidian-research` skill
