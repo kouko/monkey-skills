@@ -21,7 +21,7 @@
 
 ## Version
 
-3.15.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
+3.22.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
 
 ## 所属
 
@@ -105,7 +105,7 @@ Upstream: [`axtonliu/axton-obsidian-visual-skills`](https://github.com/axtonliu/
 
 | Skill | 用途 |
 |---|---|
-| `obsidian-canvas-creator` | Obsidian Canvas ファイルを MindMap / freeform layout で作成（kepano の json-canvas integration を統合） |
+| `obsidian-canvas-creator` | Obsidian Canvas ファイルを MindMap / freeform layout で作成。さらにカンバン／ダッシュボード（ホームページ）／研究マップ／ムードボードの 4 つのコミュニティパターンとテンプレート、`.canvas` 出力検証スクリプトにも対応（kepano の json-canvas integration を統合） |
 | `obsidian-excalidraw-diagram` | Excalidraw 図を Obsidian / Standard / Animated 形式で生成 |
 | `obsidian-mermaid-visualizer` | Mermaid 17 図種（flow / data-viz / structural / time）— Obsidian 11.4.1 最適化、GitHub / Notion / HackMD にも portable |
 
@@ -164,7 +164,7 @@ note 内に図を描く：
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata、version 3.15.0
+│   └── plugin.json              # plugin metadata、version 3.22.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault 保守 agent
 ├── commands/
