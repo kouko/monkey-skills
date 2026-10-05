@@ -1,0 +1,124 @@
+{
+  "nodes": [
+    {
+      "id": "0f60718293a4b5c6",
+      "type": "group",
+      "x": 0,
+      "y": 0,
+      "width": 420,
+      "height": 560,
+      "label": "Palette"
+    },
+    {
+      "id": "10718293a4b5c6d7",
+      "type": "group",
+      "x": 460,
+      "y": 0,
+      "width": 420,
+      "height": 560,
+      "label": "Textures"
+    },
+    {
+      "id": "208293a4b5c6d7e8",
+      "type": "group",
+      "x": 920,
+      "y": 0,
+      "width": 420,
+      "height": 560,
+      "label": "References"
+    },
+    {
+      "id": "3093a4b5c6d7e8f9",
+      "type": "file",
+      "x": 20,
+      "y": 40,
+      "width": 380,
+      "height": 150,
+      "file": "Moodboard/palette-sunset.png",
+      "color": "6"
+    },
+    {
+      "id": "400a4b5c6d7e8f90",
+      "type": "file",
+      "x": 20,
+      "y": 210,
+      "width": 380,
+      "height": 150,
+      "file": "Moodboard/palette-ocean.png"
+    },
+    {
+      "id": "501b5c6d7e8f90a1",
+      "type": "file",
+      "x": 20,
+      "y": 380,
+      "width": 380,
+      "height": 150,
+      "file": "Moodboard/palette-forest.png"
+    },
+    {
+      "id": "602c6d7e8f90a1b2",
+      "type": "file",
+      "x": 480,
+      "y": 40,
+      "width": 380,
+      "height": 150,
+      "file": "Moodboard/texture-linen.png"
+    },
+    {
+      "id": "703d7e8f90a1b2c3",
+      "type": "file",
+      "x": 480,
+      "y": 210,
+      "width": 380,
+      "height": 150,
+      "file": "Moodboard/texture-grain.png"
+    },
+    {
+      "id": "804e8f90a1b2c3d4",
+      "type": "text",
+      "x": 480,
+      "y": 400,
+      "width": 380,
+      "height": 90,
+      "text": "Grain direction follows the horizon line"
+    },
+    {
+      "id": "905f90a1b2c3d4e5",
+      "type": "file",
+      "x": 940,
+      "y": 40,
+      "width": 380,
+      "height": 150,
+      "file": "Moodboard/reference-poster.png"
+    },
+    {
+      "id": "106f9a1b2c3d4e5f",
+      "type": "link",
+      "x": 940,
+      "y": 210,
+      "width": 380,
+      "height": 90,
+      "url": "https://www.pinterest.com",
+      "color": "5"
+    },
+    {
+      "id": "2070a1b2c3d4e5f6",
+      "type": "file",
+      "x": 940,
+      "y": 320,
+      "width": 380,
+      "height": 150,
+      "file": "Moodboard/reference-mockup.png"
+    },
+    {
+      "id": "3081b2c3d4e5f607",
+      "type": "text",
+      "x": 940,
+      "y": 490,
+      "width": 380,
+      "height": 50,
+      "text": "Mood: calm, coastal, morning light"
+    }
+  ],
+  "edges": []
+}

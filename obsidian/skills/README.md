@@ -10,7 +10,7 @@
 | obsidian-bases | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Steph Ango) |
 | obsidian-cli | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Steph Ango) |
 | obsidian-markdown | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Steph Ango) |
-| obsidian-canvas-creator | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) + json-canvas from [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Axton Liu + Steph Ango) |
+| obsidian-canvas-creator | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) + json-canvas from [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) — this repo added layout patterns (kanban, dashboard / home page, research map, moodboard) and a `.canvas` output validator (derivative) | MIT (Axton Liu + Steph Ango) |
 | obsidian-excalidraw-diagram | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) | MIT (Axton Liu) |
 | obsidian-mermaid-visualizer | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) | MIT (Axton Liu) |
 | daily-news-digest | This project | — |

@@ -1,0 +1,48 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-10-05-canvas-layout-templates-validator",
+  "content_digest": "ce5af25686eeda5c6891df8205d2ddc2e5845285",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-10-05-canvas-layout-templates-validator/evidence/probes/test_canvas_validator_adversarial.py",
+      "artifact": "docs/loom/2026-10-05-canvas-layout-templates-validator/evidence/probes/test_canvas_validator_adversarial.py",
+      "result": "pass",
+      "command_digest": "513ea3a5d84c6bb8569e8ad33992e4316eb9a7fee984a5c5929a125bd82a3c18"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-review-code",
+      "vendor": "opencode",
+      "model": "host-default/unverified",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "closing-review-skill",
+      "vendor": "opencode",
+      "model": "host-default/unverified",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "missing-population",
+          "anchor": "docs/loom/2026-10-05-canvas-layout-templates-validator/acceptance-test-report.md :: 再以 44 項機械化規則比對全部符合",
+          "text": "The 44-item conformance claim comes from conformance_check.py, which is not committed in the delta; scope unverifiable from the repo."
+        }
+      ]
+    }
+  ],
+  "findings": [],
+  "selection": null
+}

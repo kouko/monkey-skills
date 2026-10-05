@@ -1,7 +1,7 @@
 {
   "nodes": [
     {
-      "id": "root001",
+      "id": "a0b1c2d3e4f50611",
       "type": "text",
       "x": -150,
       "y": -60,
@@ -11,7 +11,7 @@
       "color": "4"
     },
     {
-      "id": "branch01",
+      "id": "b1c2d3e4f5a60721",
       "type": "text",
       "x": 250,
       "y": -200,
@@ -21,7 +21,7 @@
       "color": "5"
     },
     {
-      "id": "branch02",
+      "id": "c2d3e4f5a6b70822",
       "type": "text",
       "x": 250,
       "y": -50,
@@ -31,7 +31,7 @@
       "color": "5"
     },
     {
-      "id": "branch03",
+      "id": "d3e4f5a6b7c80923",
       "type": "text",
       "x": 250,
       "y": 100,
@@ -41,7 +41,7 @@
       "color": "5"
     },
     {
-      "id": "detail01",
+      "id": "e4f5a6b7c8d90a24",
       "type": "text",
       "x": 550,
       "y": -200,
@@ -51,7 +51,7 @@
       "color": "6"
     },
     {
-      "id": "detail02",
+      "id": "f5a6b7c8d9e00b25",
       "type": "text",
       "x": 550,
       "y": -100,
@@ -63,42 +63,42 @@
   ],
   "edges": [
     {
-      "id": "e1",
-      "fromNode": "root001",
+      "id": "a1e2f3a4b5c60711",
+      "fromNode": "a0b1c2d3e4f50611",
       "fromSide": "right",
-      "toNode": "branch01",
+      "toNode": "b1c2d3e4f5a60721",
       "toSide": "left",
       "toEnd": "arrow"
     },
     {
-      "id": "e2",
-      "fromNode": "root001",
+      "id": "b2f3a4b5c6d71822",
+      "fromNode": "a0b1c2d3e4f50611",
       "fromSide": "right",
-      "toNode": "branch02",
+      "toNode": "c2d3e4f5a6b70822",
       "toSide": "left",
       "toEnd": "arrow"
     },
     {
-      "id": "e3",
-      "fromNode": "root001",
+      "id": "c3a4b5c6d7e82933",
+      "fromNode": "a0b1c2d3e4f50611",
       "fromSide": "right",
-      "toNode": "branch03",
+      "toNode": "d3e4f5a6b7c80923",
       "toSide": "left",
       "toEnd": "arrow"
     },
     {
-      "id": "e4",
-      "fromNode": "branch01",
+      "id": "d4b5c6d7e8f93a44",
+      "fromNode": "b1c2d3e4f5a60721",
       "fromSide": "right",
-      "toNode": "detail01",
+      "toNode": "e4f5a6b7c8d90a24",
       "toSide": "left",
       "toEnd": "arrow"
     },
     {
-      "id": "e5",
-      "fromNode": "branch01",
+      "id": "e5c6d7e8f9a04b55",
+      "fromNode": "b1c2d3e4f5a60721",
       "fromSide": "right",
-      "toNode": "detail02",
+      "toNode": "f5a6b7c8d9e00b25",
       "toSide": "left",
       "toEnd": "arrow"
     }
