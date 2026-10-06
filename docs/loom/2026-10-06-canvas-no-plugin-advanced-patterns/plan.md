@@ -20,6 +20,11 @@ charter: 1.1
 - Test: A4 positive: skill-routes-to-reference; boundary: existing-six-unchanged. A5 positive: readme-3-23-0; negative: stale-version-absent.
 - Risk: repo version-bump gate requires 3.22.0→3.23.0 + codex manifest sync or CI fails; existing sections unchanged; agent-decided.
 
+**W2-02 per-skill READMEs**  after: W1-01, W1-02  acceptance: 5
+- Files: obsidian/skills/obsidian-canvas-creator/README.md, obsidian/skills/obsidian-canvas-creator/README.ja.md, obsidian/skills/obsidian-canvas-creator/README.zh-TW.md
+- Test: A5 positive: skill-readme-lists-no-plugin; boundary: attribution-retained.
+- Risk: per-skill READMEs describe capabilities and were left stale by W2-01 (outside its file list); a one-line capability clause per file closes A5; agent-decided.
+
 ## Simplicity check
 - Merge W1-02 (nested template) into W1-01 — declined: merges two test mechanisms (prose assertions vs validator run); removes no file, test, or mechanism
 - Fold W1-02 into W2-01 — declined: W2-01 already spans 8 files; the two-wave DAG is the minimum for the genuine routing dependency
