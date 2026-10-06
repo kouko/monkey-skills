@@ -8,19 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added — `obsidian-canvas-creator` zero-plugin advanced patterns + nested-workspace template
 
-- `skills/obsidian-canvas-creator/references/no-plugin-patterns.md` — seven
+- `skills/obsidian-canvas-creator/references/no-plugin-patterns.md` — eight
   advanced applications using Obsidian core features only: nested canvas
   workspaces (Canvas-in-Canvas), research dual-canvas, data-pipeline
   documentation, audit / incident post-mortem / onboarding canvases, teacher
-  class canvas, worldbuilding basics, and Bases-in-canvas (requires Obsidian
-  1.9+, Bases core plugin) — plus the canvas-drift anti-pattern: never keep a
-  canvas as a continuously maintained live dashboard; use notes, queries, or
-  Bases for live data.
+  class canvas, worldbuilding basics, Bases-in-canvas (requires Obsidian
+  1.9+, Bases core plugin), and canvas-only vault / 2D MOC — plus the
+  canvas-drift anti-pattern: never keep a canvas as a continuously maintained
+  live dashboard; use notes, queries, or Bases for live data.
 - `skills/obsidian-canvas-creator/assets/template-nested-workspace.canvas` — a
   parent canvas demonstrating Canvas-in-Canvas nesting (embedded child `.canvas`
   file node, linked note, in-file path-replacement guidance), passing the
   bundled validator.
-- `skills/obsidian-canvas-creator/SKILL.md` routes the seven applications to
+- `skills/obsidian-canvas-creator/SKILL.md` routes the eight applications to
   the new reference and template, with a when-NOT-to-use-canvas pointer; plugin
   README and the skill attribution table list the new capability (derivative of
   axtonliu + kepano json-canvas).

@@ -6,8 +6,8 @@ Obsidian core features only — no community plugins. Where
 (kanban, dashboard / home page, research map, moodboard), this file documents
 multi-canvas and embedded-file workflows: nesting a canvas inside a canvas,
 splitting a project across two canvases, documenting a data pipeline, using a
-canvas as a finished artifact, running a class, building a world, and
-embedding a Bases view.
+canvas as a finished artifact, running a class, building a world, embedding a
+Bases view, and indexing a vault as a 2D MOC (canvas-only vault).
 
 The mechanism behind every pattern is the JSON Canvas `file` node. Its `file`
 field takes a vault path, and Obsidian renders that file in place — not only
@@ -52,7 +52,7 @@ required.
 - A section has its own legend or color language that would clash with the
   parent's.
 - Panning and zooming feel slow — large canvases degrade, and splitting
-  restores responsiveness (see section 8 for the maintenance caveat).
+  restores responsiveness (see section 9 for the maintenance caveat).
 
 ### Example: a parent embedding a child canvas
 
@@ -132,7 +132,7 @@ colors readable.
   nodes to the canvas edge, under a `Deprecated` group with a dated note. The
   pipeline's history stays visible while the current path stays central.
 
-This documents a fixed pipeline, not a monitor — see section 8 before turning
+This documents a fixed pipeline, not a monitor — see section 9 before turning
 it into something that must stay current.
 
 ## 4. Output-as-Deliverable Method Canvases
@@ -160,7 +160,7 @@ maintainable.
 - A **project kickoff** canvas and a **content-ideation** canvas both failed
   as living documents: they needed updating faster than they were used.
 - **Do not** keep any deliverable canvas as a continuously maintained
-  dashboard. The drift trap (section 8) is exactly this mistake: an artifact
+  dashboard. The drift trap (section 9) is exactly this mistake: an artifact
   canvas is allowed to freeze at delivery; a dashboard is not.
 
 ## 5. Teacher Class Canvas
@@ -236,7 +236,38 @@ canvas JSON, when the query changes. This is the "database view × spatial
 document" workflow — useful for a working overview, never a substitute for the
 query.
 
-## 8. When NOT to Use Canvas (Canvas Drift)
+## 8. Canvas-Only Vault / 2D MOC
+
+Treat the vault's index as a 2D map: a canvas whose file nodes are MOCs and
+hub notes, laid out spatially, replacing or supplementing a text MOC. The map
+of contents becomes a place you navigate by position, grouping, and labeled
+relations instead of by reading a list.
+
+### How (core only)
+
+- File nodes reference the MOC and hub notes; each stays a normal vault note.
+- Groups mark the map's sections; edges carry the explicit relations between
+  hubs (`feeds`, `part of`, `overlaps`).
+- Embed a child canvas for a sub-map: a file node pointing at another
+  `.canvas` file (see section 1), so one region of the index can grow its own
+  canvas.
+
+### Limits — stated plainly
+
+- A canvas-only vault is an index — a finished artifact, not a self-updating
+  map. Nothing in it refreshes itself.
+- A canvas full of typed text cards is invisible to search, backlinks, and
+  the graph; the file nodes are the part that stays wired to the vault.
+- Keep it small and about a structure that has stabilized, and re-derive the
+  layout when the vault's structure changes.
+
+### When it works, when it fails
+
+It works for personal navigation over a slow-changing structure, or for
+presenting a vault. It fails the moment the map is expected to stay
+automatically current — that is canvas drift (see section 9).
+
+## 9. When NOT to Use Canvas (Canvas Drift)
 
 The most common canvas failure is **canvas drift**: a canvas kept as a
 continuously maintained live dashboard. A consultant who ran a canvas as a

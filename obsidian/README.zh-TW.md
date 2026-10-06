@@ -102,7 +102,7 @@ Upstream：[`axtonliu/axton-obsidian-visual-skills`](https://github.com/axtonliu
 
 | Skill | 用途 |
 |---|---|
-| `obsidian-canvas-creator` | 建立 Obsidian Canvas 檔，支援 MindMap 或 freeform layout，另提供四種社群版型（看板／儀表板（首頁）／研究地圖／moodboard）與範本、`.canvas` 輸出驗證腳本，以及零外掛的進階應用（巢狀畫布／研究雙畫布／資料管線文件化／稽核・事故檢討・onboarding 畫布／教師班級畫布／世界觀建構／Bases-in-canvas 1.9+）（整合 kepano 的 json-canvas） |
+| `obsidian-canvas-creator` | 建立 Obsidian Canvas 檔，支援 MindMap 或 freeform layout，另提供四種社群版型（看板／儀表板（首頁）／研究地圖／moodboard）與範本、`.canvas` 輸出驗證腳本，以及零外掛的進階應用（巢狀畫布／研究雙畫布／資料管線文件化／稽核・事故檢討・onboarding 畫布／教師班級畫布／世界觀建構／Bases-in-canvas 1.9+／canvas-only／2D MOC）（整合 kepano 的 json-canvas） |
 | `obsidian-excalidraw-diagram` | 產生 Excalidraw 圖（Obsidian / Standard / Animated 三種格式） |
 | `obsidian-mermaid-visualizer` | 17 種 Mermaid 圖（flow / data-viz / structural / time）—— 為 Obsidian 11.4.1 優化，可移植到 GitHub / Notion / HackMD |
 
