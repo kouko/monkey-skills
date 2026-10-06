@@ -25,6 +25,11 @@ charter: 1.1
 - Test: A5 positive: skill-readme-lists-no-plugin; boundary: attribution-retained.
 - Risk: per-skill READMEs describe capabilities and were left stale by W2-01 (outside its file list); a one-line capability clause per file closes A5; agent-decided.
 
+**W2-03 graduate Bases probe into standing suite**  after: W1-01, W1-02, W2-01  acceptance: 5
+- Files: scripts/test_bases_version_note.py
+- Test: A5 positive: probe-runs-in-scripts-suite; boundary: probe-paths-adapted.
+- Risk: the Bases probe went RED on this change, so review.probe-graduation requires a copy carried into the suite that runs on every later change (pytest scripts/) before finalize-review; REPO_ROOT/parents and DOCS paths must be adapted for scripts/; agent-decided.
+
 ## Simplicity check
 - Merge W1-02 (nested template) into W1-01 — declined: merges two test mechanisms (prose assertions vs validator run); removes no file, test, or mechanism
 - Fold W1-02 into W2-01 — declined: W2-01 already spans 8 files; the two-wave DAG is the minimum for the genuine routing dependency
