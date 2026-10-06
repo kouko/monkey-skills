@@ -1,8 +1,9 @@
 # concern: user-facing Bases capability claims must carry the Obsidian 1.9+
 # requirement, or an older-Obsidian user reads a capability the release cannot
 # provide. Bases shipped as a core plugin in Obsidian 1.9 and a direct .base
-# embed in a canvas card rendered correctly from 1.9.5, so 1.9 is the real
-# requirement; every doc in the change's Bases surface must qualify Bases with
+# embed in a canvas card works from 1.9 (1.9.5 fixed only a refresh edge case
+# for moved cards), so 1.9 is the real requirement; every doc in the change's
+# Bases surface must qualify Bases with
 # 1.9+ and none may state the superseded 1.13 note.
 """Standing graduated copy of the Bases version-note adversarial probe.
 
@@ -16,7 +17,8 @@ docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/evidence/probes/.
 The document set below is the change's user-facing Bases surface. A file that
 names the Bases capability without the 1.9 requirement is a defect: Bases
 ships as a core plugin in Obsidian 1.9, and a direct .base embed in a canvas
-card renders correctly from 1.9.5 — so a capability list without the 1.9+
+card works from 1.9 (1.9.5 fixed only a refresh edge case for moved cards) —
+so a capability list without the 1.9+
 note advertises the feature with no floor at all, and any doc still carrying
 the earlier (factually wrong) 1.13 note misstates the real requirement.
 """

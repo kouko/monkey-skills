@@ -207,9 +207,10 @@ canvas carry only the relation.
 Bases is a core plugin (shipped in Obsidian 1.9) that renders a note database
 as a view — a table, a list, or a card layout. A canvas can embed a `.base`
 file with a file node exactly as it embeds a note. Direct `.base` embeds in a
-canvas card render from Obsidian 1.9.5 (earlier 1.9.x had a canvas-embed
-rendering bug); if a base view does not render inside a canvas card, embed the
-base in a note first and embed that note in the canvas (still core-only).
+canvas card work from Obsidian 1.9 (Bases' release); 1.9.5 fixed an edge case
+where an embedded base inside a moved canvas card failed to refresh. If a base
+view does not render inside a canvas card, embed the base in a note first and
+embed that note in the canvas (still core-only).
 
 ```json
 {
@@ -234,7 +235,9 @@ The canvas is a spatial composition around the view; the data itself keeps
 living in the notes and the `.base` query. Update the `.base` file, not the
 canvas JSON, when the query changes. This is the "database view × spatial
 document" workflow — useful for a working overview, never a substitute for the
-query.
+query. The spatial composition around a view is still hand-maintained —
+positions and annotations do not refresh — so treat it as a working overview,
+not a live dashboard (see section 9).
 
 ## 8. Canvas-Only Vault / 2D MOC
 
@@ -256,8 +259,10 @@ relations instead of by reading a list.
 
 - A canvas-only vault is an index — a finished artifact, not a self-updating
   map. Nothing in it refreshes itself.
-- A canvas full of typed text cards is invisible to search, backlinks, and
-  the graph; the file nodes are the part that stays wired to the vault.
+- A canvas full of typed text cards stays out of backlinks and the graph —
+  links only ever originate from file nodes — so the file nodes are the part
+  that stays wired to the vault. (Text-card content is searchable, but a typed
+  card is not a note.)
 - Keep it small and about a structure that has stabilized, and re-derive the
   layout when the vault's structure changes.
 
@@ -279,11 +284,14 @@ Spatial documents do not refresh themselves. A note can be transcluded, a
 query re-run, a Bases view re-rendered; a canvas node is a snapshot typed by
 hand. Anything that changes on its own schedule will outpace the canvas.
 
-**Never use canvas as a live dashboard.** If the content changes weekly or
-daily, or is expected to always be current, canvas is the wrong tool. For live
-data use notes, queries, or Bases instead — Bases views and file-node embeds
-refresh, and a note's links and backlinks stay truthful. Use canvas for the
-two jobs it does well:
+**Never keep hand-maintained status content as a live dashboard on a canvas.**
+Anything typed by hand on the canvas — status cards, checklists, summaries —
+is a snapshot and will drift if it must stay current. For live data, embed a
+Bases view or transclude a note instead: Bases views and file-node embeds
+refresh from their source, and a note's links and backlinks stay truthful.
+What refreshes is the embedded content; what does not is the spatial
+composition around it — positions, grouping, and annotations are still
+maintained by hand. Use canvas for the two jobs it does well:
 
 - **Spatial reasoning** — thinking that benefits from position, grouping, and
   labeled relations while it is in flux (brainstorming, mapping, planning).
