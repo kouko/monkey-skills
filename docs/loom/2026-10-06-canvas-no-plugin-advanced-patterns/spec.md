@@ -4,7 +4,7 @@ pre-build-review: not-required — content-only change (skill reference docs + o
 
 ## Requirements
 REQ-1 — No-plugin application guidance
-  WHEN the skill covers the no-plugin advanced applications, it shall document each one (nested canvas workspace, research dual-canvas, data-pipeline documentation, audit / incident post-mortem / onboarding map, teacher class canvas, worldbuilding basics, Bases-in-canvas) using only core Obsidian features, with Bases marked as requiring Obsidian 1.9+ → Acceptance #1
+  WHEN the skill covers the no-plugin advanced applications, it shall document each one (nested canvas workspace, research dual-canvas, data-pipeline documentation, audit / incident post-mortem / onboarding map, teacher class canvas, worldbuilding basics, Bases-in-canvas, canvas-only / 2D-MOC) using only core Obsidian features, with Bases marked as requiring Obsidian 1.9+ → Acceptance #1
 REQ-2 — Nested canvas template
   WHEN nesting is documented, a `.canvas` template demonstrating Canvas-in-Canvas nesting shall exist and pass the bundled validator → Acceptance #2
 REQ-3 — Drift anti-pattern

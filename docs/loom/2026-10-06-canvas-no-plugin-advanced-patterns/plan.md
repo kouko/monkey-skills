@@ -7,7 +7,7 @@ charter: 1.1
 
 **W1-01 no-plugin patterns reference**  after: —  acceptance: 1, 3
 - Files: obsidian/skills/obsidian-canvas-creator/references/no-plugin-patterns.md
-- Test: A1 positive: seven-applications-documented; boundary: bases-1-13-note. A3 positive: drift-section-present; boundary: names-live-dashboard.
+- Test: A1 positive: eight-applications-documented; boundary: bases-1-9-note. A3 positive: drift-section-present; boundary: names-live-dashboard.
 - Risk: must stay zero-plugin; a community-plugin technique would violate the intent constraint; agent-decided.
 
 **W1-02 nested workspace template**  after: —  acceptance: 2

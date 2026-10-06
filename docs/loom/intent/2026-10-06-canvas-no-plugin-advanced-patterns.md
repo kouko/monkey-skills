@@ -13,7 +13,7 @@ publication: automatic — authorized 2026-10-06 by kouko
 skill 以零外掛（僅核心功能）文件化上述應用的做法：多畫布工作流（研究雙畫布、管線文件化、稽核／檢討／onboarding）、巢狀畫布結構（含一個模板）、Bases 內嵌（標注 1.9+）、canvas-only／2D MOC 的做法與限制、以及「何時不該用 canvas」的 drift 反模式。
 
 ## Acceptance
-1. skill 內有每一個上述應用的建置指引（巢狀畫布、研究雙畫布、資料管線、稽核／事故檢討／onboarding、教師班級、世界觀基礎、Bases 內嵌），全部僅用核心功能；Bases 指引標注需要 Obsidian 1.9+。
+1. skill 內有每一個上述應用的建置指引（巢狀畫布、研究雙畫布、資料管線、稽核／事故檢討／onboarding、教師班級、世界觀基礎、Bases 內嵌、canvas-only／2D MOC），全部僅用核心功能；Bases 指引標注需要 Obsidian 1.9+。
 2. 巢狀畫布有可用且通過驗證器的 `.canvas` 模板（含嵌入的子畫布節點與指向說明）。
 3. skill 文件化 canvas drift 反模式：哪些場景不該用 canvas（持續維護的 live dashboard），與該改用什麼。
 4. SKILL.md 路由到新的文件；既有六種版型的行為不變。
