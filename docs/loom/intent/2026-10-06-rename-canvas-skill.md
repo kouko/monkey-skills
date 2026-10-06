@@ -4,7 +4,8 @@ kind: engineering
 needs-design: no — skill content edits are pinned as the skill artifact type by the repo's interface-surfaces standing default (SKILL.md and skill docs are not a user interface); the rename changes the skill's internal identifier and repo-internal cross references only, no interface-surface glob matches
 map: 
 evidence: [docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/acceptance-test-report.md]
-status: open
+status: confirmed 2026-10-06
+publication: automatic — authorized 2026-10-06 by kouko
 
 ## Problem
 Obsidian plugin 的 canvas skill 名為「canvas-creator」，是從上游（axtonliu）匯入時的遺留名稱。2026-10 的兩輪變更（3.22.0 版型規則＋驗證器、3.23.0 零外掛進階應用）之後，這個 skill 的實際範圍已經遠超「建立」：它還涵蓋編輯既有畫布、輸出驗證、八種多畫布工作流，以及「何時不要用 canvas」的治理指引。名稱低估了範圍，與同 plugin 內偏功能域命名的兄弟 skill（markdown、bases、research、cli）不一致，使用者與 LLM 在閱讀 skill 清單時需要多猜一次「creator」是什麼意思。
