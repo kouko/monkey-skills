@@ -1,6 +1,6 @@
 ---
 name: obsidian-canvas-creator
-description: Create Obsidian Canvas files with MindMap, freeform, or community layout patterns (kanban, dashboard / home page, research map, moodboard), with templates and a bundled .canvas validator. Use when visualizing content spatially, creating mind maps, or organizing information on a canvas. Canvas・マインドマップ。心智圖・畫布。
+description: Create Obsidian Canvas files with MindMap, freeform, community layout patterns (kanban, dashboard / home page, research map, moodboard), or zero-plugin advanced patterns (nested canvases, multi-canvas workflows, Bases-in-canvas), with templates and a bundled .canvas validator. Use when visualizing content spatially, creating mind maps, or organizing information on a canvas. Canvas・マインドマップ。心智圖・畫布。
 ---
 
 # Obsidian Canvas Creator
@@ -51,6 +51,18 @@ Ask user to choose or infer from context:
 | Dashboard / home page | `assets/template-dashboard.canvas` |
 | Research map | `assets/template-research-map.canvas` |
 | Moodboard | `assets/template-moodboard.canvas` |
+
+**No-Plugin Advanced Patterns (Nested Canvas Workspace, Research Dual-Canvas, Data-Pipeline Documentation, Audit / Post-Mortem / Onboarding, Teacher Class, Worldbuilding, Bases-in-Canvas):**
+- Multi-canvas and embedded-file workflows built on Obsidian core features only
+- Read `references/no-plugin-patterns.md` for these and for when NOT to use
+  canvas (the canvas-drift anti-pattern); nested workspaces start from the
+  matching template under `assets/`:
+
+| Pattern | Template |
+|---------|----------|
+| Nested canvas workspace (Canvas-in-Canvas) | `assets/template-nested-workspace.canvas` |
+
+Bases-in-canvas requires Obsidian 1.13+ (Bases core plugin).
 
 ### 3. Plan Structure
 
@@ -263,6 +275,7 @@ Process:
 - **Canvas Specification**: `references/canvas-spec.md` - Complete JSON Canvas format specification
 - **Layout Algorithms**: `references/layout-algorithms.md` - Detailed positioning algorithms for both layout types
 - **Layout Patterns**: `references/layout-patterns.md` - Community patterns (kanban, dashboard / home page, research map, moodboard) with their templates and color semantics
+- **No-Plugin Advanced Patterns**: `references/no-plugin-patterns.md` - Zero-plugin multi-canvas and embedded-file workflows (nested canvas workspaces, research dual-canvas, data-pipeline documentation, audit / post-mortem / onboarding, teacher class, worldbuilding, Bases-in-canvas 1.13+) plus the canvas-drift anti-pattern (when NOT to use canvas)
 - **Complete Examples**: `references/EXAMPLES.md` - Full canvas examples (mind maps, project boards, research canvases, flowcharts)
 - **JSON Canvas Spec 1.0**: https://jsoncanvas.org/spec/1.0/ — Official specification
 - **JSON Canvas GitHub**: https://github.com/obsidianmd/jsoncanvas
@@ -289,3 +302,5 @@ Load these references when:
 - Too much text in nodes (use file nodes for long content)
 - Duplicate IDs (each must be unique)
 - Unconnected nodes (unless intentional islands)
+- Canvas drift — keeping a canvas as a continuously maintained live dashboard
+  (use notes, queries, or Bases instead; see `references/no-plugin-patterns.md`)
