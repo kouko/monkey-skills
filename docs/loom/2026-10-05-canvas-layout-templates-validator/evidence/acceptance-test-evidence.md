@@ -68,6 +68,52 @@ $ python3 conformance_check.py
 
 Evidence: validator exit 0 for each generated file; `conformance_check.py` output "44/44 conformance checks passed". Skill routing anchors: `SKILL.md:42-53`, `references/layout-patterns.md:14-21` (Pattern Selection).
 
+`conformance_check.py` (run from the probe directory, read-only over the four freshly generated canvases under `skill-output/`) asserted these 44 checks, all PASS. The count is per item: a check repeated once per node is counted once per node.
+
+**Kanban — `kanban-blog.canvas` (14 checks)**
+1. three column groups
+2. columns in workflow order
+3. group color = state (6 To Do / 2 In Progress / 4 Done)
+4. 40px column gap
+5. full board height columns
+6. groups listed first
+7–12. each card fully inside its column (6 cards: Write outline, Pick hero images, Draft post, Blog/Draft Notes, Publish, Promote on feed)
+13. exactly one urgent (red) card
+14. single dependency edge labeled `blocked by`, red
+
+**Dashboard / Home Page — `dashboard-home.canvas` (14 checks)**
+15. purple title node on top
+16. three section groups
+17. 3-section row at x=0/500/1000 (40px gap)
+18. title centered above the middle section
+19. no edges
+20–25. each node fully inside one section (6 nodes: Jot an idea, Morning pages, two file nodes, two link nodes)
+26. capture text yellow `3`
+27. file nodes yellow/green
+28. link nodes cyan `5`
+
+**Research Map — `research-attention.canvas` (9 checks)**
+29. root question purple `6`
+30. two `Theme` groups
+31. group color neutral
+32. root above groups
+33. theme papers inside groups
+34. root `explores` each theme anchor
+35. `extends` edge orange `2`
+36. `contradicts` edge red `1`
+37. paper colors are the reading-status set
+
+**Moodboard — `moodboard-cabin.canvas` (7 checks)**
+38. three theme groups
+39. group backgrounds neutral
+40. 40px group gap
+41. no edges
+42. at most one purple accent anchor
+43. link nodes cyan `5`
+44. no text nodes (optional)
+
+The 44 fall into five categories: 40px geometry, group-first ordering, cards fully inside their groups, color semantics, and edge labels/colors. `conformance_check.py` was a one-off acceptance aid and is not committed here.
+
 ## 3. Validator checks: JSON parse, unique 16-char lowercase-hex ids, edge fromNode/toNode existence, per-type required fields, no overlap; exit 0 clean / non-zero naming each violation
 
 How I tried it: wrote 12 hand-crafted probe files (`/private/var/folders/m5/4cb4p8h938qc4qcpdykwz2480000gn/T/opencode/acc-probes/`) exercising every check, plus the six bundled templates (clean, see section 1), and ran `python3 obsidian/skills/obsidian-canvas-creator/scripts/validate_canvas.py <file>` on each.

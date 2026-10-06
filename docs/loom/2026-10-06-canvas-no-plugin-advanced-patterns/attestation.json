@@ -1,0 +1,78 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-10-06-canvas-no-plugin-advanced-patterns",
+  "content_digest": "b17a972acb1d6a40ac0659736bb5b6bb5c05e992",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/evidence/probes/test_bases_version_note.py -q",
+      "artifact": "docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/evidence/probes/test_bases_version_note.py",
+      "result": "pass",
+      "command_digest": "222ed6679620ef2af806e1fc175c82be3605d2683183eb8185330c235adf939e"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-docs-1",
+      "vendor": "opencode",
+      "model": "host-default/unverified",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/SKILL.md:278",
+          "text": "Round-1 nit, unfixed: \"canvas-only / 2D-MOC\" (hyphen) vs \"2D MOC\" elsewhere.",
+          "fix": "Drop the hyphen at SKILL.md:278."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/references/no-plugin-patterns.md:207",
+          "text": "Round-1 nit, partially fixed: views sentence implies list view exists at the 1.9 floor; Obsidian Help marks List view 1.10.",
+          "fix": "Qualify: \"a table or a card layout (list view from 1.10)\"."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "README.md:13",
+          "text": "Round-1 nit, unfixed, pre-existing: repo-root curated table lists obsidian at 3.5.0 vs 3.23.0.",
+          "fix": "Update the row when the user takes up the offer."
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/references/no-plugin-patterns.md:244",
+          "text": "Round-1 nit, unfixed: MOC used without expansion.",
+          "fix": "Expand on first use: \"MOCs (maps of content)\"."
+        }
+      ]
+    },
+    {
+      "reviewer": "closing-skill-2",
+      "vendor": "opencode",
+      "model": "host-default/unverified",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/spec.md:22",
+          "text": "Round-1 nit, unfixed: spec says methodology sections carry inline JSON examples; sections 2-6 have none.",
+          "fix": "Amend the spec sentence to \"where the file structure is the mechanism\"."
+        }
+      ]
+    }
+  ],
+  "findings": [],
+  "selection": null
+}

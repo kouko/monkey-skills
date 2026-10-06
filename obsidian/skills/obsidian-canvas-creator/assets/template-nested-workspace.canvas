@@ -1,0 +1,97 @@
+{
+  "nodes": [
+    {
+      "id": "a1b2c3d4e5f60001",
+      "type": "group",
+      "x": -40,
+      "y": -40,
+      "width": 1320,
+      "height": 960,
+      "label": "Parent Workspace Canvas",
+      "color": "4"
+    },
+    {
+      "id": "a1b2c3d4e5f60002",
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 580,
+      "height": 120,
+      "text": "# Parent Workspace Canvas\n\nReplace this title with the name of your workspace.",
+      "color": "4"
+    },
+    {
+      "id": "a1b2c3d4e5f60003",
+      "type": "text",
+      "x": 640,
+      "y": 0,
+      "width": 580,
+      "height": 140,
+      "text": "## Navigation\n\n- Double-click a file node to open it.\n- The embedded child canvas opens as its own tab.\n- Edit the child canvas file to change the sub-workspace.",
+      "color": "3"
+    },
+    {
+      "id": "a1b2c3d4e5f60004",
+      "type": "text",
+      "x": 0,
+      "y": 180,
+      "width": 760,
+      "height": 60,
+      "text": "## Embedded child canvas (Canvas-in-Canvas)",
+      "color": "6"
+    },
+    {
+      "id": "a1b2c3d4e5f60005",
+      "type": "file",
+      "x": 0,
+      "y": 280,
+      "width": 760,
+      "height": 560,
+      "file": "Child/child-canvas.canvas",
+      "color": "6"
+    },
+    {
+      "id": "a1b2c3d4e5f60006",
+      "type": "text",
+      "x": 800,
+      "y": 180,
+      "width": 420,
+      "height": 60,
+      "text": "## Linked notes",
+      "color": "2"
+    },
+    {
+      "id": "a1b2c3d4e5f60007",
+      "type": "file",
+      "x": 800,
+      "y": 280,
+      "width": 420,
+      "height": 260,
+      "file": "Notes/workspace-notes.md",
+      "subpath": "#Overview",
+      "color": "2"
+    },
+    {
+      "id": "a1b2c3d4e5f60008",
+      "type": "text",
+      "x": 800,
+      "y": 580,
+      "width": 420,
+      "height": 280,
+      "text": "## Replace these paths\n\n- Child canvas: `Child/child-canvas.canvas`\n- Note: `Notes/workspace-notes.md`\n\nCanvas JSON has no comments, so guidance lives in node labels. To nest one level deeper, duplicate the child canvas file and point this node at the copy.\n\nLayering idiom: this parent canvas holds navigation and overview nodes; the embedded child canvas node is the prominent work area.",
+      "color": "1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "a1b2c3d4e5f60009",
+      "fromNode": "a1b2c3d4e5f60003",
+      "fromSide": "bottom",
+      "toNode": "a1b2c3d4e5f60005",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "label": "opens in its own tab",
+      "color": "3"
+    }
+  ]
+}
