@@ -1,17 +1,21 @@
 # concern: user-facing Bases capability claims must carry the Obsidian 1.9+
 # requirement, or an older-Obsidian user reads a capability the release cannot
-# provide. Bases shipped as a core plugin in Obsidian 1.9 and a direct .base
-# embed in a canvas card rendered correctly from 1.9.5, so 1.9 is the real
-# requirement; every doc in the change's Bases surface must qualify Bases with
-# 1.9+ and none may state the superseded 1.13 note.
+# provide. Bases shipped as a core plugin in Obsidian 1.9, and a direct .base
+# embed in a canvas card has rendered correctly since 1.9 (1.9.5 only fixed an
+# edge case where an embedded base inside a moved canvas card failed to
+# refresh), so 1.9 is the real requirement; every doc in the change's Bases
+# surface must qualify Bases with 1.9+ and none may state the superseded 1.13
+# note.
 """Adversarial probe: every doc that advertises Bases-in-canvas qualifies it.
 
 The document set below is the change's user-facing Bases surface. A file that
 names the Bases capability without the 1.9 requirement is a defect: Bases
 ships as a core plugin in Obsidian 1.9, and a direct .base embed in a canvas
-card renders correctly from 1.9.5 — so a capability list without the 1.9+
-note advertises the feature with no floor at all, and any doc still carrying
-the earlier (factually wrong) 1.13 note misstates the real requirement.
+card has rendered correctly since 1.9 (1.9.5 only fixed an edge case where an
+embedded base inside a moved canvas card failed to refresh) — so a capability
+list without the 1.9+ note advertises the feature with no floor at all, and
+any doc still carrying the earlier (factually wrong) 1.13 note misstates the
+real requirement.
 """
 
 from pathlib import Path
