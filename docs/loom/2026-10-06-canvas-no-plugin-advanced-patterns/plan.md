@@ -37,4 +37,4 @@ charter: 1.1
 ## Risks
 1. Zero-plugin constraint must hold everywhere in the new reference; one community-plugin technique breaks the intent's constraint.
 2. The repo version-bump gate: skill-content change requires the 3.23.0 bump and codex manifest sync, else CI fails at ship.
-3. Bases guidance is version-bound (1.13+); without the note it would silently mislead older-Obsidian users.
+3. Bases guidance is version-bound (1.9+; the research report's "1.13" was corrected during build — Bases shipped in Obsidian 1.9, canvas embeds render from 1.9.5); without the note it would silently mislead older-Obsidian users.
