@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v2",
   "change_id": "2026-10-06-rename-canvas-skill",
-  "content_digest": "85556bea5f0497edc1f1088da9e964f7d886fd5d",
+  "content_digest": "e347e41f6ac28585b5831dbef69378dcf40db88c",
   "executions": [
     {
       "kind": "package-tests",
