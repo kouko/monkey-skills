@@ -164,6 +164,102 @@ run executed only the tests that cover each criterion, below.
 - Evidence: gate outputs above; `plugin.json:3` in both manifests; README
   diff hunks; CHANGELOG `[3.23.0]` entry.
 
-## Re-run
+## Re-run on 2026-10-06, at 847ca813e
 
-None — first run; no fix cycle.
+Fix range `f98df0bb9..847ca813e`: `f98df0bb9` corrected the evidence-store
+probe's comment lines (docstring fact only, assertions unchanged);
+`22a7505e6` corrected three claims in
+`references/no-plugin-patterns.md` and the matching comments in
+`scripts/test_bases_version_note.py`; `847ca813e` corrected the plan's
+Risk 3 wording. Re-run in a fresh worktree at `847ca813e` (detached, clean);
+all five lines re-tested in full against every surface they name.
+
+### 1: re-tested
+
+- Reference re-read in full (now 305 lines). All eight applications still have
+  their own section: §1–§8 (headers at `:27, :76, :106, :138, :166, :185, :203,
+  :242`), §9 drift at `:275`. Bases markers still present:
+  `no-plugin-patterns.md:25` and `:205` "**requires Obsidian 1.9+ (Bases core
+  plugin)**"; `:207` "shipped in Obsidian 1.9". The superseded "1.13" note
+  appears nowhere in user-facing docs (only in the probe's own comment naming
+  the superseded note). Zero-plugin grep over the reference, SKILL.md, the new
+  template, and the six READMEs: no community plugin named as required (only
+  pre-existing `obsidian-excalidraw-diagram` mentions for the separate skill,
+  unchanged).
+- Corrected claim (a) — §7 now reads `:210-211`: "Direct `.base` embeds in a
+  canvas card work from Obsidian 1.9 (Bases' release); 1.9.5 fixed an edge case
+  where an embedded base inside a moved canvas card failed to refresh." Checked
+  against the official Obsidian 1.9.5 changelog (2025-07-17): "Bases: Fixed a
+  few edge cases where a base not update when it comes into view, for example,
+  inside a canvas card that is moved" — accurate, and the same 1.9.5 release's
+  "Canvas: It's now possible to select a specific view for an embedded Base"
+  shows embeds predate 1.9.5. Wording matches.
+- Probe: `python3 -m pytest
+  docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/evidence/probes/test_bases_version_note.py
+  -q` → `12 passed in 0.12s`.
+- Standing copy: `python3 -m pytest scripts/ -q` → `710 passed in 26.06s`
+  (includes the graduated `scripts/test_bases_version_note.py`, whose comments
+  carry the corrected fact; assertions unchanged).
+- Evidence: `references/no-plugin-patterns.md:25,205,207,210-211`; zero-plugin
+  grep output; probe `12 passed`; scripts suite `710 passed`; official 1.9.5
+  changelog.
+
+### 2: re-tested
+
+- Ran the bundled validator on the template in the fresh worktree:
+  `python3 obsidian/skills/obsidian-canvas-creator/scripts/validate_canvas.py
+  obsidian/skills/obsidian-canvas-creator/assets/template-nested-workspace.canvas`
+  → exit 0, no output. `python3 -m pytest obsidian/tests/ -q` →
+  `31 passed in 0.79s` (includes the validator's own 9 tests). The fix range
+  touched neither the template nor the validator.
+- Evidence: validator `exit: 0`; `31 passed in 0.79s` in the fresh worktree;
+  template and validator files unchanged from the first run.
+
+### 3: re-tested
+
+- Corrected claim (c) — §9 `:287` now reads "**Never keep hand-maintained
+  status content as a live dashboard on a canvas.**"; `:292-294` "What
+  refreshes is the embedded content; what does not is the spatial composition
+  around it — positions, grouping, and annotations are still maintained by
+  hand." §7 was reconciled in the same commit: `:237-240` "…never a substitute
+  for the query. The spatial composition around a view is still hand-maintained
+  — positions and annotations do not refresh — so treat it as a working
+  overview, not a live dashboard (see section 9)." §7 (embedded live Bases
+  views refresh) and §9 (only hand-typed status content must not masquerade as
+  a live dashboard) no longer contradict: read together, they say the embedded
+  content refreshes while the surrounding spatial composition does not. SKILL.md
+  pitfall pointer (`SKILL.md:305-306`) still matches §9's own framing ("a canvas
+  kept as a continuously maintained live dashboard"), unchanged by the fix and
+  consistent with the scoped §9 rule.
+- Evidence: `references/no-plugin-patterns.md:287,292-294` and `:237-240`;
+  `SKILL.md:305-306`.
+
+### 4: re-tested
+
+- All seven SKILL.md routing targets resolve with `[ -f ]` (same list as the
+  first run); the new reference's three internal cross-references resolve.
+  `git diff --stat 4228c056..HEAD` over the six existing pattern files and six
+  existing templates is empty — untouched. The fix range touched no SKILL.md
+  line.
+- Evidence: `[ -f ]` output; empty diff over the six files + six templates.
+
+### 5: re-tested
+
+- Corrected claim (b) — §8 `:262-265`: "A canvas full of typed text cards
+  stays out of backlinks and the graph — links only ever originate from file
+  nodes — so the file nodes are the part that stays wired to the vault.
+  (Text-card content is searchable, but a typed card is not a note.)" Checked
+  against the official Obsidian 1.1.13 changelog (2023-02-13): "Canvas: Content
+  from text cards will now appear as results in global searches." — accurate;
+  the removed "invisible to search" claim was wrong. Wording matches.
+- Docs/version surfaces unchanged by the fix and still correct:
+  `obsidian/.claude-plugin/plugin.json:3` and
+  `obsidian/.codex-plugin/plugin.json:3` = 3.23.0; `obsidian/CHANGELOG.md:7`
+  `[3.23.0]`; `obsidian/README.md` Version line `3.23.0`; en/ja/zh-TW skill
+  rows carry the new capability clause; attribution row (Axton Liu + Steph
+  Ango) retained.
+- Gates: `python3 scripts/check_version_bump.py --base 4228c056 --head HEAD`
+  → `OK … every plugin with skill-content changes bumped its version.` (exit
+  0); `python3 scripts/sync_codex_manifests.py --check obsidian` → exit 0.
+- Evidence: `references/no-plugin-patterns.md:262-265`; official 1.1.13
+  changelog; manifest/CHANGELOG/README lines above; gate exit codes.
