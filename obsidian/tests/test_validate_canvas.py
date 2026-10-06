@@ -1,4 +1,4 @@
-"""Validator tests for obsidian-canvas-creator (Acceptance #3 / #4).
+"""Validator tests for obsidian-canvas (Acceptance #3 / #4).
 
 Covers the checks the validator must make: a clean file exits 0, a duplicate
 id is named, a dangling edge reference is named, a missing required field is
@@ -14,7 +14,7 @@ from pathlib import Path
 SCRIPT = (
     Path(__file__).parent.parent
     / "skills"
-    / "obsidian-canvas-creator"
+    / "obsidian-canvas"
     / "scripts"
     / "validate_canvas.py"
 )
