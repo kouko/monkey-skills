@@ -1,18 +1,17 @@
-# concern: user-facing Bases capability claims must carry the Obsidian 1.13+
+# concern: user-facing Bases capability claims must carry the Obsidian 1.9+
 # requirement, or an older-Obsidian user reads a capability the release cannot
-# provide. The plugin READMEs, SKILL.md and the reference all qualify Bases with
-# 1.13+; the three per-skill READMEs list "Bases-in-canvas" with no version at
-# all, so the change is not internally consistent about its own version note.
+# provide. Bases shipped as a core plugin in Obsidian 1.9 and a direct .base
+# embed in a canvas card rendered correctly from 1.9.5, so 1.9 is the real
+# requirement; every doc in the change's Bases surface must qualify Bases with
+# 1.9+ and none may state the superseded 1.13 note.
 """Adversarial probe: every doc that advertises Bases-in-canvas qualifies it.
 
 The document set below is the change's user-facing Bases surface. A file that
-names the Bases capability without the 1.13 requirement is a defect: the whole
-point of the note (spec Risk 3 / plan Risk 3) is that Bases-in-canvas silently
-fails on Obsidian < 1.13, and a capability list without the note advertises it
-just as unconditionally.
-
-RED against the change as it stands: obsidian/skills/obsidian-canvas-creator
-README.md / README.ja.md / README.zh-TW.md name Bases-in-canvas with no 1.13.
+names the Bases capability without the 1.9 requirement is a defect: Bases
+ships as a core plugin in Obsidian 1.9, and a direct .base embed in a canvas
+card renders correctly from 1.9.5 — so a capability list without the 1.9+
+note advertises the feature with no floor at all, and any doc still carrying
+the earlier (factually wrong) 1.13 note misstates the real requirement.
 """
 
 from pathlib import Path
@@ -34,17 +33,17 @@ DOCS = [
     "obsidian/CHANGELOG.md",
 ]
 
-VERSION_MARKER = "1.13"
+VERSION_MARKER = "1.9"
 
 
 def unqualified_bases_claim(text: str) -> bool:
-    """True when text advertises the Bases capability with no 1.13 marker."""
+    """True when text advertises the Bases capability with no 1.9 marker."""
     return "Bases" in text and VERSION_MARKER not in text
 
 
 @pytest.mark.parametrize("rel_path", DOCS)
 def test_bases_readme_versioned(rel_path):
-    """A doc naming Bases-in-canvas also states the Obsidian 1.13 requirement."""
+    """A doc naming Bases-in-canvas also states the Obsidian 1.9 requirement."""
     path = REPO_ROOT / rel_path
     assert path.is_file(), f"expected doc missing: {rel_path}"
 
@@ -57,7 +56,7 @@ def test_bases_readme_versioned(rel_path):
 def test_bases_check_accepts():
     """The check clears a capability line that carries the version marker."""
     assert not unqualified_bases_claim(
-        "zero-plugin advanced patterns (worldbuilding, Bases-in-canvas 1.13+)"
+        "zero-plugin advanced patterns (worldbuilding, Bases-in-canvas 1.9+)"
     )
 
 
