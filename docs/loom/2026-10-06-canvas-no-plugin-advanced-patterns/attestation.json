@@ -1,0 +1,92 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-10-06-canvas-no-plugin-advanced-patterns",
+  "content_digest": "98b3b772408a1d1dc5fca630eddc727c48f667fe",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/evidence/probes/test_bases_version_note.py -q",
+      "artifact": "docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/evidence/probes/test_bases_version_note.py",
+      "result": "pass",
+      "command_digest": "222ed6679620ef2af806e1fc175c82be3605d2683183eb8185330c235adf939e"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-docs-1",
+      "vendor": "opencode",
+      "model": "host-default/unverified",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/SKILL.md:278",
+          "text": "\"canvas-only / 2D-MOC\" (hyphen) vs \"2D MOC\" in the heading, READMEs and CHANGELOG; a grep of the route for the section name misses it.",
+          "fix": "Drop the hyphen in SKILL.md:278."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/references/no-plugin-patterns.md:207",
+          "text": "The 1.9.5 claim is stronger than the changelog (edge cases when an embedded base comes into view inside a moved canvas card), and Obsidian Help marks List view as 1.10.",
+          "fix": "Reword to the changelog's edge-case wording and qualify the views list (table/card at 1.9; list view from 1.10)."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/references/no-plugin-patterns.md:259",
+          "text": "\"invisible to search, backlinks, and the graph\" overstates: core search does match text inside .canvas files.",
+          "fix": "Narrow to backlinks/graph."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "README.md:13",
+          "text": "Repo-root plugin table still lists obsidian at 3.5.0 (pre-existing; table declares marketplace.json authoritative).",
+          "fix": "Refresh the row (Ship may batch publication-only)."
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/references/no-plugin-patterns.md:241",
+          "text": "\"MOC\" used five times without expansion.",
+          "fix": "Expand on first use: maps of content."
+        }
+      ]
+    },
+    {
+      "reviewer": "closing-skill-2",
+      "vendor": "opencode",
+      "model": "host-default/unverified",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "obsidian/skills/obsidian-canvas-creator/SKILL.md:65",
+          "text": "The Bases 1.9+ sentence and the zero-plugin rule paragraph (no-plugin-patterns.md:23) read as rules with no <!-- gate --> marker.",
+          "fix": "Register the rule or reword as advisory guidance."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-10-06-canvas-no-plugin-advanced-patterns/spec.md:22",
+          "text": "Spec says the methodology sections carry inline JSON examples; no-plugin-patterns.md sections 2-6 have none.",
+          "fix": "Amend the spec sentence to \"where the file structure is the mechanism\"."
+        }
+      ]
+    }
+  ],
+  "findings": [],
+  "selection": null
+}
