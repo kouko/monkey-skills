@@ -22,7 +22,7 @@ belongs in node text.
 
 Zero-plugin rule: every technique below works in a stock Obsidian install.
 Where a feature is version-bound it is called out explicitly; the only such
-case here is Bases, which **requires Obsidian 1.13+ (Bases core plugin)**.
+case here is Bases, which **requires Obsidian 1.9+ (Bases core plugin)**.
 
 ## 1. Nested Canvas Workspace (Canvas-in-Canvas)
 
@@ -202,11 +202,14 @@ canvas carry only the relation.
 
 ## 7. Bases-in-Canvas
 
-> **requires Obsidian 1.13+ (Bases core plugin).**
+> **requires Obsidian 1.9+ (Bases core plugin).**
 
-Bases is a core plugin (shipped in Obsidian 1.13) that renders a note database
+Bases is a core plugin (shipped in Obsidian 1.9) that renders a note database
 as a view — a table, a list, or a card layout. A canvas can embed a `.base`
-file with a file node exactly as it embeds a note.
+file with a file node exactly as it embeds a note. Direct `.base` embeds in a
+canvas card render from Obsidian 1.9.5 (earlier 1.9.x had a canvas-embed
+rendering bug); if a base view does not render inside a canvas card, embed the
+base in a note first and embed that note in the canvas (still core-only).
 
 ```json
 {

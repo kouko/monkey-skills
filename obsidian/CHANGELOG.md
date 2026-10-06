@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   workspaces (Canvas-in-Canvas), research dual-canvas, data-pipeline
   documentation, audit / incident post-mortem / onboarding canvases, teacher
   class canvas, worldbuilding basics, and Bases-in-canvas (requires Obsidian
-  1.13+, Bases core plugin) — plus the canvas-drift anti-pattern: never keep a
+  1.9+, Bases core plugin) — plus the canvas-drift anti-pattern: never keep a
   canvas as a continuously maintained live dashboard; use notes, queries, or
   Bases for live data.
 - `skills/obsidian-canvas-creator/assets/template-nested-workspace.canvas` — a

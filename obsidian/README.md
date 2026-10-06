@@ -107,7 +107,7 @@ Upstream: [`axtonliu/axton-obsidian-visual-skills`](https://github.com/axtonliu/
 
 | Skill | Purpose |
 |---|---|
-| `obsidian-canvas-creator` | Create Obsidian Canvas files with MindMap or freeform layouts, four community patterns (kanban, dashboard / home page, research map, moodboard) with templates and a `.canvas` output validator, and zero-plugin advanced patterns (nested canvas workspaces, research dual-canvas, data-pipeline documentation, audit / post-mortem / onboarding, teacher class, worldbuilding, Bases-in-canvas 1.13+). (Combined with json-canvas integration from kepano.) |
+| `obsidian-canvas-creator` | Create Obsidian Canvas files with MindMap or freeform layouts, four community patterns (kanban, dashboard / home page, research map, moodboard) with templates and a `.canvas` output validator, and zero-plugin advanced patterns (nested canvas workspaces, research dual-canvas, data-pipeline documentation, audit / post-mortem / onboarding, teacher class, worldbuilding, Bases-in-canvas 1.9+). (Combined with json-canvas integration from kepano.) |
 | `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams in Obsidian / Standard / Animated formats. |
 | `obsidian-mermaid-visualizer` | 17 Mermaid diagram types — flow, data-viz, structural, time — optimized for Obsidian 11.4.1, portable to GitHub / Notion / HackMD. |
 

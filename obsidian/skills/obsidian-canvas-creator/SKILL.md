@@ -62,7 +62,7 @@ Ask user to choose or infer from context:
 |---------|----------|
 | Nested canvas workspace (Canvas-in-Canvas) | `assets/template-nested-workspace.canvas` |
 
-Bases-in-canvas requires Obsidian 1.13+ (Bases core plugin).
+Bases-in-canvas requires Obsidian 1.9+ (Bases core plugin).
 
 ### 3. Plan Structure
 
@@ -275,7 +275,7 @@ Process:
 - **Canvas Specification**: `references/canvas-spec.md` - Complete JSON Canvas format specification
 - **Layout Algorithms**: `references/layout-algorithms.md` - Detailed positioning algorithms for both layout types
 - **Layout Patterns**: `references/layout-patterns.md` - Community patterns (kanban, dashboard / home page, research map, moodboard) with their templates and color semantics
-- **No-Plugin Advanced Patterns**: `references/no-plugin-patterns.md` - Zero-plugin multi-canvas and embedded-file workflows (nested canvas workspaces, research dual-canvas, data-pipeline documentation, audit / post-mortem / onboarding, teacher class, worldbuilding, Bases-in-canvas 1.13+) plus the canvas-drift anti-pattern (when NOT to use canvas)
+- **No-Plugin Advanced Patterns**: `references/no-plugin-patterns.md` - Zero-plugin multi-canvas and embedded-file workflows (nested canvas workspaces, research dual-canvas, data-pipeline documentation, audit / post-mortem / onboarding, teacher class, worldbuilding, Bases-in-canvas 1.9+) plus the canvas-drift anti-pattern (when NOT to use canvas)
 - **Complete Examples**: `references/EXAMPLES.md` - Full canvas examples (mind maps, project boards, research canvases, flowcharts)
 - **JSON Canvas Spec 1.0**: https://jsoncanvas.org/spec/1.0/ — Official specification
 - **JSON Canvas GitHub**: https://github.com/obsidianmd/jsoncanvas
