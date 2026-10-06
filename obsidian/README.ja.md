@@ -21,7 +21,7 @@
 
 ## Version
 
-3.23.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
+3.24.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
 
 ## 所属
 
@@ -105,7 +105,7 @@ Upstream: [`axtonliu/axton-obsidian-visual-skills`](https://github.com/axtonliu/
 
 | Skill | 用途 |
 |---|---|
-| `obsidian-canvas-creator` | Obsidian Canvas ファイルを MindMap / freeform layout で作成。さらにカンバン／ダッシュボード（ホームページ）／研究マップ／ムードボードの 4 つのコミュニティパターンとテンプレート、`.canvas` 出力検証スクリプト、そしてプラグインなしで使える応用パターン（ネストキャンバス／研究デュアルキャンバス／データパイプラインの文書化／監査・ポストモーテム・オンボーディング／教師用クラスキャンバス／ワールドビルディング／Bases-in-canvas 1.9+／canvas-only／2D MOC）に対応（kepano の json-canvas integration を統合） |
+| `obsidian-canvas` | Obsidian Canvas ファイルを MindMap / freeform layout で作成。さらにカンバン／ダッシュボード（ホームページ）／研究マップ／ムードボードの 4 つのコミュニティパターンとテンプレート、`.canvas` 出力検証スクリプト、そしてプラグインなしで使える応用パターン（ネストキャンバス／研究デュアルキャンバス／データパイプラインの文書化／監査・ポストモーテム・オンボーディング／教師用クラスキャンバス／ワールドビルディング／Bases-in-canvas 1.9+／canvas-only／2D MOC）に対応（kepano の json-canvas integration を統合） |
 | `obsidian-excalidraw-diagram` | Excalidraw 図を Obsidian / Standard / Animated 形式で生成 |
 | `obsidian-mermaid-visualizer` | Mermaid 17 図種（flow / data-viz / structural / time）— Obsidian 11.4.1 最適化、GitHub / Notion / HackMD にも portable |
 
@@ -164,7 +164,7 @@ note 内に図を描く：
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata、version 3.23.0
+│   └── plugin.json              # plugin metadata、version 3.24.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault 保守 agent
 ├── commands/
@@ -181,7 +181,7 @@ obsidian/
 │   ├── obsidian-bases/          # kepano から import
 │   ├── obsidian-cli/            # kepano から import
 │   ├── defuddle/                # kepano から import
-│   ├── obsidian-canvas-creator/ # axtonliu から import
+│   ├── obsidian-canvas/ # axtonliu から import
 │   ├── obsidian-excalidraw-diagram/ # axtonliu から import
 │   ├── obsidian-mermaid-visualizer/ # axtonliu から import
 │   ├── wiki-setup/                # wiki layer 初期化（original）
@@ -217,9 +217,9 @@ import 済 skill は各 skill の `LICENSE` ファイルに原著作権表示を
 
 - `defuddle`、`obsidian-bases`、`obsidian-cli`、`obsidian-markdown` — MIT,
   Copyright (c) 2026 Steph Ango。各 skill 配下の `LICENSE` 参照。
-- `obsidian-canvas-creator`、`obsidian-excalidraw-diagram`、
+- `obsidian-canvas`、`obsidian-excalidraw-diagram`、
   `obsidian-mermaid-visualizer` — MIT, Copyright (c) 2025 Axton Liu。
-  各 skill 配下の `LICENSE` 参照。（`obsidian-canvas-creator` は kepano 由来の
+  各 skill 配下の `LICENSE` 参照。（`obsidian-canvas` は kepano 由来の
   json-canvas integration も同梱。）
 
 プロジェクト全体の license は [LICENSE](../LICENSE)、third-party コンポーネント

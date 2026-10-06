@@ -21,7 +21,7 @@ plugin 安裝的 subprocess 與 plugin MCP 在同一個 sandbox 內執行，因�
 
 ## Version
 
-3.23.0 — 參見 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)。
+3.24.0 — 參見 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)。
 
 ## 所屬
 
@@ -102,7 +102,7 @@ Upstream：[`axtonliu/axton-obsidian-visual-skills`](https://github.com/axtonliu
 
 | Skill | 用途 |
 |---|---|
-| `obsidian-canvas-creator` | 建立 Obsidian Canvas 檔，支援 MindMap 或 freeform layout，另提供四種社群版型（看板／儀表板（首頁）／研究地圖／moodboard）與範本、`.canvas` 輸出驗證腳本，以及零外掛的進階應用（巢狀畫布／研究雙畫布／資料管線文件化／稽核・事故檢討・onboarding 畫布／教師班級畫布／世界觀建構／Bases-in-canvas 1.9+／canvas-only／2D MOC）（整合 kepano 的 json-canvas） |
+| `obsidian-canvas` | 建立 Obsidian Canvas 檔，支援 MindMap 或 freeform layout，另提供四種社群版型（看板／儀表板（首頁）／研究地圖／moodboard）與範本、`.canvas` 輸出驗證腳本，以及零外掛的進階應用（巢狀畫布／研究雙畫布／資料管線文件化／稽核・事故檢討・onboarding 畫布／教師班級畫布／世界觀建構／Bases-in-canvas 1.9+／canvas-only／2D MOC）（整合 kepano 的 json-canvas） |
 | `obsidian-excalidraw-diagram` | 產生 Excalidraw 圖（Obsidian / Standard / Animated 三種格式） |
 | `obsidian-mermaid-visualizer` | 17 種 Mermaid 圖（flow / data-viz / structural / time）—— 為 Obsidian 11.4.1 優化，可移植到 GitHub / Notion / HackMD |
 
@@ -162,7 +162,7 @@ sequence diagram type、套用 Obsidian 11.4.1 的 quirk，輸出
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata，version 3.23.0
+│   └── plugin.json              # plugin metadata，version 3.24.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault 維運 agent
 ├── commands/
@@ -179,7 +179,7 @@ obsidian/
 │   ├── obsidian-bases/          # 引入自 kepano
 │   ├── obsidian-cli/            # 引入自 kepano
 │   ├── defuddle/                # 引入自 kepano
-│   ├── obsidian-canvas-creator/ # 引入自 axtonliu
+│   ├── obsidian-canvas/ # 引入自 axtonliu
 │   ├── obsidian-excalidraw-diagram/ # 引入自 axtonliu
 │   ├── obsidian-mermaid-visualizer/ # 引入自 axtonliu
 │   ├── wiki-setup/                # wiki layer 初始化（original）
@@ -215,9 +215,9 @@ MIT — 詳見 repository root 的 [LICENSE](../LICENSE)。
 
 - `defuddle`、`obsidian-bases`、`obsidian-cli`、`obsidian-markdown` —— MIT,
   Copyright (c) 2026 Steph Ango。詳見各 skill 內的 `LICENSE`。
-- `obsidian-canvas-creator`、`obsidian-excalidraw-diagram`、
+- `obsidian-canvas`、`obsidian-excalidraw-diagram`、
   `obsidian-mermaid-visualizer` —— MIT, Copyright (c) 2025 Axton Liu。
-  詳見各 skill 內的 `LICENSE`。（`obsidian-canvas-creator` 同時包含 kepano
+  詳見各 skill 內的 `LICENSE`。（`obsidian-canvas` 同時包含 kepano
   的 json-canvas integration。）
 
 整個專案的 license 詳見 [LICENSE](../LICENSE)，
