@@ -1,6 +1,6 @@
 ---
-name: obsidian-canvas-creator
-description: Create Obsidian Canvas files with MindMap, freeform, community layout patterns (kanban, dashboard / home page, research map, moodboard), or zero-plugin advanced patterns (nested canvases, multi-canvas workflows, Bases-in-canvas), with templates and a bundled .canvas validator. Use when visualizing content spatially, creating mind maps, or organizing information on a canvas. Canvas・マインドマップ。心智圖・畫布。
+name: obsidian-canvas
+description: Create Obsidian Canvas files with MindMap, freeform, community layout patterns (kanban, dashboard / home page, research map, moodboard), or zero-plugin advanced patterns (nested canvases, multi-canvas workflows, Bases-in-canvas), with templates and a bundled .canvas validator. Use when visualizing content spatially, creating mind maps, or organizing information on a canvas. Canvas・マインドマップ。心智圖・畫布。formerly obsidian-canvas-creator
 ---
 
 # Obsidian Canvas Creator
