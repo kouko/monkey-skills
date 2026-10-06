@@ -1,4 +1,4 @@
-# Obsidian Canvas Creator
+# Obsidian Canvas
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
