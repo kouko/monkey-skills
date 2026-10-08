@@ -144,14 +144,15 @@ def test_git_diff_shows_no_edits_to_historical_records():
     ).stdout
     changed = set(line for line in out.splitlines() if line)
     # This change's own loom records are allowed in the diff; historical
-    # records of prior changes are not.
-    own = {
-        "docs/loom/2026-10-06-rename-canvas-skill/plan.md",
-        "docs/loom/intent/2026-10-06-rename-canvas-skill.md",
-    }
+    # records of prior changes are not. The whole change directory is
+    # allowed so every artifact this change produces (plan, acceptance
+    # report, attestation, evidence) passes the guard.
+    own_prefix = "docs/loom/2026-10-06-rename-canvas-skill/"
+    own_intent = "docs/loom/intent/2026-10-06-rename-canvas-skill.md"
     forbidden = {
         p for p in changed
-        if (p.startswith("docs/loom/") and p not in own)
+        if (p.startswith("docs/loom/") and p != own_intent
+            and not p.startswith(own_prefix))
         or p.startswith(".worktrees/")
         or p.startswith("docs/skill-dogfood/")
     }
