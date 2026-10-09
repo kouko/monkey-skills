@@ -1,6 +1,6 @@
 # obsidian-canvas-creator → obsidian-canvas 名稱變更 — 我試了什麼、結果如何
 
-2026-10-06 試跑，在乾淨副本（commit `b191144a2`）上進行；修正後（無需修正，直接使用 HEAD commit `cc215fa14`）在全新的乾淨副本上把五條全部重測一遍。每一條怎麼試、指令與輸出：
+2026-10-06 試跑，在乾淨副本（commit `b191144a2`）上進行；修正後（HEAD commit `d62966427`）在全新的乾淨副本上把五條全部重測一遍。每一條怎麼試、指令與輸出：
 `docs/loom/2026-10-06-rename-canvas-skill/evidence/acceptance-test-evidence.md`。
 
 ## 你要求的，一條一條來
@@ -13,8 +13,9 @@
 | 4 | SKILL.md 路由到新的文件；既有六種版型的行為不變。 | works | SKILL.md 新增了通往新參考文件與巢狀模板的路由（含 Bases 1.9+ 註記與 drift 指向），所有引用路徑都解析得到；既有六種版型的檔案與 SKILL.md 原段落逐一比對，零改動（diff 只有新增）。 | re-tested |
 | 5 | plugin README／attribution 與新能力一致，plugin 版本依 repo gate bump（skill 內容變動）。 | works | plugin 自身 README（英／日／繁中）與各 skill README 都補上新能力描述、CHANGELOG 有 3.24.0 條目、attribution（Axton Liu + kepano json-canvas）原樣保留；兩份 plugin manifest 都 bump 到 3.24.0，repo 的版本檢查 gate 與 Codex manifest 同步檢查都通過。 | re-tested |
 
-修正後重測說明（範圍 無修正）：
-沒有——沒有任何步驟被指示跳過（完整測試套件與 closing review 都照跑），且五條皆在首次測試即判定 works；故無需修正。
+修正後重測說明（範圍含 Codex 獨立 review 回饋）：
+
+Codex CLI（codex-cli 0.161.0）以 `codex exec review --base origin/main` 於 closing review 後對本變更做獨立審查，發現一條 P1：`obsidian/tests/test_canvas_plugin_docs.py` 的 history-guard 測試 `own` 白名單未涵蓋本變更自行新增的驗收證據檔（acceptance-test-report.md、attestation.json、evidence/…），導致測試誤判並失敗。已在 Build 內修復（`fix(obsidian): allow this change's own loom evidence in history guard`，commit `263bf0784`），將白名單改為本變更 loom 目錄前綴 + intent 檔，覆蓋所有當前與未來的證據檔。修復後完整套件重測：`pytest scripts/` 710 passed、`pytest obsidian/tests/` 37 passed、兩個 gate（sync_codex_manifests、check_version_bump）皆 exit 0。五條驗收條件皆維持 works，無行為退步。
 
 ## 對你既有的資料做了什麼
 
