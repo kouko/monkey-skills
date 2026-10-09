@@ -21,7 +21,7 @@ both paths get blocked equally on Cowork.
 
 ## Version
 
-3.23.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
+3.24.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
 
 ## Part of
 
@@ -107,7 +107,7 @@ Upstream: [`axtonliu/axton-obsidian-visual-skills`](https://github.com/axtonliu/
 
 | Skill | Purpose |
 |---|---|
-| `obsidian-canvas-creator` | Create Obsidian Canvas files with MindMap or freeform layouts, four community patterns (kanban, dashboard / home page, research map, moodboard) with templates and a `.canvas` output validator, and zero-plugin advanced patterns (nested canvas workspaces, research dual-canvas, data-pipeline documentation, audit / post-mortem / onboarding, teacher class, worldbuilding, Bases-in-canvas 1.9+, canvas-only / 2D MOC). (Combined with json-canvas integration from kepano.) |
+| `obsidian-canvas` | Create Obsidian Canvas files with MindMap or freeform layouts, four community patterns (kanban, dashboard / home page, research map, moodboard) with templates and a `.canvas` output validator, and zero-plugin advanced patterns (nested canvas workspaces, research dual-canvas, data-pipeline documentation, audit / post-mortem / onboarding, teacher class, worldbuilding, Bases-in-canvas 1.9+, canvas-only / 2D MOC). (Combined with json-canvas integration from kepano.) |
 | `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams in Obsidian / Standard / Animated formats. |
 | `obsidian-mermaid-visualizer` | 17 Mermaid diagram types — flow, data-viz, structural, time — optimized for Obsidian 11.4.1, portable to GitHub / Notion / HackMD. |
 
@@ -169,7 +169,7 @@ sequence diagram type, applies Obsidian 11.4.1 quirks, and emits a
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata, version 3.23.0
+│   └── plugin.json              # plugin metadata, version 3.24.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault hygiene agent
 ├── commands/
@@ -188,7 +188,7 @@ obsidian/
 │   ├── obsidian-bases/          # imported from kepano
 │   ├── obsidian-cli/            # imported from kepano
 │   ├── defuddle/                # imported from kepano
-│   ├── obsidian-canvas-creator/ # imported from axtonliu (this repo adds layout patterns, validator, zero-plugin advanced patterns)
+│   ├── obsidian-canvas/ # imported from axtonliu (this repo adds layout patterns, validator, zero-plugin advanced patterns)
 │   ├── obsidian-excalidraw-diagram/ # imported from axtonliu
 │   ├── obsidian-mermaid-visualizer/ # imported from axtonliu
 │   ├── wiki-setup/                # wiki layer init (original)
@@ -229,9 +229,9 @@ Imported skills retain their original copyright notices in each skill's
 
 - `defuddle`, `obsidian-bases`, `obsidian-cli`, `obsidian-markdown` — MIT,
   Copyright (c) 2026 Steph Ango. See the per-skill `LICENSE`.
-- `obsidian-canvas-creator`, `obsidian-excalidraw-diagram`,
+- `obsidian-canvas`, `obsidian-excalidraw-diagram`,
   `obsidian-mermaid-visualizer` — MIT, Copyright (c) 2025 Axton Liu. See the
-  per-skill `LICENSE`. (`obsidian-canvas-creator` also bundles json-canvas
+  per-skill `LICENSE`. (`obsidian-canvas` also bundles json-canvas
   integration from kepano.)
 
 See [LICENSE](../LICENSE) for the overall project license, and

@@ -36,7 +36,7 @@ This plugin provides daily workflow skills and vault management for Obsidian.
 | `obsidian-markdown` | Create and edit Obsidian Flavored Markdown (wikilinks, embeds, callouts, properties) |
 | `obsidian-bases` | Create and edit Bases (.base files) with views, filters, formulas |
 | `obsidian-cli` | Interact with Obsidian vaults via CLI (read, create, search, plugin dev) |
-| `obsidian-canvas-creator` | Create Canvas files (MindMap/freeform layouts) |
+| `obsidian-canvas` | Create Canvas files (MindMap/freeform layouts) |
 | `obsidian-mermaid-visualizer` | Create Mermaid diagrams in vault notes |
 | `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams (Obsidian/Standard/Animated) |
 | `dashboard-design` | Design dashboards from requirements to prototyping |

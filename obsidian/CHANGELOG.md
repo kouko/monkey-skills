@@ -4,6 +4,28 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.24.0] — 2026-10-06 rename obsidian-canvas-creator skill to obsidian-canvas
+
+### Changed — `obsidian-canvas-creator` → `obsidian-canvas`
+
+- Skill directory and skill identity renamed to `obsidian-canvas`; the name
+  now matches the skill's actual scope (canvas creation, editing, output
+  validation, eight multi-canvas workflows, when-not-to-use-canvas
+  guidance). Skill content (templates, references, validator) unchanged.
+- Plugin READMEs (`README.md` / `README.ja.md` / `README.zh-TW.md`): skill
+  table row, repository-structure tree, and license list now name
+  `obsidian-canvas`; version references updated to 3.24.0.
+- Per-skill attribution table (`skills/README.md` and its ja / zh-TW
+  translations): component row now names `obsidian-canvas`; MIT attribution
+  (Axton Liu + kepano json-canvas) unchanged.
+- `ATTRIBUTION.md`: component path now `obsidian/skills/obsidian-canvas/`;
+  MIT license cell and axtonliu / kepano attribution unchanged.
+- Plugin manifests bumped 3.23.0 → 3.24.0 (Claude + Codex, synced); skill
+  description notes the former name (`formerly obsidian-canvas-creator`).
+- The old name survives only as a rename record: this entry, the former-name
+  note, and historical entries below. `docs/loom/` history and `.worktrees/`
+  old copies are untouched by design.
+
 ## [3.23.0] — 2026-10-06 zero-plugin advanced canvas patterns
 
 ### Added — `obsidian-canvas-creator` zero-plugin advanced patterns + nested-workspace template

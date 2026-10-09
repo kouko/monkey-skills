@@ -113,4 +113,4 @@ Apply every fix to the saved note (correct, re-cite, or remove), keep the source
 ## Related skills
 
 - `wiki-auto-research` scans `wiki/` for open questions and writes gap-filling notes; this skill researches a topic the user names. Notes written here carry no wiki fields. `wiki-ingest` may still ingest `research/` later — that is the user's choice.
-- After saving, the user may ask for a diagram (`obsidian-mermaid-visualizer`) or a canvas (`obsidian-canvas-creator`); do not add those unasked.
+- After saving, the user may ask for a diagram (`obsidian-mermaid-visualizer`) or a canvas (`obsidian-canvas`); do not add those unasked.

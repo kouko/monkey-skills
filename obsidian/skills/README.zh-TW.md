@@ -10,7 +10,7 @@
 | obsidian-bases | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Steph Ango) |
 | obsidian-cli | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Steph Ango) |
 | obsidian-markdown | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Steph Ango) |
-| obsidian-canvas-creator | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) + json-canvas（出自 [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills)） | MIT (Axton Liu + Steph Ango) |
+| obsidian-canvas | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) + json-canvas（出自 [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills)） | MIT (Axton Liu + Steph Ango) |
 | obsidian-excalidraw-diagram | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) | MIT (Axton Liu) |
 | obsidian-mermaid-visualizer | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) | MIT (Axton Liu) |
 | dashboard-design | 本專案 | — |

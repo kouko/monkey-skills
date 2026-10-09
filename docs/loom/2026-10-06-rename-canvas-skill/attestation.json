@@ -1,0 +1,41 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-10-06-rename-canvas-skill",
+  "content_digest": "4e330db3eeb487498b72127de1e7e9d77b4866f8",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-review",
+      "vendor": "opencode",
+      "model": "host-default/unverified",
+      "lens": "full",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "obsidian/README.md:191",
+          "text": "Repo-root curated overview table still lists obsidian plugin at 3.5.0 vs 3.24.0; tracked as pre-existing, user-decided to batch-refresh later.",
+          "fix": "No action in this change; tracked in prior acceptance report."
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "obsidian/skills/obsidian-canvas/SKILL.md:278",
+          "text": "Router table row id is backticked exact form; description text unchanged (no 'formerly' note there) — acceptable, the formerly-note lives in SKILL.md description.",
+          "fix": "No action; formerly-note only required in skill description per intent."
+        }
+      ]
+    }
+  ],
+  "findings": [],
+  "selection": null
+}

@@ -34,11 +34,11 @@ DOCS = [
     "obsidian/README.ja.md",
     "obsidian/README.zh-TW.md",
     "obsidian/skills/README.md",
-    "obsidian/skills/obsidian-canvas-creator/README.md",
-    "obsidian/skills/obsidian-canvas-creator/README.ja.md",
-    "obsidian/skills/obsidian-canvas-creator/README.zh-TW.md",
-    "obsidian/skills/obsidian-canvas-creator/SKILL.md",
-    "obsidian/skills/obsidian-canvas-creator/references/no-plugin-patterns.md",
+    "obsidian/skills/obsidian-canvas/README.md",
+    "obsidian/skills/obsidian-canvas/README.ja.md",
+    "obsidian/skills/obsidian-canvas/README.zh-TW.md",
+    "obsidian/skills/obsidian-canvas/SKILL.md",
+    "obsidian/skills/obsidian-canvas/references/no-plugin-patterns.md",
     "obsidian/CHANGELOG.md",
 ]
 

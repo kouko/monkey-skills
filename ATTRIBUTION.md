@@ -29,7 +29,7 @@ License: MIT, Copyright (c) 2025 Axton Liu
 
 | Component | License file | Notes |
 |-----------|-------------|-------|
-| `obsidian/skills/obsidian-canvas-creator/` | [LICENSE](obsidian/skills/obsidian-canvas-creator/LICENSE) | Combines Axton Liu's canvas creator with kepano's json-canvas integration |
+| `obsidian/skills/obsidian-canvas/` | [LICENSE](obsidian/skills/obsidian-canvas/LICENSE) | Combines Axton Liu's canvas creator with kepano's json-canvas integration |
 | `obsidian/skills/obsidian-excalidraw-diagram/` | [LICENSE](obsidian/skills/obsidian-excalidraw-diagram/LICENSE) | |
 | `obsidian/skills/obsidian-mermaid-visualizer/` | [LICENSE](obsidian/skills/obsidian-mermaid-visualizer/LICENSE) | |
 
