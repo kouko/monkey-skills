@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "kind": "controlled-internal-docs-review-corpus",
+  "source_commit": "2aae5d8b4c1e3aaf5aac4f8c121af275f70abce2",
+  "intervention_cutoff_utc": "2026-08-31T14:20:27Z",
+  "boundary_commit": "82b6adf798b4d3745242669b2885c0ee92a56869",
+  "input_sha256": "0e9a021e6dbfceaa4103a79fa2c672fcdad344c18cf890c3a05b3cb6de39cf84",
+  "prompt_sha256": "e9b154b6cb1c71e060795b935b4fc1861d9bc5feab9c397f6f4ca60c9da8bb8d",
+  "documents": [
+    {
+      "label": "technical",
+      "path": "docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md",
+      "git_blob": "6a6de5f298e991493bb141292b2715834a6dee5e",
+      "sha256": "2c39072425702cb8e0dc8e155a095672da1663fc6eb2eee0a9f23db4a96cc61e"
+    },
+    {
+      "label": "business",
+      "path": "docs/loom/discovery/2026-08-31-docs-review-cost/business-value.md",
+      "git_blob": "f874bf59c5a357f39f3edff50c6dec7cda33f4f5",
+      "sha256": "368cdcf750c44a1851b56e0a759605776ccc46b55382b2b3a75ac80992e3dda4"
+    },
+    {
+      "label": "strategy",
+      "path": "docs/loom/discovery/2026-08-31-docs-review-cost/research/writer-versus-reviewer-attribution.md",
+      "git_blob": "be0252e5ad4157d62befd0d96af5ed9c6507cd7f",
+      "sha256": "afd6005ce731f25939c55515d2f739259db90d40267bfd64141e85b7a62a28c7"
+    }
+  ]
+}
