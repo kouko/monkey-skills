@@ -71,6 +71,18 @@ charter: 1.1
 - Test: A7 positive: manifests_synchronized; negative: missing_patch_bump_rejected. Run existing manifest drift and version-bump checks; release metadata only, no new tests.
 - Risk: REQ-7; agent-decided patch release follows existing `.github/workflows/skill-structure.yml` version-bump job. No installed-plugin updates or unrelated manifest edits.
 
+### Wave 4 — Close adversarial single-choice filtering gap
+
+**W4-01 Reject ambiguous preference-choice tokens** after: W3-04 acceptance: 4
+- Files: `skill-dev-toolkit/skills/skill-tuning/scripts/preference_log.py` (entry), `skill-dev-toolkit/tests/test_preference_export.py`.
+- Test: A4 positive: explicit_single_preferences_export; negative: preferences_nonsingle_rejected. Run focused preference tests and the committed adversarial single-choice program.
+- Risk: REQ-4; agent-decided validate normalized single-choice labels without fabricating winners. Defect class: non-single tokens counted as single; searched changed files, shared eligibility, both consumers, harness labels, schemas and adversarial cases. Raw data remains unchanged.
+
+**W4-02 Graduate the single-choice regression into continuous checks** after: W4-01 acceptance: 4, 7
+- Files: `docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/probes/test_preferences_single_choice.py`, `scripts/test_preferences_single_choice.py` (entry), `.github/workflows/skill-dev-toolkit-ci.yml`, `skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py`.
+- Test: A4 positive: graduated_probe_green; negative: original_defect_pinned. A7 positive: continuous_probe_selected; negative: missing_probe_route_detected. Run moved probe unchanged and focused CI-routing tests.
+- Risk: REQ-4/7; agent-decided move the adversary-owned portable program byte-identically into the declared suite, and route that suite in toolkit CI. Defect class: regression omitted from later checks; searched suite discovery and workflow path filters.
+
 ## Simplicity check
 - none found
 
