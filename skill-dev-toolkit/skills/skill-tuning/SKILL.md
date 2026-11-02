@@ -161,10 +161,12 @@ new) is **withheld** until after the user picks. Reveal only after
 the choice is locked.
 
 For multi-evaluator setups (rare; only when multiple humans review
-together), each evaluator picks independently; aggregate via
-inter-rater agreement; if agreement <70%, escalate as
-`skill-dev-toolkit:skill-refactor`-style "uncertain" → don't ratchet
-without resolution.
+together), each evaluator picks independently. Use at least 70%
+agreement on the same single label for a unanimous or majority verdict.
+Escalate a 2/3 split because it falls below 70%. Allow a 3/4 split
+to form a majority. Escalate ties or lower agreement for human-to-human
+resolution before any edit. Multi-pick always produces DEFER, even when
+evaluators agree on the same set of labels.
 
 See `references/ab-harness-protocol.md` for the full harness flow.
 
@@ -172,7 +174,7 @@ See `references/ab-harness-protocol.md` for the full harness flow.
 
 | User pick | Verdict | Action |
 |---|---|---|
-| User picks variant ≠ baseline | **ADOPT** | Apply the picked variant's SKILL.md edit; commit; log preference |
+| User makes a locked single pick ≠ baseline | **ADOPT** | Log preference; Apply the picked variant's SKILL.md edit; commit |
 | User picks baseline | **DROP** (variants drop) | Discard variant edits; log "no preference for variants this round" |
 | User picks "Both" | **DEFER** | No immediate change; record both as candidates for future rounds |
 | User picks "None" | **DROP** | Discard all variants; log "all variants worse"; consider this a signal that the variant-generation prompt may be too narrow |
@@ -192,7 +194,7 @@ Parallel to loom-workflow's critique skills:
 
 | Verdict | When | Action |
 |---|---|---|
-| **ADOPT** | User prefers a non-baseline variant | Apply edit; ratchet to new baseline; log |
+| **ADOPT** | Locked single pick of a non-baseline variant | Apply edit; ratchet to new baseline; log |
 | **DROP** | User prefers baseline OR all variants worse | Variants discarded; baseline preserved |
 | **DEFER** | Multiple variants preferred (no single winner) | Record candidates; no immediate change |
 | **REFINE** | User needs different test inputs / variants | Re-run with revised generation; no decision yet |
@@ -415,7 +417,7 @@ Scripts:
 
 ```
 Constitution is the floor. Taste is the ceiling.
-Variants the user picks ship. Variants the user doesn't pick log
+Only a locked single non-baseline ADOPT ships. Other outcomes log
 the signal anyway.
 The ratchet here is the preference log — it only grows.
 ```

@@ -104,11 +104,16 @@ If 2+ humans review the same A/B independently:
 2. Each evaluator picks independently; do not show them others'
    picks until all have picked
 3. Aggregate:
+   - Use at least 70% agreement on the same single label for a verdict.
    - Unanimous (all pick same letter) → that's the verdict
-   - Majority (≥⅔ pick same letter) → that's the verdict, log as
+   - Majority (≥70% pick same letter) → that's the verdict, log as
      "majority"
-   - Tie or wide spread (<⅔ agreement) → ESCALATE — this is a
+   - Escalate a 2/3 split because it falls below 70%.
+   - Allow a 3/4 split to form a majority.
+   - Tie or wide spread (<70% agreement) → ESCALATE — this is a
      human-to-human resolution, not a tuning decision
+   - Multi-pick always produces DEFER, even when evaluators agree on
+     the same set of labels.
 
 For 1-evaluator workflow (the common case), skip aggregation;
 their pick is the verdict.
@@ -151,13 +156,19 @@ Asymmetric truncation introduces bias.
 
 ## Atomicity / lock-in
 
-Once the user submits a pick:
+Once the user locks a pick (or the independent evaluators finish):
 
-1. Save pick to preference log immediately (`preference_log.py`
-   append operation)
+1. Save the pick and resolved verdict to the preference log immediately
+   (`preference_log.py` append operation). REFINE records a request for
+   another round rather than a preference decision.
 2. Reveal which letter was the baseline / which were variants
-3. Apply the picked variant's SKILL.md edit (if pick ≠ baseline)
-4. `git commit` the change
+3. Apply the picked variant's SKILL.md edit only for a locked single
+   non-baseline ADOPT.
+4. Within that ADOPT branch, `git commit` the change.
+
+For DROP, DEFER, REFINE, or ESCALATE, preserve the current skill.
+None produces DROP; Refine produces REFINE; multiple picks produce
+DEFER. Resolve disagreement or run a new comparison before adopting.
 
 If the user changes their mind after seeing the reveal, that's a
 new round, not a retroactive edit. This is to keep the preference
@@ -182,7 +193,7 @@ evaluating whether tuning investments are worth it.
 | Failure | Cause | Mitigation |
 |---|---|---|
 | User can identify baseline by style alone | Variants too cosmetic | Re-generate with stronger dimension; widen |
-| All variants picked equally over baseline | Baseline is genuinely worse on all axes user cares about | ADOPT the first picked; future rounds against new baseline |
+| All variants picked equally over baseline | More than one candidate is preferred; no single winner | DEFER; record candidates for a future round |
 | All variants worse on every prompt | Variant generation prompt is wrong | Refine generation prompt; or hand off to skill-creator-advance |
 | User fatigue (round N+1 user "doesn't care") | Too many rounds in one session | Cap at 3-5 rounds per session; encourage breaks |
 | Inter-evaluator disagreement >30% | Genuine taste split among evaluators | ESCALATE; resolve human-to-human; if irreconcilable, fork the skill (different versions for different evaluator preferences) |
