@@ -63,7 +63,7 @@ Before proposing any refactor, the target skill needs:
 **Do not edit a candidate or propose Q1's refactor moves until baseline is captured.**
 
 Use **entrypoint mode** when only `SKILL.md` changes. Use package-resource
-mode only when the candidate changes a bundled resource; then read
+mode only when the candidate changes, adds, or removes a bundled resource; then read
 `references/package-resource-mode.md` before creating the candidate.
 
 **PACKAGE-MODE LOAD GATE.** For any bundled-resource request, before
@@ -103,9 +103,16 @@ For each test prompt:
     framing, see `references/multi-judge-ensemble.md`): is the
     semantic content equivalent?
 
-**Pass rule**: structural OK *and* ≥2 of 3 ensemble judges report
-equivalent. Disagreement among judges → flag as **uncertain** →
-auto-escalate to human Tier 2 (do not auto-keep).
+**Pass rule**: structural OK and `PASS_HIGH` or `PASS_MODERATE` from the
+existing reducer (`scripts/multi_judge.py`):
+
+| Ensemble result (apply in this order) | Q1 outcome |
+|---|---|
+| Specific behavior dissent from any `not_equivalent` judge | `FLAG_TIER_2` — escalate before considering vote counts |
+| 3 `equivalent` | `PASS_HIGH` |
+| 2 `equivalent` + 1 `uncertain` | `PASS_MODERATE` — report moderate confidence; may proceed |
+| 2 `equivalent` + 1 `not_equivalent` | `FLAG_TIER_2` — human review; hold candidate |
+| ≤1 `equivalent`, after the dissent override | `FAIL` — reject |
 
 **Pass = output is functionally the same as before.** This is the
 load-bearing guarantee of refactor work.
@@ -123,6 +130,8 @@ Entrypoint mode measures `wc -w` on candidate `SKILL.md` compared to baseline:
 
 The 10% threshold prevents cosmetic micro-edits from accumulating
 ratchet credit. Each refactor round must be a real win.
+Package mode uses whole-package Q2 under `references/package-resource-mode.md`;
+moving prose into a resource alone earns no reduction.
 
 ### Q3. Invariant preservation
 
@@ -134,7 +143,7 @@ Begin:
 | `name` (frontmatter) | Never change |
 | `description` (frontmatter) | Allowed; this is often the target of token reduction |
 | Other frontmatter fields (e.g., `compatibility`) | Never change |
-| Declared dependencies (scripts called, references referenced) | Never change without going to skill-creator-advance |
+| Declared dependencies (scripts called, references referenced) | Preserve existing dependencies; allow a new bundled reference required for equivalent extraction in package mode. Other dependency changes go to skill-creator-advance. |
 | Subdirectory structure (`agents/`, `references/`, `scripts/`) | Allowed to add files (e.g. extract content); never to remove without skill-creator-advance |
 | Bundled file *contents* | Allowed. Entrypoint mode: each cascade is its own round. Package mode follows §Round scope: one isolated package round may include target + directly supporting bundled resources; unrelated resources split. |
 
@@ -173,8 +182,8 @@ don't need an ancestor or sibling to compare against).
 **Three caveats — ship them with every ablation report:**
 
 1. **Redundancy trap.** Two overlapping sections each read as removable (the other
-   covers for it), but you cannot remove both → the verdict is **merge the pair**,
-   not delete either. A SPLIT ensemble verdict across two related sections is the tell.
+   covers for it), but removing both may break behavior. Disagreement across two
+   related sections suggests overlap; test a merged candidate through Q1/Q2/Q3.
 2. **Coverage boundary.** A section reads as bloat if no test prompt exercises its
    purpose. Navigational sections (`See also`, cross-skill tables) carry discoverability
    value that behavioral ablation cannot measure — judge those by hand.
@@ -216,9 +225,12 @@ cascade governs how to handle disagreement:
 
 | Tier | Trigger | Action |
 |---|---|---|
-| **Tier 1** | All 3 judges agree (equivalent or not) | Auto verdict |
-| **Tier 2** | 2-of-3 agree | Auto verdict but flag as "uncertain", show user |
-| **Tier 3** | Judges all disagree, or >50% probability of taste-call | Hand off to `skill-dev-toolkit:skill-tuning` (the equivalence question is masking a taste question; skill-refactor is the wrong tool) |
+| **Tier 2 override (first)** | Specific behavior dissent from any `not_equivalent` judge | `FLAG_TIER_2`; human review before count-based decisions |
+| **Tier 1** | 3 `equivalent` | `PASS_HIGH`; auto pass |
+| **Tier 1, moderate** | 2 `equivalent` + 1 `uncertain` | `PASS_MODERATE`; report confidence, may proceed |
+| **Tier 2** | 2 `equivalent` + 1 `not_equivalent` | `FLAG_TIER_2`; hold for human review |
+| **Reject** | ≤1 `equivalent`, after the dissent override | `FAIL`; reject |
+| **Tier 3** | Human review finds the question is which output is better | Hand off to `skill-dev-toolkit:skill-tuning` |
 
 Tier 3 is the safety valve: when "is the output the same?" turns
 into "which output is better?", we've left refactor territory.
@@ -230,7 +242,7 @@ into "which output is better?", we've left refactor territory.
 | User wants the output to *improve*, not preserve | This is `skill-tuning` territory |
 | Refactor adds new sections that change behavior | Two Hats violation — feature smuggled into refactor |
 | Q1 says equivalent but token reduction <5% | The refactor cost exceeds the gain; reject |
-| Q1's ensemble disagrees and you want to "majority-rules" anyway | Don't — that's how taste creep enters via judge bias |
+| Q1 returns `FLAG_TIER_2` and you want to "majority-rules" anyway | Hold for human review; `PASS_MODERATE` remains a valid pass |
 | Skill has no `test-prompts.json` and user is unwilling to write any | The gate cannot run; revert to `skill-creator-advance` |
 | Entrypoint mode would touch `SKILL.md` and bundled files in one round | Split the round; package mode has the narrow directly-supporting-resource exception in §Round scope |
 
@@ -262,6 +274,8 @@ into "which output is better?", we've left refactor territory.
 
 ## Worked Example — token bloat in skill-creator-advance
 
+This extraction illustrates why entrypoint shrinkage alone cannot pass Q2.
+
 **Input**: User says "skill-creator-advance is at 5627 words, way
 over the soft cap. Let's refactor."
 
@@ -269,7 +283,7 @@ over the soft cap. Let's refactor."
 - Capture `test-prompts.json` if absent — 3 prompts covering
   creation / improvement / description optimization
 - Run baseline: each prompt × current skill → outputs
-- Token count: 5627 words
+- Entrypoint count: 5627 words; capture whole-package baseline under package mode
 
 **Phase 1 (Q1+Q2+Q3)**:
 - Candidate move: extract "Description Optimization" section (§
@@ -278,19 +292,19 @@ over the soft cap. Let's refactor."
 - Q1 ensemble: 3/3 say outputs equivalent (the description-opt
   use case still works because the section is loaded on demand
   via reference)
-- Q2: 5627 → 4927 words = 12.4% reduction ✓
-- Q3: name unchanged, dependencies unchanged, structure adds one
-  reference file (allowed) ✓
+- Q2: entrypoint 5627 → 4927 words = 12.4% smaller, but the ~700 words
+  remain in the new reference. Whole-package words stay the same or increase
+  with the pointer; moving prose alone earns no reduction.
+- Q3: name and existing dependencies preserved; the new bundled reference
+  is required for equivalent extraction (allowed in package mode) ✓
 
-**Verdict**: PROCEED. `git commit` the candidate.
+**Verdict**: REJECT. Discard this candidate: whole-package Q2 fails even
+though Q1 and Q3 pass. A later candidate must remove actual duplication
+and pass Q1/Q2/Q3 on the whole package.
 
 **Phase 2 (next round)**:
-- Look for next-largest extraction candidate
-- Repeat...
-
-After 3 rounds: 5627 → 4927 → 4400 → 4100. Skill is back under
-soft cap. Output behavior unchanged. Each round individually
-verified.
+- Look for actual duplication to compress, rather than counting relocated words
+- Capture and verify the next isolated candidate independently
 
 ## Worked Example — refactor that should be REJECT
 
@@ -304,7 +318,7 @@ candidate's output is "less specific about edge cases". Tier 2.
 
 **Q3 result**: clean.
 
-**Verdict**: RESHAPE → user examines the dissenting judge's
+**Verdict**: HOLD (`FLAG_TIER_2`) → user examines the dissenting judge's
 reasoning. Turns out the "clearer" rewording dropped a phrase that
 nudged Claude to handle a specific edge case. The candidate is
 **not actually equivalent** — it's a subtle behavior change masked

@@ -60,20 +60,24 @@ caveat). For navigational sections, judge by hand.
 
 ## Cost
 
-Roughly `(1 + N_sections) × N_relevant_prompts` runs + 2 judges. Bound it: feed
-each section only the prompt(s) that exercise it (not the full cross product). A
-prototype with 2 prompts + 7 sections ran in ~11 subagent calls.
+Roughly `(1 + N_sections) × N_relevant_prompts` skill runs, plus 3 judges
+for each full-vs-ablated prompt comparison, using Q1's ensemble. Bound it:
+feed each section only the prompt(s) that exercise it (not the full cross product).
 
 ## Verdict mapping
 
 | Ensemble on a section | Meaning | Action |
 |---|---|---|
-| Both judges: behavior unchanged | BLOAT candidate | compress or cut (then pass the Q1/Q2/Q3 gate) |
-| Both judges: behavior degraded | LOAD-BEARING | keep |
-| SPLIT (judges disagree) across **two related sections** | the two are REDUNDANT with each other | **merge the pair** into one tighter section — do NOT delete either alone |
-| SPLIT on an isolated section | uncertain | investigate by hand / add a sharper test prompt |
+| `PASS_HIGH` (3 equivalent) or `PASS_MODERATE` (2 equivalent + 1 uncertain) | BLOAT candidate; report confidence | compress or cut only after Q1/Q2/Q3 |
+| Specific behavior dissent, before count rules | `FLAG_TIER_2`; possible load-bearing behavior | hold; inspect the cited loss |
+| 2 equivalent + 1 not_equivalent | `FLAG_TIER_2` | investigate by hand / add a sharper test prompt |
+| ≤1 equivalent after dissent override | `FAIL`; removal fails equivalence | keep pending investigation |
+| Disagreement across **two related sections** | possible redundancy trap | investigate overlap; test a merged candidate through Q1/Q2/Q3 rather than delete both |
 
 ## Worked example — verification-before-completion (2026-05-30 prototype)
+
+This historical two-judge prototype records its original votes and call count;
+current runs use the three-judge Q1 policy above. It ran in ~11 subagent calls.
 
 7 sections, 2 prompts (P1 = "ran the test FILE directly, good to merge?" → correct
 = refuse + demand package-level run; P2 = "bumped version + README, done without

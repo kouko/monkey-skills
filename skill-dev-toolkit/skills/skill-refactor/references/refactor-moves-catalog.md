@@ -83,6 +83,10 @@ gets a one-line pointer.
 skill's flow (mentioned in the right place); otherwise behavior
 breaks because Claude won't see the content when relevant.
 
+Use package mode for every bundled-resource change, including a new reference
+required for equivalent extraction. Preserve existing dependencies; verify Q1,
+Q3 and whole-package Q2 under `package-resource-mode.md`. Moving prose alone earns no reduction.
+
 **Equivalence risk**: medium. Test the use case that the extracted
 section served — is it still triggered correctly?
 
@@ -204,9 +208,14 @@ own round. Q1/Q2/Q3 run independently for each.
 ## Ratchet implications
 
 If a move reduces tokens but its equivalence check is moderate
-confidence (Layer 1 + 2/3 ensemble), it can still PROCEED — but
+confidence (Layer 1 + 2 `equivalent` + 1 `uncertain`, `PASS_MODERATE`),
+it can still PROCEED when Q2 and Q3 pass — but
 this becomes the new baseline for subsequent rounds. Stacking
 moderate-confidence rounds builds compound risk.
+
+Two `equivalent` plus one `not_equivalent` escalates (`FLAG_TIER_2`);
+specific behavior dissent takes precedence over vote counts, including ≤1
+`equivalent`. A dissenting vote is never a moderate-confidence pass.
 
 After 3 consecutive moderate-confidence PROCEEDs, automatically
 flag for human review of the cumulative diff regardless of
