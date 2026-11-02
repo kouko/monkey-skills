@@ -146,26 +146,23 @@ soft cap，refactor 一下」。
 - 建立 `test-prompts.json`（3 個 prompt：創建 / 改進 / description
   optimization）
 - 對當前 skill 跑 baseline → outputs 落 `<workspace>/baseline/`
-- Token count: 5627 字
+- 入口字數：5627 字；以 package mode 記錄整個套件的 baseline
 - Invariant snapshot：`name` / 依賴 / 結構紀錄下來
 
 **Phase 1, Round 1**：
 - Move：把 Description Optimization section（~700 字）抽到
   `references/description-optimization.md`
-- Git commit
-- Q1 ensemble：3/3 say 輸出等價（description-opt 使用情境仍
+- Q1 ensemble（假設結果）：3/3 say 輸出等價（description-opt 使用情境仍
   work，因為 reference 按需載入）
-- Q2：5627 → 4927 = 12.4% 縮減 ✓
-- Q3：name 不變、依賴不變、結構加一個 reference 檔（被允許）✓
-- **Verdict: PROCEED**
+- Q2：入口 5627 → 4927 = 12.4% 縮小，但 ~700 字仍留在 reference。
+  整個套件字數不變，或因參照連結而增加；單純搬移文字不算縮減。
+- Q3：保留 name 與既有依賴；等價抽取所需的新 bundled reference
+  在 package mode 中允許加入 ✓
+- **Verdict: REJECT** — 即使 Q1、Q3 通過，whole-package Q2 仍不通過，
+  因此捨棄這個候選版本。
 
-**Phase 1, Round 2**：
-- Move：把兩個 phase-2 section 之間的重複文字 dedupe
-- ...（類似）
-- **Verdict: PROCEED**
-
-3 round 後：5627 → 4927 → 4400 → 4100。Skill 回到 soft cap 之
-下。輸出行為不變。每輪獨立驗證。
+下一個候選版本須刪除實際重複，並以整個套件獨立通過 Q1/Q2/Q3；
+此例未提供後續輪次的驗證結果。
 
 ### Worked Example — 應該 REJECT 的 refactor
 

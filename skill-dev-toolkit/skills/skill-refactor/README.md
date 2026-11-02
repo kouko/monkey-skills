@@ -161,27 +161,24 @@ over the soft cap. Refactor it."
 - Capture `test-prompts.json` (3 prompts: creation / improvement /
   description optimization)
 - Run baseline against current skill → outputs in `<workspace>/baseline/`
-- Token count: 5627 words
+- Entrypoint count: 5627 words; capture whole-package baseline in package mode
 - Invariant snapshot: `name` / dependencies / structure recorded
 
 **Phase 1, Round 1**:
 - Move: extract Description Optimization section (~700 words) to
   `references/description-optimization.md`
-- Git commit
-- Q1 ensemble: 3/3 say outputs equivalent (description-opt use case
+- Q1 ensemble (illustrative): 3/3 say outputs equivalent (description-opt use case
   still works because reference loads on demand)
-- Q2: 5627 → 4927 = 12.4% reduction ✓
-- Q3: name unchanged, dependencies unchanged, structure adds one
-  reference file (allowed) ✓
-- **Verdict: PROCEED**
+- Q2: entrypoint 5627 → 4927 = 12.4% smaller, but the ~700 words
+  remain in the reference. Whole-package words stay the same or increase
+  with the pointer; moving prose alone earns no reduction.
+- Q3: name and existing dependencies preserved; the new bundled reference
+  is required for equivalent extraction (allowed in package mode) ✓
+- **Verdict: REJECT** — discard this candidate: whole-package Q2 fails
+  even if Q1 and Q3 pass.
 
-**Phase 1, Round 2**:
-- Move: dedupe prose between two phase-2 sections
-- ... (similar)
-- **Verdict: PROCEED**
-
-After 3 rounds: 5627 → 4927 → 4400 → 4100. Skill back under soft
-cap. Output behavior unchanged. Each round individually verified.
+A later candidate must remove actual duplication and independently pass
+Q1/Q2/Q3 on the whole package; no later rounds are verified here.
 
 ### Worked Example — refactor that should be REJECT
 

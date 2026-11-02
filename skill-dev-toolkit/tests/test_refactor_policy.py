@@ -67,6 +67,14 @@ def test_unsafe_refactor_policy_rejected():
     example = text.split("## Worked Example — token bloat", 1)[1].split("## Worked Example", 1)[0]
     assert "whole-package" in example and "**Verdict**: REJECT" in example
     assert "**Verdict**: PROCEED" not in example
+    for filename in ("README.md", "README.ja.md", "README.zh-TW.md"):
+        consumer = (SKILL / filename).read_text()
+        example = consumer.split("### Worked Example", 1)[1].split("### Worked Example", 1)[0]
+        assert "5627 → 4927" in example and "12.4%" in example, filename
+        assert "package mode" in example and "whole-package Q2" in example, filename
+        assert "**Verdict: REJECT**" in example, filename
+        assert "**Verdict: PROCEED**" not in example, filename
+        assert "4400 → 4100" not in example, filename
     catalog = (SKILL / "references/refactor-moves-catalog.md").read_text()
     extraction = catalog.split("### Extract to references/", 1)[1].split("### ", 1)[0]
     assert "Use package mode" in extraction and "whole-package Q2" in extraction
