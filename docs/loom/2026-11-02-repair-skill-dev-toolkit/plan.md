@@ -45,7 +45,7 @@ charter: 1.1
 - Risk: REQ-5; agent-decided existing 70% threshold and DEFER policy prevail. Defect class: conflicting adoption outcomes; searched entrypoint and harness agreement, verdict, atomicity and fallback clauses. No new vote mechanism.
 
 **W2-05 Separate blind artifact rubric from informed trajectory check** after: W2-04 acceptance: 5
-- Files: `skill-dev-toolkit/skills/dogfood-skill-testing/SKILL.md` (entry), `skill-dev-toolkit/skills/dogfood-skill-testing/references/defect-taxonomy.md`, `skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py`.
+- Files: `skill-dev-toolkit/skills/dogfood-skill-testing/SKILL.md` (entry), `skill-dev-toolkit/skills/dogfood-skill-testing/references/defect-taxonomy.md`, `skill-dev-toolkit/skills/dogfood-skill-testing/templates/dogfood-report-template.md`, `skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py`.
 - Test: A5 positive: explicit_blind_rubric; negative: trajectory_not_in_blind_context. Run `python3 -m pytest skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py -q`.
 - Risk: REQ-5; agent-decided retain existing two roles. Existing structure tests retain taxonomy/resource coverage. Defect class: missing or forbidden review inputs; searched Probe B, firewall, trajectory guardrails, taxonomy and report template.
 
