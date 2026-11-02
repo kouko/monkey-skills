@@ -156,6 +156,11 @@ Asymmetric truncation introduces bias.
 
 ## Atomicity / lock-in
 
+Invalid input and a bare `m` (which still needs specific labels) do not
+lock a selection. The CLI returns a non-success status and saves only the
+prompt and failed/incomplete pick with its reason, without a label-to-identity
+assignment. No selection success is reported for these attempts.
+
 Once the user locks a pick (or the independent evaluators finish):
 
 1. Save the pick and resolved verdict to the preference log immediately

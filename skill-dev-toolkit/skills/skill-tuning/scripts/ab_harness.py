@@ -165,9 +165,10 @@ def write_session(session_out: Path, prompt: str, label_map: dict[str, dict], pi
     """Persist the session decision atomically to a JSON file."""
     record = {
         "prompt": prompt,
-        "label_assignment": {label: v["identity"] for label, v in label_map.items()},
         "pick": pick,
     }
+    if pick["type"] in {"single", "multiple", "none", "refine"}:
+        record["label_assignment"] = {label: v["identity"] for label, v in label_map.items()}
     session_out.parent.mkdir(parents=True, exist_ok=True)
     session_out.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -206,8 +207,8 @@ def main() -> int:
     pick = parse_pick(raw, label_map)
     write_session(args.session_out, args.prompt, label_map, pick)
 
-    if pick["type"] == "invalid":
-        print(f"\nInvalid pick: {pick['reason']}", file=sys.stderr)
+    if pick["type"] in {"invalid", "needs_clarification"}:
+        print(f"\nPick not locked: {pick['reason']}", file=sys.stderr)
         print(f"Session record saved to {args.session_out} for retry.", file=sys.stderr)
         return 2
 
