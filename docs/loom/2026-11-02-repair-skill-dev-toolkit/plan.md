@@ -20,7 +20,7 @@ charter: 1.1
 **W1-03 Keep truncated full-output viewing blind** after: W1-02 acceptance: 3
 - Files: `skill-dev-toolkit/skills/skill-tuning/scripts/ab_harness.py` (entry), `skill-dev-toolkit/skills/skill-tuning/references/ab-harness-protocol.md`, `skill-dev-toolkit/tests/test_blind_harness.py`.
 - Test: A3 positive: blind_full_view_same_choice; negative: identity_path_not_displayed. Run `python3 -m pytest skill-dev-toolkit/tests/test_blind_harness.py -q`.
-- Risk: REQ-3; agent-decided neutral ordinary-file copies, no symlinks or source mutation. Defect class: identity-bearing metadata; searched all harness display/retrieval paths and truncation instructions. Retain original mapping through lock-in.
+- Risk: REQ-3; agent-decided neutral ordinary-file copies and identity-free records for unconfirmed picks. Defect class: identity-bearing metadata; searched display, retrieval, invalid/clarification inputs, session recording and truncation instructions. Decode identity only after choice lock-in.
 
 ### Wave 2 — Align instruction consumers without new workflow roles
 
