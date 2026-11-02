@@ -68,8 +68,8 @@ TEST PROMPT (#M of #N)
 ─────────────────────────────────────────────────────────────────
 OUTPUT A
 ─────────────────────────────────────────────────────────────────
-<output content; truncate if >500 lines, append "[truncated; full
-output saved to <path>]">
+<output content; truncate at the configured line limit, append
+"[... truncated; full output: <neutral directory>/A.md]">
 
 ─────────────────────────────────────────────────────────────────
 OUTPUT B
@@ -130,11 +130,20 @@ all off-axis, force-picking would corrupt the preference log.
 
 ## Truncation rules
 
-Long outputs (>500 lines, >5000 chars) are truncated for display:
+The CLI truncates outputs beyond `--max-display-lines` (default 200):
 
-- Show first ~200 lines
-- Append "[... truncated; full output: <path>]"
-- User can request to view full output before picking
+- Show the first configured number of lines.
+- When any output is truncated, copy all complete outputs as ordinary
+  `A.md`, `B.md`, etc. files in a fresh neutral temporary directory.
+  Preserve source bytes; never modify the originals or use symlinks.
+- Append "[... truncated; full output: <neutral directory>/<label>.md]".
+  Display only these blind paths, never original filenames or paths.
+- The user can open the printed files before picking. Keep them available
+  for the current workflow; untruncated rounds create no viewing files.
+- Use the same label assignment for display, full-output files, choice,
+  and the session's post-lock decoding. Never re-randomize to retrieve
+  full text. Blindness covers harness-added metadata; user-authored
+  output content is preserved without sanitization.
 
 Truncation must be **uniform across variants** — same truncation
 length, same boundary (don't truncate A at 200 lines but B at 300).

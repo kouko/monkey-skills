@@ -35,7 +35,9 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -81,6 +83,7 @@ def truncate(text: str, max_lines: int) -> tuple[str, bool]:
 
 
 def render(label_map: dict[str, dict], prompt: str, max_lines: int = 200) -> str:
+    full_output_dir = None
     sep = "─" * 65
     out = [sep]
     out.append("TEST PROMPT")
@@ -96,7 +99,11 @@ def render(label_map: dict[str, dict], prompt: str, max_lines: int = 200) -> str
         out.append(sep)
         out.append(body)
         if was_truncated:
-            out.append(f"[... truncated; full output: {variant['output_path']}]")
+            if full_output_dir is None:
+                full_output_dir = Path(tempfile.mkdtemp(prefix="ab-view-"))
+                for blind_label, source in label_map.items():
+                    shutil.copyfile(source["output_path"], full_output_dir / f"{blind_label}.md")
+            out.append(f"[... truncated; full output: {full_output_dir / f'{label}.md'}]")
         out.append("")
 
     out.append(sep)
