@@ -1,0 +1,111 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-11-02-repair-skill-dev-toolkit",
+  "content_digest": "04207617acdc488a8bb4a9db1f1ccd909a18c688",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest scripts/test_preferences_single_choice.py -p no:cacheprovider",
+      "artifact": "scripts/test_preferences_single_choice.py",
+      "result": "pass",
+      "command_digest": "bdf51e599bb1885a1a2547514d93b59ae6b0fbf78821f0009353e2c7ae96f5ca"
+    }
+  ],
+  "verdicts": [
+    {
+      "verdict": "PASS",
+      "lens": "code",
+      "reviewed_sha": "4cbf85a8841d7d52393a8bb4058284755e108e25",
+      "review_target_sha": "bb6bfd7fcfe37adc90532d42f19e521c9bb31528",
+      "dimension_scores": {
+        "security": "PASS — Fixes preserve read-only source logs; labelled records must resolve uniquely to the recorded identity, and no transmission or execution surface was added.",
+        "architecture": "PASS — Fixes remain in existing aggregation and shared preference-eligibility boundaries; no new module or framework was introduced.",
+        "correctness": "PASS — All three prior code findings are fixed; current-first deltas, independent captured tokens and observed repetition populations agree with their consumers and schema. No fix-induced defect found in the bounded delta.",
+        "naming": "PASS — New repetition-count and labelled-choice names describe their values and policy without new vocabulary.",
+        "tests": "PASS — Independently ran all three test files changed in this fix delta with the supplied interpreter, PYTHONDONTWRITEBYTECODE=1 and pytest -p no:cacheprovider; 40 passed in 1.83s without skips. Expanded CLI cases assert both baseline layouts, duration/token independence, zero tokens and uniform/unequal/empty populations; shared preference and policy-consumer regressions also passed.",
+        "refactoring": "PASS — Duration and token extraction are separated locally, recognized configuration ordering retains discovery-order fallback, and both preference consumers retain one eligibility rule.",
+        "cross-task-coherence": "PASS — Aggregation schema and Markdown match observed count semantics; preference label compatibility matches its schema; ensemble qualifications and translated extraction examples agree with operative policies. Updated acceptance retains unchanged rows with explicit reasons.",
+        "external-surface-grounding": "PASS — This fix delta adds no external API, provider, CLI flag or dependency; existing owned command interfaces remain unchanged.",
+        "principles-conformance": "PASS — Focused executable regressions accompany the fixes, original logs remain untouched, and acceptance explicitly distinguishes local and native fixture evidence from live-provider or host activation claims.",
+        "architecture-conformance": "N/A — No ratified ARCHITECTURE.md exists in the reviewed checkout; unchanged from Round 1.",
+        "deliberate-simplification": "PASS — Unequal populations use null plus an explicit Markdown qualification; empty populations use zero. Identity-only compatibility is restricted to entirely unlabelled records and does not bypass incomplete mappings.",
+        "deletion-first": "PASS — Fixes extend existing functions and tests; they remove character-as-token substitution and misleading consumer claims without introducing an additional mechanism."
+      },
+      "findings": [],
+      "notes": [
+        "fixed — Prior fatal at aggregate_benchmark.py:206: with_skill now precedes old_skill/without_skill in summary calculation and Markdown, yielding current-minus-baseline deltas. Both layouts passed the extended real CLI fixture.",
+        "fixed — Prior fatal at aggregate_benchmark.py:140: sibling total_tokens is read independently of grading duration; output_chars is no longer substituted. CLI assertions passed for retained grading duration, actual token values and missing/zero captured tokens.",
+        "fixed — Prior important at aggregate_benchmark.py:271: repetition metadata is observed per eval/configuration, including missing discovered cells; uniform counts, unequal null and empty zero match schema and Markdown. Package/adversarial logs were handed evidence only; neither was rerun, and their summary lines contain no artifact stem suitable for a probe confirmation."
+      ],
+      "reviewer": "/root/code_review",
+      "vendor": "codex",
+      "model": "unknown"
+    },
+    {
+      "verdict": "PASS",
+      "lens": "skill",
+      "reviewed_sha": "4cbf85a8841d7d52393a8bb4058284755e108e25",
+      "review_target_sha": "bb6bfd7fcfe37adc90532d42f19e521c9bb31528",
+      "dimension_scores": {
+        "omission": "PASS — The new R4 acceptance fixture includes both an omitted mandatory artifact limitation and a skipped declared source-integrity gate, with separate negative and positive controls.",
+        "ambiguity": "PASS — Labelled-record validation, identity-only compatibility, repetition populations, and FLAG_TIER_2 escalation conditions now have explicit boundaries.",
+        "inconsistency": "PASS — The shared preference eligibility follows supplied blind mappings; ensemble consumers agree on moderate passes; translated extraction examples reject relocation without whole-package savings.",
+        "incorrect-fact": "PASS — Focused CLI results support current-minus-baseline deltas, captured-token accounting, and observed repetition metadata; the refreshed acceptance report accurately distinguishes rerun and retained evidence.",
+        "missing-population": "PASS — Repetition metadata states uniform, unequal, and empty observed populations, while preference readiness retains separate usable-record and pair counts.",
+        "user-judgment-leak": "PASS — Fixes resolve technical policy conflicts from existing authorities and do not introduce new technical decisions for the user.",
+        "deletion-first": "PASS — The fix delta extends existing eligibility, consumer passages, tests, and acceptance evidence without adding a checker framework or workflow role."
+      },
+      "findings": [],
+      "notes": [
+        "Fixed prior ensemble-consumer finding: multi-judge-ensemble.md rationale, NOTICE, and all three README Tier 2 rows now escalate only FLAG_TIER_2. The related extraction consumer sweep also corrects all three relocation-only examples to whole-package Q2 REJECT and removes the unsupported later-success chain.",
+        "Fixed prior fatal label/identity finding: preference_log.py shared eligibility requires a unique consistent normalized picked-label mapping whenever labels are supplied, rejects contradictory/duplicate/missing picked mappings, and preserves all-unlabelled identity compatibility without rewriting JSONL. Independently ran the three changed focused test files with PYTHONDONTWRITEBYTECODE=1 and pytest -p no:cacheprovider: 40 passed in 2.25s.",
+        "Fixed prior acceptance omission: acceptance-test-evidence.md R4 records genuine validator output, transcript A missing step 3 versus complete B, informed FAIL/PASS, and two fresh rubric/artifact-only auditor packets returning A FAIL/B PASS for the omitted limitation. Reviewed only the 35d507e..bb6bfd7 fix delta and the prior findings; no complete suite, probe, repository edit, external-provider call, or model/host validation was performed or inferred."
+      ],
+      "reviewer": "/root/skill_review",
+      "vendor": "codex",
+      "model": "unknown"
+    }
+  ],
+  "findings": [],
+  "selection": null,
+  "intent_confirmed_sha": "26254110d52156a1987962189111076dd862851d",
+  "tested_commit": "834668cce",
+  "reviewed_commit": "bb6bfd7fcfe37adc90532d42f19e521c9bb31528",
+  "acceptance_status": [
+    {
+      "acceptance": 1,
+      "status": "works"
+    },
+    {
+      "acceptance": 2,
+      "status": "works"
+    },
+    {
+      "acceptance": 3,
+      "status": "works"
+    },
+    {
+      "acceptance": 4,
+      "status": "works"
+    },
+    {
+      "acceptance": 5,
+      "status": "works"
+    },
+    {
+      "acceptance": 6,
+      "status": "works"
+    },
+    {
+      "acceptance": 7,
+      "status": "works"
+    }
+  ]
+}
