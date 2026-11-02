@@ -87,7 +87,7 @@ loom-workflow の critique skill と並行：
 | **PROCEED** | 3 つ全部厳密に pass | Ratchet 前進、commit 保持 |
 | **RESHAPE** | Q2 弱い（5-10%）が Q1+Q3 通過 | user に提示、保持 / 続行を判断 |
 | **REJECT** | Q1/Q2/Q3 のいずれか失敗 | `git revert`、results.tsv に記録、次へ |
-| (Tier 2) | Q1 ensemble が分裂、明確な fail なし | 人間 review にエスカレーション |
+| (Tier 2) | Q1 = `FLAG_TIER_2` | 人間 review にエスカレーション |
 
 ### Multi-judge ensemble（核となる innovation）
 

@@ -89,7 +89,7 @@ Parallel to loom-workflow's critique skills:
 | **PROCEED** | All 3 checks strict pass | Ratchet advances; commit kept |
 | **RESHAPE** | Weak Q2 (5-10% reduction) but Q1+Q3 pass | Show user; decide keep or further-refactor |
 | **REJECT** | Any of Q1/Q2/Q3 fails | `git revert`; record in results.tsv; move on |
-| (Tier 2) | Q1 ensemble disagrees but no clear fail | Escalate to human review |
+| (Tier 2) | Q1 = `FLAG_TIER_2` | Escalate to human review |
 
 ### Multi-judge ensemble (the load-bearing innovation)
 

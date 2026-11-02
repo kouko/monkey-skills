@@ -26,8 +26,8 @@ Specific design distinctions from `darwin-skill`:
 2. **Multi-judge ensemble** — `skill-refactor` uses a 3-judge
    ensemble with varied prompt framing (utility / content /
    boundary) for Q1's semantic equivalence check, rather than a
-   single judge subagent. Ensemble disagreement is itself a signal
-   that auto-escalates to human review.
+   single judge subagent. Apply the consensus rules to disagreement;
+   escalate only `FLAG_TIER_2` outcomes to human review.
 3. **Specific-behavior-diff override** — a single dissenting judge
    citing concrete behavior change outranks numeric majority. This
    prevents subtle regressions from sneaking through "2/3 says

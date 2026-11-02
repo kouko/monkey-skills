@@ -82,7 +82,7 @@ flowchart TD
 | **PROCEED** | 三項全部嚴格 pass | Ratchet 推進、commit 留下 |
 | **RESHAPE** | Q2 微弱（5-10%）但 Q1+Q3 過 | 給 user 看、user 決定留或繼續 refactor |
 | **REJECT** | Q1/Q2/Q3 任一失敗 | `git revert`、記 results.tsv、繼續 |
-| (Tier 2) | Q1 ensemble 分歧但無明確 fail | 升給人類 review |
+| (Tier 2) | Q1 = `FLAG_TIER_2` | 升給人類 review |
 
 ### Multi-judge ensemble（核心 innovation）
 

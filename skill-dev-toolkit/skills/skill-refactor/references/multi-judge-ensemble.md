@@ -11,8 +11,8 @@ A 3-judge ensemble:
 
 1. **Reduces variance** — single judge's idiosyncratic verdict gets
    averaged out
-2. **Surfaces uncertainty** — disagreement among judges is a signal,
-   not noise; auto-escalate to human
+2. **Surfaces uncertainty** — disagreement among judges informs the
+   consensus rules; escalate only `FLAG_TIER_2` outcomes to human review
 3. **Catches subtle behavior change** — a single dissenting judge
    pointing to a specific behavior diff outranks numeric majority
 
