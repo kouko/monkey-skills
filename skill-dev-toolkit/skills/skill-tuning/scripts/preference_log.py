@@ -153,7 +153,7 @@ def usable_preferences(entries: list[dict], skill: str) -> tuple[list[tuple], in
         shown = entry.get("variants_shown")
         if (entry.get("type", "pick") != "pick"
                 or not text(picked) or picked.lower() in no_choice
-                or not text(pick) or pick.lower() in no_choice
+                or not text(pick) or pick.strip().lower() not in set("abcdefghij")
                 or not text(entry.get("test_prompt_hash"))
                 or not isinstance(shown, list)
                 or not (entry.get("verdict") == "ADOPT" and picked != "baseline"
