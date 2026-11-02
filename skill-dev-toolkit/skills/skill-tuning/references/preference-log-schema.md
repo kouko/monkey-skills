@@ -219,6 +219,13 @@ match exactly one object in `variants_shown`, with a nonempty
 `skill_md_hash`; `test_prompt_hash` must also be nonempty. Old string-list
 variants and records missing the chosen identity or hashes are skipped.
 
+When any shown object supplies a `label` field, the picked label must match
+exactly one shown object after trimming whitespace and ignoring letter case,
+and that object's identity must equal `user_pick_identity`. Contradictory or
+duplicate picked-label mappings, and partial mappings without the picked
+label, are skipped. Identity-only compatibility applies only when every
+shown object omits `label`; incomplete mappings never fall back to it.
+
 Each usable record yields at least one selected-over-other comparison with
 distinct, nonempty skill hashes. Unusable alternatives are omitted, and
 duplicate alternative hashes produce one pair. Readiness counts **records**,

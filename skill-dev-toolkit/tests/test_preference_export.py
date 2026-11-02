@@ -55,9 +55,11 @@ def test_explicit_single_preferences_export(tmp_path, verdict, picked):
     assert log.read_bytes() == raw and entry == original
 
 
+@pytest.mark.parametrize("labelled", [False, True])
 @pytest.mark.parametrize("invalid", ["none", "multiple", "refine", "missing", "hash",
-                                     "prompt_hash", "same", "shape", "duplicate_pick"])
-def test_unusable_preferences_not_ready(tmp_path, invalid):
+                                     "prompt_hash", "same", "shape", "duplicate_pick",
+                                     "contradictory_label", "duplicate_label", "missing_label"])
+def test_unusable_preferences_not_ready(tmp_path, invalid, labelled):
     bad = record()
     if invalid in {"none", "multiple", "refine"}:
         bad["user_pick"] = bad["user_pick_identity"] = invalid
@@ -72,10 +74,22 @@ def test_unusable_preferences_not_ready(tmp_path, invalid):
             variant["skill_md_hash"] = "same"
     elif invalid == "shape":
         bad["variants_shown"] = ["baseline", "candidate"]
-    else:
+    elif invalid == "duplicate_pick":
         bad["variants_shown"].append(dict(bad["variants_shown"][1]))
+    else:
+        bad["variants_shown"][0]["label"] = "A"
+        if invalid == "contradictory_label":
+            bad["variants_shown"][1]["label"] = "B"
+            bad["user_pick"] = "A"
+        elif invalid == "duplicate_label":
+            bad["variants_shown"][0]["label"] = " b "
+            bad["variants_shown"][1]["label"] = "B"
     assert stub.extract_preference_pairs([bad], "example") == []
     many = record()
+    if labelled:
+        many["user_pick"] = " b "
+        for label, variant in zip(("A", " b ", "C"), many["variants_shown"]):
+            variant["label"] = label
     many["variants_shown"] += [{"identity": f"v{i}", "skill_md_hash": f"hash-{i}"} for i in range(1000)]
     log, out, model = (tmp_path / name for name in ("log.jsonl", "pairs.json", "model.pt"))
     raw = (json.dumps(bad) + "\n" + json.dumps(many) + "\n").encode()

@@ -165,6 +165,13 @@ def usable_preferences(entries: list[dict], skill: str) -> tuple[list[tuple], in
             skipped += 1
             continue
         chosen = choices[0]
+        if any(isinstance(v, dict) and "label" in v for v in shown):
+            labelled_choices = [v for v in shown if isinstance(v, dict)
+                                and text(v.get("label"))
+                                and v["label"].strip().lower() == pick.strip().lower()]
+            if len(labelled_choices) != 1 or labelled_choices[0].get("identity") != picked:
+                skipped += 1
+                continue
         alternatives = []
         seen_hashes = {chosen["skill_md_hash"]}
         for variant in shown:
