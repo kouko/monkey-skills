@@ -88,6 +88,7 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         assert result.returncode == 0, result.stderr + result.stdout
         benchmark = json.loads((tmp_path / "benchmark.json").read_text())
         assert benchmark["metadata"]["evals_run"] == [7]
+        assert benchmark["metadata"]["runs_per_configuration"] == 2
         assert len(benchmark["runs"]) == 4
         summary = benchmark["run_summary"]
         assert summary["with_skill"]["pass_rate"] == {"mean": 0.75, "stddev": 0.3536, "min": 0.5, "max": 1.0}
@@ -101,6 +102,7 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         baseline_label = baseline.replace("_", " ").title()
         assert f"| Metric | With Skill | {baseline_label} | Delta |" in markdown
         assert "75% ± 35%" in markdown
+        assert "(2 runs each per configuration)" in markdown
         assert "| Tokens | 15 ± 7 | 8 ± 4 | +8 |" in markdown
         for index, captured in enumerate([{"total_tokens": 0}, {}], 1):
             (tmp_path / f"eval-7/with_skill/run-{index}/timing.json").write_text(json.dumps(captured))
@@ -110,6 +112,25 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         assert [run["result"]["tokens"] for run in benchmark["runs"] if run["configuration"] == "with_skill"] == [0, 0]
         assert benchmark["run_summary"]["with_skill"]["tokens"]["mean"] == 0
         assert "| Tokens | 0 ± 0 | 8 ± 4 | -8 |" in (tmp_path / "benchmark.md").read_text()
+        for grading in (tmp_path / "eval-7").rglob("grading.json"):
+            copied = tmp_path / "eval-8" / grading.relative_to(tmp_path / "eval-7")
+            copied.parent.mkdir(parents=True)
+            copied.write_text(grading.read_text())
+        result = command(entry, tmp_path)
+        assert result.returncode == 0, result.stderr + result.stdout
+        assert json.loads((tmp_path / "benchmark.json").read_text())["metadata"]["runs_per_configuration"] == 2
+        for index in [2, 1]:
+            (tmp_path / f"eval-8/{baseline}/run-{index}/grading.json").unlink()
+            result = command(entry, tmp_path)
+            assert result.returncode == 0, result.stderr + result.stdout
+            assert json.loads((tmp_path / "benchmark.json").read_text())["metadata"]["runs_per_configuration"] is None
+            assert "unequal run counts per eval/configuration; see runs" in (tmp_path / "benchmark.md").read_text()
+        for grading in tmp_path.rglob("grading.json"):
+            grading.unlink()
+        result = command(entry, tmp_path)
+        assert result.returncode == 0, result.stderr + result.stdout
+        assert json.loads((tmp_path / "benchmark.json").read_text())["metadata"]["runs_per_configuration"] == 0
+        assert "(0 runs each per configuration)" in (tmp_path / "benchmark.md").read_text()
     else:
         module = request.getfixturevalue("optimizer")
         evaluated, improved = [], []

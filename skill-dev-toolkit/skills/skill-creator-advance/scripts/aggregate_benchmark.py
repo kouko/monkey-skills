@@ -259,6 +259,15 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
         for config in results.values()
         for r in config
     ))
+    repetition_counts = {
+        sum(r["eval_id"] == eval_id for r in config_runs)
+        for eval_id in eval_ids
+        for config_runs in results.values()
+    }
+    runs_per_configuration = (
+        next(iter(repetition_counts)) if len(repetition_counts) == 1
+        else None if repetition_counts else 0
+    )
 
     benchmark = {
         "metadata": {
@@ -268,7 +277,7 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
             "analyzer_model": "<model-name>",
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "evals_run": eval_ids,
-            "runs_per_configuration": 3
+            "runs_per_configuration": runs_per_configuration
         },
         "runs": runs,
         "run_summary": run_summary,
@@ -290,13 +299,18 @@ def generate_markdown(benchmark: dict) -> str:
     config_b = configs[1] if len(configs) >= 2 else "config_b"
     label_a = config_a.replace("_", " ").title()
     label_b = config_b.replace("_", " ").title()
+    repetitions = metadata["runs_per_configuration"]
+    population = (
+        f"{repetitions} runs each per configuration" if repetitions is not None
+        else "unequal run counts per eval/configuration; see runs"
+    )
 
     lines = [
         f"# Skill Benchmark: {metadata['skill_name']}",
         "",
         f"**Model**: {metadata['executor_model']}",
         f"**Date**: {metadata['timestamp']}",
-        f"**Evals**: {', '.join(map(str, metadata['evals_run']))} ({metadata['runs_per_configuration']} runs each per configuration)",
+        f"**Evals**: {', '.join(map(str, metadata['evals_run']))} ({population})",
         "",
         "## Summary",
         "",
