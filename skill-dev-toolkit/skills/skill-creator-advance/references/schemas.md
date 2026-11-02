@@ -40,7 +40,7 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 
 ## eval_metadata.json
 
-Metadata for a single evaluation case during a run. Located at `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json`.
+Metadata for a single evaluation case within an iteration. Located at `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json`. This file is shared across configurations and repeat runs of that case; pass its path explicitly to each grader rather than copying it into run directories.
 
 ```json
 {
@@ -67,7 +67,7 @@ Metadata for a single evaluation case during a run. Located at `<workspace>/iter
 
 Output from the grader agent. Located at `<run-dir>/grading.json`.
 
-**Source of assertions:** The grader reads `assertions` from `<run-dir>/eval_metadata.json`. The assertion text strings become the `text` field in the grading.json `expectations` array. After grading, each expectation object has `text` (the original assertion), `passed` (boolean), and `evidence` (supporting detail).
+**Source of assertions:** The grader reads `assertions` from the explicitly supplied path to the case's `eval_metadata.json` (see the eval_metadata.json section above). The assertion text strings become the `text` field in the grading.json `expectations` array. After grading, each expectation object has `text` (the original assertion), `passed` (boolean), and `evidence` (supporting detail).
 
 ```json
 {
