@@ -4,6 +4,24 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] — 2026-11-03
+
+### Fixed
+
+- Restore skill packaging, benchmark aggregation, and bounded description
+  optimization commands.
+- Reject reordered tool-call traces while preserving the documented one-call
+  count tolerance and tool vocabulary.
+- Keep truncated full-output viewing paths blind and mask version identities
+  in session records until a choice is locked.
+- Export valid explicit baseline preferences and align usable-record readiness
+  counts with preference-pair generation; training remains inactive.
+- Reconcile description, evaluation metadata, refactor, human-choice, and blind
+  auditor instructions with their operative policies.
+- Qualify consistency reports above the nominal 25k-token bound without
+  changing the 30k grouping threshold; add regression coverage and a dedicated
+  toolkit CI workflow.
+
 ## [0.5.0] — 2026-09-24
 
 ### Added — `skill-consistency-check`
