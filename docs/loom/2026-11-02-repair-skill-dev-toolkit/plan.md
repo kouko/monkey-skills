@@ -83,6 +83,33 @@ charter: 1.1
 - Test: A4 positive: graduated_probe_green; negative: original_defect_pinned. A7 positive: continuous_probe_selected; negative: missing_probe_route_detected. Run moved probe unchanged and focused CI-routing tests.
 - Risk: REQ-4/7; agent-decided move the adversary-owned portable program byte-identically into the declared suite, and route that suite in toolkit CI. Defect class: regression omitted from later checks; searched suite discovery and workflow path filters.
 
+### Wave 5 — Resolve closing-review findings in one fix round
+
+**W5-01 Preserve current-before-baseline aggregation** after: W4-02 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/aggregate_benchmark.py` (entry), `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: creator_commands_valid; negative: existing_skill_delta_direction. Extend the existing aggregation CLI case for old_skill and assert current-first columns and deltas; run the creator command tests.
+- Risk: REQ-1; agent-decided preserve documented configuration semantics. Defect class: reversed existing-skill deltas; searched all changed files and the complete creator acceptance surface, including discovery, summary, Markdown and evaluation protocol. Instances are first-two-config subtraction and column ordering in aggregate_benchmark.py; preserve unrecognized-name fallback.
+
+**W5-02 Read token metrics independently of timing fallback** after: W5-01 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/aggregate_benchmark.py` (entry), `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: creator_commands_valid; negative: captured_tokens_with_grading_duration. Extend the same aggregation CLI fixture with nonzero grading duration, output_chars and captured sibling tokens; assert JSON statistics and Markdown. Run creator command tests.
+- Risk: REQ-1; agent-decided retain grading duration precedence without substituting characters for tokens. Defect class: token metrics suppressed by duration; searched all changed files and creator scripts, schema, grader and evaluation protocol. Instances are conditional sibling loading and output_chars fallback in aggregate_benchmark.py.
+
+**W5-03 Report observed repetition populations** after: W5-02 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/aggregate_benchmark.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/schemas.md`, `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: creator_commands_valid; boundary: observed_run_population. Extend the existing CLI test to assert two observed repeats and honest unequal/empty reporting; run creator command tests.
+- Risk: REQ-1; agent-decided qualify unequal/empty counts. Defect class: invented repetition count; searched changed files and creator acceptance surface. Instances: hardcoded metadata and Markdown consumer; schema three remains an example, not a default.
+
+**W5-04 Reconcile labelled preferences before export** after: W5-03 acceptance: 4, 7
+- Files: `skill-dev-toolkit/skills/skill-tuning/scripts/preference_log.py` (entry), `skill-dev-toolkit/skills/skill-tuning/references/preference-log-schema.md`, `skill-dev-toolkit/tests/test_preference_export.py`.
+- Test: A4 positive: explicit_single_preferences_export; negative: contradictory_label_mapping. Extend the current malformed-record parameterization for contradictory and ambiguous picked-label mappings, exercising both export consumers; run preference tests and graduated regression unchanged.
+- Risk: REQ-4; agent-decided preserve identity-only compatibility and raw JSONL. Defect class: decoded identity contradicts picked label; searched changed files, tuning producer, schema, eligibility, exporter, trainer and pipeline. Shared eligibility has the unchecked join; harness already joins correctly.
+
+**W5-05 Qualify remaining ensemble escalation consumers** after: W5-04 acceptance: 5, 7
+- Files: `skill-dev-toolkit/skills/skill-refactor/references/multi-judge-ensemble.md`, `skill-dev-toolkit/skills/skill-refactor/NOTICE`, `skill-dev-toolkit/skills/skill-refactor/README.md`, `skill-dev-toolkit/skills/skill-refactor/README.ja.md`, `skill-dev-toolkit/skills/skill-refactor/README.zh-TW.md`, `skill-dev-toolkit/tests/test_refactor_policy.py` (entry).
+- Test: A5 positive: refactor_policy_consistent; negative: unconditional_escalation_rejected. Extend existing scoped policy coverage to these consumer passages, then run focused policy and package-contract checks.
+- Risk: REQ-5; agent-decided preserve reducer/moderate pass. Defect class: disagreement automatically escalated; searched changed files and refactor acceptance surface. Instances: ensemble rationale, NOTICE and three translated Tier 2 rows; preserve concrete-dissent examples and dated history.
+
 ## Simplicity check
 - none found
 
@@ -95,3 +122,4 @@ charter: 1.1
 3. REQ-5 text assertions cannot alone establish agent behavior; independent realistic execution must exercise voting, deferral, extraction accounting and audit evidence separation before closing acceptance.
 4. Unknown model/effort uses the dispatch resolver's atomic inheritance fallback; no exact model identity or cross-vendor evidence is fabricated.
 5. User authorized non-forced publication and Ready PR after checks; merge remains separate. No external reviewer was selected; second-vendor stays suggest.
+6. Round 1 found five defect classes and an evidence gap. Fix together, repeat package/probe checks, resume same reviewers. Independent acceptance re-tests affected rows with omitted-output-criterion and skipped-procedure-gate cases in separated contexts; justify retained rows.
