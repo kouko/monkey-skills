@@ -42,12 +42,13 @@ def test_toolkit_verification_routed():
     }
     for event in ("pull_request", "push"):
         paths = workflow["on"][event]["paths"]
-        assert {"skill-dev-toolkit/**", workflow_path, *shared_checks} <= set(paths)
+        assert {"skill-dev-toolkit/**", "scripts/**", workflow_path, *shared_checks} <= set(paths)
     assert "main" in workflow["on"]["push"]["branches"]
     job = workflow["jobs"]["test"]
     assert workflow["permissions"] == {"contents": "read"}
     assert job["env"]["PYTHONDONTWRITEBYTECODE"] == "1"
     commands = [shlex.split(step["run"]) for step in job["steps"] if "run" in step]
+    assert ["python3", "-m", "pytest", "scripts/", "-q", "-p", "no:cacheprovider"] in commands
     for target in ("skill-dev-toolkit/", "skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py"):
         assert any(command[:3] == ["python3", "-m", "pytest"]
                    and target in command and "-p" in command
