@@ -1,0 +1,56 @@
+name: skill-dev-toolkit CI
+
+on:
+  pull_request:
+    paths:
+      - 'skill-dev-toolkit/**'
+      - '.github/workflows/skill-dev-toolkit-ci.yml'
+      - 'scripts/check-skill-structure.py'
+      - 'scripts/check-shared-conventions-drift.py'
+      - 'scripts/sync_codex_manifests.py'
+  push:
+    branches: [main]
+    paths:
+      - 'skill-dev-toolkit/**'
+      - '.github/workflows/skill-dev-toolkit-ci.yml'
+      - 'scripts/check-skill-structure.py'
+      - 'scripts/check-shared-conventions-drift.py'
+      - 'scripts/sync_codex_manifests.py'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + description + structure + drift + manifest
+    runs-on: ubuntu-latest
+    env:
+      # Keep generated nested cache folders out of flat skill validation.
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        run: python3 -m pip install --quiet pytest PyYAML
+
+      - name: Run full toolkit pytest suite
+        run: python3 -m pytest skill-dev-toolkit/ -q -p no:cacheprovider
+
+      - name: Run hidden description-standard suite explicitly
+        # pytest does not discover the hidden .claude-plugin directory.
+        run: python3 -m pytest skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py -q -p no:cacheprovider
+
+      - name: Validate toolkit structure
+        run: python3 scripts/check-skill-structure.py skill-dev-toolkit
+
+      - name: Check shared convention drift
+        run: python3 scripts/check-shared-conventions-drift.py
+
+      - name: Check Codex manifest drift
+        run: python3 scripts/sync_codex_manifests.py --check skill-dev-toolkit
