@@ -110,6 +110,11 @@ charter: 1.1
 - Test: A5 positive: refactor_policy_consistent; negative: unconditional_escalation_rejected. Extend existing scoped policy coverage to these consumer passages, then run focused policy and package-contract checks.
 - Risk: REQ-5; agent-decided preserve reducer/moderate pass. Defect class: disagreement automatically escalated; searched changed files and refactor acceptance surface. Instances: ensemble rationale, NOTICE and three translated Tier 2 rows; preserve concrete-dissent examples and dated history.
 
+**W5-06 Qualify legacy entry-only refactor examples** after: W5-05 acceptance: 5, 7
+- Files: `skill-dev-toolkit/skills/skill-refactor/README.md`, `skill-dev-toolkit/skills/skill-refactor/README.ja.md`, `skill-dev-toolkit/skills/skill-refactor/README.zh-TW.md`, `skill-dev-toolkit/tests/test_refactor_policy.py` (entry).
+- Test: A5 positive: refactor_policy_consistent; negative: extraction_only_not_package_saving. Extend existing extraction-policy coverage for the three consumer examples; run focused policy and package-contract checks.
+- Risk: REQ-5; agent-decided qualify illustrative entry-only calculations rather than invent package savings. Defect class: moving words treated as reduction; searched changed files and complete refactor surface. Instances: three README extraction examples claiming 12.4% PROCEED from relocation alone; preserve actual package-mode rules.
+
 ## Simplicity check
 - none found
 
@@ -122,4 +127,4 @@ charter: 1.1
 3. REQ-5 text assertions cannot alone establish agent behavior; independent realistic execution must exercise voting, deferral, extraction accounting and audit evidence separation before closing acceptance.
 4. Unknown model/effort uses the dispatch resolver's atomic inheritance fallback; no exact model identity or cross-vendor evidence is fabricated.
 5. User authorized non-forced publication and Ready PR after checks; merge remains separate. No external reviewer was selected; second-vendor stays suggest.
-6. Round 1 found five defect classes and an evidence gap. Fix together, repeat package/probe checks, resume same reviewers. Independent acceptance re-tests affected rows with omitted-output-criterion and skipped-procedure-gate cases in separated contexts; justify retained rows.
+6. Round 1 found five defect classes and an evidence gap; the consumer sweep also found entry-only examples. Fix together, repeat package/probe checks, resume same reviewers. Independent acceptance re-tests affected rows with omitted-output-criterion and skipped-procedure-gate cases; justify retained rows.
