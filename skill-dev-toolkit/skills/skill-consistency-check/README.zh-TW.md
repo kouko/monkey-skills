@@ -46,8 +46,9 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 - **分組**：估計 30,000 tokens 以內的套件整包一次讀完；超過就分組，
   每組以 25,000 tokens 為目標。每組都放 SKILL.md、agents/ 檔和 SKILL.md
   直接引用的檔案，其餘檔案在兩種方法間用不同方式分配。從沒被放在同一
-  組讀過的檔案組合會列在報告裡；若仍有某組超過 25,000 tokens（核心檔
-  太大，或單一檔案很大），報告會發出警告。
+  組讀過的檔案組合會列在報告裡。任何實際組別超過估計 25,000 tokens，
+  報告都會加上大小提醒，包含未分組而整包讀取的情況。這是保守的名目
+  報告界線，不會改變分組門檻，也不是經實驗證實的準確率驟降點。
 - **判定**：只要有一個 high 的發現就是「需要修改」；medium 和 low
   只是提示。
 - **副作用**：沒有。不安裝任何東西，也不在被檢查的資料夾裡寫任何檔案；
@@ -63,6 +64,11 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - 驗證時用的是 Claude Sonnet（200k context），套件約 25,000 tokens。
   其他模型未經驗證，報告會註明。
+  現有已驗證測試語料的套件估計為 25,135 tokens，仍整包讀取。報告 JSON
+  的 `reference.nominal_reporting_bound_tokens` 記錄保守的 25,000-token
+  提醒界線。舊有的 `reference.max_validated_tokens` 鍵保留 25,000，作為
+  這條名目界線的相容別名，不代表實測最大值或準確率上限。僅超過這條
+  界線，不能證明準確率已變差。
 - 有條件才成立的矛盾（只在共同條件下衝突）和需要推好幾步才看得出的
   矛盾可能被漏掉。
 - 附標準答案的回歸測試資料在 plugin 的

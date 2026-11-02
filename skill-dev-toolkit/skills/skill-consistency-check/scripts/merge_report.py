@@ -17,7 +17,13 @@ import sys
 NAME_RE = re.compile(r"^(read|simulate)-(\d+)(-\d+)?\.json$")
 RANK = {"high": 0, "medium": 1, "low": 2}
 LINE_WINDOW = 2
-REFERENCE = {"model": "Claude Sonnet (200k context)", "max_validated_tokens": 25000}
+# max_validated_tokens is retained as a compatibility alias for the nominal
+# reporting bound, not an empirical maximum or an accuracy ceiling.
+REFERENCE = {"model": "Claude Sonnet (200k context)", "max_validated_tokens": 25000,
+             "nominal_reporting_bound_tokens": 25000}
+SIZE_NOTE = ("25,000 estimated tokens is a conservative nominal reporting bound, "
+             "not a proven accuracy cliff; the existing validated corpus "
+             "fixture estimates to 25,135 tokens (approximately 25k).")
 BLIND_SPOTS = [
     "conditional contradictions (conflict only under a shared condition)",
     "multi-step contradictions (need several inference hops or unstated background knowledge)",
@@ -163,10 +169,10 @@ def _finding_md(n, m):
 def render_md(r):
     out = ["# Consistency report", "", f"Verdict: **{r['verdict']}**", ""]
     if r["over_limit"]:
-        out += ["> Warning: At least one group exceeds the validated size "
-                f"({REFERENCE['max_validated_tokens']:,} estimated tokens) "
-                "because the core files or a single large file are too big; "
-                "results for this run are less reliable.", ""]
+        out += ["> Caution: At least one group exceeds the conservative nominal "
+                "reporting bound "
+                f"({r['reference']['nominal_reporting_bound_tokens']:,} estimated tokens); "
+                "interpret this run with the size qualification in Known limits.", ""]
     high = [m for m in r["findings"] if m["confidence"] == "high"]
     rest = [m for m in r["findings"] if m["confidence"] != "high"]
     out += ["## High-confidence findings (blocking)", ""]
@@ -179,10 +185,10 @@ def render_md(r):
         out += [f"- {a} ↔ {b}" for a, b in r["uncovered_pairs"]] or ["None."]
         out.append("")
     out += ["## Known limits", ""] + [f"- {b}" for b in r["blind_spots"]]
-    out += [f"- {r['coverage_note']}", ""]
+    out += [f"- {r['coverage_note']}", f"- {SIZE_NOTE}", ""]
     ref = r["reference"]
     out.append(f"Model used: {r['model']} — validated on: {ref['model']}, "
-               f"packages up to {ref['max_validated_tokens']:,} tokens")
+               "packages of approximately 25k tokens")
     if not r["model_matches_reference"]:
         out += ["", "> Warning: Accuracy with this model is not validated."]
     return "\n".join(out) + "\n"

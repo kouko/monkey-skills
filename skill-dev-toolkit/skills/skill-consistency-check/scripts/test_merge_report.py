@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).with_name("merge_report.py")
 
 
@@ -154,15 +156,20 @@ def test_limits_and_models_listed(tmp_path):
     data, md = _report(out)
     assert data["model"] == "claude-sonnet-4-5"
     assert data["reference"] == {"model": "Claude Sonnet (200k context)",
-                                 "max_validated_tokens": 25000}
+                                 "max_validated_tokens": 25000,
+                                 "nominal_reporting_bound_tokens": 25000}
     assert len(data["blind_spots"]) == 2
     assert any("conditional" in b for b in data["blind_spots"])
     assert any("multi-step" in b for b in data["blind_spots"])
     assert "Known limits" in md
     for b in data["blind_spots"]:
         assert b in md
-    assert ("Model used: claude-sonnet-4-5 — validated on: Claude Sonnet "
-            "(200k context), packages up to 25,000 tokens") in md
+    assert "Model used: claude-sonnet-4-5" in md
+    assert "packages of approximately 25k tokens" in md
+    limits = md[md.index("Known limits"):md.index("Model used:")]
+    assert "25,000" in limits and "nominal reporting bound" in limits
+    assert "accuracy cliff" in limits
+    assert "25,135" in limits
 
 
 def test_model_mismatch_warning(tmp_path):
@@ -190,15 +197,17 @@ def test_uncovered_pairs_and_over_limit_reported(tmp_path):
     assert data["uncovered_pairs"] == [["references/a.md", "references/b.md"]]
     assert "Not checked together" in md
     assert "references/a.md" in md and "references/b.md" in md
-    assert "exceeds the validated size" in md
+    assert "exceeds the conservative nominal reporting bound" in md
 
 
 def test_not_grouped_has_no_uncovered_section(tmp_path):
     target, plan, f = _setup(tmp_path, {"read-1.json": []})
     out = tmp_path / "out"
     _run(target, plan, f, out)
-    _, md = _report(out)
+    data, md = _report(out)
     assert "Not checked together" not in md
+    assert data["over_limit"] is False
+    assert "> Caution:" not in md
 
 
 # --- Acceptance 5 -----------------------------------------------------------
@@ -306,15 +315,18 @@ def test_thorough_mode_second_run_accepted(tmp_path):
     assert r.returncode == 0, r.stderr
 
 
-def test_over_limit_warning_is_cause_neutral(tmp_path):
-    target, plan, f = _setup(tmp_path, {}, {"grouped": True, "over_limit": True})
+@pytest.mark.parametrize("grouped", [False, True])
+def test_over_limit_warning_is_cause_neutral(tmp_path, grouped):
+    target, plan, f = _setup(tmp_path, {}, {"grouped": grouped, "over_limit": True})
     out = tmp_path / "out"
     _run(target, plan, f, out)
-    _, md = _report(out)
-    assert "core files alone" not in md
-    assert ("At least one group exceeds the validated size (25,000 estimated "
-            "tokens) because the core files or a single large file are too "
-            "big; results for this run are less reliable.") in md
+    data, md = _report(out)
+    assert data["over_limit"] is True and data["grouped"] is grouped
+    caution = next(line for line in md.splitlines() if line.startswith("> Caution:"))
+    assert "25,000 estimated tokens" in caution
+    assert "conservative nominal reporting bound" in caution
+    assert "core" not in caution and "single large file" not in caution
+    assert "less reliable" not in caution and "validated size" not in caution
 
 
 def test_markdown_only_coverage_note(tmp_path):

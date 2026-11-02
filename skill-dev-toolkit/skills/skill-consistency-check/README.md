@@ -52,8 +52,10 @@ skill folder ──► plan_groups.py ──► one group, or several groups
   Larger ones are split into groups aimed at 25,000 tokens each; every
   group carries SKILL.md, agents/ files and the files SKILL.md cites, and
   the two methods group the rest differently. The report lists file pairs
-  that were never read together, and warns when a group still exceeds
-  25,000 tokens (a large core, or one large file).
+  that were never read together. Any actual group over 25,000 estimated
+  tokens receives a size caution, including a whole-package group that
+  was not split. This is a conservative nominal reporting bound; it
+  does not change splitting or establish an accuracy cliff.
 - **Verdict**: "needs revision" only when a high-confidence finding
   exists; medium and low findings are advisory.
 - **Side effects**: none. Nothing is installed and nothing is written
@@ -71,6 +73,13 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - Validated on Claude Sonnet (200k context) with packages of about
   25,000 tokens. Other models are not validated; the report says so.
+  The existing validated corpus fixture estimates to 25,135 tokens and
+  is read whole. In the report JSON,
+  `reference.nominal_reporting_bound_tokens` records the conservative
+  25,000-token notice bound. The legacy `reference.max_validated_tokens`
+  key retains 25,000 as a compatibility alias for that nominal bound,
+  not an empirical maximum or an accuracy ceiling. Exceeding it alone
+  does not establish that accuracy is worse.
 - Conditional contradictions (conflict only under a shared condition)
   and multi-step contradictions (several inference hops) may be missed.
 - The regression corpus with answer keys lives in the plugin's

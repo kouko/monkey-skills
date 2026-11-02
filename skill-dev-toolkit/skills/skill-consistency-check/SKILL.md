@@ -61,10 +61,11 @@ Read `<run>/plan.json`:
   30,000 estimated tokens); `true` means the package was split into
   groups aimed at 25,000 tokens each, each carrying SKILL.md, agents/
   files and the files SKILL.md cites, with the two groupings offset.
-- `over_limit` — `true` when some group still exceeds 25,000 tokens
-  (the core alone is too large, or a single large file needs a group of
-  its own); the report then warns that the run is over the validated
-  size.
+- `over_limit` — `true` when any actual group exceeds 25,000 estimated
+  tokens, including a whole-package group when `grouped` is `false`.
+  This conservative nominal reporting bound qualifies the report; it
+  does not change the 30,000-token split threshold or prove an accuracy
+  cliff at 25,000 tokens.
 
 Only Markdown files other than README*.md are checked: the package is
 every `*.md` file under the target except README files, which are for
@@ -169,10 +170,11 @@ Read `<run>/consistency-report.md` and present it in the user's language:
 - The "Not checked together" list when the package was grouped: those
   file pairs were never read in the same group, so contradictions
   between them could be missed.
-- The over-limit warning when present: at least one group exceeded the
-  validated size.
+- The size caution when present: at least one group exceeded the
+  conservative nominal reporting bound, even if the package was not split.
 - The known limits: conditional and multi-step contradictions may be
-  missed.
+  missed; 25,000 estimated tokens is a conservative nominal reporting
+  bound, not a proven accuracy cliff.
 - The model line, and the warning when the model differs from the
   validation reference.
 
@@ -182,6 +184,16 @@ Give the report's path in the run directory. Do not edit the target.
 ## Validated on
 
 Validated on: Claude Sonnet (200k context) on skill packages of about 25,000 tokens; other models are unvalidated until they pass the regression corpus.
+
+The existing validated corpus fixture estimates to 25,135 tokens
+(approximately 25k) and is still read whole. The report JSON's
+`reference.nominal_reporting_bound_tokens` records the conservative
+25,000-token notice bound. The legacy `reference.max_validated_tokens`
+key retains 25,000 as a compatibility alias for that nominal bound,
+not an empirical maximum or an accuracy ceiling. The plan's `group_max` stays
+25,000 as the grouping target and notice bound; `limit` stays 30,000 as
+the split threshold. Exceeding the notice bound alone does not establish
+that accuracy is worse.
 
 The regression corpus (planted contradictions with answer keys and a
 scoring helper) lives in this plugin's `tests/consistency-check-corpus/`
