@@ -76,12 +76,14 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
             for index, rate in enumerate(rates, 1):
                 run = tmp_path / f"eval-7/{config}/run-{index}"
                 run.mkdir(parents=True)
+                multiplier = 2 if config == "with_skill" else 1
                 (run / "grading.json").write_text(json.dumps({
                     "summary": {"pass_rate": rate, "passed": int(rate * 2), "failed": int(2 - rate * 2), "total": 2},
                     "expectations": [{"text": "fixture", "passed": bool(rate), "evidence": "offline"}],
+                    "timing": {"total_duration_seconds": index * multiplier if config == "with_skill" else 0},
+                    "execution_metrics": {"output_chars": index * 1000},
                 }))
-                multiplier = 2 if config == "with_skill" else 1
-                (run / "timing.json").write_text(json.dumps({"total_duration_seconds": index * multiplier, "total_tokens": index * multiplier * 5}))
+                (run / "timing.json").write_text(json.dumps({"total_duration_seconds": index * 10 if config == "with_skill" else index, "total_tokens": index * multiplier * 5}))
         result = command(entry, tmp_path, "--skill-name", "example-skill")
         assert result.returncode == 0, result.stderr + result.stdout
         benchmark = json.loads((tmp_path / "benchmark.json").read_text())
@@ -91,6 +93,7 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         assert summary["with_skill"]["pass_rate"] == {"mean": 0.75, "stddev": 0.3536, "min": 0.5, "max": 1.0}
         assert summary["with_skill"]["time_seconds"]["mean"] == 3
         assert summary["with_skill"]["tokens"]["mean"] == 15
+        assert [run["result"]["tokens"] for run in benchmark["runs"] if run["configuration"] == "with_skill"] == [10, 20]
         assert summary["delta"]["pass_rate"] == "+0.50"
         assert summary["delta"]["time_seconds"] == "+1.5"
         assert summary["delta"]["tokens"] == "+8"
@@ -98,6 +101,15 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         baseline_label = baseline.replace("_", " ").title()
         assert f"| Metric | With Skill | {baseline_label} | Delta |" in markdown
         assert "75% ± 35%" in markdown
+        assert "| Tokens | 15 ± 7 | 8 ± 4 | +8 |" in markdown
+        for index, captured in enumerate([{"total_tokens": 0}, {}], 1):
+            (tmp_path / f"eval-7/with_skill/run-{index}/timing.json").write_text(json.dumps(captured))
+        result = command(entry, tmp_path)
+        assert result.returncode == 0, result.stderr + result.stdout
+        benchmark = json.loads((tmp_path / "benchmark.json").read_text())
+        assert [run["result"]["tokens"] for run in benchmark["runs"] if run["configuration"] == "with_skill"] == [0, 0]
+        assert benchmark["run_summary"]["with_skill"]["tokens"]["mean"] == 0
+        assert "| Tokens | 0 ± 0 | 8 ± 4 | -8 |" in (tmp_path / "benchmark.md").read_text()
     else:
         module = request.getfixturevalue("optimizer")
         evaluated, improved = [], []
