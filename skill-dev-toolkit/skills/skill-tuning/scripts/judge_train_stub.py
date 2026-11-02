@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 """judge_train_stub.py — H4 horizon scaffold for self-trained preference judge.
 
-This is a STUB at v1.7.0. The full training pipeline activates only
-when a target skill's preference log has accumulated ≥1000 entries
-with ADOPT or DROP verdicts. Until then, this script documents the
-interface and fails fast with a clear error.
+This is a STUB at v1.7.0. Data readiness requires ≥1000 usable explicit
+single ADOPT or baseline DROP records for one skill. This script reports
+readiness and fails clearly; training remains unimplemented at threshold.
 
 Per references/self-trained-judge-pipeline.md.
 
 Workflow (when active):
     1. Load preference log; filter by target skill
-    2. Extract (preferred, rejected) pairs from ADOPT entries
+    2. Extract (preferred, rejected) pairs from usable single-pick records
     3. Pair training: model learns to score preferred > rejected
     4. Evaluate on held-out 20%
     5. Save trained model to <skill>/preference-judge-vN.<ext>
     6. Append a session_summary entry to log noting trainer ran
 
 Workflow (current, v1.7.0):
-    Just shouts: "scaffolded, not active. Threshold N=1000 entries.
-    Got <K>. Continue using LLM-as-judge."
+    Report usable/skipped records and pairs. Threshold N=1000 usable records.
+    Below threshold: continue using LLM-as-judge. At threshold: still inactive.
 
 Usage:
     python judge_train_stub.py \\
@@ -40,6 +39,8 @@ import json
 import sys
 from pathlib import Path
 
+from preference_log import usable_preferences
+
 
 def load_log(log_path: Path) -> list[dict]:
     if not log_path.exists():
@@ -58,29 +59,11 @@ def load_log(log_path: Path) -> list[dict]:
 
 
 def extract_preference_pairs(entries: list[dict], skill: str) -> list[dict]:
-    """For each ADOPT entry on this skill, generate (preferred, rejected) pairs.
-
-    Each ADOPT becomes one pair per non-picked variant.
-    """
-    pairs = []
-    for e in entries:
-        if e.get("skill") != skill:
-            continue
-        if e.get("verdict") != "ADOPT":
-            continue
-        picked = e.get("user_pick_identity")
-        shown = e.get("variants_shown", [])
-        if not picked or not shown:
-            continue
-        for variant in shown:
-            if variant.get("identity") == picked:
-                continue
-            pairs.append({
-                "preferred": picked,
-                "rejected": variant.get("identity"),
-                "test_prompt_hash": e.get("test_prompt_hash"),
-            })
-    return pairs
+    """Generate identity pairs using the exporter's usable-record rule."""
+    usable, _ = usable_preferences(entries, skill)
+    return [{"preferred": chosen["identity"], "rejected": variant["identity"],
+             "test_prompt_hash": entry.get("test_prompt_hash")}
+            for entry, chosen, alternatives in usable for variant in alternatives]
 
 
 def main() -> int:
@@ -98,18 +81,21 @@ def main() -> int:
         return 2
 
     pairs = extract_preference_pairs(entries, args.skill)
+    usable, skipped = usable_preferences(entries, args.skill)
 
     print(f"Skill: {args.skill}")
     print(f"Log: {args.log}")
     print(f"Total log entries: {len(entries)}")
-    print(f"Preference pairs (from ADOPT entries): {len(pairs)}")
-    print(f"Threshold: ≥{args.min_entries}")
+    print(f"Preference data: {len(usable)} usable records, "
+          f"{skipped} skipped records, {len(pairs)} pairs")
+    print(f"Threshold: ≥{args.min_entries} usable records")
 
-    if len(pairs) < args.min_entries:
+    if len(usable) < args.min_entries:
         print(
             f"\nInsufficient training data. The self-trained judge pipeline "
             f"is scaffolded but not active. Threshold is "
-            f"≥{args.min_entries} preference pairs; you have {len(pairs)}.",
+            f"≥{args.min_entries} usable records; you have {len(usable)} usable "
+            f"records, {skipped} skipped records, {len(pairs)} pairs.",
             file=sys.stderr,
         )
         print(
@@ -136,7 +122,7 @@ def main() -> int:
 
     # If we ever reach here in a future PR's activated pipeline:
     print(
-        f"\nThreshold met ({len(pairs)} ≥ {args.min_entries}) but training "
+        f"\nThreshold met ({len(usable)} ≥ {args.min_entries}) but training "
         f"pipeline activation is not yet implemented. The presence of this "
         f"path indicates {args.skill} has accumulated enough preference data "
         f"that activating real training is now warranted — open a PR to "
@@ -147,7 +133,7 @@ def main() -> int:
     raise NotImplementedError(
         f"Training pipeline scaffolded but not implemented. Reaching this "
         f"path is itself a signal that activation is now needed: skill "
-        f"{args.skill!r} has {len(pairs)} preference pairs (≥ threshold "
+        f"{args.skill!r} has {len(usable)} usable records (≥ threshold "
         f"{args.min_entries}). Implement training and replace this stub. "
         "Activation methodology: 80/20 train/eval split + Bradley-Terry "
         "preference loss + held-out ≥80% agreement gate + comparison vs "

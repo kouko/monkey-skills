@@ -183,7 +183,7 @@ See `references/ab-harness-protocol.md` for the full harness flow.
 Preference log entry per round:
 
 ```jsonl
-{"timestamp": "...", "skill": "...", "round": N, "test_prompt_id": M, "variants_shown": ["baseline", "variant_a", "variant_b"], "user_pick": "variant_a", "rejected_by_constitution": [], "evaluator": "human-1", "notes": "..."}
+{"timestamp": "...", "skill": "...", "round": 1, "test_prompt_id": 1, "test_prompt_hash": "sha256-of-prompt", "variants_shown": [{"label": "A", "identity": "baseline", "skill_md_hash": "sha256-of-baseline"}, {"label": "B", "identity": "variant_a", "skill_md_hash": "sha256-of-variant-a"}], "user_pick": "B", "user_pick_identity": "variant_a", "verdict": "ADOPT", "constitutional_rejected": [], "evaluator": "human-1", "user_notes": "..."}
 ```
 
 See `references/preference-log-schema.md`.
@@ -228,8 +228,14 @@ implicit constraints.
 The preference log is **durable signal**. Every round adds an
 entry; over time, hundreds to thousands of entries accumulate.
 
-At ≥1000 entries, the log becomes training data for a
-domain-specific preference model:
+At ≥1000 usable explicit single-pick records for one skill, the log
+meets the data-readiness threshold for a domain-specific preference model.
+Each record must yield at least one selected-over-other pair from distinct,
+nonempty hashes: a single ADOPT or an explicit baseline DROP counts;
+None, multiple and refine do not invent a winner. Missing chosen identity
+or required hashes is skipped. Usable/skipped records and pair counts are
+reported separately; many pairs from one record still count as one record.
+Training remains inactive even when the threshold is met. Future flow:
 
 ```
 Train: log[i].variants → predict log[i].user_pick
@@ -411,7 +417,8 @@ Scripts:
 - `scripts/preference_log.py` — append / query / aggregate
   preference log entries
 - `scripts/judge_train_stub.py` — H4 stub: documents training
-  pipeline, fails with "log too small" until ≥1000 entries
+  pipeline, reports readiness at ≥1000 usable single-pick records;
+  training remains inactive
 
 ## Bottom Line
 

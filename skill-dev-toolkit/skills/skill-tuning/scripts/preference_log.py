@@ -17,8 +17,8 @@ Operations:
         Per-skill aggregate (total picks, ADOPT rate, etc.).
 
     export-for-training <log_path> --skill X --out PATH [--min-entries N]
-        Export training-ready preference pairs JSON; fails if entries
-        below threshold (default 1000).
+        Export preference pairs JSON; fails below the usable single-pick
+        record threshold (default 1000); reports skipped records separately.
 
 Usage examples:
     python preference_log.py append /path/to/log.jsonl '{"skill":"X",...}'
@@ -132,15 +132,71 @@ def op_summarize(log_path: Path, skill: str | None) -> int:
     return 0
 
 
-def op_export_training(log_path: Path, skill: str, out_path: Path, min_entries: int) -> int:
-    entries = load_entries(log_path)
-    skill_entries = [e for e in entries if e.get("skill") == skill and e.get("verdict") in {"ADOPT", "DROP"}]
+def usable_preferences(entries: list[dict], skill: str) -> tuple[list[tuple], int]:
+    """Return (entry, chosen, alternatives) records and skipped target records.
 
-    if len(skill_entries) < min_entries:
+    Only explicit single ADOPT or baseline DROP picks with distinct usable
+    hashes count. Keep raw records untouched; both export consumers use this rule.
+    """
+    usable = []
+    skipped = 0
+    no_choice = {"none", "multiple", "refine"}
+
+    def text(value):
+        return isinstance(value, str) and bool(value.strip())
+
+    for entry in entries:
+        if not isinstance(entry, dict) or entry.get("skill") != skill:
+            continue
+        picked = entry.get("user_pick_identity")
+        pick = entry.get("user_pick")
+        shown = entry.get("variants_shown")
+        if (entry.get("type", "pick") != "pick"
+                or not text(picked) or picked.lower() in no_choice
+                or not text(pick) or pick.lower() in no_choice
+                or not text(entry.get("test_prompt_hash"))
+                or not isinstance(shown, list)
+                or not (entry.get("verdict") == "ADOPT" and picked != "baseline"
+                        or entry.get("verdict") == "DROP" and picked == "baseline")):
+            skipped += 1
+            continue
+        choices = [v for v in shown if isinstance(v, dict) and v.get("identity") == picked]
+        if len(choices) != 1 or not text(choices[0].get("skill_md_hash")):
+            skipped += 1
+            continue
+        chosen = choices[0]
+        alternatives = []
+        seen_hashes = {chosen["skill_md_hash"]}
+        for variant in shown:
+            if (not isinstance(variant, dict) or not text(variant.get("identity"))
+                    or variant["identity"] == picked
+                    or not text(variant.get("skill_md_hash"))
+                    or variant["skill_md_hash"] in seen_hashes):
+                continue
+            alternatives.append(variant)
+            seen_hashes.add(variant["skill_md_hash"])
+        if alternatives:
+            usable.append((entry, chosen, alternatives))
+        else:
+            skipped += 1
+    return usable, skipped
+
+
+def op_export_training(log_path: Path, skill: str, out_path: Path, min_entries: int) -> int:
+    usable, skipped = usable_preferences(load_entries(log_path), skill)
+    pairs = [{
+        "test_prompt_hash": entry.get("test_prompt_hash"),
+        "preferred_skill_md_hash": chosen["skill_md_hash"],
+        "rejected_skill_md_hash": variant["skill_md_hash"],
+        "evaluator": entry.get("evaluator"),
+        "constitution_version": entry.get("constitution_version"),
+    } for entry, chosen, alternatives in usable for variant in alternatives]
+
+    if len(usable) < min_entries:
         print(
             f"error: insufficient training data for skill {skill!r}: "
-            f"got {len(skill_entries)} entries with ADOPT/DROP verdicts, "
-            f"need ≥{min_entries}.",
+            f"{len(usable)} usable records, {skipped} skipped records, "
+            f"{len(pairs)} pairs; need ≥{min_entries} usable records.",
             file=sys.stderr,
         )
         print(
@@ -151,31 +207,17 @@ def op_export_training(log_path: Path, skill: str, out_path: Path, min_entries: 
         )
         return 1
 
-    pairs: list[dict[str, Any]] = []
-    for e in skill_entries:
-        if e.get("verdict") == "ADOPT":
-            picked = e.get("user_pick_identity")
-            shown = {v.get("identity"): v for v in e.get("variants_shown", [])}
-            for identity, variant_record in shown.items():
-                if identity == picked:
-                    continue
-                pairs.append({
-                    "test_prompt_hash": e.get("test_prompt_hash"),
-                    "preferred_skill_md_hash": shown.get(picked, {}).get("skill_md_hash"),
-                    "rejected_skill_md_hash": variant_record.get("skill_md_hash"),
-                    "evaluator": e.get("evaluator"),
-                    "constitution_version": e.get("constitution_version"),
-                })
-
     out = {
         "skill": skill,
-        "n_entries_used": len(skill_entries),
+        "n_entries_used": len(usable),
+        "n_entries_skipped": skipped,
         "n_training_pairs": len(pairs),
         "training_pairs": pairs,
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"exported {len(pairs)} training pairs to {out_path}")
+    print(f"exported {len(pairs)} pairs from {len(usable)} usable records; "
+          f"{skipped} skipped records; output: {out_path}")
     return 0
 
 
