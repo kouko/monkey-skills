@@ -200,7 +200,6 @@ def test_extraction_accounting_real_package_expected():
     assert reduction<.05
 
 ```
-
 ## Captured independent probe output
 
 ```text
@@ -218,5 +217,365 @@ agreement 3/4 = 0.75 majority
 extraction: target words 2894 -> 2488, package words 22783 -> 22783
 whole-package reduction 0.0 overall Q2 REJECT
 3 passed in 0.28s
+```
+
+## Re-run on 2026-11-03, at 834668cce
+
+Tried on 2026-11-03, in a clean copy of the project at 834668cce.
+
+### Setup, scope and correction
+
+- Exact tested HEAD: `834668cce32659ec24c8f997fc9f267840248d62`.
+- Fresh local clone `/private/tmp/monkey-skills-acceptance-834668cce`, detached at that exact SHA; initial and final tracked/untracked status empty. README setup rechecked. No dependency installs or host changes: reused `/Users/kouko/.conda/envs/dbt-redshift/bin/python3`, which loaded the commands and focused tests successfully.
+- Read the complete fix diff `35d507e2a33759a29b7990b4ab4b1a2e0275e14a..834668cce32659ec24c8f997fc9f267840248d62`, including all 13 changed paths and their consumers. Also checked `8b174cd17..834668cce` for every carried-over surface; relevant paths had no diff.
+- No important/fatal findings were dismissed. Code and skill review findings were repaired, including the extra translated extraction examples found by the parent.
+- Correction to first-run evidence: the arithmetic-only audit above proved rubric delivery and arithmetic judgment, but did NOT prove detection of an omitted artifact criterion or a skipped declared gate. Its earlier claim of sufficient acceptance #5 evidence was too broad. The bounded discriminating fixture below supplies the missing evidence and supersedes that claim.
+- No complete package/toolkit suite was run by this tester. Finalize-review is not skipped and will execute the declared package suite before accepting. Handed Build logs inspected: `/private/tmp/toolkit-round2-package-tests.txt` ends `715 passed in 53.39s`; adversarial log ends `5 passed in 0.10s`. These are Build's runs, not this tester's independent executions.
+
+### 1. Re-tested — all three creator entrypoints and aggregation boundaries
+
+- Command, existing interpreter:
+```sh
+-m pytest skill-dev-toolkit/tests/test_creator_commands.py skill-dev-toolkit/tests/test_preference_export.py skill-dev-toolkit/tests/test_creator_metadata_contract.py skill-dev-toolkit/tests/test_refactor_policy.py skill-dev-toolkit/tests/test_tuning_policy.py skill-dev-toolkit/skills/skill-refactor/scripts/test_package_mode_contract.py skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py scripts/test_preferences_single_choice.py -q
+```
+- Output: `81 passed in 2.15s`, exit 0.
+- Packaging archive inclusion/exclusion and invalid-input no-output branches reran. Offline optimizer bounded progress/heldout separation/backend-failure branches reran.
+- Actual aggregation CLI tested BOTH without_skill and old_skill baselines: current rate .75, baseline .25 -> delta +.50; Markdown current-first columns; grading duration mean 3 retained despite different sibling duration; captured tokens 10/20 -> mean15 independently of duration and output_chars; zero/missing captured tokens remain0 rather than treating characters as tokens.
+- Observed uniform populations2 -> metadata2/Markdown2, two-eval uniform2 ->2; unequal population ->null/qualified Markdown, including zero missing-eval/configuration cells; no grading runs ->0/Markdown0.
+- Evidence: expanded `test_creator_commands_valid` parameterizations and `test_creator_commands_invalid`.
+- Boundaries unchanged: optimizer uses offline stubs, no provider or triggering-quality inference.
+
+### 2. Carried over — ordered equivalence surfaces unchanged
+
+- Same result as initial section2. Checked whole `8b174cd17..834668cce`: `equivalence_check.py`, `equivalence-check-protocol.md` and order tests unchanged. New aggregator, preference export and prose consumers do not feed structural traces.
+- No rerun result fabricated; initial 14 deterministic trace fixtures remain the backing evidence.
+
+### 3. Carried over — blind display and lock-in surfaces unchanged
+
+- Same result as initial section3. Whole-range comparison showed no changes to `ab_harness.py`, blind harness protocol or blind CLI tests.
+- New shared export validation consumes already-recorded picks; it does not change printed paths, label assignment, full-output copies or pick parsing. Initial ten CLI rounds remain backing evidence.
+
+### 4. Re-tested — all preference consumers, compatibility and counts
+
+- Focused command above reran explicit candidate/baseline exports and inactive trainer, all unusable cases, readiness population and graduated regression.
+- New contradictory label A=baseline / recorded candidate winner is rejected; duplicate normalized picked labels and incomplete mappings missing picked label are rejected. Both exporter and trainer share eligibility and give no usable-record credit; all-unlabelled records retain compatibility.
+- Consistent labelled picks with whitespace/case normalization remain usable. Labelled and identity-only usable-record readiness still counts records, not1002 derived pairs; source bytes unchanged; trainer still inactive.
+- Independent CLI replay for BOTH valid labelled choices:
+```text
+labelled A baseline 1 usable 1 pair preferred base raw unchanged
+labelled B candidate 1 usable 1 pair preferred candidate raw unchanged
+1 passed, 3 deselected in 0.15s
+```
+- Command: existing interpreter `-m pytest /private/tmp/test_acceptance_repair_rerun.py -q -s -k labelled`.
+- This also tests the valid labelled baseline branch directly, rather than inferring it from candidate-only fixtures.
+
+### 5. Re-tested — eight policy surfaces and discriminating audit fixture
+
+- Creator/judge description authority and word budget, case-metadata ownership, refactor dependency/extraction, ensemble voting/ablation, human agreement/multi-pick and dogfood evidence ownership all reran via focused files above.
+- Re-read ensemble reference, NOTICE and three README Tier2 rows: only FLAG_TIER_2 escalates. Actual E,E,U CLI -> PASS_MODERATE exit0; E,E,N ->FLAG_TIER_2 exit2; concrete warning loss overrides low-equivalence count ->FLAG_TIER_2; vague E,N,U ->FAIL exit1.
+- Translated extraction examples now all REJECT a12.4% entry-only relocation without whole-package savings. Fresh real-package export/account replay: target words2894->2488(-406), package words22879->22879(0), package bytes189020->189020(0), valid accounting PASS but whole-package Q2 REJECT. No candidate applied.
+- Actual harness parsing followed by informed policy execution: a+b DEFER/no edit; none DROP/no edit; refine REFINE/no edit; baseline single DROP/no edit; candidate single ADOPT/edit. 2/3<.70 ESCALATE;3/4>.70 majority. No product tally API invented.
+- Command: existing interpreter `-m pytest /private/tmp/test_acceptance_repair_rerun.py -q -s` before labelled case was added: `3 passed in0.32s`. The separate added labelled test passed as recorded under4.
+- R4 fixture execution and exact independent-context packets/results follow below. It used real repository structure output and real unchanged-source checks with intentionally omitted evidence, not a paid executor or a whole live-host dogfood run.
+
+### 6. Carried over — planner and report evidence surfaces unchanged
+
+- Whole-range comparison showed no changes to consistency-check planner, merger, user-facing size/coverage documentation or their tests.
+- Initial boundary fixtures and real25135-token corpus results remain backing evidence. New refactor example prose cannot change group membership, nominal warning or rendering.
+
+### 7. Re-tested — focused detection, current authorities and repository checks
+
+- 81 focused cases passed; the independent voting/deferral/extraction cases3 passed plus valid labelled preferences1 passed. They exercise the repaired negative branches and current resolved references rather than asserting obsolete inline placement.
+- `python3 scripts/check-skill-structure.py skill-dev-toolkit`: all6PASS.
+- `python3 scripts/check-shared-conventions-drift.py`:3 conventions,0 drift failures,0 read errors.
+- `python3 scripts/sync_codex_manifests.py --check skill-dev-toolkit`: exit0.
+- Workflow and graduated test route unchanged; graduated5-case program passed in the focused run. Parent's Build package715 result inspected separately; acceptance does not relabel it as its own suite run.
+- Finalizer still must run `python3 -m pytest scripts/ -q`; failures block acceptance. No steps skipped, no host installation or activation claim.
+
+### R4 declared contract and executed informed workflow
+
+The intentionally failing and positive-control fixture uses an ordered procedure and genuine repository validator output. Its scripted executor writes fixture artifacts only outside the source tree.
+
+Declared procedure (informed-only):
+```json
+[
+  "1. Enumerate all toolkit skill directories containing SKILL.md.",
+  "2. Run the repository structure validator on the toolkit and require success.",
+  "3. Before reporting, run git diff --exit-code and require unchanged tracked source.",
+  "4. Write the report with title, observed skill count, and mandatory scope limitation."
+]
+```
+
+Exact executed transcript A (informed-only):
+```json
+[
+  {
+    "step": 1,
+    "operation": "glob skill-dev-toolkit/skills/*/SKILL.md",
+    "result": [
+      "dogfood-skill-testing",
+      "skill-consistency-check",
+      "skill-creator-advance",
+      "skill-judge",
+      "skill-refactor",
+      "skill-tuning"
+    ]
+  },
+  {
+    "step": 2,
+    "command": [
+      "python3",
+      "scripts/check-skill-structure.py",
+      "skill-dev-toolkit"
+    ],
+    "exit": 0,
+    "output": "check-skill-structure: scanned 6 skills under /private/tmp/monkey-skills-acceptance-834668cce/skill-dev-toolkit/skills\nPASS  dogfood-skill-testing\nPASS  skill-consistency-check\nPASS  skill-creator-advance\nPASS  skill-judge\nPASS  skill-refactor\nPASS  skill-tuning\n\nAll 6 skills PASS\n"
+  },
+  {
+    "step": 4,
+    "operation": "write report",
+    "artifact": "artifact-A.md"
+  }
+]
+```
+
+Exact executed transcript B (informed-only):
+```json
+[
+  {
+    "step": 1,
+    "operation": "glob skill-dev-toolkit/skills/*/SKILL.md",
+    "result": [
+      "dogfood-skill-testing",
+      "skill-consistency-check",
+      "skill-creator-advance",
+      "skill-judge",
+      "skill-refactor",
+      "skill-tuning"
+    ]
+  },
+  {
+    "step": 2,
+    "command": [
+      "python3",
+      "scripts/check-skill-structure.py",
+      "skill-dev-toolkit"
+    ],
+    "exit": 0,
+    "output": "check-skill-structure: scanned 6 skills under /private/tmp/monkey-skills-acceptance-834668cce/skill-dev-toolkit/skills\nPASS  dogfood-skill-testing\nPASS  skill-consistency-check\nPASS  skill-creator-advance\nPASS  skill-judge\nPASS  skill-refactor\nPASS  skill-tuning\n\nAll 6 skills PASS\n"
+  },
+  {
+    "step": 3,
+    "command": [
+      "git",
+      "diff",
+      "--exit-code"
+    ],
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "step": 4,
+    "operation": "write report",
+    "artifact": "artifact-B.md"
+  }
+]
+```
+
+Command: `python3 /private/tmp/acceptance_r4_fixture.py`, exit0.
+```text
+informed {"artifact": "A", "verdict": "FAIL", "missing_declared_steps": [3]}
+informed {"artifact": "B", "verdict": "PASS", "missing_declared_steps": []}
+```
+Informed finding: transcript A jumps from required step2 to reporting step4, skipping step3 `git diff --exit-code`. B runs step3 with exit0 and no output, satisfying the required unchanged-tracked-source gate. This is distinct from the artifact criterion and was not sent to either auditor.
+
+### Exact blind packets and returned judgments
+
+Before EACH native auditor dispatch, ran packaged `dispatch_profile.py` locally with:
+```json
+{"event":"initial","main_profile":{"model":null,"effort":null},"task_evidence":{"trust_boundary":true},"capabilities":{},"inheritance_guaranteed":true,"completed_redispatches":0}
+```
+Both resolver outputs:
+```json
+{"completed_redispatches":0,"effective_profile":"inherited","outcome":"dispatch","overrides":null,"reason":"unobservable-main-profile","requested_profile":null,"task_class":"complex","uncertainty":null}
+```
+Both calls used `fork_turns:"none"`, omitted model/effort overrides, no external provider tools. Exact payload for EACH of the two isolated calls:
+```text
+Judge the artifacts ONLY against the supplied rubric. You have no context about how they were produced; no tools, external services or inference about producer steps. Return coarse PASS/FAIL/UNVERIFIED per artifact and cite the specific missing criterion. RUBRIC: Report requires title Toolkit structure check; the observed count is six skills; report all six passed; explicitly state that structural validation does not prove live host activation. Judge only these artifact requirements, not producer steps. ARTIFACT A:
+# Toolkit structure check
+
+Six skills checked; all six passed.
+
+ARTIFACT B:
+# Toolkit structure check
+
+Six skills checked; all six passed.
+
+Structural validation does not prove live host activation.
+```
+
+Run1 exact response:
+> Artifact A: FAIL — Missing the explicit statement that structural validation does not prove live host activation.
+> Artifact B: PASS — Includes the required title, count of six skills, all six passing, and the required limitation.
+
+Run2 exact response:
+> Artifact A: FAIL — Missing the required statement that structural validation does not prove live host activation.
+> Artifact B: PASS — Meets all four artifact requirements.
+
+Observed separation: both blind auditors catch the omitted required limitation, with no procedure/transcript present in either packet. The informed tester separately catches the skipped source-integrity gate from the ordered procedure/transcript. Positive control B passes both checks. Exact model/version pin remains UNVERIFIED; two native inherited-context samples do not establish provider activation, full skill routing, or full live-host workflow fidelity.
+
+### R4 replay source
+
+```python
+"""Execute two bounded fixture workflows; keep blind and informed packets separate."""
+import json
+from pathlib import Path
+import subprocess
+
+ROOT=Path('/private/tmp/monkey-skills-acceptance-834668cce')
+OUT=Path('/private/tmp/acceptance-r4-rerun')
+OUT.mkdir(exist_ok=True)
+PROCEDURE=[
+    '1. Enumerate all toolkit skill directories containing SKILL.md.',
+    '2. Run the repository structure validator on the toolkit and require success.',
+    '3. Before reporting, run git diff --exit-code and require unchanged tracked source.',
+    '4. Write the report with title, observed skill count, and mandatory scope limitation.',
+]
+RUBRIC=('Report requires title Toolkit structure check; the observed count is six skills; '
+        'report all six passed; explicitly state that structural validation does not prove '
+        'live host activation. Judge only these artifact requirements, not producer steps.')
+for name,skip in [('A',True),('B',False)]:
+    transcript=[]
+    found=sorted(p.parent.name for p in (ROOT/'skill-dev-toolkit/skills').glob('*/SKILL.md'))
+    transcript.append({'step':1,'operation':'glob skill-dev-toolkit/skills/*/SKILL.md','result':found})
+    cmd=['python3','scripts/check-skill-structure.py','skill-dev-toolkit']
+    p=subprocess.run(cmd,cwd=ROOT,capture_output=True,text=True)
+    assert p.returncode==0
+    transcript.append({'step':2,'command':cmd,'exit':p.returncode,'output':p.stdout})
+    if not skip:
+        p=subprocess.run(['git','diff','--exit-code'],cwd=ROOT,capture_output=True,text=True)
+        assert p.returncode==0
+        transcript.append({'step':3,'command':['git','diff','--exit-code'],'exit':0,'output':p.stdout})
+    artifact='# Toolkit structure check\n\nSix skills checked; all six passed.\n'
+    if not skip:
+        artifact+='\nStructural validation does not prove live host activation.\n'
+    (OUT/f'artifact-{name}.md').write_text(artifact)
+    transcript.append({'step':4,'operation':'write report','artifact':f'artifact-{name}.md'})
+    (OUT/f'transcript-{name}.json').write_text(json.dumps(transcript,indent=2))
+    missing=[step for step in range(1,5) if step not in [r['step'] for r in transcript]]
+    result={'artifact':name,'verdict':'FAIL' if missing else 'PASS','missing_declared_steps':missing}
+    print('informed',json.dumps(result))
+    assert missing==([3] if skip else [])
+    print('artifact',name,repr(artifact))
+(OUT/'procedure.json').write_text(json.dumps(PROCEDURE,indent=2))
+(OUT/'rubric.txt').write_text(RUBRIC)
+print('rubric',RUBRIC)
+
+```
+
+### Independent local re-run replay source
+
+```python
+"""Independent offline acceptance probes, not a live-provider dogfood run."""
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+ROOT = Path('/private/tmp/monkey-skills-acceptance-834668cce')
+PY = sys.executable
+OUT = Path('/private/tmp/acceptance-repair-rerun-fixtures')
+OUT.mkdir(exist_ok=True)
+
+def test_labelled_preferences_both_choices_expected():
+    """Consistent labelled baseline and candidate picks export their actual winner."""
+    scripts=ROOT/'skill-dev-toolkit/skills/skill-tuning/scripts'
+    for choice,identity,verdict in [('A','baseline','DROP'),('B','candidate','ADOPT')]:
+        record={'skill':'acceptance','verdict':verdict,'user_pick':choice,
+                'user_pick_identity':identity,'test_prompt_hash':'prompt',
+                'variants_shown':[{'label':'A','identity':'baseline','skill_md_hash':'base'},
+                                  {'label':'B','identity':'candidate','skill_md_hash':'candidate'}]}
+        log=OUT/f'{choice}.jsonl'
+        raw=json.dumps(record)+'\n'
+        log.write_text(raw)
+        output=OUT/f'{choice}-pairs.json'
+        p=subprocess.run([PY,str(scripts/'preference_log.py'),'export-for-training',str(log),
+                          '--skill','acceptance','--out',str(output),'--min-entries','1'],
+                         capture_output=True,text=True)
+        assert p.returncode==0,p.stderr
+        result=json.loads(output.read_text())
+        preferred='base' if identity=='baseline' else 'candidate'
+        assert result['n_entries_used']==result['n_training_pairs']==1
+        assert result['training_pairs'][0]['preferred_skill_md_hash']==preferred
+        assert log.read_text()==raw
+        print('labelled',choice,identity,'1 usable 1 pair preferred',preferred,'raw unchanged')
+
+def load(name, relative):
+    spec = importlib.util.spec_from_file_location(name, ROOT / relative)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+def test_vote_cases_real_cli_expected():
+    """Read the current rule and execute its representative vote outcomes."""
+    script = ROOT/'skill-dev-toolkit/skills/skill-refactor/scripts/multi_judge.py'
+    for label, votes, reason, expected, code in [
+        ('uncertain','EEU','same observable behavior','PASS_MODERATE',0),
+        ('dissent','EEN','different emphasis','FLAG_TIER_2',2),
+        ('specific','ENU','drops the warning','FLAG_TIER_2',2),
+        ('weak','ENU','different emphasis','FAIL',1)]:
+        names = {'E':'equivalent','U':'uncertain','N':'not_equivalent'}
+        path = OUT / f'{label}.json'
+        path.write_text(json.dumps({'judges':[{'verdict':names[v],'reason':reason} for v in votes]}))
+        proc = subprocess.run([PY,str(script),'--ensemble',str(path)],capture_output=True,text=True)
+        result=json.loads(proc.stdout)
+        print(label, proc.returncode, json.dumps(result,sort_keys=True))
+        assert (result['consensus'],proc.returncode)==(expected,code)
+
+def test_human_deferral_interpretation_expected():
+    """Execute the harness parser then apply the read instruction's adoption rule."""
+    harness=load('acceptance_harness','skill-dev-toolkit/skills/skill-tuning/scripts/ab_harness.py')
+    labels={'A':{'identity':'baseline'},'B':{'identity':'candidate'}}
+    expected={'a+b':'DEFER','n':'DROP','r':'REFINE','a':'DROP','b':'ADOPT'}
+    for raw,want in expected.items():
+        pick=harness.parse_pick(raw,labels)
+        verdict=({'multiple':'DEFER','none':'DROP','refine':'REFINE'}.get(pick['type'])
+                 or ('DROP' if pick['identity']=='baseline' else 'ADOPT'))
+        print('human pick',raw,pick,'=>',verdict,'edit=',verdict=='ADOPT')
+        assert verdict==want
+    # Policy has no executable human tally reducer: execute this interpretation
+    # explicitly and disclose that boundary rather than inventing a product API.
+    for winners,total,expected in [(2,3,'ESCALATE'),(3,4,'majority')]:
+        result='majority' if winners/total>=.70 else 'ESCALATE'
+        print('agreement',winners,total,winners/total,result)
+        assert result==expected
+
+def test_extraction_accounting_real_package_expected():
+    """Actually relocate repository prose and account immutable original bytes."""
+    gate=load('acceptance_package_gate','skill-dev-toolkit/skills/skill-refactor/scripts/package_gate.py')
+    workspace=OUT/'extraction'
+    manifest=gate.export_baseline(ROOT,workspace,'skill-dev-toolkit/skills/skill-creator-advance','HEAD')
+    digest=hashlib.sha256(manifest.read_bytes()).hexdigest()
+    candidate=workspace/'candidate'
+    shutil.copytree(manifest.parent/'skill',candidate)
+    target=candidate/'SKILL.md'
+    before=target.read_text()
+    start=before.index('\n## ')
+    end=before.index('\n## ',start+1)
+    moved=before[start:end]
+    target.write_text(before[:start]+before[end:])
+    (candidate/'references/acceptance-extracted.md').write_text(moved)
+    result=gate.account_package(manifest,digest,candidate,'SKILL.md')
+    print('extraction',json.dumps(result,sort_keys=True))
+    assert result['verdict']=='PASS'
+    assert result['target']['words']['delta']<0
+    assert result['package']['words']['delta']==0
+    reduction=1-result['package']['words']['candidate']/result['package']['words']['baseline']
+    print('whole-package reduction',reduction,'overall Q2 REJECT')
+    assert reduction<.05
+
 ```
 
