@@ -8,7 +8,8 @@ import sys
 import pytest
 
 
-ROOT = Path(__file__).resolve().parents[5]
+ROOT = next(parent for parent in Path(__file__).resolve().parents
+            if (parent / "skill-dev-toolkit/skills/skill-tuning/scripts/preference_log.py").is_file())
 SCRIPTS = ROOT / "skill-dev-toolkit/skills/skill-tuning/scripts"
 sys.path.insert(0, str(SCRIPTS))
 SPEC = importlib.util.spec_from_file_location("preference_log", SCRIPTS / "preference_log.py")
