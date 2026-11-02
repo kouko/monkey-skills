@@ -53,8 +53,11 @@ def optimize(module, skill, **kwargs):
     )
 
 
-@pytest.mark.parametrize("entry", ["package_skill", "aggregate_benchmark", "run_loop"])
-def test_creator_commands_valid(entry, tmp_path, skill, request, monkeypatch):
+@pytest.mark.parametrize("entry, baseline", [
+    ("package_skill", None), ("aggregate_benchmark", "without_skill"),
+    ("aggregate_benchmark", "old_skill"), ("run_loop", None),
+])
+def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monkeypatch):
     if entry == "package_skill":
         for relative in ["references/guide.md", "references/evals/keep.txt", "evals/case.json", "__pycache__/cache.pyc"]:
             path = skill / relative
@@ -69,7 +72,7 @@ def test_creator_commands_valid(entry, tmp_path, skill, request, monkeypatch):
             }
             assert archive.read("example-skill/SKILL.md").decode() == (skill / "SKILL.md").read_text()
     elif entry == "aggregate_benchmark":
-        for config, rates in [("with_skill", [0.5, 1.0]), ("without_skill", [0.0, 0.5])]:
+        for config, rates in [("with_skill", [0.5, 1.0]), (baseline, [0.0, 0.5])]:
             for index, rate in enumerate(rates, 1):
                 run = tmp_path / f"eval-7/{config}/run-{index}"
                 run.mkdir(parents=True)
@@ -77,7 +80,8 @@ def test_creator_commands_valid(entry, tmp_path, skill, request, monkeypatch):
                     "summary": {"pass_rate": rate, "passed": int(rate * 2), "failed": int(2 - rate * 2), "total": 2},
                     "expectations": [{"text": "fixture", "passed": bool(rate), "evidence": "offline"}],
                 }))
-                (run / "timing.json").write_text(json.dumps({"total_duration_seconds": index * 2, "total_tokens": index * 10}))
+                multiplier = 2 if config == "with_skill" else 1
+                (run / "timing.json").write_text(json.dumps({"total_duration_seconds": index * multiplier, "total_tokens": index * multiplier * 5}))
         result = command(entry, tmp_path, "--skill-name", "example-skill")
         assert result.returncode == 0, result.stderr + result.stdout
         benchmark = json.loads((tmp_path / "benchmark.json").read_text())
@@ -88,7 +92,12 @@ def test_creator_commands_valid(entry, tmp_path, skill, request, monkeypatch):
         assert summary["with_skill"]["time_seconds"]["mean"] == 3
         assert summary["with_skill"]["tokens"]["mean"] == 15
         assert summary["delta"]["pass_rate"] == "+0.50"
-        assert "75% ± 35%" in (tmp_path / "benchmark.md").read_text()
+        assert summary["delta"]["time_seconds"] == "+1.5"
+        assert summary["delta"]["tokens"] == "+8"
+        markdown = (tmp_path / "benchmark.md").read_text()
+        baseline_label = baseline.replace("_", " ").title()
+        assert f"| Metric | With Skill | {baseline_label} | Delta |" in markdown
+        assert "75% ± 35%" in markdown
     else:
         module = request.getfixturevalue("optimizer")
         evaluated, improved = [], []

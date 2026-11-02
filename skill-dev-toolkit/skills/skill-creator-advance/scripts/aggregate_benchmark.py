@@ -180,7 +180,7 @@ def aggregate_results(results: dict) -> dict:
     Returns run_summary with stats for each configuration and delta.
     """
     run_summary = {}
-    configs = list(results.keys())
+    configs = sorted(results, key=lambda config: config != "with_skill")
 
     for config in configs:
         runs = results.get(config, [])
@@ -203,7 +203,7 @@ def aggregate_results(results: dict) -> dict:
             "tokens": calculate_stats(tokens)
         }
 
-    # Calculate delta between the first two configs (if two exist)
+    # Keep the current skill before its baseline; retain other discovery order.
     if len(configs) >= 2:
         primary = run_summary.get(configs[0], {})
         baseline = run_summary.get(configs[1], {})
@@ -284,7 +284,8 @@ def generate_markdown(benchmark: dict) -> str:
     run_summary = benchmark["run_summary"]
 
     # Determine config names (excluding "delta")
-    configs = [k for k in run_summary if k != "delta"]
+    configs = sorted((k for k in run_summary if k != "delta"),
+                     key=lambda config: config != "with_skill")
     config_a = configs[0] if len(configs) >= 1 else "config_a"
     config_b = configs[1] if len(configs) >= 2 else "config_b"
     label_a = config_a.replace("_", " ").title()
