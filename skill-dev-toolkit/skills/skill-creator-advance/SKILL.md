@@ -130,7 +130,7 @@ Layout follows the flat-structure and progressive-disclosure conventions in [ref
 Based on the user interview and the planned structure above, fill in these components:
 
 - **name**: Skill identifier (lowercase, hyphens only, 1-64 chars)
-- **description**: What it does + when to use it (use positive specificity; see Description Best Practices below and the §House description standard — avoid "Do NOT use for X" negation)
+- **description**: What it does + when to use it (positive triggers first; limited adjacent-skill exclusions follow Description Best Practices and the §House description standard)
 - **compatibility**: Required tools, dependencies (optional)
 - **license**: SPDX identifier or path to LICENSE file (optional)
 - **allowed-tools**: Space-separated pre-approved tools (e.g., "Bash(git *) Read"; optional)
@@ -145,7 +145,7 @@ it owns the design patterns: WHAT+WHEN (not WHAT+WORKFLOW),
 third-person voice, length guidance, a validation checklist, and
 examples. The house standard for descriptions is defined in
 description-design.md §Principles (Principles 1–4). Principle 4
-specifically covers length requirements.
+is the length number authority.
 
 ### Skill Writing Guide
 
@@ -225,7 +225,7 @@ For the full description optimization workflow, see [references/description-opti
 
 ### House description standard (the optimization target)
 
-Any description you write or optimize MUST follow the house standard in [references/description-design.md](references/description-design.md): §Principles 1–4 (Principle 4 owns the length numbers: normal ≤150 target / 250 soft lint line; router/CONDITIONAL ≤500 with firing evidence), plus §Multilingual keyword belt and the context-listing-budget note. The optimization loop must keep `best_description` within these rules.
+Any description you write or optimize MUST follow the house standard in [references/description-design.md](references/description-design.md): §Principles 1–4 (Principle 4 is the length number authority), plus §Multilingual keyword belt and the context-listing-budget note. The optimization loop must keep `best_description` within these rules.
 
 For the full step-by-step workflow, see [references/description-optimization.md](references/description-optimization.md) — it owns the complete sequence including eval query generation, user review, the optimization loop, and result application.
 

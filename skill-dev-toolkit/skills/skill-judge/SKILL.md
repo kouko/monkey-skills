@@ -30,7 +30,7 @@ Cost: $0
 Timeline: Instant
 ```
 
-This is the paradigm shift from "training AI" to "educating AI" — like a hot-swappable LoRA adapter that requires no training. You edit a Markdown file in natural language, and the model's behavior changes.
+Editing natural-language instructions changes model behavior without training.
 
 ### The Core Formula
 
@@ -57,8 +57,6 @@ Skills inject knowledge — without frontend-design Skill, model produces generi
 ```
 General Agent + Excellent Skill = Domain Expert Agent
 ```
-
-Same Claude model, different Skills loaded, becomes different experts.
 
 ### Three Types of Knowledge in Skills
 
@@ -299,21 +297,21 @@ This is useless — Agent has no idea when to activate it.
 
 **House description standard (additional D4 criteria — deduct when violated)**
 Number authority: `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`
-§Principle 5 (supersedes `docs/skill-mining/2026-06-19-skill-description-standard.md`).
+§Principle 4 (supersedes `docs/skill-mining/2026-06-19-skill-description-standard.md`).
 - [ ] **Length: two-tier** — normal skills target ≤150 chars; 250 is a SOFT lint line
   (150–250 = flag, not a hard penalty). A normal skill >250 with a colocated YAML
   justification comment above `description:` naming the retained trigger surfaces =
-  flag + verify the justification, not a penalty; >250 with NO justification and no
-  router/CONDITIONAL status = penalize.
-  Router/CONDITIONAL skills get an exception band ≤500 REQUIRING a firing-evidence note —
-  missing note = penalize. Over-long descriptions evict other skills from the shared
-  listing budget.
+  flag + verify the justification, not a penalty; unjustified >250 = penalize.
+  Router/CONDITIONAL skills get an exception band ≤500 REQUIRING a firing-evidence note.
+  A NEW router/CONDITIONAL skill with no evidence yet stays in the normal band
+  (≤250 with YAML justification if needed). Audit rendered length via YAML parse;
+  justification comments are metadata. Over-long descriptions evict other skills.
 - [ ] **what + when only** — step-by-step **procedure / workflow / grounding** belongs in the
   body, NOT the description. Penalize procedure dumped into the description.
-- [ ] **Positive specific triggers**, not reliance on "ALWAYS invoke" directives (over-trigger at
-  scale) or "Do NOT use for X" behavioral negation (LLMs handle negation unreliably).
-- [ ] **No CJK / multilingual keyword redundancy** — cross-lingual triggering is A/B-verified
-  redundant; translated trigger tails are dead weight (and truncated first).
+- [ ] **Positive specific triggers first**; allow only 2-3 exclusions for adjacent-skill
+  disambiguation. Penalize reliance on "ALWAYS invoke" directives (over-trigger at scale).
+- [ ] **Optional multilingual belt**: allow ≤50 chars only for mixed-language prompts
+  routinely non-English; skip it otherwise. Penalize belts outside these conditions.
 
 ---
 
@@ -713,9 +711,7 @@ When evaluating any Skill, always return to this fundamental question:
 If the answer is yes → the Skill has genuine value.
 If the answer is no → it's compressing what Claude already knows.
 
-The best Skills are **compressed expert brains** — they take a designer's 10 years of aesthetic accumulation and compress it into 43 lines, or a document expert's operational experience into a 200-line decision tree.
-
-What gets compressed must be things Claude doesn't have. Otherwise, it's garbage compression.
+Compress expert experience into usable instructions; repeating Claude's existing knowledge adds no value.
 
 ---
 

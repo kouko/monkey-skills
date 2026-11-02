@@ -4,6 +4,7 @@ Guidelines for writing skill descriptions that drive adoption and correct usage.
 
 ## Purpose
 A skill description answers: "What does this do and when should I use it?"
+Write what it does + when to use it; procedure / workflow / grounding belongs in the body, not the description.
 It appears in skill lists, tooltips, and the skill catalog — it's the first
 thing users read.
 
@@ -15,10 +16,11 @@ Lead with what the skill enables, not how it works.
 - ❌ "Reads lines, parses commas, handles quotes, writes newline-delimited JSON"
 
 ### Principle 2: When to Use
-Include clear triggers and negative triggers.
+Lead with positive specific triggers; add exclusions only to disambiguate adjacent skills.
 - **Do use for**: X, Y, Z (positive triggers)
 - **Do NOT use for**: A, B — use other-skill instead (negative triggers)
-- **Disambiguate by positive specificity** — prefer naming what triggers the skill. When multiple skills could match similar queries, add explicit negative triggers to prevent mis-routing. **Limit to 2-3 negative triggers** — a long exclusion list buries the positives. A light positive redirect ("for X, use skill-Y") is also fine.
+- **Disambiguate by positive specificity** — prefer naming what triggers the skill. When adjacent skills could match similar queries, limit exclusions to **2-3 negative triggers** to prevent mis-routing; a long exclusion list buries the positives. A light positive redirect ("for X, use skill-Y") is also fine.
+- Avoid "ALWAYS invoke" directives — they over-trigger at scale.
 - Third person, no XML tags — the description is injected into the system prompt, so it must read as neutral third-person text without markup.
 
 ### Principle 3: Concrete Over Abstract
@@ -48,7 +50,7 @@ This section is the repo's number authority for description length.
 
 ### Multilingual keyword belt (optional)
 
-For repos with mixed-language prompts, append a short keyword belt (≤50 chars) at the end of the description: `Triggers: commit / PR / merge / コミット / 決定記録`. Zero of 14 superpowers skills use this pattern; include it if the repo's prompts are routinely non-English, skip it otherwise.
+For repos with mixed-language prompts, an optional short keyword belt (≤50 chars) may appear at the end of the description: `Triggers: commit / PR / merge / コミット / 決定記録`. Zero of 14 superpowers skills use this pattern; include it if the repo's prompts are routinely non-English, skip it otherwise.
 
 ### Context-listing budget note
 
