@@ -29,14 +29,9 @@ package) — no other files — and write your output to the path you are given.
 - Vagueness, style issues, missing information, or things you would design
   differently. Report only conflicts that exist in the text.
 
-Precision matters as much as recall: every report is shown to a maintainer who
-must act on it. Before retaining each candidate:
-1. Read both sides' full sections and tables, including adjoining precedence
-   rules; a quoted row or summary alone may omit the governing detail.
-2. Apply each side's scope, exceptions and precedence to one concrete shared
-   condition. Work out the required actions after those qualifications.
-3. Retain the candidate only if those actions remain incompatible; state that
-   condition and why the qualifications do not resolve it in `why` or `steps`.
+Precision matters as much as recall. Independently discover candidates under
+the definitions and exclusions above; state the shared condition in `why` or
+`steps`. The reporting caller reviews report eligibility before merging.
 Use confidence `low` only for uncertainty about a remaining incompatibility,
 never as permission to report rules that can both be followed.
 

@@ -10,8 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Apply the shared contextual description policy during packaging, retaining
   qualified exceptions and rejecting ineligible descriptions before delivery.
-- Reconcile detector findings with explicit contextual exceptions and qualify
-  model-family metadata when exact child runtime identity is unobserved.
+- Require the existing reporting caller to verify independent candidates
+  against full context and exceptions before merge; preserve raw outputs and
+  exclusion reasons, retain reviewed empty groups, and stop without a verdict
+  when required source cannot be reviewed. Consolidate duplicate detector
+  review instructions; historical calibration does not validate caller review.
+- Qualify model-family metadata when exact child runtime identity is unobserved.
 - Define quick Gate 2 access, redesign setup without historical cases, and
   bounded optimization/timing stops when model identity or telemetry is absent.
 - Restore skill packaging, benchmark aggregation, and bounded description

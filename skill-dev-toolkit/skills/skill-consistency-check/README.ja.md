@@ -49,6 +49,9 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 - **二つの検出器**、それぞれ独立した subagent：通読（read-through）と
   実行シミュレーション（walk-through）。仕様は
   [`references/`](references/) にある。
+- **統合前の確認**：報告担当の agent が候補を文脈全体と例外に照らして
+  確認し、元の出力と除外理由を保存する。空のリストも含め、全グループの
+  採用候補を統合する。必要な原文を確認できなければ全体判定を出さず停止する。
 - **グループ分け**：推定 30,000 tokens 以下のパッケージは丸ごと読む。
   それを超える場合は 1 グループ 25,000 tokens を目安に分割する。各
   グループに SKILL.md、agents/ のファイル、SKILL.md が直接引用する
@@ -74,6 +77,8 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - 検証は Claude Sonnet（200k context）、約 25,000 tokens のパッケージ
   で行った。他のモデルは未検証で、レポートにもそう明記される。
+  この過去の検出器・コーパス検証は、追加した報告担当の確認を検証した
+  ものではない。レポートのモデル情報が一致しても、この制限は変わらない。
   既存の検証済みコーパスのパッケージは推定 25,135 tokens で、丸ごと読む。
   レポート JSON の `reference.nominal_reporting_bound_tokens` は注意書き用の
   保守的な 25,000-token の目安を記録する。従来の

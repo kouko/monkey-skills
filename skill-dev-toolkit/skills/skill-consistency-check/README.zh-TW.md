@@ -43,6 +43,9 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - **兩種偵測器**，各自是獨立的 subagent：通讀（read-through）與模擬
   執行（walk-through）。規格在 [`references/`](references/)。
+- **合併前核對**：負責報告的 agent 依完整文脈與例外核對候選，保留原始
+  輸出及排除理由，再把各組採用清單交給合併器，空清單也要保留。必要
+  原文無法核對時停止，不給整包判定。
 - **分組**：估計 30,000 tokens 以內的套件整包一次讀完；超過就分組，
   每組以 25,000 tokens 為目標。每組都放 SKILL.md、agents/ 檔和 SKILL.md
   直接引用的檔案，其餘檔案在兩種方法間用不同方式分配。從沒被放在同一
@@ -64,6 +67,8 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - 驗證時用的是 Claude Sonnet（200k context），套件約 25,000 tokens。
   其他模型未經驗證，報告會註明。
+  這些歷史偵測器與語料驗證不涵蓋新增的報告代理核對；報告的模型資訊
+  相符也不代表已驗證這個流程。
   現有已驗證測試語料的套件估計為 25,135 tokens，仍整包讀取。報告 JSON
   的 `reference.nominal_reporting_bound_tokens` 記錄保守的 25,000-token
   提醒界線。舊有的 `reference.max_validated_tokens` 鍵保留 25,000，作為

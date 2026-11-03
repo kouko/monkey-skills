@@ -8,11 +8,11 @@ description: |
 Finds places where a skill package contradicts itself — one file requires
 what another forbids, two limits disagree, or following one rule forces a
 step another rule bans — so an agent obeying every line literally cannot
-succeed. Detection is done by independent LLM detectors reading the text
-directly; two stdlib-only Python scripts do the deterministic parts
-(grouping, merging, verdict, report).
+succeed. Independent LLM detectors discover candidates by reading the text;
+the reporting caller verifies them before merge. Two stdlib-only Python scripts
+do the deterministic parts (grouping, merging, verdict, report).
 
-Two detectors, each validated in blind experiments:
+Two detectors, each calibrated in earlier blind experiments:
 
 | Detector | Spec | What it does |
 |---|---|---|
@@ -148,13 +148,37 @@ one run per method.
 ### 6. Merge and report
 
 <!-- gate: skill-consistency-check.merge-report -->
+Before merging, the reporting caller must review every candidate from every
+completed detector output, including thorough-mode runs:
+
+1. Preserve each raw JSON file byte-for-byte outside `read-*.json` and
+   `simulate-*.json` (e.g. `raw-read-1.json`) before changing a planned file.
+2. Read each candidate's full relevant sections and tables in the target,
+   including applicable scope, precedence and platform exceptions. Try one
+   concrete execution under the same condition that obeys both rules.
+3. Exclude a candidate if both rules can be followed or its alleged required
+   action is unsupported by the source (e.g. permission inferred as a duty).
+   Retain only candidates whose required actions remain incompatible. Record
+   the shared condition, why qualifications do not resolve retained candidates,
+   and source-grounded reasons for every exclusion in the existing run evidence
+   and final reply. Never add findings discovered in the caller's own context.
+4. Write subsets of each raw file's findings to its original planned filename;
+   do not add or rewrite findings or change confidence. Use `low` only for
+   uncertainty about a remaining incompatibility, never for compatible rules.
+   Reviewed empty `findings` lists are valid; never omit a method/group.
+
+If required review cannot finish, including when relevant source is unread
+or unavailable, stop before merge, name the unchecked candidates/groups and
+give no whole-package verdict. JSON validity alone does not finish review.
+
 ```bash
 python3 scripts/merge_report.py --target "<target>" --plan "<run>/plan.json" \
   --findings <run>/read-*.json <run>/simulate-*.json \
   --model "<model id from step 4, or unknown>" --out "<run>"
 ```
 
-Pass every detector output file to `--findings`. The script merges
+Pass every planned group's reviewed output file to `--findings`, including
+empty lists and every thorough-mode run. The script merges
 duplicate findings, sets the verdict and writes
 `<run>/consistency-report.md` and `<run>/consistency-report.json`.
 Exit 0 = pass, exit 1 = needs revision (a result, not an error),
@@ -183,6 +207,8 @@ Read `<run>/consistency-report.md` and present it in the user's language:
   bound, not a proven accuracy cliff.
 - The model line, and the warning when the model differs from the
   validation reference.
+- Raw-output paths and source-grounded exclusion reasons; explain that earlier
+  detector/corpus calibration does not validate this caller-review variant.
 
 Give the report's path in the run directory. Do not edit the target.
 <!-- /gate -->
@@ -190,6 +216,9 @@ Give the report's path in the run directory. Do not edit the target.
 ## Validated on
 
 Validated on: Claude Sonnet (200k context) on skill packages of about 25,000 tokens; other models are unvalidated until they pass the regression corpus.
+
+This historical detector/corpus calibration does not validate the step 6 caller
+review, even with matching model metadata. The CLI metadata remains unchanged.
 
 The existing validated corpus fixture estimates to 25,135 tokens
 (approximately 25k) and is still read whole. The report JSON's

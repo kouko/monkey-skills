@@ -48,6 +48,10 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - **Two detectors**, each an independent subagent: a read-through and an
   execution walk-through. Their specs are in [`references/`](references/).
+- **Caller review before merge**: the reporting agent checks candidates against
+  full context and exceptions, preserves raw outputs and exclusion reasons,
+  and passes every group's accepted list, even empty ones, to the merger.
+  Unavailable required source stops review without a whole-package verdict.
 - **Grouping**: packages up to 30,000 estimated tokens are read whole.
   Larger ones are split into groups aimed at 25,000 tokens each; every
   group carries SKILL.md, agents/ files and the files SKILL.md cites, and
@@ -73,6 +77,8 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - Validated on Claude Sonnet (200k context) with packages of about
   25,000 tokens. Other models are not validated; the report says so.
+  This historical detector/corpus calibration does not validate the added
+  caller review, even when the report's model metadata matches.
   The existing validated corpus fixture estimates to 25,135 tokens and
   is read whole. In the report JSON,
   `reference.nominal_reporting_bound_tokens` records the conservative
