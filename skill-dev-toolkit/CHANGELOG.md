@@ -10,14 +10,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Restore skill packaging, benchmark aggregation, and bounded description
   optimization commands.
+- Fail trigger evaluation on backend errors, explicit aborts, incomplete
+  output, and timeouts before a conclusive decision; read completed output
+  buffers and verify the real command entries.
+- Keep missing token capture distinct from zero, expose observation counts,
+  and suppress token deltas when either comparison population is incomplete.
+- Generate optimizer descriptions from the current authority, exclude
+  mechanically ineligible candidates, and require contextual review before
+  applying the result.
 - Reject reordered tool-call traces while preserving the documented one-call
   count tolerance and tool vocabulary.
 - Keep truncated full-output viewing paths blind and mask version identities
   in session records until a choice is locked.
+- Continue interactive clarification within the same displayed blind round;
+  another invocation starts a new round without a pre-lock identity file.
 - Export valid explicit baseline preferences and align usable-record readiness
   counts with preference-pair generation; training remains inactive.
 - Reconcile description, evaluation metadata, refactor, human-choice, and blind
   auditor instructions with their operative policies.
+- Synchronize translated readiness documentation and qualify golden-anchor
+  comparisons so they cannot replace required human review.
 - Qualify consistency reports above the nominal 25k-token bound without
   changing the 30k grouping threshold; add regression coverage and a dedicated
   toolkit CI workflow.

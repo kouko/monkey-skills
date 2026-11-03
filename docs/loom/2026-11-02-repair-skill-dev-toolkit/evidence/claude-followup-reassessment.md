@@ -30,3 +30,19 @@ The [official Python Agent SDK ResultMessage reference](https://code.claude.com/
 No confirmed requirement, paid service, existing-data operation or intended outcome changes. Wave 6 repairs the same command reliability, stable blind selection, consistent policy and executable-evidence obligations. The interactive recovery design makes the existing same-round map lifetime explicit; a separate invocation is a new comparison. Previous evidence remains historical and only unchanged conditions may be carried forward with reasons. Review round and task retry continuity are retained; this request does not reset them.
 
 The outside review did not execute tests. Its findings and the parent reproductions are not a passing review of later corrections. No repeat outside run is authorized. A packet scan found no matches; that check covered only the dispatch packet, not all material reachable by CLI startup or tools. No completeness, confidentiality or zero-defect guarantee is made.
+
+## Local correction hand-off
+
+The following records completed focused corrections; integration, independent acceptance and terminal native review still follow. The parent replay above characterizes pre-fix commit `343483314`, not the corrected tree; current permanent regressions are the post-fix checks.
+
+| Class | Local correction | Focused evidence |
+|---|---|---|
+| Failed evaluations counted as non-triggers | Real entry/evaluator failures propagate; completed buffers are parsed; explicit abort results fail closed before a conclusive decision. | Original W6-01 RED 11 failed/12 passed, GREEN 23; later documented-abort cases RED 4 failed/34 passed, GREEN creator 38. |
+| Description authority drift | Current authority supplies generation instructions; mechanical eligibility filters selection; contextual semantics and evidence remain applying-agent obligations. Ordinary justification domain nouns do not declare a router role. | Initial RED 6 failed/23 passed; exception RED 3 failed/30 passed; creator plus hidden suite GREEN 38 before later abort additions. Qualified-role continuation RED 1 failed/33 passed, GREEN 38 including hidden. |
+| Unknown token measurements | Nulls remain unknown, captured zero remains numeric, partial statistics show sample/total counts, and incomplete comparisons have no token delta. | Two original aggregation cases went RED on zero versus null; whole creator file GREEN 34 at that correction. |
+| Blind clarification | One display and map survive interactive invalid/m input; EOF and invalid one-shot input fail without identity disclosure. No implicit cross-invocation resume. | RED 6 failed/9 passed, GREEN blind CLI suite 15. |
+| Readiness consumers | Three translated README sets and NOTICE count usable single-pick records, including baseline DROP; training remains unimplemented. | Existing preference and graduated regression suites: 31 passed. |
+| Golden vote consumers | Optional comparison may supplement PASS_HIGH or PASS_MODERATE, but cannot clear FLAG_TIER_2 or replace its required human review. Legacy CLI enum is comparison-only. | Existing refactor/package checks: 17 passed; shared copies synchronized; comparator executable AST unchanged. |
+| Lower-severity consumers | Explicit grader metadata path, usable module packaging help and nonredundant CI filters. | Metadata 2 passed; packaging help RED 1 failed/33 passed then creator GREEN 34; routing checks 9 passed before and after. |
+
+No task count or review episode was reset. The role-declaration continuation clarified an ambiguous lexical context in the packet; the evaluator continuation consumed newly checked optional terminal-result fields. Both retained their first completed-redispatch count. This evidence does not claim renewed Claude approval of the corrected content.
