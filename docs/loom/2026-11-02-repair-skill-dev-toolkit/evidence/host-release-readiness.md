@@ -254,8 +254,8 @@ These procedural deviations remain recorded. Native backend identity/version
 was not pinned; this does not substitute for the separate Claude cases,
 prove perfect reference-load isolation, or establish statistical performance.
 
-Release remains unverified: the semantic control failed, independent
-acceptance is not complete,
+Before expanded acceptance, release remained unverified: the semantic control
+failed and independent acceptance was not complete,
 and cumulative closing review/finalization for this expanded scope has not
 started. The old attestation must not be used to publish this tree.
 
@@ -327,9 +327,37 @@ still justify that report's needs-revision verdict. A supported overall verdict
 does not make its false individual blockers correct. None of these judgments
 is discarded or rewritten into an all-pass result.
 
-Independent acceptance must now evaluate all11 confirmed criteria against
-the current source and these results. No additional same-task semantic fix is
+At this point in the sequence, independent acceptance had yet to evaluate
+all11 criteria against the source and these results. No additional same-task semantic fix is
 dispatched: W7-02 remains at its exhausted continuation count2. Existing
 coverage, explicit platform precedence and caller independence must remain
 visible in any later redesign; another retry cannot be obtained by relabelling
 this persistent defect.
+
+### Independent expanded acceptance at9853569a
+
+A fresh witness cloned with --no-hardlinks and checked out
+9853569a2f9e18b5815de88ac687acf8df3eddcd. It ran127 focused tests (all passed),
+six skill-structure checks, three shared-convention checks, manifest checks
+and three actual vote/user-choice/package-move probes. It did not rerun the
+complete package or toolkit suites, install dependencies or call an external
+model. Criteria2–4 were carried only after checking their complete surfaces
+against the diff from65619dbd; all other affected criteria were re-tested.
+
+The updated acceptance report has nine works rows (1–8 and10), criterion9
+fails and criterion11 partly. Its important finding is the recurring
+context/exception false-finding class, not missing model identity or a process
+crash. Minor locator, stopped-run artifact and cold-load deviations remain
+visible. No important finding was waived and no new attestation was generated.
+
+The witness also corrects an error in the completion audits' prose: raw
+retry-workflow.jsonl line95 returns `needs-revision` and `exit=1`, with
+`is_error=false`; this is the merger's verdict convention, not exit0 and not
+a failed report-generation process. Top-level host exit0 remains a separate
+observation. Preserve the original audits and this correction together.
+
+Source instructions were not changed after the completed trials. Same-class
+wording retries stop at the retained W7-02 limit. A possible change of
+responsibility—existing caller verifies independent candidates before report
+generation—is an unimplemented proposal, not an approved new task or proof
+of effectiveness. It must not silently reset counters or permit publication.

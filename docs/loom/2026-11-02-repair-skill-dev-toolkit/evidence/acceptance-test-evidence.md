@@ -954,3 +954,148 @@ The same independent file also reran generator actual stdin capture/normal and r
 - Workflow/declared package routing unchanged; no obsolete inline-placement check substitutes for current authority checks. Full package execution remains finalizer's future blocking automated check; no new full-suite result claimed by acceptance.
 - Result works under the role's prescribed focused-tests plus blocking-final-suite contract. Findings: none remaining from this re-run. Report's previous A8 failure remains historical, not silently replaced.
 
+
+## Re-run on 2026-11-03, at 9853569a2f9e18b5815de88ac687acf8df3eddcd
+
+This dated section supersedes current verdicts from the historical seven-row reports above. Historical commands, failures, model limits and prior judgments remain unchanged. The expanded confirmed intent now has eleven acceptance lines. This tester implemented no source changes and did not call providers, CLI models, subagents or install dependencies.
+
+### Environment, setup and exact source
+
+- Active report destination: `/private/tmp/monkey-skills-repair-qnf38yi7`; original user checkout untouched.
+- Fresh isolation commands actually executed:
+  `git clone --no-hardlinks /private/tmp/monkey-skills-repair-qnf38yi7 /private/tmp/toolkit-acceptance-9853569`
+  and `git -C /private/tmp/toolkit-acceptance-9853569 checkout 9853569a2f9e18b5815de88ac687acf8df3eddcd`.
+- Read root README clean-checkout setup and toolkit README. Reused the station-specified `/Users/kouko/.conda/envs/dbt-redshift/bin/python3`, with pytest 9.1.1 and PyYAML 6.0.2 imported successfully. No venv/dependency installation or host installation was performed. Actual CLI-focused tests loaded and exercised source successfully: this establishes clean source-checkout usability, not marketplace activation.
+- Read confirmed intent, retained spec (including all engineering CLI flows), plan, old report and evidence before editing. Diff baseline for original repair: `4cbf85a8841d7d52393a8bb4058284755e108e25`. Re-run carryover comparison: `git diff 65619dbd..9853569a`, all 23 changed paths inspected by surface.
+- Initial and post-test `git status --short` in the fresh clone were empty.
+- No instruction skips occur in committed intent Constraints or plan Risks. No important/fatal dismissals were supplied for this current review. Earlier cross-invocation blind-round fatal hypothesis and its documented limitation remain historical, not silently removed.
+- Package-tests is NOT skipped. Declared complete command is `python3 -m pytest scripts/ -q`. This tester ran neither the complete root suite nor the complete toolkit suite. Finalization is conditional on acceptance/review succeeding; no new attestation is claimed while important defects remain.
+
+### Commands actually run at current HEAD
+
+All Python commands below use the interpreter named above, from `/private/tmp/toolkit-acceptance-9853569`.
+
+```sh
+python3 -m pytest skill-dev-toolkit/tests/test_creator_commands.py skill-dev-toolkit/tests/test_creator_metadata_contract.py skill-dev-toolkit/tests/test_refactor_policy.py skill-dev-toolkit/tests/test_tuning_policy.py skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py skill-dev-toolkit/skills/skill-refactor/scripts/test_package_mode_contract.py skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_plan_groups.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_merge_report.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py -q
+```
+
+Result: `127 passed in 8.76s`, exit 0. These are criterion-focused files, not the complete toolkit suite.
+
+```sh
+python3 scripts/check-skill-structure.py skill-dev-toolkit
+python3 scripts/check-shared-conventions-drift.py
+python3 scripts/sync_codex_manifests.py --check skill-dev-toolkit
+```
+
+Results: all six skills PASS; three conventions checked, zero drift failures/read errors; manifest check exit 0.
+
+Replayed the three preserved independent probes above by extracting their Python code from this evidence file, replacing only ROOT with the fresh clone and OUT with unused `/private/tmp/acceptance-9853569-probes`, then calling each named function in-process. No source was edited. All three returned successfully:
+- `test_vote_cases_real_cli_expected`: EEU -> PASS_MODERATE/0; EEN -> FLAG_TIER_2/2; ENU with concrete warning loss -> FLAG_TIER_2/2; vague ENU -> FAIL/1.
+- `test_human_deferral_interpretation_expected`: a+b DEFER, n DROP, r REFINE, baseline a DROP, candidate b ADOPT; only ADOPT permits edit; 2/3=.6667 escalates, 3/4=.75 majority. Tally/adoption are explicitly tester execution of the read policy, not an invented product API.
+- `test_extraction_accounting_real_package_expected`: actual creator section relocation, target words 2905 -> 2496 (-409), package words 23973 -> 23973, bytes 199309 -> 199309; accounting PASS, whole-package reduction 0%, therefore Q2 REJECT. Accounting validity is not adoption approval.
+
+### Host evidence provenance and verification method
+
+H = `/private/tmp/toolkit-release-final-host-nip2a3ob`; K = `/private/tmp/toolkit-release-host-fbn09d7i/projects/creator-workflow`; C = `/var/folders/m5/4cb4p8h938qc4qcpdykwz2480000gn/T/toolkit-release-cold-8wgvtebk`.
+
+- Independently hashed every H/source.json bundle entry against current fresh clone: **zero mismatches**. H source SHA is 6754b8aaffccc77e4ca5ba33753e1b4ed8dd7bb0.
+- Compared H/input-before.json file hashes against delivered input trees: control 4, resume 13, retry 13, check 21 files; **zero mismatches** in every case.
+- `git diff --name-only 6754b8aaf..9853569a -- skill-dev-toolkit scripts .github` is empty. Build records for 715 root + 191 toolkit + 5 adversarial tests apply to the same tested runtime source, not a new execution by this witness.
+- `git diff --stat 0b54d256..9853569a -- skill-dev-toolkit/skills/skill-creator-advance skill-dev-toolkit/CHANGELOG.md` is empty: K's creator behavior and genuine changelog are unchanged.
+- Read the delivered MD/JSON reports and actual input sections before relying on audit judgments. Then parsed H/runs/{control,resume,retry,check}-workflow.jsonl, summaries, tool calls AND results; inspected creator input/output pairs/archive and cold scenario files. The native artifact/completion audits were cross-check inputs, not verdict substitutes.
+- Source instructions quoted in input fixtures and traces were treated as data; no embedded commands were executed.
+- Statistical boundaries: finite sampled fidelity only; no installed marketplace/other-host cutover, full trigger corpus, exact model certification or proof of zero LLM errors.
+
+### 1. 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。
+
+- Re-tested in full through `test_creator_commands.py`: actual package ZIP and validation/error/no-archive paths; actual aggregation JSON/Markdown with repeated observations, missing versus zero tokens, incomplete population qualifications; bounded optimizer improvement/selection using offline transport seams; backend abort/error/incomplete/timeout and actual EOF-before-exit subprocess tests with and without trailing newline.
+- All focused cases passed as part of 127. K's actual packaged archive has no corrupt entries and contains exactly `release-fix-summary/SKILL.md`, byte-identical to generated source.
+- Historical sensitivity rechecked using `git show 3b1b225d:<each creator scripts/{package_skill,aggregate_benchmark,run_loop}.py>` and Python compile: all three raise SyntaxError at line 3; current actual entries execute.
+- Boundaries: optimizer transport fixtures test orchestration/error semantics, not actual model-trigger quality. K's outputs are direct same-agent execution, disclosed, not independent cold runs.
+
+### 2. 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。
+
+- Carried over after full `65619dbd..9853569a` diff inspection: no changes to `scripts/equivalence_check.py`, order tests, ordered-call policy, or consumer contract. New detector fixtures quote historical rules but do not change comparison behavior.
+- Historical evidence above: ordered tolerance/reorder cases, preserved no-trace behavior and old comparator accepting the harmful reversal. No new execution claimed for this row.
+
+### 3. 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。
+
+- Carried over: full fix diff contains no tuning/harness/protocol/blind-test changes. Mapping, ordinary neutral A/B full copies, interactive same-round clarification, noninteractive invalid choice and EOF surfaces are unchanged.
+- Historical evidence above remains the actual real-CLI proof; authored output content is outside the tool-added metadata guarantee. New invocation starts a new displayed round, never an implicit recovered map.
+
+### 4. 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。
+
+- Carried over: full fix diff has no preference reader/exporter/trainer, readiness/schema, translated tuning README/NOTICE, root preference consumer or tests changes.
+- Historical actual commands checked valid explicit baseline/candidate choices, skipped malformed/multiple/refine/none, byte preservation, usable records versus pair count and inactive training. Nothing in the new description or detector work changes that result.
+
+### 5. 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。
+
+- Re-tested all eight original REQ-5 surfaces, distinguished from the broader new host-artifact precision requirement:
+  1. Description authoring/judging: current authority and creator/judge consumers checked; positive triggers, bounded exclusions and qualified length exceptions retained. Description/creator CLI suites pass; semantic contextual review remains applying-agent responsibility.
+  2. Case metadata: `test_creator_metadata_contract.py` passes; reread grader input and case-level schema/dispatch, preserving per-run outputs.
+  3. Split votes: actual four multi_judge CLI cases above reproduce moderate, dissent and failure outcomes; source entry/references remain aligned, optional golden comparison cannot clear dissent.
+  4. Reference extraction: actual immutable package baseline + isolated relocation/accounting above; moving text does not create a saving; dependency policy permits necessary new references.
+  5. Ablation: current three-judge policy and reducer outcomes checked by focused refactor tests and reference reading; dated two-judge example remains explicitly historical, not current authority.
+  6. Multi-human agreement: current 70% instruction, actual parser and disclosed manual threshold interpretation above; 2/3 escalates, 3/4 may form a majority.
+  7. Multi-pick handling: actual parser returns multiple/none/refine/baseline/candidate dispositions; only locked single nonbaseline ADOPT applies a candidate.
+  8. Blind auditor evidence: current dogfood contract/taxonomy tests and source read separate rubric/artifact from author rationale/trajectory. Preserved native audit packets above and current independent artifact audits explicitly judge artifacts before trajectory addenda; no additional auditor was fabricated or invoked here.
+- Verdict works is limited to these eight retained obligations. It is NOT a claim that every possible toolkit risk label is consistent or that detectors produce no false findings; see 9/11.
+
+### 6. 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。
+
+- Re-tested planner and merger criterion files in full: 25000/25001/28000/30000/30001 boundaries, actual frozen 25135-token corpus, core/large/small groups, uncovered pairs, Markdown scope and model values/matching caveats. All passed in 127.
+- Actual retry report has size caution at approximately 25135; ordinary check approximately 13738/control approximately 588 do not falsely split. 30000 grouping threshold remains distinct from 25000 conservative notice.
+- Delivered reports explicitly use unknown and warn accuracy unvalidated; caller-supplied family matching is not runtime identity or a new corpus validation. No inference from successful detector outputs to universal accuracy.
+
+### 7. 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。
+
+- Current focused 127 tests and three repository commands above actually passed; real CLI ZIP/stats/error/EOF and description rejection branches provide present evidence, not merely a promised future suite.
+- Historical syntax defects independently reproduced at old source as noted in row 1. Carryover order, blind metadata and preference tests retain prior behavioral evidence because their entire surfaces are unchanged.
+- Read current `.github/workflows/skill-dev-toolkit-ci.yml`: path-filtered toolkit/scripts/workflow changes select full toolkit, root package suite, explicit hidden-description suite, structure, shared drift and manifest checks; focused `test_skill_text.py` passes against current reference authorities rather than obsolete inline positions.
+- Read recorded full root outputs `/private/tmp/toolkit-release-completion-package-tests.txt` -> **715 passed in 52.05s**, and earlier `/private/tmp/toolkit-release-package-tests.txt` -> **715 passed in 47.30s**. Runtime diff since 6754b8aaf is empty. The associated build record reports 191 toolkit and 5 adversarial passes; no complete-suite rerun is claimed by this witness.
+- Existing automated full suite is intended to run before acceptance and block on failure; finalizer is **conditional and has not run for this acceptance**, because current important semantic findings remain. No attestation or GitHub CI success is inferred.
+- Detector data fixtures are regression inputs/oracles, not executable fresh LLM results. Their negative failed control remains failed despite all deterministic tests passing.
+
+### 8. 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。
+
+- Current real packaging test covers the preserved 268-character unjustified class -> exit 1/no archive; 1024-character justified normal exception -> archive; 500-character admitted router with evidence note -> archive; router lacking required evidence -> no archive; ordinary short description -> archive. Source input remains unchanged in each branch. Optimizer generation/selection share the same validation function.
+- Actual K generated description is 199 characters; source and real archive match. Inspected three genuine changelog slices and all three outputs: exact version/date header, exactly three Traditional Chinese numbered points, material changes/qualifiers preserved, no invented user feedback.
+- Archive ZipFile.testzip() -> None; single entry matches source byte-for-byte. Trace `creator-workflow.jsonl:54,59–68,73–74,99–101` records creation, corrected extraction, direct output generation and successful packaging after a disclosed initial import error.
+- Existing authority requires semantic voice, triggers and actual exception justification review; passing mechanical length/comment checks alone is not proof of semantic eligibility. This row tests the confirmed shared-eligibility and bounded real creation requirement, not a new automatic grammar/semantic classifier.
+
+### 9. 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。
+
+- **fails**: H control input `references/refactor-moves-catalog.md:11–17` labels column Auto / User-confirm; :5–7 separately requires testing. Testing then applying automatically satisfies both. Delivered control MD:13–15/JSON finding 2 still equates Auto with omitted testing and reports a conditional contradiction; quoted row locator 15 is actually 17. Both detectors read all four complete input files, then reproduce the same inference (`control-workflow.jsonl:14–24,26,38–51`); final merge retains it (:57–58). Advisory status reduces consequence but does not make it true.
+- Positive control remains genuine: quick baseline comparison is expressly skipped in control SKILL.md:20 and expressly required by eval-methodology:5–7. Correctly reported. Specific dissent precedence negative is correctly NOT reported. Thus no suppress-all success is claimed.
+- H check delivered finding 1 is another confirmed scope/exception error: `multi-judge-ensemble.md:150–166` provides a conditional structural-only Q1 exception; SKILL.md:102–104 delegates to that reference, and :153–164 separately retains all Q1/Q2/Q3. Report's claim that the exception forces Q2/Q3 bypass is unsupported. Its omission of the historical caps and dissent false claims is a bounded improvement, not a clean precision pass.
+- H retry report overstates Claude.ai packaging and Cowork order conflicts despite explicit platform delegation in input SKILL.md:525–527 and platform-adaptations:9–39; environmental AskUserQuestion fallback likewise cannot be an unavoidable repair chain after iteration-automation:51–54's skill-cause qualification.
+- **Model sub-obligation works**: actual reports use unknown, retain not-validated warning and metadata caveat. External raw log resolvedModel/message envelope may identify Sonnet, while model-facing tool-result message.content does not expose that identifier; parent modelUsage/selected sonnet alias cannot establish caller-observed child identity. No fabricated identity defect established.
+- X3 timing oracle was disputed and replaced by X1 only in separately identified control data with rationale; original frozen corpus and failed large trial remain unchanged and failed. W7-02 continued-dispatch count remains 2/exhausted.
+
+### 10. 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。
+
+- Read `/private/tmp/toolkit-release-cold-execution.md`, then actual C scenario files and current matching entry references.
+- Quick creation: actual three newly prepared cases/outputs, current Gate 2 three questions answered; no claimed historical evals/baseline/superiority/user feedback. C quick output files were re-read and have exact header and three points.
+- Redesign with no old cases: actual snapshot equals original byte-for-byte, three new cases and old-version outputs exist before any source edit. Missing-date and multi-record cases ask for information; synthetic mutations explicitly labelled. Duplicate same-version input is a weaker ambiguity case than distinct versions. No new-version improvement is claimed.
+- Unknown/unsupported model: actual two optimization-stop.json files disclose controlled missing/unsupported ID and absent confirmed query set; no guessed model, provider call, silent alternate choice or edit. This exercises a bounded prerequisite stop, not all native-host capabilities.
+- Missing telemetry: timing-stop.json references six genuine historical files; all input/output hashes independently match. No timing.json or benchmark.json exists anywhere in C; unavailable counters remain unavailable, with quality observations separated. No zeros/null durations or reconstructed file-mtime measurements.
+- **Execution deviations preserved**: cold executor accidentally over-read Gate 3 before precise Gate 2 extraction; description optimization/reference material was preloaded earlier than its intended progressive gate. This is not a perfect reference-load isolation test. It does demonstrate the criterion's available setup/bounded-stop handling without fabricated required inputs/measurements; wider workflow fidelity is qualified under 11.
+- Actual current source anchors: creator SKILL.md quick entry and structural router; pre-creation-gates Gate2; improvement-workflows quick/case(c); description-optimization Phase3; eval-protocol Step3; schemas timing section.
+
+### 11. 代表性真實宿主流程可完成且產物符合其已宣告要求；尚未驗證的環境、條件與模型判斷限制明確保留。
+
+- **partly**: creator task meets its bounded prototype/three-source-slices/real-archive contract (row 8), with direct same-agent execution/self-review limits honestly retained. Genuine checker positive found and explicit dissent exception omitted (row 9).
+- Retry mechanics independently verified from actual results: exactly one Agent at H/runs/retry-workflow.jsonl:38; all 13 assigned input Read returns cover every real line (per-file numbered-line comparisons all zero mismatches; :46–83). Partial JSON/handback is preserved outside merge globs at :36–37 before retry. New simulate result seven findings at :86, completed handback :91–92, explicit merge of read-1.json + simulate-1.json :94–95. read output reuse and no second locator check are disclosed. **Correction to audit narration**: raw :95 says `needs-revision / exit=1`, not exit 0; 1 is the merger's finding verdict, not a process crash. Top-level success is separate.
+- Ordinary checker: two sequential fresh Agents (:6,:47). First nine complete files independently compared against Read results, zero mismatches. Second initially receives persisted-output preview, then actually reads 1–400 and 400–1776 (:57–61), reaching complete concatenated output. Both detector JSONs parsed before merge; broad validation glob hits plan.json KeyError and final reply discloses it. A pass label means no high-confidence findings under the declared policy, not all advisory claims true.
+- Exhausted-retry replay: H/resume reads actual recorded incomplete handback, performs no new Agent or merge and creates no whole-package verdict. It is controlled replay, not a new second detector run. **Retained deviation**: incomplete simulate-1.json still matches merge globs and final reply proposes another dispatch despite already exhausted retry. No actual third dispatch/manual merge occurred; not represented as full procedural compliance.
+- Artifact quality remains mixed after process completion: recurring Auto/testing, platform/general and structural-Q1 exception overclaims above defeat a complete fulfillment of declared detector precision. These are known finite acceptance failures, not a demand to eliminate all stochastic LLM errors.
+- Independent judgments remain distinct: artifact A/B both find Auto/testing false; completion A calls packaging a medium false positive, B sees lower-severity wording/factual tension while both reject the delivered blocking incompatibility; extraction label A accepts limited discrepancy but rejects proven incompatible actions, B accepts qualified classification inconsistency. Direct input reading supports preserving these differences; neither disputed label is needed to establish row9 failure.
+- Audit inputs: `/private/tmp/toolkit-release-artifact-{a,b}.md`, `/private/tmp/toolkit-release-completion-audit-{a,b}.md`, and `/private/tmp/toolkit-release-completion-audit-a-addendum.md`. No important/fatal finding was dismissed by this witness or supplied as dismissed by parent.
+- No claim of release readiness, source publication, merge, new attestation, marketplace cache parity, installed discovery, untested host support or universal accuracy.
+
+### Findings retained for the closing station
+
+- **important — context/exception false findings (existing W7-02 class, exhausted count 2):** row9 fails and row11 partly. Primary anchors are actual control report/input Auto column, ordinary check structural-only exception/Q2-Q3 overclaim, retry platform delegation. Closing evidence would require the confirmed positive/negative host controls to satisfy their unchanged contracts; this witness makes no design or additional retry authorization.
+- **nit — evidence locator:** control report catalog:15 should locate quoted row17; retry has approximate locators. Actual quotes exist; navigation precision differs from truth of claim.
+- **nit — exhausted-retry residual artifact/recommendation:** no merge occurred, but active incomplete glob and suggestion of another dispatch are retained as bounded procedural deviations.
+- **nit — cold read isolation:** Gate3 over-read and early reference loads mean strict progressive isolation was not demonstrated.
