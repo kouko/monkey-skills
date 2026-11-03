@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
 intent: 2026-11-02-repair-skill-dev-toolkit@55dee191
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@7aad3646
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@10275609
 charter: 1.1
 
 ## Task DAG
@@ -189,6 +189,11 @@ charter: 1.1
 - Test: A10 positive: available_setup_reused; boundary: absent_input_not_invented. Use the independent cold-reader's actual missing-input answers as baseline; re-exercise quick Gate2, redesign without cases, unknown/unsupported model and missing telemetry in fresh contexts. Run existing creator metadata/policy checks; no new prose-pin suite.
 - Risk: REQ-10/11; agent-decided existing setup or bounded stop. Class: unconditional input/capability assumption. Sweep quick/full/redesign/model/timing entries. Preserve unknown tokens; no unsupported null duration or duration-statistics expansion.
 
+**W7-05 Reject known incomplete detector completion** after: W7-04 acceptance: 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (entry).
+- Test: A11 positive: completed_groups_merged; negative: known_partial_group_no_verdict. Preserve the real positive-workflow incomplete hand-back and merge as RED. Exercise the existing retry/stop branch with the recorded hand-back and run clear positive/negative controls; JSON validity alone is insufficient.
+- Risk: REQ-11; agent-decided existing single retry/stop only. Class: completed output confused with completed assignment. Sweep dispatch validation, detector completion messages and merger input boundary. No schema, receipt, grouping change or extra mandatory agent.
+
 ## Simplicity check
 - shared validation and existing input paths — taken
 
@@ -206,3 +211,4 @@ charter: 1.1
 8. User-confirmed Acceptance8–11 expand earlier scope; risk7 describes an earlier correction. Preserve W6-01/W6-02/W7-02 count1 and historical three-candidate evidence. Fresh pre-build spec+adversarial review passed7aad3646; no accounting reset by rename.
 9. Fresh host projects retain explicit model/effort and disclosed non-hard cost estimates. Re-test affected acceptance surfaces in full, including original obligations. No repeat outside code review or publication is authorized; risk5 still applies.
 10. If the same class survives bounded attempts or evidence cannot choose a design, consult primary industry sources and mature implementations as user requested. Research resets no retry count and justifies no generic framework.
+11. The0b54d256 large positive trial remains failed for incomplete walk-through. W7-05 adds the distinct caller completion precondition, not another semantic detector attempt. Refine the disputed timing oracle transparently; preserve W7-02 continuation counts and frozen corpus.
