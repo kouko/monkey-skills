@@ -23,6 +23,8 @@ The description-budget wording, omitted grader metadata path, redundant workflow
 
 ## Scope and continuity
 
+The already completed outside preflight's retained JSON provided a concrete CLI framing observation: `type: result`, `subtype: success`, `is_error: false`, modelUsage key `claude-opus-5-5`. This is observed local CLI evidence for the result framing used in the fail-closed parser; no additional provider request was made to obtain it.
+
 No confirmed requirement, paid service, existing-data operation or intended outcome changes. Wave 6 repairs the same command reliability, stable blind selection, consistent policy and executable-evidence obligations. The interactive recovery design makes the existing same-round map lifetime explicit; a separate invocation is a new comparison. Previous evidence remains historical and only unchanged conditions may be carried forward with reasons. Review round and task retry continuity are retained; this request does not reset them.
 
 The outside review did not execute tests. Its findings and the parent reproductions are not a passing review of later corrections. No repeat outside run is authorized. A packet scan found no matches; that check covered only the dispatch packet, not all material reachable by CLI startup or tools. No completeness, confidentiality or zero-defect guarantee is made.
