@@ -238,7 +238,7 @@ def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch, 
 
 
 @pytest.mark.parametrize("entry", ["run_eval", "run_loop"])
-@pytest.mark.parametrize("outcome", ["success", "trigger", "early_no", "early_trigger", "nonzero", "error", "incomplete", "timeout"])
+@pytest.mark.parametrize("outcome", ["success", "trigger", "early_no", "early_trigger", "nonzero", "error", "incomplete", "timeout", "aborted_streaming", "aborted_tools"])
 def test_creator_evaluation_completion(entry, outcome, optimizer, skill, monkeypatch, capsys):
     evaluator = importlib.import_module("scripts.run_eval")
     module = importlib.import_module(f"scripts.{entry}")
@@ -259,6 +259,8 @@ def test_creator_evaluation_completion(entry, outcome, optimizer, skill, monkeyp
                 "early_no": {"type": "stream_event", "event": {"type": "message_stop"}},
                 "trigger": {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": name}}]}},
             }
+            for reason in ("aborted_streaming", "aborted_tools"):
+                events[reason] = dict(events["success"], terminal_reason=reason)
             events["early_trigger"] = {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Read", "input": {"file_path": name + ".md"}}]}}
             payload = json.dumps(events.get(outcome, {"type": "system"})).encode()
             self.stdout = Output(payload)
@@ -281,7 +283,7 @@ def test_creator_evaluation_completion(entry, outcome, optimizer, skill, monkeyp
     if entry == "run_loop":
         argv += ["--model", "offline", "--report", "none", "--holdout", "0", "--max-iterations", "1", "--results-dir", str(skill.parent / "saved")]
     monkeypatch.setattr(sys, "argv", argv)
-    if outcome in {"nonzero", "error", "incomplete", "timeout"}:
+    if outcome in {"nonzero", "error", "incomplete", "timeout", "aborted_streaming", "aborted_tools"}:
         with pytest.raises(RuntimeError):
             module.main()
         assert not list(skill.parent.rglob("results.json"))

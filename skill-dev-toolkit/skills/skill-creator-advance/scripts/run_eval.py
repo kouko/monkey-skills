@@ -173,6 +173,11 @@ def run_single_query(
                             return triggered
 
                     elif event.get("type") == "result":
+                        # ResultMessage can report success for an interrupted,
+                        # incomplete turn. Older CLI versions omit this field.
+                        # https://code.claude.com/docs/en/agent-sdk/python#resultmessage
+                        if event.get("terminal_reason") in ("aborted_streaming", "aborted_tools"):
+                            raise RuntimeError("Query backend aborted before completing")
                         if event.get("is_error") or event.get("subtype") != "success":
                             raise RuntimeError("Query backend returned an unsuccessful result")
                         return triggered
