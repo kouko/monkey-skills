@@ -154,14 +154,16 @@ completed detector output, including thorough-mode runs:
 1. Preserve each raw JSON file byte-for-byte outside `read-*.json` and
    `simulate-*.json` (e.g. `raw-read-1.json`) before changing a planned file.
 2. Read each candidate's full relevant sections and tables in the target,
-   including applicable scope, precedence and platform exceptions. Try one
-   concrete execution under the same condition that obeys both rules.
-3. Exclude a candidate if both rules can be followed or its alleged required
-   action is unsupported by the source (e.g. permission inferred as a duty).
-   Retain only candidates whose required actions remain incompatible. Record
-   the shared condition, why qualifications do not resolve retained candidates,
-   and source-grounded reasons for every exclusion in the existing run evidence
-   and final reply. Never add findings discovered in the caller's own context.
+   including applicable scope, precedence and platform exceptions. Assess the
+   raw claim as written: opposing actions, facts, field names or values in the
+   same scope. For action conflicts, try a concrete execution obeying both rules.
+3. Retain only claims still supported after those qualifications. Compatible
+   execution can refute an action conflict; extra keys, aliases or workarounds
+   do not reconcile conflicting definitions. Exclude unsupported or overstated
+   claims (e.g. permission inferred as a duty), even if the quotes support a
+   narrower concern. Record qualifications, shared conditions, why retained
+   claims remain incompatible and source-grounded exclusion reasons in run
+   notes or the final reply. Never add findings from the caller's own context.
 4. Write subsets of each raw file's findings to its original planned filename;
    do not add or rewrite findings or change confidence. Use `low` only for
    uncertainty about a remaining incompatibility, never for compatible rules.
