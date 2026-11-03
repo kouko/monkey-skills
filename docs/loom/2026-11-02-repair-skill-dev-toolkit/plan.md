@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
-intent: 2026-11-02-repair-skill-dev-toolkit@0840fdb0
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@2044ade2
+intent: 2026-11-02-repair-skill-dev-toolkit@7f27d665
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@ea526fd7
 charter: 1.1
 
 ## Task DAG
@@ -198,8 +198,8 @@ charter: 1.1
 
 **W8-01 Verify independent candidates at the existing reporting boundary** after: W7-05 acceptance: 7, 9, 11
 - Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-consistency-check/references/detector-read.md`, `skill-dev-toolkit/skills/skill-consistency-check/references/detector-simulate.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.ja.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.zh-TW.md`, `skill-dev-toolkit/CHANGELOG.md`.
-- Test: A7 positive: existing_merger_routes; negative: unchecked_candidate_not_published. A9 positive: genuine_conflict_retained; negative: compatible_exception_removed. A11 positive: raw_preserved_with_accepted_subset; boundary: unavailable_review_no_verdict. Replay genuine recorded control/retry/ordinary outputs and one explicitly withheld-context condition; run existing merger/text checks, then toolkit/package/adversarial checks.
-- Risk: REQ-9/11; user-confirmed caller eligibility, one candidate. Class: unverified findings. Searched caller, detectors, merger, presentation, README copies and tests. Preserve raw/schema/coverage/independence; consolidate checks. W7-02 remains exhausted. No Python, framework, prose-pin tests or external models.
+- Test: A7 positive: existing_merger_routes; negative: unchecked_candidate_not_published. A9 positive: genuine_and_schema_conflicts_retained; negative: compatible_exception_removed. A11 positive: raw_preserved_with_accepted_subset; boundary: unavailable_review_no_verdict. Replay unchanged raw controls, including schema false negative and unavailable source; run existing checks.
+- Risk: REQ-9/11; existing caller eligibility. Class: unverified findings. Searched caller, detectors, merger, presentation, README copies and tests. Preserve raw/schema/coverage/independence; consolidate checks. W7-02 remains exhausted. No Python, framework, prose-pin tests or external models.
 
 ## Simplicity check
 - shared validation and existing input paths — taken
@@ -223,4 +223,5 @@ charter: 1.1
 11. The0b54d256 large positive trial remains failed for incomplete walk-through. W7-05 adds the distinct caller completion precondition, not another semantic detector attempt. Refine the disputed timing oracle transparently; preserve W7-02 continuation counts and frozen corpus.
 12. User approved two Claude host cases after disclosure of source/public examples/recorded replies, Anthropic transfer and combined US$2.50 estimated thresholds (not hard limits). Tests only; no additional outside review, installation, publication or merge.
 13. User-confirmed2026-11-04: W8-01 owns caller verification, one local candidate/replay only. W7-02 stays exhausted; no review-counter reset, paid calls, installation or publication. Native replay is not fresh Claude validation.
-14. W8-01's sole candidate f8a68658 completed four native replays; both blind audits confirm a named-field false negative. No further source candidate is authorized. Preserve raw/subset proof and qualified packaging disagreement; release remains blocked.
+14. Initial candidate f8a68658 completed four native replays and stopped with a named-field false negative. Preserve raw/subset proof and qualified packaging disagreement. The following renewed user instruction governs continuation; release remains blocked.
+15. User requested「繼續迭代吧」: W8-01 continuation1 repairs action-only eligibility in SKILL/changelog. Keep all previous counters/failures; replay unchanged four-case inputs. No new task, mechanism, external model call or publication authority; no model escalation inferred from unknown profiles.

@@ -520,3 +520,31 @@ the authorized one-candidate local experiment with a failed recall check,
 not completion of the overall release objective. No further repair or paid
 validation was attempted, no review/implementation counter reset and no new
 attestation or publication occurred.
+
+### W8-01 continuation1 authorized
+
+The user subsequently requested「繼續迭代吧」. This resumes the same caller
+task within its existing continuation budget; it does not rename it or reset
+W7-02, W8-01 or any closing-review episode. The previous f8a68658 failure
+and both auditors' conclusions remain retained. W8-01's next completed
+redispatch will be1, following its initial implementation at count0.
+
+The concrete packet correction restores the already required schema/numeric/
+factual conflict coverage: a compatible operation does not reconcile opposing
+named definitions. Verify the raw claim as written; a narrower supported
+concern in its quotes does not validate an overstated claim or authorize a
+rewritten finding. Keep qualifications in existing dispositions. This is a
+repair of the action-only criterion, not a new category, review stage or
+runtime agent. Only the existing checker SKILL and changelog need source
+changes; README summaries and both independent discovery definitions remain
+applicable. The own earlier run-evidence/final-reply wording is also aligned
+with the existing optional notes carrier, without a new receipt requirement.
+
+The bounded class sweep searched all cumulative changed files and existing
+caller/detector/merger/README surfaces. Only Step6's concrete-execution test
+and required-actions-only retention predicate implement the too-narrow filter;
+historical evidence describing that failed version is preserved. The spec
+decision is corrected within the same active Build, with all11 Acceptance
+outcomes unchanged. New isolated fixtures will copy identical original raw
+outputs/targets; no truth key or prior audit is given to native executors.
+Local-only scope remains: no Claude/API call or publication is authorized.
