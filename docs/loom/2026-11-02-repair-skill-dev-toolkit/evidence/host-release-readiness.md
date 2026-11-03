@@ -361,3 +361,40 @@ wording retries stop at the retained W7-02 limit. A possible change of
 responsibility—existing caller verifies independent candidates before report
 generation—is an unimplemented proposal, not an approved new task or proof
 of effectiveness. It must not silently reset counters or permit publication.
+
+### Confirmed local caller-verification batch on2026-11-04
+
+The user answered「同意」to the explicit question authorizing one local
+implementation and recorded-data replay of the existing caller-verification
+proposal. Its separate draft paid-test budget was not authorized. The
+confirmed intent preserves all11 Acceptance lines and records the changed
+report-eligibility owner. W7-02 stays exhausted at count2; W8-01 is the
+user-confirmed caller boundary, not another detector wording retry or a
+fresh closing-review episode.
+
+The spec was committed at2044ade2; its fresh independent spec+adversarial
+review passed, retained at `/private/tmp/toolkit-caller-spec-review.yaml`.
+This is pre-build feasibility evidence, not a passing replay or a release
+verdict. Current failed controls and acceptance9/11 remain unchanged until
+actual new evidence exists.
+
+Defect class and bounded sweep: unverified candidates published as findings.
+All cumulative changed files were searched for merger, candidate and output
+validation consumers. Existing caller dispatch checks completion/JSON only;
+Step6 passes every output directly to the merger. Both detector references
+duplicate the three-step reconciliation procedure. Three human README copies
+describe the direct detector/report path and need a short caller qualification.
+The merger enforces names/groups and consumes supplied lists; it must not
+become a semantic classifier. Existing merger/text tests preserve those
+mechanics; they do not prove contextual correctness. No additional production
+instance outside these named boundaries was found.
+
+Replay preparation will copy genuine target inputs and recorded completed
+detector outputs into new isolated directories, regenerate actual plans,
+preserve originals and hash them. It will not edit the preserved host roots.
+The native caller executors receive the revised skill and actual candidate
+files, without author explanations, truth keys or previous audits. Independent
+artifact judgments precede separate trajectory inspection. A deliberately
+withheld source case is labelled a controlled unavailable-context condition,
+not a historical host failure. One candidate only; a repeated semantic failure
+stops this batch. No external Claude/model call, installation or publication.

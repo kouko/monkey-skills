@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
-intent: 2026-11-02-repair-skill-dev-toolkit@55dee191
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@10275609
+intent: 2026-11-02-repair-skill-dev-toolkit@0840fdb0
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@2044ade2
 charter: 1.1
 
 ## Task DAG
@@ -194,11 +194,20 @@ charter: 1.1
 - Test: A11 positive: completed_groups_merged; negative: known_partial_group_no_verdict. Preserve the real positive-workflow incomplete hand-back and merge as RED. Exercise the existing retry/stop branch with the recorded hand-back and run clear positive/negative controls; JSON validity alone is insufficient.
 - Risk: REQ-11; agent-decided existing single retry/stop only. Class: completed output confused with completed assignment. Sweep dispatch validation, detector completion messages and merger input boundary. No schema, receipt, grouping change or extra mandatory agent.
 
+### Wave 8 — User-confirmed local caller-verification boundary
+
+**W8-01 Verify independent candidates at the existing reporting boundary** after: W7-05 acceptance: 7, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-consistency-check/references/detector-read.md`, `skill-dev-toolkit/skills/skill-consistency-check/references/detector-simulate.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.ja.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.zh-TW.md`, `skill-dev-toolkit/CHANGELOG.md`.
+- Test: A7 positive: existing_merger_routes; negative: unchecked_candidate_not_published. A9 positive: genuine_conflict_retained; negative: compatible_exception_removed. A11 positive: raw_preserved_with_accepted_subset; boundary: unavailable_review_no_verdict. Replay genuine recorded control/retry/ordinary outputs and one explicitly withheld-context condition; run existing merger/text checks, then toolkit/package/adversarial checks.
+- Risk: REQ-9/11; user-confirmed caller eligibility responsibility, one implementation candidate only. Class: unverified candidates published as findings. Sweep dispatch, both detector procedures, merger, presentation, three human README copies and existing tests. Preserve schema/group coverage/raw bytes and independent discovery; consolidate duplicated reconciliation. W7-02 remains count2/exhausted. No new Python, framework, prose-pin test or external model call.
+
 ## Simplicity check
 - shared validation and existing input paths — taken
+- W8-01 — fresh plan review found no simpler shape; consolidate in the existing caller, preserve raw candidates, and use only local replay for this single candidate.
 
 ## Questions asked
 ① — what — 以上就是這次要完成的範圍，對嗎？
+① — consequence — 同意依此只再做一次本機修補與錄製資料重播嗎？ 此階段不增加外部呼叫。
 
 ## Risks
 1. Historical recovery is not optimizer correctness; REQ-1 offline fixtures validate orchestration without claiming paid-provider or live-host behavior.
@@ -213,3 +222,4 @@ charter: 1.1
 10. If the same class survives bounded attempts or evidence cannot choose a design, consult primary industry sources and mature implementations as user requested. Research resets no retry count and justifies no generic framework.
 11. The0b54d256 large positive trial remains failed for incomplete walk-through. W7-05 adds the distinct caller completion precondition, not another semantic detector attempt. Refine the disputed timing oracle transparently; preserve W7-02 continuation counts and frozen corpus.
 12. User explicitly approved the remaining two Claude host cases after disclosure of toolkit source/public historical examples/recorded replies, Anthropic transfer and combined US$2.50 estimated thresholds (not hard limits). This approval covers tests only; no additional external code review, installation, publication or merge.
+13. User answered「同意」on2026-11-04 to the caller-verification proposal limited to one local implementation and recorded-data replay. W8-01 changes report eligibility ownership after W7-02's exhausted detector-only approach; no existing counter or closing episode is reset. Its initial count0 is not an allowance for further same-class implementations. Native replay is not fresh Claude execution; paid scope in the temporary proposal remains unapproved.
