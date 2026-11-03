@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""golden_compare.py — compare a candidate output to golden anchors for Tier 2 escalation.
+"""golden_compare.py — compare a candidate output to golden anchors (comparison only).
 
-When the multi-judge ensemble flags a refactor round as moderate-confidence
-(2-of-3 + 1 uncertain), the gate may escalate to Tier 2 by checking whether
-the candidate output is closer to a curated golden anchor than the baseline.
-This module performs that comparison.
+Q1's 2 equivalent + 1 uncertain, without specific behavior dissent, yields
+PASS_MODERATE and may proceed under existing Q1/Q2/Q3 rules. This module
+provides an optional supplemental comparison to a curated golden anchor.
+If selected, an anchor regression can reject the candidate. A positive
+comparison cannot clear FLAG_TIER_2 (2 equivalent + 1 not_equivalent, or
+specific behavior dissent) or replace its required human review.
 
 Per references/golden-anchor-protocol.md §How skill-refactor uses goldens.
 
@@ -21,9 +23,12 @@ Note: this is intentionally simple — Jaccard + length is a baseline
 heuristic, not a semantic similarity metric. Real semantic similarity
 would require LLM judges (which Layer 2 already does). This script
 serves the "is candidate at least as close to golden as baseline" check
-for Tier 2 escalation, where direction matters more than precision.
+as supplemental evidence, where direction matters more than precision.
+Legacy TIER_2_PASS / TIER_2_FAIL labels are comparison results only,
+not adoption authorization; output fields and exit codes remain compatible.
 
 Usage:
+    # Optional comparison evidence; a positive result never clears FLAG_TIER_2.
     python golden_compare.py \\
         --golden-dir <skill>/golden/ \\
         --baseline-output <workspace>/baseline/eval-1/output.md \\

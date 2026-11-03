@@ -384,17 +384,19 @@ Scripts:
   comparison
 - `scripts/multi_judge.py` — runs 3-judge ensemble, returns consensus
 - `scripts/golden_compare.py` — compares candidate output to a
-  golden reference (used in Tier 2 escalation)
+  golden reference (optional `PASS_MODERATE` supplement; comparison only,
+  cannot clear `FLAG_TIER_2` or replace human review)
 
 For a bundled-resource refactor only, read
 `references/package-resource-mode.md`. It supplies the immutable-baseline,
 whole-package accounting, and layered evidence protocol; entrypoint-only
 requests do not load it.
 
-Optional Tier 3 hand-off path: if golden anchors exist for the
-target skill (in `<skill>/golden/`), Q1's pass criterion can be
-strengthened to "equivalence check passes AND candidate output
-matches golden anchor pattern"; see `golden-anchor-protocol.md`.
+Optional golden check: for `PASS_HIGH` or `PASS_MODERATE`, if golden anchors exist
+in `<skill>/golden/`, a selected comparison can reject an anchor regression.
+A positive result cannot clear `FLAG_TIER_2` or replace human review;
+existing Q1/Q2/Q3 rules and cumulative-drift safeguards still apply.
+See `references/golden-anchor-protocol.md`.
 
 ## Bottom Line
 

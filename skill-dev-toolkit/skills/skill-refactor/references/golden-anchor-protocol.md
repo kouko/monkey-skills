@@ -26,7 +26,7 @@ Goldens differ from `test-prompts.json`:
 | Purpose | Run-on-current-skill input | Reference output to compare against |
 | Authored by | Often LLM-drafted, user-confirmed | Always human-curated |
 | What it tests | "Skill produces *some* output" | "Skill produces *this kind* of output" |
-| Used by | Equivalence check (Q1) | Anchor comparison (Tier 2 escalation, taste check) |
+| Used by | Equivalence check (Q1) | Optional anchor comparison (PASS_MODERATE supplement, taste check) |
 
 ## When goldens matter
 
@@ -128,26 +128,36 @@ anchoring.
 
 ## How `skill-refactor` uses goldens
 
-In Q1's Tier 2 escalation:
+Q1's existing vote outcome remains authoritative:
+
+- 2 `equivalent` + 1 `uncertain`, without specific behavior dissent,
+  yields `PASS_MODERATE` and may proceed under the existing Q1/Q2/Q3 rules.
+- 2 `equivalent` + 1 `not_equivalent`, or specific behavior dissent,
+  yields `FLAG_TIER_2`: hold for human review. A positive anchor comparison
+  cannot clear this flag or replace human review.
+
+Golden comparison is an **optional supplement** to `PASS_MODERATE`, not
+a required escalation; `PASS_HIGH` candidates may also use it. If selected,
+an anchor regression can reject the candidate; a positive result supplies
+comparison evidence only.
 
 ```
-If 2-of-3 ensemble agree on equivalence (moderate confidence) and
-golden anchors exist for this skill:
+If Q1 = FLAG_TIER_2:
+  HOLD for human review, regardless of anchor similarity
+Else if Q1 in {PASS_HIGH, PASS_MODERATE} and anchors exist and check is selected:
+  For each test prompt with matching anchors:
+    compare candidate and baseline outputs to the relevant golden anchors
 
-  For each test prompt:
-    candidate_output = run skill_v_candidate on prompt
-    
-    For each golden in golden/ matching this prompt_pattern:
-      similarity = compare(candidate_output, golden.anchor_output)
-      
-    If candidate's similarity to relevant golden < baseline's:
-      FAIL — refactor moved away from anchored quality
+    If candidate's similarity to relevant goldens < baseline's:
+      REJECT candidate — moved away from anchored quality
     Else:
-      PASS — refactor preserved or improved anchored quality
+      Record positive anchor evidence — existing Q1/Q2/Q3 rules still apply
 ```
 
-Golden-anchored equivalence is stronger than judge-only equivalence
-because the comparison target is human-fixed, not LLM-floating.
+The comparison target is human-fixed, but textual similarity does not
+establish semantic equivalence or authorize adoption. This optional check
+does not alter the separate cumulative-drift safeguard: after 3 consecutive
+moderate-confidence PROCEEDs, flag the cumulative diff for human review.
 
 ## How `skill-tuning` uses goldens
 
