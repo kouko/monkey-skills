@@ -85,6 +85,14 @@ The shared helper belongs in the existing validation module rather than utils:
 `run_eval.py` uses utils without PyYAML today, so placing the YAML-dependent
 validator there would add a dependency to an unrelated evaluator entry.
 
+During W7-02, the positive oracle was tightened from an arguable unreachable
+numeric branch to the frozen corpus X3's explicit recoverable/unrecoverable
+timing contradiction. Both negative controls remain unchanged. This consumed
+one continued dispatch for W7-02, whose count1 is retained; it did not add a
+fixture or runtime mechanism. Only the separate regression data changed,
+never the historical corpus. W7-04 also refreshes the existing unreleased
+0.5.2 changelog, without an additional version or release artifact.
+
 Drop a permanent additional LLM reviewer, generic policy registry, receipt/event
 schema, duration-statistics rewrite and repair of the preserved test artifacts.
 The existing full-context prohibition and unknown/null support are reused.
