@@ -47,7 +47,13 @@ def description_violation(description: str, skill_content: str) -> str | None:
             break
     justification = " ".join(comments)
     firing_note = re.search(r"\bFiring evidence:\s*(\S.*)", justification, re.IGNORECASE)
-    declared_exception = firing_note or re.search(r"\b(?:router|CONDITIONAL)\b|Firing evidence:", justification, re.IGNORECASE)
+    # Domain nouns in a KEEP explanation do not declare the skill's role.
+    role_declaration = any(re.match(
+        r"^(?:(?:skill\s+)?role:\s*(?:router|CONDITIONAL)\b|"
+        r"(?:router|CONDITIONAL)(?:\s+skill\b|\s*[:.;]|\s*$))",
+        comment, re.IGNORECASE,
+    ) for comment in comments)
+    declared_exception = firing_note or role_declaration or re.search(r"Firing evidence:", justification, re.IGNORECASE)
     if declared_exception and len(description) > 250:
         if not firing_note:
             return "description router/CONDITIONAL exception needs a firing-evidence note"

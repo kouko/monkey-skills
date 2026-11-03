@@ -294,7 +294,7 @@ def test_creator_evaluation_completion(entry, outcome, optimizer, skill, monkeyp
 @pytest.mark.parametrize("candidate, comment, valid", [
     ("Converts CSV files when streaming JSONL is needed.", "", True),
     ("x" * 251, "", False),
-    ("x" * 251, "# KEEP: Retains CSV, JSONL and streaming trigger surfaces\n", True),
+    ("x" * 251, "# KEEP: Retains CSV, JSONL and router configuration trigger surfaces\n", True),
     ("x" * 1024, "# KEEP: Retains CSV, JSONL and streaming trigger surfaces\n", True),
     ("x" * 1025, "# KEEP: Retains CSV, JSONL and streaming trigger surfaces\n", False),
     ("x" * 500, "# Firing evidence: 87% match rate from support-ticket A/B corpus\n", True),
