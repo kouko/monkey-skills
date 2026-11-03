@@ -1,0 +1,63 @@
+{
+  "source_sha": "343483314d22d28f3981a23733d75094834c717a",
+  "package": "skill-dev-toolkit/skills/skill-refactor",
+  "observation": "Original check-workflow audit-run/consistency-report.md from the preserved toolkit-host-dogfood-2mvmmael run; findings 4/6, 5 and 7 respectively. These excerpts are regression inputs, not fresh detector results.",
+  "cases": [
+    {
+      "id": "explicit_exception_not_conflict",
+      "passages": [
+        {
+          "file": "SKILL.md",
+          "section": "Q1. Output equivalence (multi-judge ensemble)",
+          "text": "| Specific behavior dissent from any `not_equivalent` judge | `FLAG_TIER_2` — escalate before considering vote counts |\n| 3 `equivalent` | `PASS_HIGH` |\n| 2 `equivalent` + 1 `uncertain` | `PASS_MODERATE` — report moderate confidence; may proceed |\n| 2 `equivalent` + 1 `not_equivalent` | `FLAG_TIER_2` — human review; hold candidate |\n| ≤1 `equivalent`, after the dissent override | `FAIL` — reject |"
+        },
+        {
+          "file": "references/equivalence-check-protocol.md",
+          "section": "Consensus rules and adjoining Important rule",
+          "text": "| 3/3 `equivalent` | PASS (high confidence) |\n| 2/3 `equivalent`, 1 `uncertain` | PASS (moderate confidence) |\n| 2/3 `equivalent`, 1 `not_equivalent` | FLAG → Tier 2 (escalate to human) |\n| 1/3 `equivalent` (or worse) | FAIL → REJECT round |\n| Any `not_equivalent` reason cites specific behavior change | FLAG → Tier 2 even if 2/3 said equivalent |\n\n**Important rule**: a single dissenting judge that points to a\n*specific behavior change* outranks numeric majority. The dissent\nis a signal that the refactor smuggled feature work; investigate\nbefore committing."
+        }
+      ],
+      "expected": "no_conflict",
+      "rationale": "With at most one equivalent vote and a specific behavior dissent, Any and the adjoining precedence rule apply before vote counts. Both sides escalate; the rejection row is not an unconditional command."
+    },
+    {
+      "id": "compatible_test_summary_not_conflict",
+      "passages": [
+        {
+          "file": "SKILL.md",
+          "section": "Move catalog",
+          "text": "| Remove \"ALWAYS / NEVER\" caps where the prose can carry meaning | Reduce noise | Low–medium (test for behavior change) |"
+        },
+        {
+          "file": "references/refactor-moves-catalog.md",
+          "section": "Remove Redundant ALWAYS / NEVER Caps",
+          "text": "**Equivalence risk**: low–medium. Test carefully on edge cases.\nCaps sometimes carry \"this is a hard rule\" semantic that prose\nloses."
+        },
+        {
+          "file": "references/refactor-moves-catalog.md",
+          "section": "Summary table",
+          "text": "| Move | Tier | Auto / User-confirm |\n|---|---|---|\n| Dedupe prose | Low | Auto |\n| Tighten phrasing | Low | Auto |\n| Inline single-use definition | Low | Auto |\n| Compress lists to tables | Low | Auto |\n| Remove redundant caps | Low | Auto |"
+        }
+      ],
+      "expected": "no_conflict",
+      "rationale": "For removing caps, Auto describes user-confirmation handling and does not forbid testing. Both detailed rules require testing edge cases; the shorter risk summary creates no incompatible action."
+    },
+    {
+      "id": "true_conflict_retained",
+      "passages": [
+        {
+          "file": "references/equivalence-check-protocol.md",
+          "section": "Layer 1: Structural comparison (deterministic)",
+          "text": "| Token count | Within ±20% of baseline | Output dropped 60% — likely missing content |\n\n**Pass rule**: all 5 checks pass. Layer 1 failure → REJECT\nimmediately, do not proceed to Layer 2."
+        },
+        {
+          "file": "references/equivalence-check-protocol.md",
+          "section": "What invalidates a \"pass\" verdict",
+          "text": "Even if both layers pass, mark as suspicious if:\n\n- Layer 1 pass but Layer 2 has any `uncertain` votes → moderate\n  confidence at best\n- Token count delta is suspiciously large (>30% reduction in\n  output) → may indicate dropped content the structural check\n  didn't catch\n- Edge-case test prompts (intentionally tricky inputs) don't\n  match — happy-path equivalence is necessary but not sufficient"
+        }
+      ],
+      "expected": "conflict",
+      "rationale": "For the same output with over 30% token reduction, mandatory ±20% Layer 1 rejection prevents reaching the stated both-layers-pass suspicious case. No scope exception makes that branch reachable."
+    }
+  ]
+}

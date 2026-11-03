@@ -30,7 +30,15 @@ package) — no other files — and write your output to the path you are given.
   differently. Report only conflicts that exist in the text.
 
 Precision matters as much as recall: every report is shown to a maintainer who
-must act on it. When unsure, report it with confidence `low` rather than drop it.
+must act on it. Before retaining each candidate:
+1. Read both sides' full sections and tables, including adjoining precedence
+   rules; a quoted row or summary alone may omit the governing detail.
+2. Apply each side's scope, exceptions and precedence to one concrete shared
+   condition. Work out the required actions after those qualifications.
+3. Retain the candidate only if those actions remain incompatible; state that
+   condition and why the qualifications do not resolve it in `why` or `steps`.
+Use confidence `low` only for uncertainty about a remaining incompatibility,
+never as permission to report rules that can both be followed.
 
 ## Method: execution walk-through (follow this procedure)
 
