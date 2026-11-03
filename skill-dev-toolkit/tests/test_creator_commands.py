@@ -204,6 +204,12 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
 
 @pytest.mark.parametrize("entry", ["package_skill", "aggregate_benchmark", "run_loop"])
 def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch, capsys):
+    if entry == "package_skill":
+        help_result = command(entry)
+        assert help_result.returncode == 1
+        assert "Usage: python -m scripts.package_skill <path/to/skill-folder> [output-directory]" in help_result.stdout
+        assert "  python -m scripts.package_skill skills/public/my-skill\n" in help_result.stdout
+        assert "  python -m scripts.package_skill skills/public/my-skill ./dist\n" in help_result.stdout
     if entry in {"package_skill", "aggregate_benchmark"}:
         result = command(entry, tmp_path / "missing")
         assert result.returncode != 0
