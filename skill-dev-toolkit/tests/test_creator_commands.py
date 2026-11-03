@@ -3,6 +3,7 @@
 import importlib
 import io
 import json
+import os
 import subprocess
 import sys
 import zipfile
@@ -235,6 +236,47 @@ def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch, 
         with pytest.raises(SystemExit) as error:
             module.main()
         assert error.value.code == 1
+
+
+@pytest.mark.parametrize("entry", ["run_eval", "run_loop"])
+@pytest.mark.parametrize("newline, exit_status", [(True, 0), (False, 0), (False, 7)])
+def test_creator_real_eof_completion(entry, newline, exit_status, tmp_path, skill, monkeypatch):
+    """Exercise the real CLI, process pool and backend when stdout closes first."""
+    (tmp_path / ".claude").mkdir()
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    backend = fake_bin / "claude"
+    payload = json.dumps({"type": "result", "subtype": "success", "is_error": False})
+    payload = (payload + ("\n" if newline else "")).encode()
+    backend.write_text(
+        f"#!{sys.executable}\nimport os, time\n"
+        f"os.write(1, {payload!r})\n"
+        f"os.close(1)\ntime.sleep(0.2)\nos._exit({exit_status})\n"
+    )
+    backend.chmod(0o755)
+    monkeypatch.setenv("PATH", str(fake_bin) + os.pathsep + os.environ["PATH"])
+    monkeypatch.setenv("PYTHONPATH", str(CREATOR))
+    evaluation = tmp_path / "negative.json"
+    evaluation.write_text(json.dumps([{"query": "negative query", "should_trigger": False}]))
+    argv = [sys.executable, "-m", f"scripts.{entry}", "--eval-set", str(evaluation),
+            "--skill-path", str(skill), "--num-workers", "1", "--runs-per-query", "1", "--timeout", "3"]
+    if entry == "run_loop":
+        argv += ["--model", "offline", "--report", "none", "--holdout", "0",
+                 "--max-iterations", "1", "--results-dir", str(tmp_path / "saved")]
+    result = subprocess.run(argv, cwd=tmp_path, capture_output=True, text=True, timeout=15)
+    if exit_status:
+        assert result.returncode != 0
+        assert "Query backend exited with status 7" in result.stderr
+        assert not result.stdout and not list(tmp_path.rglob("results.json"))
+    else:
+        assert result.returncode == 0, result.stderr
+        output = json.loads(result.stdout)
+        if entry == "run_eval":
+            assert output["summary"] == {"total": 1, "passed": 1, "failed": 0}
+        else:
+            assert output["best_score"] == "1/1"
+            assert output["exit_reason"] == "all_passed (iteration 1)"
+    assert not list((tmp_path / ".claude/commands").glob("*.md"))
 
 
 @pytest.mark.parametrize("entry", ["run_eval", "run_loop"])

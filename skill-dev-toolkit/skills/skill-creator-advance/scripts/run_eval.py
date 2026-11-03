@@ -116,8 +116,18 @@ def run_single_query(
 
                     chunk = os.read(process.stdout.fileno(), 8192)
                     if not chunk:
-                        raise RuntimeError("Query backend ended without a conclusive result")
-                    buffer += chunk.decode("utf-8", errors="replace")
+                        # Stdout may close before poll observes process exit.
+                        # Confirm status before parsing the unterminated tail.
+                        try:
+                            process.wait(timeout=max(0, timeout - (time.time() - start_time)))
+                        except subprocess.TimeoutExpired as exc:
+                            raise RuntimeError("Query backend timed out before a conclusive result") from exc
+                        if process.returncode != 0:
+                            raise RuntimeError(f"Query backend exited with status {process.returncode}")
+                        completed = True
+                        buffer += "\n"
+                    else:
+                        buffer += chunk.decode("utf-8", errors="replace")
 
                 while "\n" in buffer:
                     line, buffer = buffer.split("\n", 1)
