@@ -1,5 +1,5 @@
 # Repair skill-dev-toolkit — spec
-intent: 2026-11-02-repair-skill-dev-toolkit@3b1b225d
+intent: 2026-11-02-repair-skill-dev-toolkit@55dee191
 pre-build-review: required — Blind comparisons and preference exports affect evidence integrity; conflicting execution policies require an independent scope check.
 
 ## Requirements
@@ -18,7 +18,23 @@ REQ-6 — Accurate size qualification
 REQ-7 — Executable regression coverage
   The verification suite shall detect the retained defects through executable or realistic behavioral cases, check current resolved instruction authorities, satisfy existing repository structural limits, and run in the relevant plugin verification path → Acceptance #7
 
+REQ-8 — One description authority through delivery
+  WHEN a new or optimized skill is validated for packaging, the toolkit shall apply the existing contextual description eligibility rules and refuse an ineligible package while accepting qualified exceptions → Acceptance #8
+REQ-9 — Contextual conflict and model evidence precision
+  WHEN the confirmed host regression cases are checked, the detectors shall reconcile explicit exceptions before reporting a conflict and the report shall qualify unobserved detector identity rather than certify a selected alias → Acceptance #9
+REQ-10 — Defined cold-entry behavior
+  WHEN historical eval cases, an observable supported model identifier, or host timing fields are unavailable, the creator shall follow the documented setup, explicit unknown-data, or bounded-stop path without inventing inputs or measurements → Acceptance #10
+REQ-11 — Release artifacts demonstrated in a real host
+  The toolkit shall complete representative real-host creation and checking workflows with artifacts meeting their declared contracts, preserving failed observations, independent judgments and unverified environment limits → Acceptance #11
+
 ## Design decision
+- REQ-8 agent-decided — Relocate the existing description_violation function to the existing quick_validate module and call it from validation, generation and selection. Remove its old body and redundant angle/1024 checks; retain current contextual role/justification behavior. Do not put a YAML dependency into utils used by run_eval, add a module, or duplicate eligibility logic. Packaging refuses invalid input before producing an archive. Semantic voice/trigger/evidence review remains an applying-agent responsibility, not a new grammar classifier.
+- REQ-9 agent-decided — Both existing independent detectors read a candidate's full table/section and adjoining precedence text, apply scope and exceptions, and retain a contradiction only when a concrete same-condition action pair remains impossible. This adds no judge or output schema. Use separate, provenance-bearing real negative/positive regression data without modifying byte-identical historical experiments. Report no universal precision or measured improvement until fresh executions support it.
+- REQ-9 agent-decided — Preserve --model and existing JSON fields. A selected family alias, parent modelUsage, or manually copied parent identifier does not establish each child's exact runtime identity. Pass unknown when that evidence is unavailable and retain the existing warning; qualify the lexical model-family match as metadata comparison, not runtime/corpus verification. No receipt architecture or extra required identity field is introduced.
+- REQ-10 agent-decided — Quick creation may load only Gate2 from the existing pre-creation-gates authority; it does not require copying those questions or running the full gates. Structural redesign reuses historical cases when present; otherwise prepare real representative cases and an old-version baseline through the existing quick/full setup before editing. Do not invent past tests or add an intake stage.
+- REQ-10 agent-decided — If a current exact model is unobservable or unsupported by the Claude backend, stop only live optimization while permitting draft/query preparation. A separately selected supported target requires explicit selection and disclosed difference; literal unknown is never sent as a provider model. Capture only observed notification fields. Reuse existing unknown-token schema; if a valid numeric duration cannot be measured from an identified source, report that limitation and stop the full timing comparison instead of inventing zero or assuming duration null compatibility.
+- REQ-11 user-decided — The user requested iteration to a releasable result while controlling complexity after the real-host report. Acceptance8–11 expand the guarantee from local historical repairs to contextual delivery eligibility, artifact precision and missing-input host behavior. The earlier three-candidate review episode is complete, not extended; its passing verdicts do not certify the expanded scope. Retain W6-01/W6-02 count1 and the prior failed artifacts. Fresh cumulative review follows completed implementation and host verification.
+- REQ-11 agent-decided — Repeat bounded real Claude Code workflows using session-local source bundles outside project fixtures, the same explicit supported model/effort, genuine positive/negative inputs and two blind artifact judgments separated from trajectory checks. Native cold-entry exercises cover the new missing-input branches. Preserve all original failed artifacts and judge disagreements. The loose translation is a sampled fidelity assertion, not justification for a generic semantic enforcement layer. Release readiness does not claim all hosts, installed marketplace cutover, a complete statistical trigger corpus or elimination of LLM errors.
 - REQ-1 agent-decided — Initial recovery selectively restored `aggregate_benchmark.py`, `package_skill.py`, and `run_loop.py` from `cb8d7e4aa317af4707373636f494ebd2a45a1f4d`. Subsequent review requires bounded corrections in their consumed helpers. Preserve command invocation shapes and reference extraction; qualify missing evidence instead of preserving fabricated numeric values. Offline backends test orchestration without paid calls or browser launches.
 - REQ-2 agent-decided — Same-length traces must be identical. A length difference of at most one may remove one call from the longer trace to obtain the shorter trace, with identical tool vocabulary. This preserves the existing count tolerance while enforcing relative order. No-trace skip behavior remains; this change does not claim semantic equivalence without Layer 2.
 - REQ-3 agent-decided — Store complete outputs as ordinary A.md/B.md files under a fresh neutral temporary directory for the current run. Render only blind paths; never expose original filenames or use symlinks. Keep one random mapping until choice lock-in and preserve existing session decoding. Leave generated viewing files available for the current workflow; do not mutate source outputs.
@@ -41,6 +57,10 @@ REQ-7 — Executable regression coverage
 - REQ-4/5 agent-decided — Synchronize all tuning README/NOTICE readiness statements with usable explicit single-pick records, including valid baseline DROP choices. Golden-anchor checks may optionally supplement PASS_MODERATE but cannot clear FLAG_TIER_2 or replace its human review. Preserve the legacy comparison-result enum as a comparison-only result and retain cumulative-drift safeguards.
 
 ## Alternatives considered
+- Copy the description rule into packaging or add a policy module — rejected because an existing function and existing validation module can own the same rule without another dependency for run_eval.
+- Add another mandatory detector judge, receipt schema or generic test service — rejected because existing detectors and unknown reporting can satisfy the bounded obligations with less state and maintenance.
+- Treat every advisory model output as a new source defect — rejected because exceptions are already prohibited; keep stochastic output errors and confirmed entry/control gaps distinct.
+- Make all descriptions over250 invalid, fabricate absent telemetry, or silently choose another backend model — rejected because these drop existing qualified exceptions or manufacture evidence.
 - Revert all of #851 — rejected because it would discard unrelated reference extraction and consistency work.
 - Rewrite the three command implementations — rejected because local Git retains compatible implementations and packaging smoke evidence.
 - Compare unordered tool multisets — rejected because they still accept harmful reordering.
@@ -52,6 +72,10 @@ REQ-7 — Executable regression coverage
 - Redesign the judge rubric based on its self-score — rejected because subjective calibration does not prove a runtime defect.
 
 ## Current state evidence
+- Host delivery gap: package_skill.py:70 invokes quick_validate.py, whose description checks omit the contextual guard already implemented by improve_description.py:22. A real268-character unjustified description was packaged at28af8bae.
+- Host precision: detector-read.md and detector-simulate.md already exclude explicit exceptions, yet the preserved native outputs omitted the adjacent Any-dissent rule. Exception-aware procedure and negative/positive behavioral controls are required; JSON validity is insufficient.
+- Host identity: skill-consistency-check/SKILL.md model-record wording permits own-model/setting inference while merge_report.py accepts caller metadata and only matches a family label. Existing unknown reporting is the smallest faithful path.
+- Host entry boundary: creator SKILL.md quick Gate2 and structural rewrite, description-optimization.md model selection and eval-protocol.md notification capture assume inputs the host need not provide. Existing token schema handles missing tokens; duration aggregation remains outside this repair.
 - Forward: `skill-dev-toolkit/skills/skill-creator-advance/SKILL.md`, Packaging, still advertises the broken command.
 - Reverse: `skill-dev-toolkit/skills/skill-refactor/references/equivalence-check-protocol.md`, Layer 1, requires ordered tool traces.
 - Error: `skill-dev-toolkit/skills/skill-creator-advance/scripts/package_skill.py:3` is unquoted prose; #851 replaced executable modules.
@@ -65,6 +89,7 @@ These are engineering CLI repairs; existing invocation shapes remain except for 
 |---|---|---|
 | Packaging success | Package a valid skill | A readable .skill archive and successful command completion. |
 | Packaging error | Supply an invalid/missing skill | Existing validation error, nonzero completion, and no success archive; fix the input and retry. |
+| Description delivery | Package short, justified long, or admitted router metadata | One shared contextual rule accepts eligible descriptions; unqualified long descriptions fail without an archive, with the existing exception policy retained. |
 | Aggregation success | Aggregate valid repeated evaluations | Benchmark JSON/Markdown with recomputed statistics; unavailable token capture is explicitly unknown, with no fabricated saving. |
 | Aggregation empty/error | Supply missing or malformed evaluation inputs | Existing explicit error or existing empty-data representation, never fabricated successful evaluation results; correct inputs and retry. |
 | Optimization progress | Run a bounded optimization with valid backend | Existing iteration/results output, preserving evaluated candidate identity; no additional paid service is introduced. |
@@ -74,5 +99,11 @@ These are engineering CLI repairs; existing invocation shapes remain except for 
 | Explicit preference | Export a valid candidate or baseline choice | Selected-over-other comparison data and usable-record/pair counts. |
 | No usable preference | Export None/multiple/refine or unusable records | No fabricated preference pairs; clear skipped/readiness accounting. |
 | Size notice | Check a group over nominal 25k | Caution explaining approximate validation scope; grouping remains governed by 30k. |
+| Detector regression controls | Check genuine incompatible rules and compatible general-rule/exception cases | Positive contradictions remain detectable; the confirmed exception and testing-summary negatives are not reported as incompatible instructions. |
+| Unobserved detector identity | Run detectors through an alias with no per-child runtime ID | Standalone reports use unknown and preserve the not-validated qualification; parent model metadata does not become child proof. |
+| Quick creation | Start a simple prototype without the full gate protocol | Gate2 questions are available through their existing subsection; no invented question list or mandatory full interview. |
+| Missing old cases | Request structural redesign of a skill that has no historic evals | Real representative cases and an old-version baseline are prepared through the existing setup before editing; no claimed historic results. |
+| Missing or unsupported optimizer ID | Prepare description optimization without an observable supported current model | Draft/query preparation may continue, while the live optimization step stops with the limitation until a supported target is explicitly selected and disclosed. |
+| Missing host counters | Run full evaluation without reliable notification fields | Tokens follow the existing unknown-data schema; an unavailable numeric duration prevents a timing comparison and is disclosed without fabricated zeros. |
 
 All local fixture operations are immediate except explicitly bounded optimization iteration. Existing log data is not rewritten; generated blind copies and reports are new artifacts. These changes do not introduce a GUI or require an external model call in CI.
