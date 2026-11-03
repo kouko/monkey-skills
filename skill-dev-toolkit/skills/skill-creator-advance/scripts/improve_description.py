@@ -14,54 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
-
+from scripts.quick_validate import description_violation
 from scripts.utils import parse_skill_md
-
-
-def description_violation(description: str, skill_content: str) -> str | None:
-    """Check mechanical eligibility; contextual justification still needs review."""
-    if not description.strip() or "<" in description or ">" in description:
-        return "description must be nonempty text without XML/angle brackets"
-    if len(description) > 1024:
-        return "description exceeds the platform ceiling of 1024 characters"
-    match = re.match(r"\A---\n(.*?)\n---(?:\n|$)", skill_content, re.DOTALL)
-    if not match:
-        return "description context has malformed YAML frontmatter"
-    try:
-        metadata = yaml.safe_load(match.group(1))
-    except yaml.YAMLError:
-        return "description context has malformed YAML frontmatter"
-    if not isinstance(metadata, dict) or not isinstance(metadata.get("description"), str):
-        return "description context needs a YAML description string"
-    # Comments do not count toward rendered length. Only the comment block
-    # directly above the parsed description field can justify a long value.
-    lines = match.group(1).splitlines()
-    comments = []
-    for index, line in enumerate(lines):
-        if line.startswith("description:"):
-            for previous in reversed(lines[:index]):
-                if not previous.startswith("#"):
-                    break
-                comments.insert(0, previous[1:].strip())
-            break
-    justification = " ".join(comments)
-    firing_note = re.search(r"\bFiring evidence:\s*(\S.*)", justification, re.IGNORECASE)
-    # Domain nouns in a KEEP explanation do not declare the skill's role.
-    role_declaration = any(re.match(
-        r"^(?:(?:skill\s+)?role:\s*(?:router|CONDITIONAL)\b|"
-        r"(?:router|CONDITIONAL)(?:\s+skill\b|\s*[:.;]|\s*$))",
-        comment, re.IGNORECASE,
-    ) for comment in comments)
-    declared_exception = firing_note or role_declaration or re.search(r"Firing evidence:", justification, re.IGNORECASE)
-    if declared_exception and len(description) > 250:
-        if not firing_note:
-            return "description router/CONDITIONAL exception needs a firing-evidence note"
-        if len(description) > 500:
-            return "description exceeds the admitted router/CONDITIONAL bound of 500 characters"
-    if len(description) > 250 and not justification:
-        return "description over 250 characters needs a colocated YAML justification"
-    return None
 
 
 def _call_claude(prompt: str, model: str | None, timeout: int = 300) -> str:

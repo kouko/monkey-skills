@@ -9,6 +9,52 @@ import re
 import yaml
 from pathlib import Path
 
+
+def description_violation(description: str, skill_content: str) -> str | None:
+    """Check mechanical eligibility; contextual justification still needs review."""
+    if not description.strip() or "<" in description or ">" in description:
+        return "description must be nonempty text without XML/angle brackets"
+    if len(description) > 1024:
+        return "description exceeds the platform ceiling of 1024 characters"
+    match = re.match(r"\A---\n(.*?)\n---(?:\n|$)", skill_content, re.DOTALL)
+    if not match:
+        return "description context has malformed YAML frontmatter"
+    try:
+        metadata = yaml.safe_load(match.group(1))
+    except yaml.YAMLError:
+        return "description context has malformed YAML frontmatter"
+    if not isinstance(metadata, dict) or not isinstance(metadata.get("description"), str):
+        return "description context needs a YAML description string"
+    # Comments do not count toward rendered length. Only the comment block
+    # directly above the parsed description field can justify a long value.
+    lines = match.group(1).splitlines()
+    comments = []
+    for index, line in enumerate(lines):
+        if line.startswith("description:"):
+            for previous in reversed(lines[:index]):
+                if not previous.startswith("#"):
+                    break
+                comments.insert(0, previous[1:].strip())
+            break
+    justification = " ".join(comments)
+    firing_note = re.search(r"\bFiring evidence:\s*(\S.*)", justification, re.IGNORECASE)
+    # Domain nouns in a KEEP explanation do not declare the skill's role.
+    role_declaration = any(re.match(
+        r"^(?:(?:skill\s+)?role:\s*(?:router|CONDITIONAL)\b|"
+        r"(?:router|CONDITIONAL)(?:\s+skill\b|\s*[:.;]|\s*$))",
+        comment, re.IGNORECASE,
+    ) for comment in comments)
+    declared_exception = firing_note or role_declaration or re.search(r"Firing evidence:", justification, re.IGNORECASE)
+    if declared_exception and len(description) > 250:
+        if not firing_note:
+            return "description router/CONDITIONAL exception needs a firing-evidence note"
+        if len(description) > 500:
+            return "description exceeds the admitted router/CONDITIONAL bound of 500 characters"
+    if len(description) > 250 and not justification:
+        return "description over 250 characters needs a colocated YAML justification"
+    return None
+
+
 def validate_skill(skill_path):
     """Basic validation of a skill"""
     skill_path = Path(skill_path)
@@ -75,13 +121,9 @@ def validate_skill(skill_path):
     if not isinstance(description, str):
         return False, f"Description must be a string, got {type(description).__name__}"
     description = description.strip()
-    if description:
-        # Check for angle brackets
-        if '<' in description or '>' in description:
-            return False, "Description cannot contain angle brackets (< or >)"
-        # Check description length (max 1024 characters per spec)
-        if len(description) > 1024:
-            return False, f"Description is too long ({len(description)} characters). Maximum is 1024 characters."
+    violation = description_violation(description, content)
+    if violation:
+        return False, violation
 
     # Validate compatibility field if present (optional)
     compatibility = frontmatter.get('compatibility', '')

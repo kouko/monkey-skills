@@ -80,6 +80,32 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
                 "example-skill/references/evals/keep.txt",
             }
             assert archive.read("example-skill/SKILL.md").decode() == (skill / "SKILL.md").read_text()
+        host_description = (
+            "Summarizes a single-version release fix log (changelog section with a version, date and Fixed items) "
+            "into a three-point Traditional Chinese summary. Use when asked to condense release-input.md or a "
+            "similar one-version fix record, or for 修復紀錄摘要, 三點摘要, release notes 摘要."
+        )
+        assert len(host_description) == 268
+        for index, (description, comment, valid) in enumerate([
+            (host_description, "", False),
+            ("x" * 1024, "# KEEP: Retains CSV, JSONL and streaming trigger surfaces\n", True),
+            ("x" * 500, "# Role: router\n# Firing evidence: 87% match rate from support-ticket A/B corpus\n", True),
+            ("x" * 268, "# Role: router\n", False),
+            ("Converts CSV files when streaming JSONL is needed.", "", True),
+        ]):
+            content = "---\nname: example-skill\n" + comment + "description: " + description + "\n---\nBody\n"
+            (skill / "SKILL.md").write_text(content)
+            destination = tmp_path / f"description-{index}"
+            result = command(entry, skill, destination)
+            assert result.returncode == (0 if valid else 1), result.stderr + result.stdout
+            archive_path = destination / "example-skill.skill"
+            assert archive_path.exists() == valid
+            if valid:
+                with zipfile.ZipFile(archive_path) as archive:
+                    assert archive.read("example-skill/SKILL.md").decode() == content
+            else:
+                assert "description" in result.stdout.lower()
+            assert (skill / "SKILL.md").read_text() == content
     elif entry == "aggregate_benchmark":
         for config, rates in [("with_skill", [0.5, 1.0]), (baseline, [0.0, 0.5])]:
             for index, rate in enumerate(rates, 1):
