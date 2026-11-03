@@ -174,8 +174,8 @@ that model. This does not establish individual detector runtime identities.
 |---|---|---|
 | Small contextual control | Completed; detected the genuine quick-baseline conflict and did not flag the explicit dissent exception. Still reported the compatible Auto/testing summary as a medium-confidence advisory. | The negative control remains failed; both blind audits confirm the false advisory. Do not change its expected answer or claim complete precision. |
 | Exhausted-retry replay | Replayed the genuine recorded unfinished walk-through response as the second response, explicitly disclosing that no second detector execution occurred. Caller stopped before merge, generated no whole-package verdict and named the unchecked group. | The observed stop behavior meets this controlled condition. The reply left the incomplete active JSON in place and suggested a further dispatch as a future option; these limits remain available for assessment. |
-| First-response replay | Not executed: automatic approval review rejected the external Claude call before process creation. | No behavioral verdict; explicit authorization for this data transfer and spend has been requested. |
-| Ordinary historical checker | Prepared, not executed on this source. | Earlier source results are not a substitute for the pending current-source run. |
+| First-response replay | Initially blocked before process creation; executed after the user's explicit approval. Exactly one fresh Agent read all13 assigned files, replaced the incomplete active output only after preserving it outside merge globs, and produced a report. | Recovery behavior observed; factual report judgment is recorded separately from CLI success. |
+| Ordinary historical checker | Completed after approval, with two sequential independent Agents. The final report has no blocking finding and two medium-confidence advisories. | Neither known dissent-exception nor Auto/testing false claim appears in this trial. The smaller failed control remains failed; other advisories require independent judgment. |
 
 The completed top-level calls (preflight, control, exhausted-retry replay)
 report estimates of US$0.0018701, US$0.188093 and US$0.0639588 respectively:
@@ -251,10 +251,83 @@ This is executor evidence, not a clean independent acceptance verdict. It
 initially over-read Gate3 while extracting Gate2, then corrected the extraction,
 and preloaded an optimization reference before its progressive loading point.
 These procedural deviations remain recorded. Native backend identity/version
-was not pinned; this does not substitute for the two unexecuted Claude cases,
+was not pinned; this does not substitute for the separate Claude cases,
 prove perfect reference-load isolation, or establish statistical performance.
 
-Release remains unverified: the semantic control failed, two external cases
-await transfer/spend authorization, independent acceptance is not complete,
+Release remains unverified: the semantic control failed, independent
+acceptance is not complete,
 and cumulative closing review/finalization for this expanded scope has not
 started. The old attestation must not be used to publish this tree.
+
+### Explicitly authorized remaining host cases
+
+After the user was shown the exact remaining data scope (toolkit source,
+public historical examples and recorded test hand-backs), Anthropic destination
+and combined US$2.50 estimated CLI thresholds (not hard limits), the user
+answered `好`. This authorizes the two remaining host tests, not an additional
+external code review, installation, publication or merge. The previously
+rejected command was not bypassed; it was executed only after this new approval.
+
+Both use the existing unchanged6754b8aaf bundle and first-party Claude setup,
+request `claude-sonnet-5-5`/medium and report that top-level model. No permission
+denials occurred. The active repository at41f3210f7 differs from that bundle's
+source only in evidence, with no toolkit-source delta.
+
+| Case | Elapsed seconds | CLI estimated USD | Observed execution |
+|---|---:|---:|---|
+| retry-workflow | 100.52 | 0.4326776 | One retry; full13-file read; preserved partial JSON/hand-back; report produced from completed retry plus disclosed carried read result. |
+| check-workflow | 102.59 | 0.4630177 | Two sequential fresh detectors; report produced with unknown model metadata and validation caveat. |
+
+The two estimates total US$0.8956953, not an invoice. All five completed
+top-level calls in this root, including the earlier preflight/control/replay,
+total US$1.1496172. All four project input manifests and the entire recorded
+bundle manifest still match their before hashes.
+
+Retry trace: JSONL line36 preserves the17-byte incomplete JSON in
+partial-simulate-1.json and the hand-back in partial-simulate-1.md before removing
+the active incomplete output; line38 dispatches one Agent; lines46–82 read all13
+assigned target files; line86 writes the fresh result; line94 validates and
+merges. The reply explicitly discloses carried read results and that the
+retry did not recheck line numbers. This is a live retry after replaying the
+genuine first hand-back, not a claim the first detector ran anew.
+
+The general check completes with two advisory claims about the historical
+skip-ensemble branch and extraction tier; neither is accepted as fact merely
+because the CLI exited successfully. Fresh artifact judgments precede their
+separate trajectory reviews. No failed historical or controlled observation
+is overwritten by these completed executions.
+
+Both completion artifact audits are now retained separately from their
+trajectory checks:
+`/private/tmp/toolkit-release-completion-audit-a.md`, its
+`toolkit-release-completion-audit-a-addendum.md`, and
+`/private/tmp/toolkit-release-completion-audit-b.md`. Each saved artifact
+judgments before reading the JSONL. Both independently verify the retry's
+single dispatch, complete13-file reading and exclusion of preserved partials;
+both ordinary-run detectors consumed all9 assigned files. These mechanics
+passed their bounded checks, not an all-findings accuracy test.
+
+Both auditors reject the retry report's Claude.ai packaging and Cowork-order
+contradictions: the historical input explicitly delegates platform adjustments
+at SKILL.md:525–527, so applying the named platform exception reconciles the
+rules. Both reject the ordinary report's structural-only claim for overlooking
+the explicit skip exception, and its additional assertion that Q2/Q3 are
+bypassed lacks evidence. AuditA classifies these as medium-consequence output
+errors. The original two named false claims did not recur, but the broader
+exception-handling class persists in new findings.
+
+Preserve judgment qualifications: AuditA finds the retry's question-tool
+fallback claim unsupported after the environmental-cause exception; AuditB
+calls it partially supported with an overstated chain. Both recognize a real
+extraction-tier label discrepancy in the ordinary case; AuditA does not find
+a forced action conflict established by it. The five supported retry findings
+still justify that report's needs-revision verdict. A supported overall verdict
+does not make its false individual blockers correct. None of these judgments
+is discarded or rewritten into an all-pass result.
+
+Independent acceptance must now evaluate all11 confirmed criteria against
+the current source and these results. No additional same-task semantic fix is
+dispatched: W7-02 remains at its exhausted continuation count2. Existing
+coverage, explicit platform precedence and caller independence must remain
+visible in any later redesign; another retry cannot be obtained by relabelling
+this persistent defect.
