@@ -1,6 +1,6 @@
 {
   "source_sha": "343483314d22d28f3981a23733d75094834c717a",
-  "observation": "These excerpts are regression inputs, not fresh detector results; each case identifies its source package and observation.",
+  "observation": "These excerpts are regression inputs, not fresh detector results; each case identifies its source package and observation. The current positive uses X1 for opposed quick-eval actions; it does not reclassify the preserved failed X3 timing trial as passing.",
   "cases": [
     {
       "id": "explicit_exception_not_conflict",
@@ -48,21 +48,21 @@
     {
       "id": "true_conflict_retained",
       "package": "skill-dev-toolkit/tests/consistency-check-corpus/multi/pkg",
-      "source": "Frozen consistency-check-corpus/multi/truth.json plant X3; grader.md:105 and schemas.md:201 at source_sha.",
+      "source": "Frozen consistency-check-corpus/multi/truth.json plant X1; references/eval-methodology.md:24-26 and SKILL.md:287 at source_sha.",
       "passages": [
         {
-          "file": "agents/grader.md",
-          "section": "Step 8: Read Executor Metrics and Timing",
-          "text": "3. If `timing.json` is missing, rebuild it from the executor's transcript — the harness writes `total_tokens` and `duration_ms` into the footer of every subagent transcript, so these figures can always be recovered after the run"
+          "file": "references/eval-methodology.md",
+          "section": "Baseline comparison",
+          "text": "This is why the baseline is not reserved for the full eval path: even on\nthe quick path, each manually run test case is paired with a baseline run\nso the user can review the two outputs side by side."
         },
         {
-          "file": "references/schemas.md",
-          "section": "timing.json",
-          "text": "**How to capture:** When a subagent task completes, the task notification includes `total_tokens` and `duration_ms`. Save these immediately — they are not persisted anywhere else and cannot be recovered after the fact."
+          "file": "SKILL.md",
+          "section": "Quick eval path / Full eval path table",
+          "text": "| **Method** | Run 2-3 test cases manually (no subagent spawning); review outputs inline with the user; skip grading, benchmarking, and baseline comparison; iterate on direct user feedback | Spawn parallel subagent runs with baselines; grade with assertions, aggregate benchmarks; structured inline review with markdown reports |"
         }
       ],
       "expected": "conflict",
-      "rationale": "When timing.json is missing after a subagent run, the grader requires rebuilding total_tokens and duration_ms from a guaranteed transcript footer, while schemas says those same values are never persisted elsewhere and cannot be recovered. Both claims apply to the same missing-data condition and cannot hold together."
+      "rationale": "For the same manually run quick-eval case, eval-methodology requires a paired baseline run and side-by-side comparison, while SKILL.md explicitly requires skipping baseline comparison. No scope exception or precedence rule reconciles performing and skipping that comparison."
     }
   ]
 }
