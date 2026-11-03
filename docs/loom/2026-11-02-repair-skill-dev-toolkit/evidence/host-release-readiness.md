@@ -92,6 +92,10 @@ one continued dispatch for W7-02, whose count1 is retained; it did not add a
 fixture or runtime mechanism. Only the separate regression data changed,
 never the historical corpus. W7-04 also refreshes the existing unreleased
 0.5.2 changelog, without an additional version or release artifact.
+The canonical pre-creation reference also contains the quick-path load guard.
+Update that guard and the entry's routing together rather than add a special
+override in the entry. This is the same Gate2 availability obligation and
+adds no phase, question copy, file or function.
 
 Drop a permanent additional LLM reviewer, generic policy registry, receipt/event
 schema, duration-statistics rewrite and repair of the preserved test artifacts.
