@@ -46,7 +46,13 @@ Specific design distinctions from `darwin-skill`:
    results.tsv but not in preference-pair training format.
 7. **Self-trained judge scaffold** — H4 horizon explicitly
    designed for trainable preference model that replaces
-   LLM-judge once log is dense (≥1000 entries). `darwin-skill`
+   LLM-judge in the future. Data readiness requires ≥1000 usable
+   explicit single-pick records per skill: non-baseline ADOPT or
+   explicit baseline DROP with valid, distinct hashes and consistent
+   picked labels when present. None/multiple/refine and unusable
+   records do not count. Each usable record counts once; comparison
+   pairs are counted separately. Training remains inactive at the
+   threshold; the stub still raises NotImplementedError. `darwin-skill`
    does not have this trajectory.
 8. **Verdict vocabulary** — ADOPT / DROP / DEFER / REFINE /
    ESCALATE. Parallels `complexity-critique` /

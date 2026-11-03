@@ -94,12 +94,19 @@ log：每個 entry 代表純粹的 taste 訊號、不是違約訊號。
 每次選擇都帶完整 context 紀錄（label 分派、被拒變體、憲法拒絕紀錄、
 決策時間、user notes）。隨時間累積成 preference-pair dataset。
 
-當單一 skill 累積 ≥1000 ADOPT entries，dataset 就是 **domain-specific
-preference model** 的訓練輸入 — 一個比通用 LLM judge 更貼近 user
+當單一 skill 累積 ≥1000 筆有效的明確單選紀錄，dataset 才具備作為未來
+**domain-specific preference model** 訓練輸入的資料條件 — 一個比通用 LLM judge 更貼近 user
 taste 的自訓 judge。
+
+有效紀錄包含單選非 baseline 的 ADOPT，或明確選擇 baseline 的 DROP；
+須有有效且不同的 hash，若提供 label，選擇的 label 須與 identity 一致。
+None、multiple、refine 及無效紀錄不計入。每筆有效紀錄只計一次，
+即使產生多組比較配對；配對數另行回報。完整驗證規則見
+[preference log schema](references/preference-log-schema.md)。
 
 Pipeline **在 v1.7.0 為 scaffolded 但未啟動**。完整計畫見
 [`references/self-trained-judge-pipeline.md`](references/self-trained-judge-pipeline.md)。
+達到門檻也不會啟動訓練；現有 stub 仍會拋出 `NotImplementedError`。
 
 ---
 
@@ -241,7 +248,7 @@ rubric）會讓 LLM-as-judge 在 taste 維度不可靠。拆開讓每個工具�
 | 限制 | 意義 | 緩解 |
 |---|---|---|
 | **每輪需人類時間** | 每 round 需人類選擇；不能背景執行 | 每 session 上限 3-5 round；鼓勵休息；只用在高價值 skill |
-| **Self-trained judge 尚未啟動** | Pipeline scaffolded 但需 ≥1000 entry 才啟動 | 持續用 LLM-judge advisory pre-filter；log 累積後再啟用 |
+| **Self-trained judge 尚未啟動** | 資料準備需每個 skill 有 ≥1000 筆有效明確單選紀錄；訓練仍未實作 | 持續用 LLM-judge advisory pre-filter；達到門檻也不會啟動訓練 |
 | **憲法檢查是二元** | 模糊 MUST 強迫主觀判斷 | 推薦把模糊 MUST 改寫為可測試規則（anti-pattern 已記錄）|
 | **User taste 隨時間漂移** | 多年前偏好可能不再有效 | Time-decay weighting（規劃中）；per-skill scope 限制 cross-context drift |
 | **單一 evaluator 跑法** | 一個人的 taste 不一定是團隊的 | 支援 Multi-evaluator extension；實務罕見但可用 |
@@ -275,7 +282,7 @@ skill-tuning/
 └── scripts/
     ├── ab_harness.py        ← Phase 3 盲測 A/B 編排
     ├── preference_log.py    ← JSONL append/query/aggregate
-    └── judge_train_stub.py  ← H4 stub（≥1000 entry 前 fail fast）
+    └── judge_train_stub.py  ← H4 stub（≥1000 筆有效單選紀錄代表資料就緒；訓練未實作）
 ```
 
 ## Bottom Line
