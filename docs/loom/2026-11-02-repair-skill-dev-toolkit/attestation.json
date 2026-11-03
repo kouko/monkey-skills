@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v2",
   "change_id": "2026-11-02-repair-skill-dev-toolkit",
-  "content_digest": "04207617acdc488a8bb4a9db1f1ccd909a18c688",
+  "content_digest": "bf3443a5b862e8333a4c165d8bb7a4a787786ff3",
   "executions": [
     {
       "kind": "package-tests",
@@ -23,26 +23,26 @@
       "verdict": "PASS",
       "lens": "code",
       "reviewed_sha": "4cbf85a8841d7d52393a8bb4058284755e108e25",
-      "review_target_sha": "bb6bfd7fcfe37adc90532d42f19e521c9bb31528",
+      "review_target_sha": "108aa7dab6ce560940389aa55f7ac83381be0117",
       "dimension_scores": {
-        "security": "PASS — Fixes preserve read-only source logs; labelled records must resolve uniquely to the recorded identity, and no transmission or execution surface was added.",
-        "architecture": "PASS — Fixes remain in existing aggregation and shared preference-eligibility boundaries; no new module or framework was introduced.",
-        "correctness": "PASS — All three prior code findings are fixed; current-first deltas, independent captured tokens and observed repetition populations agree with their consumers and schema. No fix-induced defect found in the bounded delta.",
-        "naming": "PASS — New repetition-count and labelled-choice names describe their values and policy without new vocabulary.",
-        "tests": "PASS — Independently ran all three test files changed in this fix delta with the supplied interpreter, PYTHONDONTWRITEBYTECODE=1 and pytest -p no:cacheprovider; 40 passed in 1.83s without skips. Expanded CLI cases assert both baseline layouts, duration/token independence, zero tokens and uniform/unequal/empty populations; shared preference and policy-consumer regressions also passed.",
-        "refactoring": "PASS — Duration and token extraction are separated locally, recognized configuration ordering retains discovery-order fallback, and both preference consumers retain one eligibility rule.",
-        "cross-task-coherence": "PASS — Aggregation schema and Markdown match observed count semantics; preference label compatibility matches its schema; ensemble qualifications and translated extraction examples agree with operative policies. Updated acceptance retains unchanged rows with explicit reasons.",
-        "external-surface-grounding": "PASS — This fix delta adds no external API, provider, CLI flag or dependency; existing owned command interfaces remain unchanged.",
-        "principles-conformance": "PASS — Focused executable regressions accompany the fixes, original logs remain untouched, and acceptance explicitly distinguishes local and native fixture evidence from live-provider or host activation claims.",
-        "architecture-conformance": "N/A — No ratified ARCHITECTURE.md exists in the reviewed checkout; unchanged from Round 1.",
-        "deliberate-simplification": "PASS — Unequal populations use null plus an explicit Markdown qualification; empty populations use zero. Identity-only compatibility is restricted to entirely unlabelled records and does not bypass incomplete mappings.",
-        "deletion-first": "PASS — Fixes extend existing functions and tests; they remove character-as-token substitution and misleading consumer claims without introducing an additional mechanism."
+        "security": "PASS — Process commands use argument arrays, malformed backend completion cannot become a successful negative observation, blind clarification persists no identity map before lock-in, and fixes do not mutate original preference data.",
+        "architecture": "PASS — Backend lifecycle handling stays in the existing evaluator, description eligibility is shared by generation and selection, and interactive clarification stays inside the current harness invocation.",
+        "correctness": "PASS — Changed command entries and consumers preserve valid EOF/no-newline completion while rejecting nonzero, error, abort, incomplete and timed-out executions before a conclusive decision. Eligible-only description selection, unknown token accounting and same-map clarification satisfy the bounded corrections; no unresolved fix-induced defect found.",
+        "naming": "PASS — Completion, eligibility and token-observation names describe their policy; retained comparison-only legacy enum labels are explicitly qualified rather than silently repurposed.",
+        "tests": "PASS — Ran exactly the three test files changed in bb6bfd7..108aa7d using the supplied Python, PYTHONDONTWRITEBYTECODE=1 and pytest -p no:cacheprovider; 68 passed in 4.80s without skips. These include six real CLI/ProcessPool/Popen EOF cases plus command-entry error/abort, description, token-population and interactive clarification cases.",
+        "refactoring": "PASS — Existing command and metric boundaries are extended locally; token formatting is a private transformation and the description helper validates rather than merely forwarding. No unnecessary module extraction or new runner was introduced.",
+        "cross-task-coherence": "PASS — Generator authority, mechanical eligibility and applying-agent semantic review have consistent responsibilities; token nulls, sample counts and unavailable deltas agree with schema and Markdown. Readiness consumers, golden comparisons and blind protocol agree with the unchanged eligibility and vote reducers.",
+        "external-surface-grounding": "PASS — The changed terminal-result interpretation has an official ResultMessage citation, independently opened and checked for success/error and aborted_streaming/aborted_tools semantics; retained local CLI framing evidence supports the consumed JSON shape. No provider execution was performed by this reviewer.",
+        "principles-conformance": "PASS — Corrections have permanent command-entry regressions and independently recorded acceptance; missing measurements remain unknown, existing user data is preserved, and local offline evidence is not presented as live-provider or host validation.",
+        "architecture-conformance": "N/A — No ratified ARCHITECTURE.md is present; unchanged from the earlier review rounds.",
+        "deliberate-simplification": "PASS — Mechanical description eligibility explicitly leaves contextual justification, voice and trigger coverage to the applying agent; comparison heuristics remain supplemental and cannot clear dissent. Missing and partial token measurements expose their coverage and suppress unsupported savings.",
+        "deletion-first": "PASS — The fix removes false-negative fallback, character-as-token substitution, pre-lock side-log guidance and redundant CI filters; it extends existing functions instead of adding a resume subsystem, another model judge or a new training mechanism."
       },
       "findings": [],
       "notes": [
-        "fixed — Prior fatal at aggregate_benchmark.py:206: with_skill now precedes old_skill/without_skill in summary calculation and Markdown, yielding current-minus-baseline deltas. Both layouts passed the extended real CLI fixture.",
-        "fixed — Prior fatal at aggregate_benchmark.py:140: sibling total_tokens is read independently of grading duration; output_chars is no longer substituted. CLI assertions passed for retained grading duration, actual token values and missing/zero captured tokens.",
-        "fixed — Prior important at aggregate_benchmark.py:271: repetition metadata is observed per eval/configuration, including missing discovered cells; uniform counts, unequal null and empty zero match schema and Markdown. Package/adversarial logs were handed evidence only; neither was rerun, and their summary lines contain no artifact stem suitable for a probe confirmation."
+        "fixed and retained — All three Round 1 code findings remain resolved: current-before-baseline deltas, independently captured tokens and observed repetition populations. Wave 6 strengthens the token fix with explicit unknown/partial counts and no incomplete numeric delta; the real aggregation CLI cases passed. Round 2 had no unresolved findings.",
+        "Reviewed only the supplied Round 3 delta and affected whole functions, callers and prose against the confirmed intent, current spec/plan and acceptance evidence. The latest independent acceptance preserves the prior EOF failure and its unchanged reproducer, then records its successful rerun at functional commit 65619dbd. No unresolved finding was identified in this bounded review.",
+        "No repository edits, new probes, full package suite or adversarial reruns. Native/profile identity remains unobservable. Live provider quality, installation and host activation remain outside the evidence; semantic description approval is explicitly not inferred from the mechanical checks."
       ],
       "reviewer": "/root/code_review",
       "vendor": "codex",
@@ -52,21 +52,21 @@
       "verdict": "PASS",
       "lens": "skill",
       "reviewed_sha": "4cbf85a8841d7d52393a8bb4058284755e108e25",
-      "review_target_sha": "bb6bfd7fcfe37adc90532d42f19e521c9bb31528",
+      "review_target_sha": "108aa7dab6ce560940389aa55f7ac83381be0117",
       "dimension_scores": {
-        "omission": "PASS — The new R4 acceptance fixture includes both an omitted mandatory artifact limitation and a skipped declared source-integrity gate, with separate negative and positive controls.",
-        "ambiguity": "PASS — Labelled-record validation, identity-only compatibility, repetition populations, and FLAG_TIER_2 escalation conditions now have explicit boundaries.",
-        "inconsistency": "PASS — The shared preference eligibility follows supplied blind mappings; ensemble consumers agree on moderate passes; translated extraction examples reject relocation without whole-package savings.",
-        "incorrect-fact": "PASS — Focused CLI results support current-minus-baseline deltas, captured-token accounting, and observed repetition metadata; the refreshed acceptance report accurately distinguishes rerun and retained evidence.",
-        "missing-population": "PASS — Repetition metadata states uniform, unequal, and empty observed populations, while preference readiness retains separate usable-record and pair counts.",
-        "user-judgment-leak": "PASS — Fixes resolve technical policy conflicts from existing authorities and do not introduce new technical decisions for the user.",
-        "deletion-first": "PASS — The fix delta extends existing eligibility, consumer passages, tests, and acceptance evidence without adding a checker framework or workflow role."
+        "omission": "PASS — Optimizer generation, mechanical eligibility, contextual pre-application review, explicit grader metadata input, and same-invocation clarification now specify their required inputs and failure outcomes. The prior discriminating audit evidence remains applicable.",
+        "ambiguity": "PASS — The delta distinguishes missing from zero token capture, mechanical description admission from semantic compliance, optional anchor evidence from adoption authority, and clarification from a new comparison.",
+        "inconsistency": "PASS — Generation follows the bundled description authority; readiness consumers include valid baseline DROP records; both golden protocols preserve FLAG_TIER_2 and cumulative-drift safeguards. Prior label-map and ensemble-consumer fixes remain intact.",
+        "incorrect-fact": "PASS — Changed CLI cases support the qualified token statistics, fail-closed backend results, completed EOF handling, packaging invocation, and stable blind clarification claims. Acceptance retains the historical EOF failure and separately records its successful replay.",
+        "missing-population": "PASS — Token summaries expose captured and loaded-run counts, incomplete capture suppresses numeric token savings, and readiness documentation distinguishes usable records from derived pairs.",
+        "user-judgment-leak": "PASS — Applying-agent checks resolve semantic policy compliance without asking the user technical quality questions; existing human taste and substantive dissent decisions retain their stated scope. No additional paid review or service is introduced by the fix.",
+        "deletion-first": "PASS — Corrections extend existing generator, evaluator, aggregate, harness, and reference mechanisms around reproduced failures. Redundant CI filters are removed; no new judge role, persistent pre-lock state, or checker framework is added."
       },
       "findings": [],
       "notes": [
-        "Fixed prior ensemble-consumer finding: multi-judge-ensemble.md rationale, NOTICE, and all three README Tier 2 rows now escalate only FLAG_TIER_2. The related extraction consumer sweep also corrects all three relocation-only examples to whole-package Q2 REJECT and removes the unsupported later-success chain.",
-        "Fixed prior fatal label/identity finding: preference_log.py shared eligibility requires a unique consistent normalized picked-label mapping whenever labels are supplied, rejects contradictory/duplicate/missing picked mappings, and preserves all-unlabelled identity compatibility without rewriting JSONL. Independently ran the three changed focused test files with PYTHONDONTWRITEBYTECODE=1 and pytest -p no:cacheprovider: 40 passed in 2.25s.",
-        "Fixed prior acceptance omission: acceptance-test-evidence.md R4 records genuine validator output, transcript A missing step 3 versus complete B, informed FAIL/PASS, and two fresh rubric/artifact-only auditor packets returning A FAIL/B PASS for the omitted limitation. Reviewed only the 35d507e..bb6bfd7 fix delta and the prior findings; no complete suite, probe, repository edit, external-provider call, or model/host validation was performed or inferred."
+        "Terminal round 3 reviewed bb6bfd7..108aa7d against the original intent and updated spec/plan, current reviewer contract, reassessment, and acceptance evidence. All three original skill findings remain fixed: ensemble consumers, preference label/identity reconciliation, and separated omitted-artifact/skipped-gate acceptance evidence. No previous finding is dismissed or reopened.",
+        "Independently ran all three changed focused test files with PYTHONDONTWRITEBYTECODE=1 and pytest -p no:cacheprovider: 68 passed in 3.94s. Read the real evaluator lifecycle, eligible-only optimizer selection, description authority/checks, unknown-token handling, harness loop, and changed consumers. No complete package suite or adversarial program was rerun; repository status remained clean.",
+        "Acceptance distinguishes original arithmetic-only limits, real EOF failure at 29309db6, and the repaired real-process replay at 65619dbd. The outside wrong-adoption severity was narrowed with its concrete second-display/decoding boundary; its same-round clarification defect was repaired. Neither the old outside verdict nor offline fixtures establish current external-provider approval, exact inherited model identity, live activation, or semantic triggering quality."
       ],
       "reviewer": "/root/skill_review",
       "vendor": "codex",
@@ -76,8 +76,8 @@
   "findings": [],
   "selection": null,
   "intent_confirmed_sha": "26254110d52156a1987962189111076dd862851d",
-  "tested_commit": "834668cce",
-  "reviewed_commit": "bb6bfd7fcfe37adc90532d42f19e521c9bb31528",
+  "tested_commit": "65619dbd",
+  "reviewed_commit": "108aa7dab6ce560940389aa55f7ac83381be0117",
   "acceptance_status": [
     {
       "acceptance": 1,
