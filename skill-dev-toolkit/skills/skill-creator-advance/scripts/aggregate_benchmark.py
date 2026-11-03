@@ -136,15 +136,19 @@ def load_run_results(benchmark_dir: Path) -> dict:
                 # Extract timing — check grading.json first, then sibling timing.json
                 timing = grading.get("timing", {})
                 result["time_seconds"] = timing.get("total_duration_seconds", 0.0)
-                result["tokens"] = 0
+                result["tokens"] = None
                 timing_file = run_dir / "timing.json"
                 if timing_file.exists():
                     try:
                         with open(timing_file) as tf:
                             timing_data = json.load(tf)
+                        if not isinstance(timing_data, dict):
+                            timing_data = {}
                         if result["time_seconds"] == 0.0:
                             result["time_seconds"] = timing_data.get("total_duration_seconds", 0.0)
-                        result["tokens"] = timing_data.get("total_tokens", 0)
+                        tokens = timing_data.get("total_tokens")
+                        if type(tokens) in (int, float) and math.isfinite(tokens) and tokens >= 0:
+                            result["tokens"] = tokens
                     except json.JSONDecodeError:
                         pass
 
@@ -185,22 +189,18 @@ def aggregate_results(results: dict) -> dict:
     for config in configs:
         runs = results.get(config, [])
 
-        if not runs:
-            run_summary[config] = {
-                "pass_rate": {"mean": 0.0, "stddev": 0.0, "min": 0.0, "max": 0.0},
-                "time_seconds": {"mean": 0.0, "stddev": 0.0, "min": 0.0, "max": 0.0},
-                "tokens": {"mean": 0, "stddev": 0, "min": 0, "max": 0}
-            }
-            continue
-
         pass_rates = [r["pass_rate"] for r in runs]
         times = [r["time_seconds"] for r in runs]
-        tokens = [r.get("tokens", 0) for r in runs]
+        tokens = [r["tokens"] for r in runs if r.get("tokens") is not None]
+        token_stats = calculate_stats(tokens) if tokens else dict.fromkeys(
+            ("mean", "stddev", "min", "max"), None
+        )
+        token_stats.update(sample_count=len(tokens), total_count=len(runs))
 
         run_summary[config] = {
             "pass_rate": calculate_stats(pass_rates),
             "time_seconds": calculate_stats(times),
-            "tokens": calculate_stats(tokens)
+            "tokens": token_stats
         }
 
     # Keep the current skill before its baseline; retain other discovery order.
@@ -213,12 +213,19 @@ def aggregate_results(results: dict) -> dict:
 
     delta_pass_rate = primary.get("pass_rate", {}).get("mean", 0) - baseline.get("pass_rate", {}).get("mean", 0)
     delta_time = primary.get("time_seconds", {}).get("mean", 0) - baseline.get("time_seconds", {}).get("mean", 0)
-    delta_tokens = primary.get("tokens", {}).get("mean", 0) - baseline.get("tokens", {}).get("mean", 0)
+    token_a = primary.get("tokens", {})
+    token_b = baseline.get("tokens", {})
+    complete_tokens = all(
+        stats.get("sample_count", 0) > 0
+        and stats["sample_count"] == stats["total_count"]
+        for stats in (token_a, token_b)
+    )
+    delta_tokens = token_a["mean"] - token_b["mean"] if complete_tokens else None
 
     run_summary["delta"] = {
         "pass_rate": f"{delta_pass_rate:+.2f}",
         "time_seconds": f"{delta_time:+.1f}",
-        "tokens": f"{delta_tokens:+.0f}"
+        "tokens": f"{delta_tokens:+.0f}" if delta_tokens is not None else None
     }
 
     return run_summary
@@ -245,7 +252,7 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
                     "failed": result["failed"],
                     "total": result["total"],
                     "time_seconds": result["time_seconds"],
-                    "tokens": result.get("tokens", 0),
+                    "tokens": result.get("tokens"),
                     "tool_calls": result.get("tool_calls", 0),
                     "errors": result.get("errors", 0)
                 },
@@ -333,9 +340,17 @@ def generate_markdown(benchmark: dict) -> str:
     lines.append(f"| Time | {a_time.get('mean', 0):.1f}s ± {a_time.get('stddev', 0):.1f}s | {b_time.get('mean', 0):.1f}s ± {b_time.get('stddev', 0):.1f}s | {delta.get('time_seconds', '—')}s |")
 
     # Format tokens
-    a_tokens = a_summary.get("tokens", {})
-    b_tokens = b_summary.get("tokens", {})
-    lines.append(f"| Tokens | {a_tokens.get('mean', 0):.0f} ± {a_tokens.get('stddev', 0):.0f} | {b_tokens.get('mean', 0):.0f} ± {b_tokens.get('stddev', 0):.0f} | {delta.get('tokens', '—')} |")
+    def format_tokens(summary):
+        stats = summary.get("tokens", {})
+        captured, total = stats.get("sample_count", 0), stats.get("total_count", 0)
+        if not captured:
+            return f"not captured (0/{total})"
+        text = f"{stats['mean']:.0f} ± {stats['stddev']:.0f}"
+        if captured < total:
+            text += f" (partial: {captured}/{total} captured)"
+        return text
+
+    lines.append(f"| Tokens | {format_tokens(a_summary)} | {format_tokens(b_summary)} | {delta.get('tokens') or 'not captured'} |")
 
     # Notes section
     if benchmark.get("notes"):

@@ -112,14 +112,43 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         assert "75% ± 35%" in markdown
         assert "(2 runs each per configuration)" in markdown
         assert "| Tokens | 15 ± 7 | 8 ± 4 | +8 |" in markdown
-        for index, captured in enumerate([{"total_tokens": 0}, {}], 1):
-            (tmp_path / f"eval-7/with_skill/run-{index}/timing.json").write_text(json.dumps(captured))
-        result = command(entry, tmp_path)
-        assert result.returncode == 0, result.stderr + result.stdout
-        benchmark = json.loads((tmp_path / "benchmark.json").read_text())
-        assert [run["result"]["tokens"] for run in benchmark["runs"] if run["configuration"] == "with_skill"] == [0, 0]
-        assert benchmark["run_summary"]["with_skill"]["tokens"]["mean"] == 0
-        assert "| Tokens | 0 ± 0 | 8 ± 4 | -8 |" in (tmp_path / "benchmark.md").read_text()
+        for captures, values in [
+            ([{"total_tokens": 0}, {}], [0, None]),
+            ([{"total_tokens": 10}, {}], [10, None]),
+            ([{"total_tokens": 0}, {"total_tokens": 0}], [0, 0]),
+            ([None, "malformed"], [None, None]),
+            ([{}, {"total_tokens": None}], [None, None]),
+            ([[], False], [None, None]),
+            ([{"total_tokens": "10"}, {"total_tokens": True}], [None, None]),
+            ([{"total_tokens": -1}, {"total_tokens": float("nan")}], [None, None]),
+        ]:
+            for index, captured in enumerate(captures, 1):
+                timing = tmp_path / f"eval-7/with_skill/run-{index}/timing.json"
+                if captured is None:
+                    timing.unlink()
+                else:
+                    timing.write_text("{" if captured == "malformed" else json.dumps(captured))
+            result = command(entry, tmp_path)
+            assert result.returncode == 0, result.stderr + result.stdout
+            benchmark = json.loads((tmp_path / "benchmark.json").read_text())
+            assert [run["result"]["tokens"] for run in benchmark["runs"] if run["configuration"] == "with_skill"] == values
+            token_stats = benchmark["run_summary"]["with_skill"]["tokens"]
+            count = sum(value is not None for value in values)
+            measured = next((value for value in values if value is not None), None)
+            expected_stats = {"mean": measured, "stddev": 0 if count else None, "min": measured, "max": measured}
+            assert token_stats == expected_stats | {"sample_count": count, "total_count": 2}
+            assert benchmark["run_summary"]["delta"]["tokens"] == ("-8" if count == 2 else None)
+            rendered = "0 ± 0" if count == 2 else f"{measured} ± 0 (partial: 1/2 captured)" if count else "not captured (0/2)"
+            delta = "-8" if count == 2 else "not captured"
+            assert f"| Tokens | {rendered} | 8 ± 4 | {delta} |" in (tmp_path / "benchmark.md").read_text()
+            if count == 2:
+                timing = tmp_path / f"eval-7/{baseline}/run-2/timing.json"
+                original = timing.read_text()
+                timing.write_text("{}")
+                assert command(entry, tmp_path).returncode == 0
+                assert json.loads((tmp_path / "benchmark.json").read_text())["run_summary"]["delta"]["tokens"] is None
+                assert "| Tokens | 0 ± 0 | 5 ± 0 (partial: 1/2 captured) | not captured |" in (tmp_path / "benchmark.md").read_text()
+                timing.write_text(original)
         for grading in (tmp_path / "eval-7").rglob("grading.json"):
             copied = tmp_path / "eval-8" / grading.relative_to(tmp_path / "eval-7")
             copied.parent.mkdir(parents=True)
@@ -138,6 +167,10 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         result = command(entry, tmp_path)
         assert result.returncode == 0, result.stderr + result.stdout
         assert json.loads((tmp_path / "benchmark.json").read_text())["metadata"]["runs_per_configuration"] == 0
+        empty_summary = json.loads((tmp_path / "benchmark.json").read_text())["run_summary"]
+        assert empty_summary["with_skill"]["tokens"] == dict.fromkeys(["mean", "stddev", "min", "max"], None) | {"sample_count": 0, "total_count": 0}
+        assert empty_summary["delta"]["tokens"] is None
+        assert "| Tokens | not captured (0/0) | not captured (0/0) | not captured |" in (tmp_path / "benchmark.md").read_text()
         assert "(0 runs each per configuration)" in (tmp_path / "benchmark.md").read_text()
     else:
         module = request.getfixturevalue("optimizer")
