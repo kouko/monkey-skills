@@ -868,3 +868,89 @@ def test_golden_positive_cannot_clear_dissent(tmp_path):
 
 The complete source is preserved in the prior re-run's independent replay section. For this execution only ROOT was changed to `/private/tmp/monkey-skills-acceptance-29309db6` and OUT to unused `/private/tmp/acceptance-wave6-policy-fixtures`; the four test bodies were unchanged. Command: existing interpreter `-m pytest /private/tmp/test_acceptance_wave6_policies.py -q -s`. Result: `4 passed in0.33s`; token/extraction counts are recorded under5 above.
 
+## Re-run on 2026-11-03, at 65619dbd
+
+Tried on 2026-11-03, in a clean copy of the project at 65619dbd.
+
+### Clean setup and scope
+
+- Exact HEAD: `65619dbd616a8fc5cd80cdca8d9a63b32914441f`. Created independent local clone `/private/tmp/monkey-skills-acceptance-65619dbd` with `git clone --no-hardlinks --no-checkout`, then detached at that exact SHA.
+- Re-read current installed acceptance role/template (loom-code3.57.0) and README clean-checkout setup. Reused existing `/Users/kouko/.conda/envs/dbt-redshift/bin/python3` and available dependencies as authorized; no installs or host changes. Packager, aggregator, evaluator/optimizer CLI and focused tests loaded successfully in the clean clone. Initial/final clone status empty.
+- Inspected complete `29309db69ea08e7d68790daa07b337c2aa035be8..65619dbd616a8fc5cd80cdca8d9a63b32914441f` diff. It contains prior report metadata, bounded spec/plan/reassessment updates, and only TWO product/test files: `run_eval.py` and `test_creator_commands.py`.
+- Product fix waits for completion within remaining deadline on stdout EOF, checks exit status, and parses final buffered JSON including an unterminated line. Added six real-CLI regression cases control stdout close before actual exit for evaluator and optimizer, newline/no-newline success and nonzero exit.
+- No new important/fatal dismissals. Previously handed external-review severity limitation remains disclosed in report. A8 was fixed, not dismissed; previous failed results and complete reproducer remain above.
+- No full repository or full toolkit suite run by this tester. Package-tests/finalize-review are not skipped; acceptance cites the future blocking automated suite rather than predicting its result. Declared finalizer command: `python3 -m pytest scripts/ -q`.
+- No real provider/model calls, plugin installation, live host activation, training or user-data changes. Fake executable remains clearly identified as an offline backend; real process pool and Popen transport remain intact.
+
+### 1. Re-tested in full — all creator commands and complete EOF cases
+
+Focused command (existing interpreter):
+```sh
+-m pytest skill-dev-toolkit/tests/test_creator_commands.py skill-dev-toolkit/tests/test_blind_harness.py skill-dev-toolkit/tests/test_preference_export.py skill-dev-toolkit/tests/test_creator_metadata_contract.py skill-dev-toolkit/tests/test_refactor_policy.py skill-dev-toolkit/tests/test_tuning_policy.py skill-dev-toolkit/skills/skill-refactor/scripts/test_package_mode_contract.py skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py scripts/test_preferences_single_choice.py -q
+```
+Recorded `133 passed in5.14s`, exit0.
+
+- Actual packaging success archive/content inclusion, missing-input no archive and current module help passed.
+- Actual aggregation current-before-old/without-skill direction, duration/token separation, zero/unknown/partial token counts and suppressed incomplete deltas, uniform/unequal/empty observed repetition counts passed.
+- Optimizer valid bounded progression, heldout evidence isolation, eligible-only description selection, invalid baseline exclusion, captured authority/normal/contextual exception boundaries and failed backend/invalid-input branches passed. Semantic compliance remains the applying agent's responsibility, as previously tested and disclosed.
+- New `test_creator_real_eof_completion` ran evaluator AND optimizer through real subprocess and process-pool transport with stdout deliberately closed before child exit; newline and no-newline success passed, no-newline exit7 failed without score/results.
+- Re-ran the independent tester's SAME real-Popen/process-pool reproducer, changing ONLY ROOT from the failed29309db6 clone to the clean65619dbd clone. No fixture assertions or fake-output behavior changed. New local replay name `/private/tmp/test_acceptance_eof_recheck.py`; complete original source is retained in preceding Wave6 section.
+- Command:
+```sh
+/Users/kouko/.conda/envs/dbt-redshift/bin/python3 -m pytest /private/tmp/test_acceptance_eof_recheck.py -q -s
+```
+Recorded `6 passed in2.22s`, exit0.
+
+Actual trimmed output:
+```text
+REAL_POOL nonzero exit1 no score; no results; RuntimeError: Query backend exited with status7
+REAL_POOL error exit1 no score; no results; RuntimeError: Query backend returned an unsuccessful result
+REAL_POOL incomplete exit1 no score; no results; RuntimeError: Query backend ended without a conclusive result
+REAL_POOL aborted_streaming exit1 no score; no results; RuntimeError: Query backend aborted before completing
+REAL_POOL aborted_tools exit1 no score; no results; RuntimeError: Query backend aborted before completing
+REAL_POOL success_line exit0 score1/1 saved1
+EOF_FRAMING success_line exit0 summary total1 passed1 failed0
+EOF_FRAMING success exit0 summary total1 passed1 failed0
+EOF_FRAMING success exit0 summary total1 passed1 failed0
+EOF_FRAMING success exit0 summary total1 passed1 failed0
+```
+All three previously failing no-newline controls now pass as legitimate negative observations. Failure modes still never become passing scores. This closes A8 on this SHA within the local offline lifecycle boundary; historical failure at29309db6 is retained.
+
+The same independent file also reran generator actual stdin capture/normal and router qualification cases, zero/unknown/partial aggregation, interactive same-map clarification and golden comparison interpretation; all passed. These incidental unchanged checks supply additional consistency evidence but do not imply any live-model quality or activation validation.
+
+### 2. Carried over — ordered structural trace policy unchanged
+
+- Diff has no comparator, ordered protocol, trace schema or order-test edits. EOF repair belongs to creator's trigger evaluator, not refactor's structural trace comparator.
+- Retain earlier positive/tolerance and reordered-call rejection evidence and works verdict.
+
+### 3. Carried over — blind rendering, full-copy inspection and clarification unchanged
+
+- Diff has no harness, protocol, source-output copy or blind-test edits. Creator evaluator EOF does not control tuning stdin or its random label map.
+- Retain29309db6 full CLI coverage and independent same-round clarification evidence. Incidental replay above also passed, with one display/three prompts and same ordinary A/B copies/map.
+
+### 4. Carried over — preference selection/export/readiness unchanged
+
+- Diff has no eligibility, exporter, trainer, log schema or readiness consumer edits. Creator child-completion status cannot alter recorded human preference joins/counts.
+- Retain valid candidate/baseline, ambiguous/contradictory label, usable-record/pair-count and unchanged-input evidence; no model training claimed.
+
+### 5. Carried over — all eight repaired rule surfaces unchanged
+
+- No description authority/generation/selection/application policy, grader metadata contract, ensemble/ablation/extraction/golden policy, human choice policy or dogfood evidence ownership edit.
+- Creator EOF change preserves valid observations but does not modify those policy decisions or audit context boundaries. Retain actual vote/deferral/extraction/golden and discriminating R4 omitted-artifact-criterion/skipped-gate evidence with its recorded native-model limits.
+- Extra generator/golden replay above passed; no new auditor or external review invoked.
+
+### 6. Carried over — grouping, nominal size notices and limits unchanged
+
+- No planner, report merger, group/size/coverage prose or relevant tests changed. EOF status handling in creator does not feed consistency grouping.
+- Retain original boundary fixtures and25135-token corpus evidence; no new empirical accuracy claim.
+
+### 7. Re-tested in full — executable regression coverage and existing checks
+
+-133 focused tests passed, including prior defect negative cases, current resolved authorities, six new real EOF command cases and graduated single-choice regression.
+- Independent reproducer6 passed, including the exact previously failing no-newline positive control and failed-backend cases; A8 no longer open.
+- `python3 scripts/check-skill-structure.py skill-dev-toolkit`: six skills PASS.
+- `python3 scripts/check-shared-conventions-drift.py`:3 conventions checked,0 drift failures,0 read errors.
+- `python3 scripts/sync_codex_manifests.py --check skill-dev-toolkit`: exit0.
+- Workflow/declared package routing unchanged; no obsolete inline-placement check substitutes for current authority checks. Full package execution remains finalizer's future blocking automated check; no new full-suite result claimed by acceptance.
+- Result works under the role's prescribed focused-tests plus blocking-final-suite contract. Findings: none remaining from this re-run. Report's previous A8 failure remains historical, not silently replaced.
+
