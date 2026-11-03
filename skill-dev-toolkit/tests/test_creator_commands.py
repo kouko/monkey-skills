@@ -1,10 +1,12 @@
 """Offline behavior checks for the advertised creator commands."""
 
 import importlib
+import io
 import json
 import subprocess
 import sys
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
@@ -32,32 +34,38 @@ def skill(tmp_path):
 
 
 @pytest.fixture
-def optimizer(monkeypatch):
+def optimizer(monkeypatch, tmp_path):
     monkeypatch.syspath_prepend(str(CREATOR))
     with patch.dict(sys.modules):
         for name in list(sys.modules):
             if name == "scripts" or name.startswith("scripts."):
                 del sys.modules[name]
         module = importlib.import_module("scripts.run_loop")
-        monkeypatch.setattr(module, "find_project_root", lambda: CREATOR)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(importlib.import_module("scripts.run_eval"), "ProcessPoolExecutor", ThreadPoolExecutor)
         yield module
 
 
-def optimize(module, skill, **kwargs):
+def optimize(module, skill, monkeypatch, capsys):
     cases = [{"query": f"query-{i}", "should_trigger": i % 2 == 0} for i in range(10)]
-    return module.run_loop(
-        eval_set=cases, skill_path=skill, description_override=None,
-        num_workers=1, timeout=1, max_iterations=3, runs_per_query=1,
-        trigger_threshold=0.5, holdout=0.4, model="offline-fixture",
-        verbose=False, **kwargs,
-    )
+    eval_path = skill.parent / "eval.json"
+    eval_path.write_text(json.dumps(cases))
+    monkeypatch.setattr(sys, "argv", ["run_loop", "--eval-set", str(eval_path),
+        "--skill-path", str(skill), "--model", "offline-fixture", "--report", "none",
+        "--results-dir", str(skill.parent / "results"), "--num-workers", "1",
+        "--runs-per-query", "1", "--max-iterations", "3"])
+    module.main()
+    output = json.loads(capsys.readouterr().out)
+    assert json.loads(next((skill.parent / "results").rglob("results.json")).read_text()) == output
+    assert not list(skill.parent.rglob("*.html"))
+    return output
 
 
 @pytest.mark.parametrize("entry, baseline", [
     ("package_skill", None), ("aggregate_benchmark", "without_skill"),
     ("aggregate_benchmark", "old_skill"), ("run_loop", None),
 ])
-def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monkeypatch):
+def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monkeypatch, capsys):
     if entry == "package_skill":
         for relative in ["references/guide.md", "references/evals/keep.txt", "evals/case.json", "__pycache__/cache.pyc"]:
             path = skill / relative
@@ -135,26 +143,26 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
         module = request.getfixturevalue("optimizer")
         evaluated, improved = [], []
 
-        def evaluate(**kwargs):
-            evaluated.append(kwargs)
-            return {"results": [dict(case, **{"pass": False}) for case in kwargs["eval_set"]]}
+        def evaluate(query, skill_name, description, *args):
+            evaluated.append((query, description))
+            return int(query.split("-")[1]) % 2 != 0
 
         def improve(**kwargs):
             improved.append(kwargs)
             train_queries = {row["query"] for row in kwargs["eval_results"]["results"]}
-            heldout = {row["query"] for row in evaluated[-1]["eval_set"]} - train_queries
+            heldout = {f"query-{i}" for i in range(10)} - train_queries
             assert len(train_queries) == 6 and len(heldout) == 4
-            assert all(query not in json.dumps(kwargs) for query in heldout)
+            assert all(query not in json.dumps(kwargs, default=str) for query in heldout)
             for history in kwargs["history"]:
                 assert not any(key.startswith("test_") for key in history)
                 assert {row["query"] for row in history["results"]} == train_queries
             return f"Candidate {len(improved)}"
 
-        monkeypatch.setattr(module, "run_eval", evaluate)
+        monkeypatch.setattr(importlib.import_module("scripts.run_eval"), "run_single_query", evaluate)
         monkeypatch.setattr(module, "improve_description", improve)
-        output = optimize(module, skill)
+        output = optimize(module, skill, monkeypatch, capsys)
         assert output["exit_reason"] == "max_iterations (3)"
-        assert output["iterations_run"] == len(evaluated) == 3
+        assert output["iterations_run"] == 3 and len(evaluated) == 30
         assert len(improved) == 2
         assert [item["description"] for item in output["history"]] == ["Original description", "Candidate 1", "Candidate 2"]
         assert output["best_description"] == "Original description"
@@ -162,7 +170,7 @@ def test_creator_commands_valid(entry, baseline, tmp_path, skill, request, monke
 
 
 @pytest.mark.parametrize("entry", ["package_skill", "aggregate_benchmark", "run_loop"])
-def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch):
+def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch, capsys):
     if entry in {"package_skill", "aggregate_benchmark"}:
         result = command(entry, tmp_path / "missing")
         assert result.returncode != 0
@@ -172,13 +180,79 @@ def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch):
     else:
         module = request.getfixturevalue("optimizer")
 
-        def failed_backend(**kwargs):
+        def failed_backend(*args):
             raise RuntimeError("offline evaluator failed")
 
         def forbidden_improvement(**kwargs):
             pytest.fail("Failed evaluation must not reach improvement")
 
-        monkeypatch.setattr(module, "run_eval", failed_backend)
+        monkeypatch.setattr(importlib.import_module("scripts.run_eval"), "run_single_query", failed_backend)
         monkeypatch.setattr(module, "improve_description", forbidden_improvement)
         with pytest.raises(RuntimeError, match="offline evaluator failed"):
-            optimize(module, skill)
+            optimize(module, skill, monkeypatch, capsys)
+        assert not list(tmp_path.rglob("results.json"))
+        assert "all_passed" not in capsys.readouterr().out
+        (skill / "SKILL.md").unlink()
+        with pytest.raises(SystemExit) as error:
+            module.main()
+        assert error.value.code == 1
+
+
+@pytest.mark.parametrize("entry", ["run_eval", "run_loop"])
+@pytest.mark.parametrize("outcome", ["success", "trigger", "early_no", "early_trigger", "nonzero", "error", "incomplete", "timeout"])
+def test_creator_evaluation_completion(entry, outcome, optimizer, skill, monkeypatch, capsys):
+    evaluator = importlib.import_module("scripts.run_eval")
+    module = importlib.import_module(f"scripts.{entry}")
+    eval_path = skill.parent / "negative.json"
+    eval_path.write_text(json.dumps([{"query": "negative query", "should_trigger": False}]))
+    chunks = []
+
+    class Output(io.BytesIO):
+        def fileno(self):
+            return 0
+
+    class Process:
+        def __init__(self, *args, **kwargs):
+            name = next((Path(kwargs["cwd"]) / ".claude/commands").glob("*.md")).stem
+            events = {
+                "success": {"type": "result", "subtype": "success", "is_error": False},
+                "error": {"type": "result", "subtype": "error_during_execution", "is_error": True},
+                "early_no": {"type": "stream_event", "event": {"type": "message_stop"}},
+                "trigger": {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": name}}]}},
+            }
+            events["early_trigger"] = {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Read", "input": {"file_path": name + ".md"}}]}}
+            payload = json.dumps(events.get(outcome, {"type": "system"})).encode()
+            self.stdout = Output(payload)
+            chunks.append(payload + b"\n")
+            self.returncode = None if outcome in {"timeout", "early_no", "early_trigger"} else int(outcome == "nonzero")
+
+        def poll(self):
+            return self.returncode
+
+        def kill(self):
+            self.returncode = -9
+
+        def wait(self):
+            return self.returncode
+
+    monkeypatch.setattr(evaluator.subprocess, "Popen", Process)
+    monkeypatch.setattr(evaluator.select, "select", lambda *args: ([args[0][0]], [], []))
+    monkeypatch.setattr(evaluator.os, "read", lambda *args: chunks.pop(0) if chunks else b"")
+    argv = [entry, "--eval-set", str(eval_path), "--skill-path", str(skill), "--num-workers", "1", "--runs-per-query", "1", "--timeout", "0" if outcome == "timeout" else "1"]
+    if entry == "run_loop":
+        argv += ["--model", "offline", "--report", "none", "--holdout", "0", "--max-iterations", "1", "--results-dir", str(skill.parent / "saved")]
+    monkeypatch.setattr(sys, "argv", argv)
+    if outcome in {"nonzero", "error", "incomplete", "timeout"}:
+        with pytest.raises(RuntimeError):
+            module.main()
+        assert not list(skill.parent.rglob("results.json"))
+        assert not capsys.readouterr().out
+    else:
+        module.main()
+        output = json.loads(capsys.readouterr().out)
+        expected = outcome in {"success", "early_no"}
+        if entry == "run_eval":
+            assert output["results"][0]["pass"] == expected
+        else:
+            assert output["best_score"] == ("1/1" if expected else "0/1")
+    assert not list(skill.parent.rglob(".claude/commands/*.md"))
