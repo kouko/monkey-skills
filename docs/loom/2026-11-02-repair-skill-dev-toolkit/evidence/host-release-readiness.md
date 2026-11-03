@@ -548,3 +548,74 @@ decision is corrected within the same active Build, with all11 Acceptance
 outcomes unchanged. New isolated fixtures will copy identical original raw
 outputs/targets; no truth key or prior audit is given to native executors.
 Local-only scope remains: no Claude/API call or publication is authorized.
+
+### W8-01 continuation1 local results at30d255df
+
+Source30d255df6ca3f1b3b87d0700efab6e5a4f1aec33 changes only the existing
+checker SKILL and changelog. The operational instruction delta is two physical
+lines/twenty words; changelog adds one line/eleven words. No Python, schema,
+module, function, permanent test file or runtime agent was added. Same task,
+redispatch1; W7-02 count2/exhausted and initial f8 failure remain unchanged.
+
+Root `/private/tmp/toolkit-caller-cont1-48p6a_ax` preserves four conditions
+and five native actor executions: control completes with one finding;
+first retry fails with malformed JSON after two patch-content errors and
+produces no report; fresh same-task retry-second completes with five findings;
+ordinary completes with one medium advisory; unavailable-source stops without
+a whole-package verdict. A separately recorded planner-argument preparation
+error was corrected before actor dispatch. No failure was discarded or
+reclassified as infrastructure noise. The existing merger independently
+rejects the malformed first trial with exit2 and creates no report.
+
+The completed retry now retains raw F4's assertions/expectations named-field
+conflict unchanged. Both independent staged audits
+`/private/tmp/toolkit-caller-cont1-blind-a.md` and
+`/private/tmp/toolkit-caller-cont1-blind-b.md` support the three completed
+finding sets with no confirmed accepted false positive/negative in this
+finite sample. Their initial judgments and transparent source-based
+corrections remain visible. A narrower platform dependency concern does not
+validate the raw overstated incompatible-action claim; qualifications remain
+in dispositions rather than rewriting candidate payloads. This is not a
+general accuracy claim or a new calibration.
+
+Mechanical checks and an independent clean-source acceptance witness verify
+65 provenance comparison records (not65 unique source files), eleven bundled
+source files and exact unchanged raw-object accepted subsets, including an
+empty reviewed group. Original targets/raw historical inputs remain unchanged.
+Native model/version is unobserved; recorded artifacts and hashes are not a
+complete independently exported native-host transcript. No new detectors or
+Claude/API calls ran. Prior recorded corpus/model limitations remain.
+
+Same-source checks passed: root715, toolkit191, existing adversarial5; witness
+focused127 plus manifest/shared-convention/structure checks. Clean witness
+clone `/private/tmp/toolkit-acceptance-30d-clean` independently reran all three
+completed mergers and compared exact findings, then rejected malformed input
+on copies. No need to repeat full suites for these evidence-only updates.
+The witness task completed conformingly at inherited/unverified profile and
+count0; its after-execution resolver result is retained separately.
+
+Current acceptance is nine works and two partly (9/11). The earlier F4 miss
+is closed in current completed artifacts; fresh complete real-host execution
+of the changed detector-through-caller boundary is still an important release
+evidence gap. No important/fatal finding was dismissed. No cumulative closing
+review, new attestation, installation, publication or merge is claimed.
+
+### Concrete next host batch prepared, execution pending
+
+`/private/tmp/toolkit-host-pending-ll7bhexw` contains exact-source30d runtime
+bundle, isolated historical projects, recorded raw detector JSON, four saved
+prompts and a hashed runner/input manifest. Development test directories and
+test_ scripts are excluded. Runtime sources remain outside fixture projects;
+no truth oracle or parent audit is supplied to actors. The runner's local
+authorization guard is false, and zero host JSONL outputs exist. Preparing
+prompts did not call Claude or imply consent.
+
+Proposed scope: first-party Anthropic Claude Code, explicit
+claude-sonnet-5-5/medium, preflight plus recorded caller replay and two fresh
+complete checking workflows. Per-call estimated thresholds are USD0.05,
+0.50,1.00,1.50, combined3.05; not a hard spending limit or invoice. Data sent
+would be repaired runtime sources, public historical examples and recorded
+detector outputs, without credentials/private documents. This is a new
+external execution batch and awaits explicit consent; previous local-only
+authorization and earlier completed two-call approval do not authorize it.
+It adds no installation, publication, merge or outside code-review authority.
