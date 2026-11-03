@@ -115,6 +115,53 @@ charter: 1.1
 - Test: A5 positive: refactor_policy_consistent; negative: extraction_only_not_package_saving. Extend existing extraction-policy coverage for the three consumer examples; run focused policy and package-contract checks.
 - Risk: REQ-5; agent-decided qualify illustrative entry-only calculations rather than invent package savings. Defect class: moving words treated as reduction; searched changed files and complete refactor surface. Instances: three README extraction examples claiming 12.4% PROCEED from relocation alone; preserve actual package-mode rules.
 
+### Wave 6 — Correct the additional independent-review findings
+
+**W6-01 Keep backend failures out of trigger scores** after: W5-06 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_eval.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_loop.py` (entry), `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: creator_commands_valid; negative: creator_commands_invalid. Exercise real main/evaluator behavior with an offline backend, including a failed negative query. Run creator command tests.
+- Risk: REQ-1/7; agent-decided fail closed. Class: backend errors counted as non-triggers; searched changed files and creator acceptance surface. Instances: future exception False, incomplete/failed query returns, loop all_passed, internal-only tests and unsupported propagation evidence.
+
+**W6-02 Align optimizer generation and application with description authority** after: W6-01 acceptance: 1, 5, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/improve_description.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_loop.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/description-optimization.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`, `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A5 positive: compliant_optimizer_candidate; boundary: noncompliant_candidate_not_applied. Extend the command-entry cases with captured offline generation prompts, length exceptions and invalid candidates. Run creator command and hidden description tests.
+- Risk: REQ-1/5; agent-decided retain contextual exceptions. Class: optimizer contradicts description authority; searched changed files and creator references/helpers. Instances: imperative/word-count prompt, 1024-only rewrite, score-only selection, unconditional application and hard-rule wording. Preserve platform ceiling separately.
+
+**W6-03 Preserve unknown token capture in aggregation** after: W6-02 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/aggregate_benchmark.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/schemas.md`, `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: creator_commands_valid; boundary: missing_tokens_not_savings. Extend existing CLI assertions for missing, captured-zero and partial populations; run creator command tests.
+- Risk: REQ-1; agent-decided explicit unknowns. Class: missing tokens become measured zeros; searched changed files and creator acceptance surface. Instances: loader defaults, empty statistics, sample collection, run serialization, delta and Markdown formatting. Preserve other metric behavior.
+
+**W6-04 Continue interactive clarification within one blind round** after: W6-03 acceptance: 3, 7
+- Files: `skill-dev-toolkit/skills/skill-tuning/scripts/ab_harness.py` (entry), `skill-dev-toolkit/skills/skill-tuning/references/ab-harness-protocol.md`, `skill-dev-toolkit/tests/test_blind_harness.py`.
+- Test: A3 positive: blind_full_view_same_choice; boundary: clarification_keeps_mapping. Extend existing real CLI cases for multiple input lines, invalid one-shot input and EOF; run blind harness tests.
+- Risk: REQ-3; agent-decided no resume file. Class: retry loses label mapping; searched changed files and tuning interaction surface. Instances: single input read, fresh assignment, pending record, misleading retry message and side-log guidance. Cross-invocation wrong adoption remains unproven.
+
+**W6-05 Synchronize readiness documentation consumers** after: W6-04 acceptance: 4, 5
+- Files: `skill-dev-toolkit/skills/skill-tuning/README.md`, `skill-dev-toolkit/skills/skill-tuning/README.ja.md`, `skill-dev-toolkit/skills/skill-tuning/README.zh-TW.md`, `skill-dev-toolkit/skills/skill-tuning/NOTICE`.
+- Test: A4 positive: explicit_single_preferences_export; negative: unusable_preferences_not_ready. Run existing preference tests and verify all current readiness statements against their shared source; no new prose-only test harness.
+- Risk: REQ-4/5; agent-decided retain inactive training. Class: old readiness population; searched changed files and tuning consumers. Instances: three ADOPT-only paragraphs, three limit rows, three stub captions and NOTICE. Keep usable records separate from pairs.
+
+**W6-06 Reconcile optional golden checks with vote outcomes** after: W6-05 acceptance: 5, 7
+- Files: `skill-dev-toolkit/skills/skill-refactor/references/golden-anchor-protocol.md`, `skill-dev-toolkit/skills/skill-tuning/references/golden-anchor-protocol.md`, `skill-dev-toolkit/skills/skill-refactor/scripts/golden_compare.py`, `skill-dev-toolkit/skills/skill-refactor/SKILL.md`.
+- Test: A5 positive: refactor_policy_consistent; negative: dissent_not_cleared_by_anchor. Run existing refactor/golden checks and shared-convention drift; independently interpret moderate/dissent cases at acceptance.
+- Risk: REQ-5; agent-decided comparison cannot authorize adoption. Class: old moderate-vote escalation; searched changed files and refactor/tuning consumers. Instances: both shared protocols, comparator docstring and entry resource caption. Preserve comparison enum and cumulative-drift safeguards.
+
+**W6-07 State the grader metadata input at dispatch** after: W6-06 acceptance: 5
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/references/eval-protocol.md`.
+- Test: A5 positive: shared_case_metadata; negative: run_local_metadata_not_required. Run existing metadata-contract tests and read the dispatch against grader inputs.
+- Risk: REQ-5; agent-decided explicit existing input. Class: grader dispatch omits case metadata; searched changed files, evaluation protocol, schema and grader. Only Step 4.1 lacks the explicit case-level path; preserve per-run outputs.
+
+**W6-08 Correct packaging usage examples** after: W6-07 acceptance: 1
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/package_skill.py` (entry), `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: creator_commands_valid; negative: creator_commands_invalid. Extend the existing packaging error case to verify usable module invocation in help; run creator command tests.
+- Risk: REQ-1; agent-decided current supported invocation. Class: nonexistent packaging usage path; searched changed files and creator packaging surface. Instances: module docstring, usage text and four examples in package_skill.py. Packaging behavior is unchanged.
+
+**W6-09 Remove redundant workflow path filters** after: W6-08 acceptance: 7
+- Files: `.github/workflows/skill-dev-toolkit-ci.yml`, `skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py`.
+- Test: A7 positive: toolkit_verification_routed; boundary: scripts_glob_preserves_coverage. Update the existing routing assertion without reducing its behavioral coverage; run test_skill_text.py.
+- Risk: REQ-7; agent-decided unchanged trigger coverage. Class: redundant script filters; searched changed files and workflow routing tests. Instances: three explicit script paths under scripts/** in both events and their over-specific assertions.
+
 ## Simplicity check
 - none found
 
@@ -126,5 +173,6 @@ charter: 1.1
 2. Existing JSONL remains read only. Neutral viewing files and reports are new artifacts, not migrations; REQ-3/4 tests check preservation.
 3. REQ-5 text assertions cannot alone establish agent behavior; independent realistic execution must exercise voting, deferral, extraction accounting and audit evidence separation before closing acceptance.
 4. Unknown model/effort uses the dispatch resolver's atomic inheritance fallback; no exact model identity or cross-vendor evidence is fabricated.
-5. User authorized non-forced publication and Ready PR after checks; merge remains separate. No external reviewer was selected; second-vendor stays suggest.
+5. GitHub publication remains blocked pending explicit destination/content approval; merge remains separate. One additionally authorized Claude review completed; no repeat outside execution is authorized. Its findings are inputs to local correction, not a passing verdict on the corrected tree.
 6. Round 1 found five defect classes and an evidence gap; the consumer sweep also found entry-only examples. Fix together, repeat package/probe checks, resume same reviewers. Independent acceptance re-tests affected rows with omitted-output-criterion and skipped-procedure-gate cases; justify retained rows.
+7. Additional review exposed real gaps in previously passing evidence. Preserve old results as historical, replace affected acceptance evidence, and use real command entries and the real evaluator. Requirements remain unchanged; these tasks correct their existing obligations.
