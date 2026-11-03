@@ -102,7 +102,7 @@ Before grading and presenting results to the human, perform a quick automated ch
 
 Once all runs are done:
 
-1. **Grade each run** — spawn a grader subagent (or grade inline) that reads `agents/grader.md` and evaluates each assertion against the outputs. Save results to `grading.json` in each run directory. The grading.json expectations array must use the fields `text`, `passed`, and `evidence` (not `name`/`met`/`details` or other variants). Check programmatically-checkable assertions with a script rather than eyeballing — faster, more reliable, reusable across iterations.
+1. **Grade each run** — spawn a grader subagent (or grade inline) that reads `agents/grader.md` and evaluates each assertion against the outputs. Pass the case's `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json` path explicitly to each grader. Save results to `grading.json` in each run directory. The grading.json expectations array must use the fields `text`, `passed`, and `evidence` (not `name`/`met`/`details` or other variants). Check programmatically-checkable assertions with a script rather than eyeballing — faster, more reliable, reusable across iterations.
 
 2. **Check for regressions** (iteration 2+) — compare results against the previous iteration (`references/iteration-automation.md` has the full protocol); lead with any regressions when reporting to the user.
 
