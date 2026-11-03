@@ -107,10 +107,16 @@ Each detector gets, as paths (not file contents):
 4. Its output JSON path in the run directory.
 
 Detectors write only their output file. After all return, confirm each
-output file exists and parses as JSON with a `findings` list. Re-dispatch
-a detector whose file is missing or malformed once; if it fails again,
-tell the user which group went unchecked and stop — a run with an
-unchecked group has no verdict.
+output exists and parses as JSON with a `findings` list; also inspect its
+completion message and available tool results. Re-dispatch once with the
+same assigned file list if the output is missing or malformed, the detector
+explicitly reports unfinished work, or visible reading demonstrably omits
+required files or sections. Preserve incomplete output and hand-back outside
+the merge globs (e.g. `partial-read-1.json` and `partial-read-1.md`) before
+retrying. If the retry fails or remains incomplete, stop before merge and
+name the unchecked method/group — no whole-package verdict. Missing tool
+detail alone does not prove incompleteness; completed checks with empty
+findings remain valid.
 <!-- /gate -->
 
 ### 4. Model
