@@ -161,3 +161,100 @@ checks, clean independent acceptance, fresh cumulative reviews and generated
 attestation on the completed content. Prior attestation is not hand-edited or
 reused for changed content. No claim covers installed marketplace cutover,
 all host UIs, a full statistical trigger benchmark or model error elimination.
+
+### Completion-gate verification at6754b8aaf
+
+The third isolated host root is
+`/private/tmp/toolkit-release-final-host-nip2a3ob`, with an immutable bundle
+from6754b8aaffccc77e4ca5ba33753e1b4ed8dd7bb0. Claude Code requested
+`claude-sonnet-5-5` at medium effort; each completed top-level result reports
+that model. This does not establish individual detector runtime identities.
+
+| Trial | Observed outcome | Release interpretation |
+|---|---|---|
+| Small contextual control | Completed; detected the genuine quick-baseline conflict and did not flag the explicit dissent exception. Still reported the compatible Auto/testing summary as a medium-confidence advisory. | The negative control remains failed; both blind audits confirm the false advisory. Do not change its expected answer or claim complete precision. |
+| Exhausted-retry replay | Replayed the genuine recorded unfinished walk-through response as the second response, explicitly disclosing that no second detector execution occurred. Caller stopped before merge, generated no whole-package verdict and named the unchecked group. | The observed stop behavior meets this controlled condition. The reply left the incomplete active JSON in place and suggested a further dispatch as a future option; these limits remain available for assessment. |
+| First-response replay | Not executed: automatic approval review rejected the external Claude call before process creation. | No behavioral verdict; explicit authorization for this data transfer and spend has been requested. |
+| Ordinary historical checker | Prepared, not executed on this source. | Earlier source results are not a substitute for the pending current-source run. |
+
+The completed top-level calls (preflight, control, exhausted-retry replay)
+report estimates of US$0.0018701, US$0.188093 and US$0.0639588 respectively:
+US$0.2539219 total, not an invoice. Original input hashes match for all four
+prepared projects (4/13/13/21 files respectively); all recorded bundle hashes
+also match. Failed trials and their raw JSONL remain unchanged.
+
+The creator run at0b54d256 may be carried only for unchanged creator behavior:
+`git diff 0b54d256aa7ae29d47851cf1950403e975f6f3a6 HEAD --
+skill-dev-toolkit/skills/skill-creator-advance skill-dev-toolkit/CHANGELOG.md`
+is empty at6754b8aaf. Its three real input/output pairs,199-character
+description and archive were accepted by both independent artifact judgments
+recorded below; their coverage remains bounded to those actual cases.
+
+At6754b8aaf, toolkit tests passed191, the complete declared repository suite
+passed715, and the unchanged adversarial program passed5. The hidden description
+suite passed4; structure passed all6 skills; shared conventions passed3 with
+no drift; Codex manifest and version-bump checks passed. These checks do not
+erase the failed semantic control or establish release readiness.
+
+Across this expanded scope relative to28af8bae2, the three changed production
+Python modules have no net new functions or production files and net minus
+one line. Regression data and evidence are separate additions. W7-02 has
+consumed both continued dispatches: no further same-task implementation attempt
+is permitted by renaming the task or changing its oracle. The final attestation
+from the old source remains stale and is not regenerated while validation is
+incomplete.
+
+The first fresh blind artifact audit, retained at
+`/private/tmp/toolkit-release-artifact-a.md`, independently accepts both the
+explicit-exception negative and genuine-baseline positive. It confirms the
+Auto/testing advisory is false and assigns medium consequence, separately from
+the detector's medium confidence. Its cited catalog line15 is actually line17
+(low citation error). The true positive still supports the delivered
+needs-revision verdict. All three creator outputs preserve the source facts
+and qualifiers; the real archive matches its generated skill. A low eval-prompt
+path usability issue and direct self-execution limits remain disclosed. The
+second blind judgment at `/private/tmp/toolkit-release-artifact-b.md` independently
+agrees on the medium false advisory and low citation error, accepts the three
+creator outputs and archive, and confirms the exhausted-retry replay stopped
+without merge or a whole-package verdict. It notes that the retained incomplete
+active JSON could be misused by a future manual merge; that did not occur in
+this run. Neither judgment is a release verdict or authorizes another
+semantic-fix attempt.
+
+Observer scope matters: raw CLI `tool_use_result.resolvedModel` metadata records
+the requested child resolution in control JSONL lines30 and55, but the
+model-facing tool-result text does not contain that field. The first auditor
+withdrew an initial claim that the caller's conservative unknown-model reason
+was false, because metadata visible to the external log reader is not proven
+visible to the caller. Keep this distinction; do not infer runtime identity
+from a parent model or silently rewrite the historical artifact.
+
+### Native missing-input execution
+
+`/private/tmp/toolkit-release-cold-execution.md` records a fresh native executor
+using five isolated copies of the genuine created skill and changelog. It
+created three quick-case outputs, and separately prepared an original snapshot,
+three new cases and old-version outputs before stopping a structural redesign
+at its pre-edit boundary. Two redesign edge cases are explicitly controlled
+mutations (missing date and duplicated record), not historical real releases.
+All five original skill hashes remain
+`ac8fd49062b74a64fa2d47942a69e6303ed8ea913c0820fc94d37f31a3a0ff17`.
+
+Under separately stated unknown-model and unsupported-model conditions, it
+saved bounded stops without a guessed provider ID, optimizer invocation or
+imagined target selection. With the actual three historical input/output pairs
+and controlled absence of measured telemetry, it stopped full timing comparison,
+saved unavailable status outside timing.json, and ran no aggregator. Historical
+outputs were not relabelled as fresh measured runs.
+
+This is executor evidence, not a clean independent acceptance verdict. It
+initially over-read Gate3 while extracting Gate2, then corrected the extraction,
+and preloaded an optimization reference before its progressive loading point.
+These procedural deviations remain recorded. Native backend identity/version
+was not pinned; this does not substitute for the two unexecuted Claude cases,
+prove perfect reference-load isolation, or establish statistical performance.
+
+Release remains unverified: the semantic control failed, two external cases
+await transfer/spend authorization, independent acceptance is not complete,
+and cumulative closing review/finalization for this expanded scope has not
+started. The old attestation must not be used to publish this tree.
