@@ -105,6 +105,44 @@ needed; the release claim must retain the current bounded coverage.
 
 ## Evidence continuity and release checks
 
+### Industry research after the large positive trial
+
+At0b54d256, the old negative checker case no longer reported the known
+Any-dissent or Auto/testing false conflicts, and used unknown model metadata.
+The creator produced a199-character description, three outputs and an archive.
+These improvements still require independent artifact judgment.
+
+The larger25,135-token positive trial is retained as failed: JSONL line95
+explicitly admits a walk-through that fully read only four files and one
+partly; line99 merges its valid empty finding list anyway. It completed at
+5/24 top-level turns, US$0.5420163/$1 estimated budget and181.62/480 seconds.
+No observed tool-output truncation or top-level resource stop explains it.
+This is incomplete execution accepted by the caller, not an infrastructure
+error to discard from evaluation. A separate read detector did find two
+high-confidence true conflicts and explicitly rejected timing caseX3.
+
+The independent diagnosis found X3 defensible as opposed universal data facts,
+but weaker under the detector's incompatible-action definition: normal capture
+and a missing-file fallback can be read as operationally compatible. Do not
+force a timing-specific detection rule or treat a historic answer key as
+unquestionable. Preserve X3 and this trial in their original records; refine
+the separate controlled positive to an unambiguous same-condition action pair.
+
+Primary sources checked2026-11-03:
+
+- [Anthropic, Demystifying evals for AI agents](https://www.anthropic.com/research/demystifying-evals-for-ai-agents), sections on balanced cases, clear reference tasks and transcript review: assess actual outcomes and inspect failures; ambiguous grading can create misleading signals.
+- [Inspect scoring policy](https://inspect.aisi.org.uk/scoring-policy.html), actor attribution and error handling: distinguish model failure from measurement failure, retaining reasons rather than converting absence of a verdict into success.
+- [Inspect scanners](https://inspect.aisi.org.uk/scanners.html), overview: transcript issues and task-success grading are distinct concerns.
+
+Project inference: reuse the current caller's one-retry/stop mechanism for
+explicit or observable incomplete reading. A valid empty JSON file is not
+completion evidence. Preserve the first attempt and stop without a full verdict
+if its retry is incomplete. No new runtime type, required field, third grader,
+grouping threshold or framework is justified. This W7-05 caller obligation is
+distinct from W7-02's candidate-context procedure; the latter's counts remain
+retained. The controlled-oracle refinement consumes W7-02's second continuation,
+not a new task name or fresh allowance.
+
 Acceptance1–7 and their underlying implementation remain required. Re-test every
 surface touched by the shared validator and creator/checker instructions;
 carry other evidence only with a checked diff reason. Historical EOF failure,
