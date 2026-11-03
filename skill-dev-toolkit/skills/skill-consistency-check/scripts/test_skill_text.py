@@ -42,7 +42,7 @@ def test_toolkit_verification_routed():
     }
     for event in ("pull_request", "push"):
         paths = workflow["on"][event]["paths"]
-        assert {"skill-dev-toolkit/**", "scripts/**", workflow_path, *shared_checks} <= set(paths)
+        assert {"skill-dev-toolkit/**", "scripts/**", workflow_path} <= set(paths)
     assert "main" in workflow["on"]["push"]["branches"]
     job = workflow["jobs"]["test"]
     assert workflow["permissions"] == {"contents": "read"}

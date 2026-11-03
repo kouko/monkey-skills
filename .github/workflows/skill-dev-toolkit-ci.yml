@@ -6,18 +6,12 @@ on:
       - 'scripts/**'
       - 'skill-dev-toolkit/**'
       - '.github/workflows/skill-dev-toolkit-ci.yml'
-      - 'scripts/check-skill-structure.py'
-      - 'scripts/check-shared-conventions-drift.py'
-      - 'scripts/sync_codex_manifests.py'
   push:
     branches: [main]
     paths:
       - 'scripts/**'
       - 'skill-dev-toolkit/**'
       - '.github/workflows/skill-dev-toolkit-ci.yml'
-      - 'scripts/check-skill-structure.py'
-      - 'scripts/check-shared-conventions-drift.py'
-      - 'scripts/sync_codex_manifests.py'
 
 permissions:
   contents: read
