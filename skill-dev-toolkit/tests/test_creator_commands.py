@@ -256,3 +256,68 @@ def test_creator_evaluation_completion(entry, outcome, optimizer, skill, monkeyp
         else:
             assert output["best_score"] == ("1/1" if expected else "0/1")
     assert not list(skill.parent.rglob(".claude/commands/*.md"))
+
+
+@pytest.mark.parametrize("candidate, comment, valid", [
+    ("Converts CSV files when streaming JSONL is needed.", "", True),
+    ("x" * 251, "", False),
+    ("x" * 251, "# KEEP: Retains CSV, JSONL and streaming trigger surfaces\n", True),
+    ("x" * 1024, "# KEEP: Retains CSV, JSONL and streaming trigger surfaces\n", True),
+    ("x" * 1025, "# KEEP: Retains CSV, JSONL and streaming trigger surfaces\n", False),
+    ("x" * 500, "# Firing evidence: 87% match rate from support-ticket A/B corpus\n", True),
+    ("x" * 501, "# Firing evidence: 87% match rate from support-ticket A/B corpus\n", False),
+    ("x" * 251, "# Router: Retains CSV, JSONL and streaming trigger surfaces\n", False),
+    ("x" * 251, "# Firing evidence:\n", False),
+    ("<broken>text", "", False),
+    ("", "", False),
+])
+def test_creator_optimizer_authority(candidate, comment, valid, optimizer, skill, monkeypatch, capsys):
+    generator = importlib.import_module("scripts.improve_description")
+    content = "---\nname: example-skill\n" + comment + "description: Original description\n---\nBody\n"
+    (skill / "SKILL.md").write_text(content)
+    evaluation = {"description": "Original description", "summary": {"passed": 0, "failed": 1, "total": 1}, "results": []}
+    eval_path = skill.parent / "generation.json"
+    eval_path.write_text(json.dumps(evaluation))
+    prompts = []
+
+    def generate(prompt, model):
+        prompts.append(prompt)
+        if valid and len(prompts) == 1:
+            return "<new_description><invalid></new_description>"
+        return f"<new_description>{candidate}</new_description>"
+
+    monkeypatch.setattr(generator, "_call_claude", generate)
+    monkeypatch.setattr(sys, "argv", ["improve_description", "--eval-results", str(eval_path), "--skill-path", str(skill), "--model", "offline"])
+    if valid:
+        generator.main()
+        assert json.loads(capsys.readouterr().out)["description"] == candidate
+    else:
+        with pytest.raises(ValueError, match="description"):
+            generator.main()
+        assert not capsys.readouterr().out
+    authority = (CREATOR / "references/description-design.md").read_text()
+    assert authority in prompts[0]
+    assert "third-person" in prompts[0]
+    assert "100-200 words" not in prompts[0]
+    assert "phrased in the imperative" not in prompts[0]
+    assert authority in prompts[1] and "ineligible" in prompts[1]
+    assert (skill / "SKILL.md").read_text() == content
+    if valid:
+        invalid_baseline = "<invalid>baseline"
+        (skill / "SKILL.md").write_text(content.replace("Original description", invalid_baseline))
+        monkeypatch.setattr(importlib.import_module("scripts.run_eval"), "run_single_query",
+                            lambda query, *args: int(query.split("-")[1]) % 2 == 0)
+        output = optimize(optimizer, skill, monkeypatch, capsys)
+        assert output["iterations_run"] == 2
+        assert output["best_description"] == candidate
+        assert output["history"][0]["eligible"] is False
+        assert output["history"][1]["eligible"] is True
+    else:
+        (skill / "SKILL.md").write_text(content.replace("Original description", "<invalid>baseline"))
+        monkeypatch.setattr(importlib.import_module("scripts.run_eval"), "run_single_query", lambda *args: True)
+        monkeypatch.setattr(sys, "argv", ["run_loop", "--eval-set", str(eval_path), "--skill-path", str(skill),
+                            "--model", "offline", "--report", "none", "--holdout", "0", "--max-iterations", "1"])
+        eval_path.write_text(json.dumps([{"query": "baseline", "should_trigger": True}]))
+        with pytest.raises(ValueError, match="No eligible description"):
+            optimizer.main()
+        assert not capsys.readouterr().out

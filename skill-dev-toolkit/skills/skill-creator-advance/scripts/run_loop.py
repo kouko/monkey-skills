@@ -16,7 +16,7 @@ import webbrowser
 from pathlib import Path
 
 from scripts.generate_report import generate_html
-from scripts.improve_description import improve_description
+from scripts.improve_description import description_violation, improve_description
 from scripts.run_eval import find_project_root, run_eval
 from scripts.utils import parse_skill_md
 
@@ -121,6 +121,7 @@ def run_loop(
         history.append({
             "iteration": iteration,
             "description": current_description,
+            "eligible": description_violation(current_description, content) is None,
             "train_passed": train_summary["passed"],
             "train_failed": train_summary["failed"],
             "train_total": train_summary["total"],
@@ -140,7 +141,7 @@ def run_loop(
         if live_report_path:
             partial_output = {
                 "original_description": original_description,
-                "best_description": current_description,
+                "best_description": current_description if history[-1]["eligible"] else "",
                 "best_score": "in progress",
                 "iterations_run": len(history),
                 "holdout": holdout,
@@ -174,7 +175,7 @@ def run_loop(
             if test_summary:
                 print_eval_stats("Test ", test_results["results"], 0)
 
-        if train_summary["failed"] == 0:
+        if train_summary["failed"] == 0 and history[-1]["eligible"]:
             exit_reason = f"all_passed (iteration {iteration})"
             if verbose:
                 print(f"\nAll train queries passed on iteration {iteration}!", file=sys.stderr)
@@ -213,12 +214,16 @@ def run_loop(
 
         current_description = new_description
 
-    # Find the best iteration by TEST score (or train if no test set)
+    # Bad baselines can be optimized, but cannot win even with perfect scores.
+    eligible_history = [item for item in history if item["eligible"]]
+    if not eligible_history:
+        raise ValueError("No eligible description candidate was evaluated")
+    # Find the best eligible iteration by TEST score (or train without holdout).
     if test_set:
-        best = max(history, key=lambda h: h["test_passed"] or 0)
+        best = max(eligible_history, key=lambda h: h["test_passed"] or 0)
         best_score = f"{best['test_passed']}/{best['test_total']}"
     else:
-        best = max(history, key=lambda h: h["train_passed"])
+        best = max(eligible_history, key=lambda h: h["train_passed"])
         best_score = f"{best['train_passed']}/{best['train_total']}"
 
     if verbose:

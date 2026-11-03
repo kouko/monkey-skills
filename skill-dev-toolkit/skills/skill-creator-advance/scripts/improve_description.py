@@ -14,7 +14,48 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 from scripts.utils import parse_skill_md
+
+
+def description_violation(description: str, skill_content: str) -> str | None:
+    """Check mechanical eligibility; contextual justification still needs review."""
+    if not description.strip() or "<" in description or ">" in description:
+        return "description must be nonempty text without XML/angle brackets"
+    if len(description) > 1024:
+        return "description exceeds the platform ceiling of 1024 characters"
+    match = re.match(r"\A---\n(.*?)\n---(?:\n|$)", skill_content, re.DOTALL)
+    if not match:
+        return "description context has malformed YAML frontmatter"
+    try:
+        metadata = yaml.safe_load(match.group(1))
+    except yaml.YAMLError:
+        return "description context has malformed YAML frontmatter"
+    if not isinstance(metadata, dict) or not isinstance(metadata.get("description"), str):
+        return "description context needs a YAML description string"
+    # Comments do not count toward rendered length. Only the comment block
+    # directly above the parsed description field can justify a long value.
+    lines = match.group(1).splitlines()
+    comments = []
+    for index, line in enumerate(lines):
+        if line.startswith("description:"):
+            for previous in reversed(lines[:index]):
+                if not previous.startswith("#"):
+                    break
+                comments.insert(0, previous[1:].strip())
+            break
+    justification = " ".join(comments)
+    firing_note = re.search(r"\bFiring evidence:\s*(\S.*)", justification, re.IGNORECASE)
+    declared_exception = firing_note or re.search(r"\b(?:router|CONDITIONAL)\b|Firing evidence:", justification, re.IGNORECASE)
+    if declared_exception and len(description) > 250:
+        if not firing_note:
+            return "description router/CONDITIONAL exception needs a firing-evidence note"
+        if len(description) > 500:
+            return "description exceeds the admitted router/CONDITIONAL bound of 500 characters"
+    if len(description) > 250 and not justification:
+        return "description over 250 characters needs a colocated YAML justification"
+    return None
 
 
 def _call_claude(prompt: str, model: str | None, timeout: int = 300) -> str:
@@ -76,7 +117,12 @@ def improve_description(
     else:
         scores_summary = f"Train: {train_score}"
 
-    prompt = f"""You are optimizing a skill description for a Claude Code skill called "{skill_name}". A "skill" is sort of like a prompt, but with progressive disclosure -- there's a title and description that Claude sees when deciding whether to use the skill, and then if it does use the skill, it reads the .md file which has lots more details and potentially links to other resources in the skill folder like helper files and scripts and additional documentation or examples.
+    authority = (Path(__file__).resolve().parents[1] / "references/description-design.md").read_text()
+    prompt = f"""You are optimizing a skill description for a Claude Code skill called "{skill_name}". Follow the current bundled description authority below, including neutral third-person voice, positive intent triggers, and its contextual length exceptions. Existing SKILL.md frontmatter/comments supply exception context; do not invent justification or firing evidence.
+
+{authority}
+
+A skill uses progressive disclosure: its name and description help select it, while its body supplies the workflow.
 
 The description appears in Claude's "available_skills" list. When a user sends a query, Claude decides whether to invoke the skill based solely on the title and on this description. Your goal is to write a description that triggers for relevant queries, and doesn't trigger for irrelevant ones.
 
@@ -129,21 +175,21 @@ Based on the failures, write a new and improved description that is more likely 
 1. Avoid overfitting
 2. The list might get loooong and it's injected into ALL queries and there might be a lot of skills, so we don't want to blow too much space on any given description.
 
-Concretely, your description should not be more than about 100-200 words, even if that comes at the cost of accuracy. There is a hard limit of 1024 characters — descriptions over that will be truncated, so stay comfortably under it.
+Aim for 150 characters. The 250-character soft lint line allows longer normal descriptions only with the authority's colocated justification. Router/CONDITIONAL admission and 500-character exception bounds require the authority's firing evidence. The separate platform ceiling is 1024 characters.
 
 Here are some tips that we've found to work well in writing these descriptions:
-- The skill should be phrased in the imperative -- "Use this skill for" rather than "this skill does"
+- Write neutral third-person text, for example "Converts CSV to JSONL when streaming output is needed."
 - The skill description should focus on the user's intent, what they are trying to achieve, vs. the implementation details of how the skill works.
 - The description competes with other skills for Claude's attention — make it distinctive and immediately recognizable.
 - If you're getting lots of failures after repeated attempts, change things up. Try different sentence structures or wordings.
 
-I'd encourage you to be creative and mix up the style in different iterations since you'll have multiple opportunities to try different approaches and we'll just grab the highest-scoring one at the end. 
+Try different structures while preserving these constraints. Only mechanically eligible candidates compete by score; the applying agent must still validate voice, trigger coverage and contextual justification.
 
 Please respond with only the new description text in <new_description> tags, nothing else."""
 
     text = _call_claude(prompt, model)
 
-    match = re.search(r"<new_description>(.*?)</new_description>", text, re.DOTALL)
+    match = re.fullmatch(r"\s*<new_description>(.*?)</new_description>\s*", text, re.DOTALL)
     description = match.group(1).strip().strip('"') if match else text.strip().strip('"')
 
     transcript: dict = {
@@ -155,24 +201,20 @@ Please respond with only the new description text in <new_description> tags, not
         "over_limit": len(description) > 1024,
     }
 
-    # Safety net: the prompt already states the 1024-char hard limit, but if
-    # the model blew past it anyway, make one fresh single-turn call that
-    # quotes the too-long version and asks for a shorter rewrite. (The old
-    # SDK path did this as a true multi-turn; `claude -p` is one-shot, so we
-    # inline the prior output into the new prompt instead.)
-    if len(description) > 1024:
+    # One bounded repair for any mechanical violation, not just platform size.
+    violation = description_violation(description, skill_content)
+    if violation:
         shorten_prompt = (
             f"{prompt}\n\n"
             f"---\n\n"
-            f"A previous attempt produced this description, which at "
-            f"{len(description)} characters is over the 1024-character hard limit:\n\n"
+            f"A previous description is ineligible: {violation}:\n\n"
             f'"{description}"\n\n'
-            f"Rewrite it to be under 1024 characters while keeping the most "
+            f"Rewrite it to satisfy the bundled authority and existing metadata while keeping the most "
             f"important trigger words and intent coverage. Respond with only "
             f"the new description in <new_description> tags."
         )
         shorten_text = _call_claude(shorten_prompt, model)
-        match = re.search(r"<new_description>(.*?)</new_description>", shorten_text, re.DOTALL)
+        match = re.fullmatch(r"\s*<new_description>(.*?)</new_description>\s*", shorten_text, re.DOTALL)
         shortened = match.group(1).strip().strip('"') if match else shorten_text.strip().strip('"')
 
         transcript["rewrite_prompt"] = shorten_prompt
@@ -188,6 +230,9 @@ Please respond with only the new description text in <new_description> tags, not
         log_file = log_dir / f"improve_iter_{iteration or 'unknown'}.json"
         log_file.write_text(json.dumps(transcript, indent=2))
 
+    violation = description_violation(description, skill_content)
+    if violation:
+        raise ValueError(f"Ineligible description: {violation}")
     return description
 
 

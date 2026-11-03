@@ -90,7 +90,9 @@ Use the model ID from your system prompt (the one powering the current session) 
 
 While it runs, periodically tail the output to update the user on which iteration it's on and the scores.
 
-The script handles the full optimization loop automatically (train/held-out-test methodology and its rationale: `references/eval-methodology.md`). When done, it opens an HTML report in the browser and returns JSON with `best_description` — selected by test score rather than train score to avoid overfitting.
+The script handles the optimization loop (train/held-out-test methodology and its rationale: `references/eval-methodology.md`). Generation reads the current bundled `description-design.md` authority. Mechanical eligibility filters candidates before score selection: nonempty text without angle brackets, the platform's 1024-character ceiling, and the authority's length/metadata constraints. An invalid original description can be optimized but cannot win. No eligible evaluated candidate means an error, not a successful best description.
+
+When done, it opens an HTML report and returns JSON with `best_description`, selected among eligible candidates by held-out test score (or train score when holdout is disabled). Mechanical eligibility does not establish semantic compliance.
 
 ### How skill triggering works
 
@@ -100,6 +102,13 @@ Understanding the triggering mechanism helps design better eval queries — read
 
 ## Phase 4: Apply the result
 
-Take `best_description` from the JSON output and update the skill's SKILL.md frontmatter. Show the user before/after and report the scores.
+Before applying `best_description`, the applying agent must validate it against the current `description-design.md` authority in the actual skill context:
+
+- Confirm neutral third-person voice, positive intent triggers and coverage of the skill's real trigger surfaces; check any adjacent-skill exclusions and multilingual belt against their conditions.
+- Preserve the normal 150-character target and 250-character soft lint line. For a longer normal description, confirm that the colocated YAML justification names retained trigger surfaces and explains why they cannot fit within 250 characters. A comment's presence alone does not prove justification.
+- For router/CONDITIONAL exceptions, confirm the skill actually has that role, verify the specific firing metric and its corpus/live A/B evidence, and enforce the 500-character bound. New exceptions without evidence stay in the normal band. Never invent an admission note to make a candidate fit.
+- Check the rendered YAML string, excluding comments, against these bands and the separate absolute platform ceiling of 1024 characters. If any check fails, reject the candidate and correct the cause before rerunning; do not apply it merely because its score won.
+
+Only after these checks pass, update SKILL.md frontmatter. Show the user before/after, scores and any retained exception justification.
 
 ---
