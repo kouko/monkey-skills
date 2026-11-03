@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
-intent: 2026-11-02-repair-skill-dev-toolkit@3b1b225d
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@33b186cc
+intent: 2026-11-02-repair-skill-dev-toolkit@55dee191
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@7aad3646
 charter: 1.1
 
 ## Task DAG
@@ -167,8 +167,30 @@ charter: 1.1
 - Test: A1 positive: real_eof_completion_accepted; negative: failed_completion_not_scored. Add one existing-file regression through real command/process-pool/subprocess execution with an offline executable, controlling EOF before exit and newline/no-newline output; rerun creator tests.
 - Risk: REQ-1/7; agent-decided preserve completion framing. Class: EOF precedes exit status; searched changed files and creator process consumers. Only run_single_query prematurely rejects EOF. Preserve error/abort/time limits and original task retry continuity.
 
+### Wave 7 — Close the expanded real-host release obligations
+
+**W7-01 Share description eligibility with the packaging entry** after: W6-10 acceptance: 1, 7, 8, 11
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/quick_validate.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/scripts/improve_description.py`, `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_loop.py`, `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A8 positive: qualified_description_packaged; negative: unjustified_description_not_packaged. Extend existing real package/optimizer CLI cases for the preserved268-character class, short/qualified-long/router inputs and missing qualification; observe RED before implementation, then run creator commands.
+- Risk: REQ-8/11; agent-decided existing validation module, one policy, no module/function growth. Class: delivery eligibility bypass. Sweep validator, optimizer, selector, packaging caller and authority. Retain W6-02 count1 and contextual admission; mechanical acceptance is not semantic compliance.
+
+**W7-02 Reconcile candidate conflicts in their full context** after: W7-01 acceptance: 5, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/references/detector-read.md` (entry), `skill-dev-toolkit/skills/skill-consistency-check/references/detector-simulate.md`, `skill-dev-toolkit/tests/fixtures/detector-context-regressions.json`.
+- Test: A9 positive: true_conflict_retained; negative: explicit_exception_not_conflict. Preserve actual baseline false claims as RED; add small provenance-bearing genuine positive/negative case data, then rerun the same real host checker and independent artifact judgment after integration. Existing structural tests remain supporting checks only.
+- Risk: REQ-9/11; agent-decided existing detectors/schema only. Class: context/exception omitted from incompatibility. Sweep both procedures and merge consumers; preserve historical corpus. Positive controls prevent suppress-all success; sampled reruns establish no universal accuracy guarantee.
+
+**W7-03 Keep report model claims within observed evidence** after: W7-02 acceptance: 6, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-consistency-check/scripts/merge_report.py`, `skill-dev-toolkit/skills/skill-consistency-check/scripts/test_merge_report.py`.
+- Test: A9 positive: observed_model_metadata_qualified; negative: alias_not_child_identity. Extend an existing report CLI case to require the identity/family-comparison caveat and unknown warning; observe missing qualification as RED, then run report/text tests and the actual host model-unknown branch.
+- Risk: REQ-9/11; agent-decided preserve --model and existing JSON fields. Class: requested/parent model inferred as observed child identity. Sweep model-record instructions, renderer, family matcher and consumers. Replace permissive inference wording; no receipt/event architecture or extra required fields.
+
+**W7-04 Define missing-input entry paths using existing setup** after: W7-03 acceptance: 5, 10, 11
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/improvement-workflows.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/description-optimization.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/eval-protocol.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/schemas.md`.
+- Test: A10 positive: available_setup_reused; boundary: absent_input_not_invented. Use the independent cold-reader's actual missing-input answers as baseline; re-exercise quick Gate2, redesign without cases, unknown/unsupported model and missing telemetry in fresh contexts. Run existing creator metadata/policy checks; no new prose-pin suite.
+- Risk: REQ-10/11; agent-decided existing setup or bounded stop. Class: unconditional input/capability assumption. Sweep quick/full/redesign/model/timing entries. Preserve unknown tokens; no unsupported null duration or duration-statistics expansion.
+
 ## Simplicity check
-- none found
+- shared validation and existing input paths — taken
 
 ## Questions asked
 ① — what — 以上就是這次要完成的範圍，對嗎？
@@ -181,3 +203,6 @@ charter: 1.1
 5. GitHub publication remains blocked pending explicit destination/content approval; merge remains separate. One additionally authorized Claude review completed; no repeat outside execution is authorized. Its findings are inputs to local correction, not a passing verdict on the corrected tree.
 6. Round 1 found five defect classes and an evidence gap; the consumer sweep also found entry-only examples. Fix together, repeat package/probe checks, resume same reviewers. Independent acceptance re-tests affected rows with omitted-output-criterion and skipped-procedure-gate cases; justify retained rows.
 7. Additional review exposed real gaps in previously passing evidence. Preserve old results as historical, replace affected acceptance evidence, and use real command entries and the real evaluator. Requirements remain unchanged; these tasks correct their existing obligations.
+8. User-confirmed Acceptance8–11 expand earlier scope; risk7 describes an earlier correction. Preserve W6-01/W6-02 count1 and historical three-candidate evidence. Fresh pre-build spec+adversarial review passed7aad3646; no accounting reset by rename.
+9. Fresh host projects retain explicit model/effort and disclosed non-hard cost estimates. Re-test affected acceptance surfaces in full, including original obligations. No repeat outside code review or publication is authorized; risk5 still applies.
+10. If the same class survives bounded attempts or evidence cannot choose a design, consult primary industry sources and mature implementations as user requested. Research resets no retry count and justifies no generic framework.
