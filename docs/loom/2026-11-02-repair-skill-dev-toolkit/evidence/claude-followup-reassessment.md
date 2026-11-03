@@ -46,3 +46,9 @@ The following records completed focused corrections; integration, independent ac
 | Lower-severity consumers | Explicit grader metadata path, usable module packaging help and nonredundant CI filters. | Metadata 2 passed; packaging help RED 1 failed/33 passed then creator GREEN 34; routing checks 9 passed before and after. |
 
 No task count or review episode was reset. The role-declaration continuation clarified an ambiguous lexical context in the packet; the evaluator continuation consumed newly checked optional terminal-result fields. Both retained their first completed-redispatch count. This evidence does not claim renewed Claude approval of the corrected content.
+
+## Independent acceptance discovered a completion-order regression
+
+At `29309db6`, the independent tester used real ProcessPoolExecutor and Popen with a local fake executable. A valid successful result without a trailing newline repeatedly returned non-success (`ended without a conclusive result`); the same JSON with a newline passed as a valid negative observation. EOF can become readable while poll still reports a running child; the EOF branch rejected the accumulated complete JSON before waiting for exit and parsing it.
+
+W6-10 adds the concrete obligation to preserve valid completed observations under that real process ordering. This differs from W6-01's correction of invalid executions being scored as negatives: it repairs a false failure introduced by the new EOF handling. W6-01 retains completed-redispatch count one; this is no reset of that task or the review episode. The acceptance report retains its failed observation at the tested commit before the lifecycle correction.

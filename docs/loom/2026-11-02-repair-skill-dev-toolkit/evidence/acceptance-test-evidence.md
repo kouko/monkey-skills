@@ -200,6 +200,7 @@ def test_extraction_accounting_real_package_expected():
     assert reduction<.05
 
 ```
+
 ## Captured independent probe output
 
 ```text
@@ -578,4 +579,292 @@ def test_extraction_accounting_real_package_expected():
     assert reduction<.05
 
 ```
+
+## Re-run on 2026-11-03, at 29309db6
+
+Tried on 2026-11-03, in a clean copy of the project at 29309db6.
+
+### Setup and evidence limits
+
+- Exact tested HEAD: `29309db69ea08e7d68790daa07b337c2aa035be8`. Fresh `git clone --no-hardlinks --no-checkout` from active repair tree into `/private/tmp/monkey-skills-acceptance-29309db6`, then detached checkout of this SHA. Initial/final clean status verified. Original user checkout never edited.
+- Read latest acceptance-tester role/template from installed loom-code3.57.0, current intent/spec/plan, and `evidence/claude-followup-reassessment.md`. README clean-checkout setup rechecked; existing interpreter `/Users/kouko/.conda/envs/dbt-redshift/bin/python3` loaded the commands/tests without package installation. No plugin installation, host setting change, real model or provider call.
+- Inspected fix range `343483314d22d28f3981a23733d75094834c717a..29309db6` and changed consumers. Checked `834668cce..29309db6` for all retained-row surfaces. Only metadata/report files are written back to active repair tree after testing.
+- Previous evidence is historical: successful exception propagation in stubbed entry tests did not establish actual process-pool/backend behavior. Earlier missing-token=zero assertions were wrong for unavailable capture and are superseded below.
+- Outside review disposition handed by parent: one Claude review ran with observed modelUsage `claude-opus-5-5`, requested high effort but effective effort unobserved. It is not this tester's execution or renewed approval. The outside fatal claim of wrong adoption across invocations was limited before this test: a new invocation displays/decodes its own map correctly, `--pick` is a testing option, and wrong supported interactive adoption was not demonstrated. The real same-round clarification gap was retained and fixed. Other handed important findings were not dismissed.
+- No complete repository/toolkit suite run by this tester. Build log inspected: `/private/tmp/toolkit-wave6-package-tests.txt` ends `715 passed in56.31s`; graduated probe log ends `5 passed in0.11s`. These are handed Build results; they do not override the independent failure below. Finalizer remains required and will execute `python3 -m pytest scripts/ -q`; no skipped-by-instruction markers or skipped finalization were handed.
+- New confirmed finding is important, not dismissed. Acceptance1 and7 fail on the exact tested SHA. No source/test repair was made.
+
+### 1. Re-tested in full — creator commands; FAIL on real EOF lifecycle
+
+Focused command using the existing interpreter:
+```sh
+-m pytest skill-dev-toolkit/tests/test_creator_commands.py skill-dev-toolkit/tests/test_blind_harness.py skill-dev-toolkit/tests/test_preference_export.py skill-dev-toolkit/tests/test_creator_metadata_contract.py skill-dev-toolkit/tests/test_refactor_policy.py skill-dev-toolkit/tests/test_tuning_policy.py skill-dev-toolkit/skills/skill-refactor/scripts/test_package_mode_contract.py skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py scripts/test_preferences_single_choice.py -q
+```
+Output `127 passed in3.53s`, exit0.
+
+- Actual packager valid archive/invalid input and corrected module help passed.
+- Aggregation's old_skill/without_skill direction, real token metrics independent of duration, honest repetition populations and all missing/invalid token input variants passed. Independent real CLI zero/unknown/partial reproduction below also passed.
+- Optimizer main/evaluator tests now exercise backend error/nonzero/incomplete/timeout/explicit-abort conditions, completed-output buffers, eligible-only selection and invalid baseline exclusion. Existing unit fixtures substitute threads and Popen streams, so independent real process-pool/Popen evidence was also required.
+- Description generator prompts include the complete current authority, neutral third-person voice and contextual bands. The independent fake-executable test captures actual subprocess stdin, without patching generator functions. Normal long descriptions need existing colocated justification; ordinary domain noun router in KEEP text is not a role; declared router needs firing evidence; admitted exception max500 enforced. Raw skill bytes unchanged.
+- Applying-agent semantic check executed: candidate "Use this skill for CSV." passes the mechanical checker but is imperative rather than neutral third person, so the informed pre-apply interpretation rejects it. The synthetic firing-note fixture proves mechanical admission only; the metric/corpus must be verified before actual application. No semantic-quality or firing-evidence claim is inferred from fabricated fixture notes.
+
+Independent command:
+```sh
+/Users/kouko/.conda/envs/dbt-redshift/bin/python3 -m pytest /private/tmp/test_acceptance_wave6.py -q -s
+```
+Recorded final result: `1 failed, 5 passed in1.79s`.
+
+The fake `claude` executable is the ONLY backend: a temporary bin directory is prepended to PATH; PYTHONPATH points to the tested creator package; cwd is a temporary directory with its own .claude. Real ProcessPoolExecutor workers and real subprocess.Popen remain intact. Nothing reaches a provider.
+
+```text
+REAL_POOL nonzero exit1 no score; no results
+REAL_POOL error exit1 no score; no results
+REAL_POOL incomplete exit1 no score; no results
+REAL_POOL aborted_streaming exit1 no score; no results
+REAL_POOL aborted_tools exit1 no score; no results
+REAL_POOL success_line exit0 score1/1 saved1
+EOF_FRAMING success_line exit0 summary {total:1,passed:1,failed:0}
+EOF_FRAMING success exit1 RuntimeError: Query backend ended without a conclusive result
+EOF_FRAMING success exit1 RuntimeError: Query backend ended without a conclusive result
+EOF_FRAMING success exit1 RuntimeError: Query backend ended without a conclusive result
+```
+
+`success_line` and `success` emit the SAME successful result JSON and exit0; only the terminal newline differs. The no-newline case was independently run three times in each of two executions and consistently failed. Direct evaluator and optimizer entrypoints both encountered this condition. The five failure modes correctly never became successful negative observations, but a valid successful negative result also failed.
+
+**Finding A8 — important (blocking)**
+
+- Anchor: `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_eval.py:117-119`.
+- Issue: EOF may be observed while poll still returns None. The code raises immediately on an empty read, leaving an already accumulated successful terminal JSON without a newline unparsed. The completed-process branch's tail handling is therefore bypassed in a real subprocess lifecycle. This contradicts the claimed completed-buffer support and interrupts valid evaluations/optimization.
+- Reproduction: `test_backend_eof_framing_success_expected` in replay source below; real process pool + fake local executable; positive control with newline succeeds1/1, same no-newline result fails3/3.
+- Fix direction: on EOF, establish process completion/status, drain/parse buffered terminal output including a final unterminated line, then reject only genuine failure/incomplete/timeout. Preserve fail-closed error behavior and add a real-subprocess EOF positive control.
+- No repair by tester. Other local test fixture error was excluded: the first fake generator incorrectly treated output-format=text as stream evaluation, producing the wrong response. Correcting that fixture's format detection made the generator probe pass; it is not a product finding.
+
+### 2. Carried over — ordered structural equivalence unchanged
+
+- Full `834668cce..29309db6` path check: comparator, ordered protocol and order tests unchanged. Creator backend/aggregation, golden optional comparison and tuning interaction changes do not consume/produce structural trace order.
+- Retain initial14 trace fixtures: allowed one-call count tolerance and no-trace behavior; reorders/vocabulary changes rejected. No new execution claim for this row.
+
+### 3. Re-tested in full — blind display, full inspection and same-round clarification
+
+- All15 focused real harness CLI cases passed, covering truncated/untruncated display, five locked choice types, invalid one-shot input, clarification, empty input/EOF and identity-free pending records.
+- Independent stdin sequence `m\ninvalid\na+b\n` in ONE subprocess: one TEST PROMPT display, three input prompts, one neutral viewing directory, ordinary A.md/B.md copies byte-identical to their selected source under the final map. Final multiple choice identities match that same A/B mapping.
+- Copy path, randomization and lock-in are unchanged during clarification; invalid/EOF does not publish hidden identity mapping. Another invocation intentionally starts a new display/map.
+- This supports repaired interactive recovery; it does not retroactively establish the outside unsupported cross-invocation wrong-adoption claim.
+
+### 4. Re-tested in full — preference eligibility, readiness consumers and data preservation
+
+- Re-ran all explicit candidate/baseline preference export/trainer cases, invalid record shapes, ambiguous/contradictory labels and graduated multi-choice rejection in the127-case command.
+- Independent valid labelled A/baseline DROP and B/candidate ADOPT actual CLI exports each:1 usable record,1 correctly oriented pair, original bytes unchanged.
+- All-unlabelled compatibility remains; any supplied label mapping must resolve picked identity uniquely. Readiness counts usable single-choice records, not derived pairs.
+- Read all three tuning README readiness paragraphs/limit rows/stub captions and NOTICE against shared schema: valid baseline DROP now counts, None/multiple/refine/invalid records do not, each record counts once, pair count separate, threshold does not activate training. Runtime trainer remains explicitly unimplemented.
+- Evidence: existing preference tests plus `test_labelled_preferences_both_choices_expected` in adapted prior independent replay. No user preference file used.
+
+### 5. Re-tested in full — description, metadata, votes, extraction, human choices and audit ownership
+
+- Eight current policy surfaces checked with actual representative executions and focused tests, not static grep alone.
+- Description generation actual prompt/normal/justified-normal/router exception cases and Phase4 contextual interpretation executed as recorded under1. Grader dispatch now explicitly supplies shared case metadata path; both shared-case and no-run-local-metadata contract tests passed.
+- Actual vote CLI replay: EEU ->PASS_MODERATE; EEN ->FLAG_TIER_2; concrete warning-loss dissent ->FLAG_TIER_2; low vague equivalence ->FAIL.
+- Actual golden comparator positive control: candidate exactly matches anchor, similarity1.0 versus baseline0.257, returns legacy TIER_2_PASS, exit0. This is synthetic local comparison data, not a newly human-curated production anchor or an LLM judgment.
+- Informed execution of current golden protocol: EEN's FLAG_TIER_2 remains HOLD for human review despite that positive result. EEU PASS_MODERATE and EEE PASS_HIGH may optionally add comparison evidence; original Q1/Q2/Q3 still apply. No auto-adoption inferred from legacy comparison label. Both shared copies match; cumulative-three-moderate safeguard remains.
+- Actual whole-package extraction accounting on tested package: target words2894->2488(-406), package words23743->23743(0), package bytes197482->197482(0); measurement PASS, whole-package Q2 REJECT. No source candidate applied.
+- Actual harness pick parsing + informed dispositions remain DEFER/no edit for multiple, DROP/no edit for none/baseline, REFINE/no edit, ADOPT only for locked candidate single. Human70% threshold:2/3 escalates,3/4 can form majority.
+- Prior discriminating R4 omitted-output-criterion/skipped-required-gate fixture is carried as a SUBCASE with reason: whole range leaves dogfood role/rubric/trajectory instruction and template/taxonomy unchanged. Previously executed artifactA omission was caught independently twice by rubric/artifact-only fresh auditors; informed transcriptA skipped declared gate3; positiveB passed both. Golden optional-vote clarification does not modify evidence ownership. Exact packets/transcripts/results remain in preceding29309db6-predecessor section (834668cce).
+- No new native auditor or outside Claude call was made in this re-run; exact model pin/full activation boundaries remain unverified.
+
+### 6. Carried over — grouping, nominal warning and limits unchanged
+
+- `834668cce..29309db6` leaves planner, merger, size/coverage documentation and planner/report tests unchanged. One consistency-check test-text edit only simplifies redundant CI path filters; it does not change grouping or report behavior.
+- Initial exact25000/25001/28000/30000/30001 boundaries and real25135-token retained corpus remain backing evidence; no new accuracy validation claimed.
+
+### 7. Re-tested — detection is meaningful but unresolved positive-control failure blocks acceptance
+
+-127 criterion-focused cases passed; independent offline commands5 passed/1 failed, plus adapted policy/export/accounting4 passed in0.33s.
+- `python3 scripts/check-skill-structure.py skill-dev-toolkit`: six skills allPASS; `python3 scripts/check-shared-conventions-drift.py`:3 conventions0 drift/read failures; `python3 scripts/sync_codex_manifests.py --check skill-dev-toolkit`: exit0.
+- Relevant CI routing remains scripts/**, toolkit/** and workflow itself. Removed redundant child-path filters do not reduce triggers. Graduated preference regression still selected; current reference-authority tests pass.
+- Existing green focused tests and handed package715 result fail to catch A8; independent real EOF positive control DOES catch it. Row7 is fails rather than calling the change fully verified. Acceptance cannot advance on a green suite alone while this real behavior fails.
+- Full suite `python3 -m pytest scripts/ -q` remains finalizer's required blocking check; tester did not run it. No paid provider, installed plugin or real host activation result claimed.
+
+### Independent Wave6 CLI replay source
+
+Save to an external temporary file, adjust ROOT to an independent exact-SHA clone, and run with the existing interpreter. It writes only pytest's temporary fixtures, never product code; fake backend is explicitly offline. The failing EOF assertion is intentional acceptance evidence, not repaired.
+
+```python
+"""Independent bounded offline CLI probes; no real provider or host activation."""
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+ROOT=Path('/private/tmp/monkey-skills-acceptance-29309db6')
+CREATOR=ROOT/'skill-dev-toolkit/skills/skill-creator-advance'
+PY='/Users/kouko/.conda/envs/dbt-redshift/bin/python3'
+
+def backend(tmp_path):
+    """Place a fake executable before PATH, keeping real pool and Popen intact."""
+    folder=tmp_path/'bin'
+    folder.mkdir()
+    executable=folder/'claude'
+    executable.write_text('#!'+PY+'\n'+'''import json, os, sys
+mode=os.environ.get('OFFLINE_MODE','success')
+if 'text' in sys.argv:
+    prompt=sys.stdin.read()
+    open(os.environ['PROMPT_CAPTURE'],'a').write(prompt+'\\n---CAPTURE---\\n')
+    print('<new_description>'+os.environ['OFFLINE_DESCRIPTION']+'</new_description>')
+    raise SystemExit(0)
+if mode=='nonzero': raise SystemExit(7)
+if mode=='incomplete': print(json.dumps({'type':'system'}),end=''); raise SystemExit(0)
+event={'type':'result','subtype':'success','is_error':False}
+if mode=='error': event.update(subtype='error_during_execution',is_error=True)
+if mode.startswith('aborted_'): event['terminal_reason']=mode
+print(json.dumps(event),end='\\n' if mode=='success_line' else '')
+''')
+    executable.chmod(0o755)
+    (tmp_path/'.claude').mkdir()
+    skill=tmp_path/'example'
+    skill.mkdir()
+    (skill/'SKILL.md').write_text('---\nname: example\ndescription: Converts CSV when JSONL output is needed.\n---\nBody\n')
+    evaluation=tmp_path/'eval.json'
+    evaluation.write_text(json.dumps([{'query':'negative unrelated query','should_trigger':False}]))
+    env={**os.environ,'PATH':str(folder)+os.pathsep+os.environ['PATH'],
+         'PYTHONPATH':str(CREATOR),'PROMPT_CAPTURE':str(tmp_path/'captured.txt')}
+    return skill,evaluation,env
+
+def test_backend_real_pool_failure_never_scores(tmp_path):
+    """Real process-pool workers invoke only the local fake backend executable."""
+    skill,evaluation,env=backend(tmp_path)
+    for mode in ['nonzero','error','incomplete','aborted_streaming','aborted_tools','success_line']:
+        env['OFFLINE_MODE']=mode
+        results=tmp_path/('results-'+mode)
+        args=[PY,'-m','scripts.run_loop','--eval-set',str(evaluation),'--skill-path',str(skill),
+              '--num-workers','1','--runs-per-query','1','--timeout','3','--max-iterations','1',
+              '--holdout','0','--model','offline','--report','none','--results-dir',str(results)]
+        p=subprocess.run(args,cwd=tmp_path,env=env,capture_output=True,text=True,timeout=15)
+        saved=list(results.rglob('results.json'))
+        if mode=='success_line':
+            assert p.returncode==0,p.stderr
+            out=json.loads(p.stdout)
+            assert out['best_score']=='1/1' and out['exit_reason']=='all_passed (iteration 1)'
+            print('REAL_POOL',mode,'exit',p.returncode,'score',out['best_score'],'saved',len(saved))
+        else:
+            assert p.returncode!=0,(mode,p.stdout,p.stderr)
+            assert not saved and not p.stdout and 'all_passed' not in p.stdout
+            print('REAL_POOL',mode,'exit',p.returncode,'no score; no results; exception',p.stderr.strip().splitlines()[-1])
+        assert not list((tmp_path/'.claude/commands').glob('*.md'))
+
+def test_description_real_prompt_policy_expected(tmp_path):
+    """Capture actual generator subprocess prompts; never apply unreviewed text."""
+    skill,evaluation,env=backend(tmp_path)
+    evaluation.write_text(json.dumps({'description':'old','summary':{'passed':0,'failed':1,'total':1},'results':[]}))
+    cases=[('normal','Converts CSV when JSONL output is needed.','',True),
+           ('normal-too-long','x'*251,'',False),
+           ('domain-noun','x'*251,'# KEEP: Retains CSV and router configuration trigger surfaces\n',True),
+           ('router-absent','x'*251,'# Router: CSV selection\n',False),
+           ('router-evidence','x'*500,'# Firing evidence: 87% match rate from support-ticket A/B corpus\n',True),
+           ('router-over','x'*501,'# Firing evidence: 87% match rate from support-ticket A/B corpus\n',False),
+           ('semantic-only','Use this skill for CSV.','',True)]
+    for name,description,comment,eligible in cases:
+        content='---\nname: example\n'+comment+'description: Original description\n---\nBody\n'
+        (skill/'SKILL.md').write_text(content)
+        env['OFFLINE_DESCRIPTION']=description
+        p=subprocess.run([PY,'-m','scripts.improve_description','--eval-results',str(evaluation),
+                          '--skill-path',str(skill),'--model','offline'],cwd=tmp_path,env=env,
+                         capture_output=True,text=True,timeout=10)
+        assert (p.returncode==0)==eligible,(name,p.stderr)
+        assert (skill/'SKILL.md').read_text()==content
+        if eligible: assert json.loads(p.stdout)['description']==description
+        print('DESCRIPTION',name,'mechanically eligible',eligible,'source unchanged')
+    captured=(tmp_path/'captured.txt').read_text()
+    authority=(CREATOR/'references/description-design.md').read_text()
+    assert authority in captured and 'neutral third-person' in captured
+    assert '100-200 words' not in captured and 'phrased in the imperative' not in captured
+    # Phase4 is the applying agent's contextual review, not a promised static NLP checker.
+    print('PHASE4 semantic-only: mechanical PASS but imperative voice -> REJECT; no apply')
+    print('PHASE4 router-evidence: verify actual metric/corpus before admission; fixture note is not real firing evidence')
+    print('PROMPT authority captured; contextual justification and voice remain informed pre-apply checks')
+
+def test_backend_eof_framing_success_expected(tmp_path):
+    """Compare successful terminal results with and without a final newline."""
+    skill,evaluation,env=backend(tmp_path)
+    failed=[]
+    for mode in ['success_line','success','success','success']:
+        env['OFFLINE_MODE']=mode
+        p=subprocess.run([PY,'-m','scripts.run_eval','--eval-set',str(evaluation),
+                          '--skill-path',str(skill),'--num-workers','1','--runs-per-query','1',
+                          '--timeout','3'],cwd=tmp_path,env=env,capture_output=True,text=True,timeout=15)
+        print('EOF_FRAMING',mode,'exit',p.returncode,'output',p.stdout.strip() or p.stderr.strip().splitlines()[-1])
+        if p.returncode: failed.append(mode)
+        else: assert json.loads(p.stdout)['summary']['passed']==1
+    assert failed==[],failed
+
+def test_tokens_real_cli_unknown_zero_partial(tmp_path):
+    """Recompute Markdown/JSON under complete zero, missing and partial capture."""
+    for config in ['with_skill','old_skill']:
+        for index in [1,2]:
+            path=tmp_path/f'eval-1/{config}/run-{index}'
+            path.mkdir(parents=True)
+            (path/'grading.json').write_text(json.dumps({'summary':{'pass_rate':1,'passed':1,'failed':0,'total':1},'timing':{'total_duration_seconds':2},'execution_metrics':{'output_chars':9999}}))
+            (path/'timing.json').write_text(json.dumps({'total_tokens':10}))
+    for values in [[0,0],[None,None],[0,None],[10,None]]:
+        for index,value in enumerate(values,1):
+            (tmp_path/f'eval-1/with_skill/run-{index}/timing.json').write_text(json.dumps({} if value is None else {'total_tokens':value}))
+        p=subprocess.run([PY,'-m','scripts.aggregate_benchmark',str(tmp_path)],cwd=CREATOR,capture_output=True,text=True)
+        assert p.returncode==0,p.stderr
+        out=json.loads((tmp_path/'benchmark.json').read_text())
+        stats=out['run_summary']['with_skill']['tokens']
+        delta=out['run_summary']['delta']['tokens']
+        assert stats['sample_count']==sum(v is not None for v in values) and stats['total_count']==2
+        assert delta==('-10' if values==[0,0] else None)
+        print('TOKENS',values,'stats',stats,'delta',delta)
+
+def test_interactive_clarification_same_round(tmp_path):
+    """One process asks again without redisplay, relabeling or replacing copies."""
+    for identity in ['baseline-private','candidate-private']:
+        p=tmp_path/identity/'output.md';p.parent.mkdir();p.write_text(identity+' authored content\nsecond line\n')
+    viewing=tmp_path/'view';viewing.mkdir()
+    session=tmp_path/'session.json'
+    script=ROOT/'skill-dev-toolkit/skills/skill-tuning/scripts/ab_harness.py'
+    p=subprocess.run([PY,str(script),'--variants-dir',str(tmp_path),'--prompt','Compare',
+                      '--session-out',str(session),'--max-display-lines','1'],input='m\ninvalid\na+b\n',
+                     capture_output=True,text=True,env={**os.environ,'TMPDIR':str(viewing)})
+    assert p.returncode==0,p.stderr
+    out=json.loads(session.read_text())
+    assert p.stdout.count('TEST PROMPT')==1 and p.stdout.count('Your pick:')==3
+    assert len(list(viewing.iterdir()))==1
+    paths=re.findall(r'full output: ([^\n]+)\]',p.stdout)
+    assert len(paths)==2
+    for path in paths:
+        f=Path(path);label=f.stem
+        assert not f.is_symlink() and f.read_bytes()==(tmp_path/out['label_assignment'][label]/'output.md').read_bytes()
+    assert out['pick']['identities']==[out['label_assignment'][label] for label in ['A','B']]
+    print('INTERACTIVE one display; 3 prompts; same ordinary A/B copies; same mapping; final multiple pick')
+
+def test_golden_positive_cannot_clear_dissent(tmp_path):
+    """Execute actual comparison then interpret its limited authority for real vote outputs."""
+    golden=tmp_path/'golden';golden.mkdir()
+    anchor='Six skills checked; all six passed.'
+    (golden/'one.md').write_text('---\nid: fixture\nprompt_pattern: structure\n---\n# Anchor Output\n'+anchor+'\n')
+    (tmp_path/'base.md').write_text('Unrelated old text')
+    (tmp_path/'candidate.md').write_text(anchor)
+    script=ROOT/'skill-dev-toolkit/skills/skill-refactor/scripts'
+    p=subprocess.run([PY,str(script/'golden_compare.py'),'--golden-dir',str(golden),
+                      '--baseline-output',str(tmp_path/'base.md'),'--candidate-output',str(tmp_path/'candidate.md'),
+                      '--prompt-pattern','structure'],capture_output=True,text=True)
+    comparison=json.loads(p.stdout)
+    assert p.returncode==0 and comparison['verdict']=='TIER_2_PASS'
+    print('GOLDEN actual comparison',comparison)
+    for votes,want in [('EEN','FLAG_TIER_2'),('EEU','PASS_MODERATE'),('EEE','PASS_HIGH')]:
+        names={'E':'equivalent','N':'not_equivalent','U':'uncertain'}
+        file=tmp_path/f'{votes}.json';file.write_text(json.dumps({'judges':[{'verdict':names[v],'reason':'different emphasis'} for v in votes]}))
+        p=subprocess.run([PY,str(script/'multi_judge.py'),'--ensemble',str(file)],capture_output=True,text=True)
+        result=json.loads(p.stdout);assert result['consensus']==want
+        action='HOLD for human review' if want=='FLAG_TIER_2' else 'optional anchor supplement; existing Q1/Q2/Q3 still apply'
+        print('GOLDEN',votes,want,'positive comparison =>',action)
+
+```
+
+### Adapted prior policy replay
+
+The complete source is preserved in the prior re-run's independent replay section. For this execution only ROOT was changed to `/private/tmp/monkey-skills-acceptance-29309db6` and OUT to unused `/private/tmp/acceptance-wave6-policy-fixtures`; the four test bodies were unchanged. Command: existing interpreter `-m pytest /private/tmp/test_acceptance_wave6_policies.py -q -s`. Result: `4 passed in0.33s`; token/extraction counts are recorded under5 above.
 

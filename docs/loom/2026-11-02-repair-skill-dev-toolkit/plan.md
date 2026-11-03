@@ -162,6 +162,11 @@ charter: 1.1
 - Test: A7 positive: toolkit_verification_routed; boundary: scripts_glob_preserves_coverage. Update the existing routing assertion without reducing its behavioral coverage; run test_skill_text.py.
 - Risk: REQ-7; agent-decided unchanged trigger coverage. Class: redundant script filters; searched changed files and workflow routing tests. Instances: three explicit script paths under scripts/** in both events and their over-specific assertions.
 
+**W6-10 Preserve valid final output across the EOF/exit ordering** after: W6-09 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_eval.py` (entry), `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: real_eof_completion_accepted; negative: failed_completion_not_scored. Add one existing-file regression through real command/process-pool/subprocess execution with an offline executable, controlling EOF before exit and newline/no-newline output; rerun creator tests.
+- Risk: REQ-1/7; agent-decided preserve completion framing. Class: EOF precedes exit status; searched changed files and creator process consumers. Only run_single_query prematurely rejects EOF. Preserve error/abort/time limits and original task retry continuity.
+
 ## Simplicity check
 - none found
 
