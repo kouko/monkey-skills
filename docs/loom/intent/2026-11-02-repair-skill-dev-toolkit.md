@@ -1,9 +1,9 @@
 # 分批修復 skill-dev-toolkit 已確認的缺陷
 originator: kouko
 kind: engineering
-needs-design: yes — 盲測全文檔案、偏好匯出與多方判定行為涉及未被現有規格涵蓋的多物件與狀態。
+needs-design: yes — 盲測、偏好匯出與候選核對涉及多物件及證據保存，需要規格約束。
 evidence: [docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/independent-reassessment.md, docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/host-release-readiness.md]
-intent_confirmed_sha: 320738a1b03dcee5d0e1804aa65afabf9d1c566e
+intent_confirmed_sha: e5b1f436c2f67b9de6924a8aa99fa3c6a17f2a70
 status: confirmed 2026-11-04
 publication: automatic — authorized 2026-11-02 by kouko
 
