@@ -316,9 +316,11 @@ bypassed lacks evidence. AuditA classifies these as medium-consequence output
 errors. The original two named false claims did not recur, but the broader
 exception-handling class persists in new findings.
 
-Preserve judgment qualifications: AuditA finds the retry's question-tool
-fallback claim unsupported after the environmental-cause exception; AuditB
-calls it partially supported with an overstated chain. Both recognize a real
+Preserve judgment qualifications: both reject the retry's mandatory
+question-tool fix/rerun chain after the environmental-cause exception. AuditB
+calls the packaging wording partially supported but rejects its blocking
+action-conflict conclusion and rates its consequence low; AuditA calls that
+finding a medium-consequence false positive. Both recognize a real
 extraction-tier label discrepancy in the ordinary case; AuditA does not find
 a forced action conflict established by it. The five supported retry findings
 still justify that report's needs-revision verdict. A supported overall verdict
