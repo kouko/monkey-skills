@@ -120,14 +120,14 @@ Use the host's mid-tier or stronger model for the detectors, never the
 smallest tier: in the experiments the smallest tier stopped after 1–3
 findings and missed most planted contradictions.
 
-Record the exact model identifier the detectors ran on, as the host
-exposes it to the running agent — the model id in your own system or
-environment information when the detectors run on your model, or the
-host's model setting you chose for the subagents. Copy it character for character; never paraphrase or shorten it
-(a shortened family name reads as a different model). If the exact id
-is not observable, record `unknown` — step 6 then prints the
-not-validated warning — and tell the user the model could not be
-observed. Step 6 needs this value.
+Record the exact model identifier only when the host exposes it for each
+detector's runtime. A selected alias, parent `modelUsage`, or copied parent
+identifier does not prove a child's identity. If every detector's observed
+identifier is identical, copy it character for character for step 6;
+never paraphrase or shorten it. Otherwise pass `unknown` and tell the user
+the shared detector identity could not be observed. Step 6 retains the
+not-validated warning.
+`unknown` is report metadata, never a provider model identifier.
 <!-- /gate -->
 
 ### 5. Thorough mode (opt-in only)

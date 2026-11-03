@@ -189,6 +189,9 @@ def render_md(r):
     ref = r["reference"]
     out.append(f"Model used: {r['model']} — validated on: {ref['model']}, "
                "packages of approximately 25k tokens")
+    out.append("Model name is caller-supplied; family matching is metadata "
+               "comparison, not runtime identity verification or new "
+               "regression-corpus validation.")
     if not r["model_matches_reference"]:
         out += ["", "> Warning: Accuracy with this model is not validated."]
     return "\n".join(out) + "\n"

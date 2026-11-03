@@ -174,15 +174,20 @@ def test_limits_and_models_listed(tmp_path):
 
 def test_model_mismatch_warning(tmp_path):
     target, plan, f = _setup(tmp_path, {"read-1.json": []})
-    out1, out2 = tmp_path / "o1", tmp_path / "o2"
-    _run(target, plan, f, out1, model="gpt-5-codex")
-    data, md = _report(out1)
-    assert data["model_matches_reference"] is False
-    assert "Accuracy with this model is not validated" in md
-    _run(target, plan, f, out2, model="Claude SONNET 4.5")
-    data, md = _report(out2)
-    assert data["model_matches_reference"] is True
-    assert "Accuracy with this model is not validated" not in md
+    for i, (model, matches) in enumerate([
+            ("gpt-5-codex", False), ("Claude SONNET 4.5", True),
+            ("unknown", False)]):
+        out = tmp_path / f"o{i}"
+        result = _run(target, plan, f, out, model=model)
+        assert result.returncode == 0, result.stderr
+        data, md = _report(out)
+        assert data["model"] == model
+        assert data["model_matches_reference"] is matches
+        assert f"Model used: {model}" in md
+        assert ("Accuracy with this model is not validated" in md) is not matches
+        assert ("Model name is caller-supplied; family matching is metadata "
+                "comparison, not runtime identity verification or new "
+                "regression-corpus validation.") in md
 
 
 def test_uncovered_pairs_and_over_limit_reported(tmp_path):
