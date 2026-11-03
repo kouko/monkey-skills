@@ -1099,3 +1099,100 @@ H = `/private/tmp/toolkit-release-final-host-nip2a3ob`; K = `/private/tmp/toolki
 - **nit — evidence locator:** control report catalog:15 should locate quoted row17; retry has approximate locators. Actual quotes exist; navigation precision differs from truth of claim.
 - **nit — exhausted-retry residual artifact/recommendation:** no merge occurred, but active incomplete glob and suggestion of another dispatch are retained as bounded procedural deviations.
 - **nit — cold read isolation:** Gate3 over-read and early reference loads mean strict progressive isolation was not demonstrated.
+
+## Re-run on 2026-11-04, at f8a686586ceef934bcc0462a99cca437955534ea
+
+### Clean setup, source and authorization boundary
+
+- Created a fresh independent clone with `git clone --no-hardlinks /private/tmp/monkey-skills-repair-qnf38yi7 /private/tmp/toolkit-acceptance-f8-clean`, then `git -C /private/tmp/toolkit-acceptance-f8-clean checkout f8a686586ceef934bcc0462a99cca437955534ea`. `git rev-parse HEAD` returned that exact SHA; clean status was empty before and after focused execution.
+- Read root README, toolkit README, `.codex/INSTALL.md` and `requirements-dev.txt`. Followed source-checkout test entry using the existing permitted interpreter, `/Users/kouko/.conda/envs/dbt-redshift/bin/python3`; imports reported pytest 9.1.1 and PyYAML 6.0.2. No dependency installation, symlink creation, host/plugin installation, service, network request, external model call or product-source edit. Actual CLI loading succeeded; this is clean source usability, not installed-host discovery.
+- Read the confirmed intent, complete spec/plan and the complete `9853569a..f8a686586` diff by acceptance surface. Runtime changes are confined to consistency-check entry, its two detector references, its three README copies and toolkit changelog. `git diff --exit-code 9853569a..f8a686586 -- scripts .github skill-dev-toolkit/tests skill-dev-toolkit/skills/skill-creator-advance skill-dev-toolkit/skills/skill-refactor skill-dev-toolkit/skills/skill-tuning skill-dev-toolkit/skills/dogfood-skill-testing skill-dev-toolkit/skills/skill-judge` exited 0. No Acceptance wording changed. Changed spec assigns caller eligibility but explicitly preserves all eleven outcomes and supported behavior.
+- No `skipped-by-instruction` markers in intent Constraints or plan Risks. Complete package command remains `python3 -m pytest scripts/ -q`, NOT skipped. Tester ran neither complete repository suite nor complete toolkit suite. Finalization will not run with the retained important failure, and no future suite/attestation result substitutes for actual observations below.
+- One local candidate only: W7-02 remains count 2/exhausted; W8-01 remains one candidate/zero redispatch. No repair was attempted during acceptance. All earlier dated evidence above is retained verbatim, including failed historical host results and the incomplete large trial.
+
+### Focused executions actually performed
+
+Working directory `/private/tmp/toolkit-acceptance-f8-clean`; `python3` below means the existing interpreter above.
+
+```text
+python3 -m pytest skill-dev-toolkit/tests/test_creator_commands.py skill-dev-toolkit/tests/test_creator_metadata_contract.py skill-dev-toolkit/tests/test_refactor_policy.py skill-dev-toolkit/tests/test_tuning_policy.py skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py skill-dev-toolkit/skills/skill-refactor/scripts/test_package_mode_contract.py skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_plan_groups.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_merge_report.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py -q
+127 passed in 7.14s
+python3 scripts/sync_codex_manifests.py --check skill-dev-toolkit
+exit 0, no output
+python3 scripts/check-shared-conventions-drift.py
+3 convention(s) checked, 0 drift failure(s), 0 read error(s)
+All shared conventions in sync.
+```
+
+Inspected same-source Build logs (not executions by this tester): `/private/tmp/toolkit-caller-package-tests.txt` ends `715 passed in 53.04s`; `/private/tmp/toolkit-caller-toolkit-tests.txt` ends `191 passed in 11.22s`; `/private/tmp/toolkit-caller-adversarial.txt` ends `5 passed in 0.10s`. They do not prove semantic caller eligibility or fresh host behavior.
+
+### Replay provenance and independent verification
+
+- R = `/private/tmp/toolkit-caller-local-7f6_y3e2`; historical H = `/private/tmp/toolkit-release-final-host-nip2a3ob`. Read R/replay-source.json, manifest.json, mechanical-replay-verification.json, four plans, raw/accepted JSON, final reports and dispositions. Original target sections/tables, scope, precedence and platform exceptions were inspected directly; executor labels and embedded target instructions were treated as data.
+- Independent Python stdlib verification read each of manifest `cases.*.records`: rehashed historical `source` against recorded SHA-256; compared source bytes to current target `copy`, or `raw-` copy for detector JSON. The deliberately withheld unavailable catalog was checked absent rather than read from its preserved location. Output: `provenance source/copy checks 50 passed`. Compared all eleven bundled runtime files byte-for-byte to exact-SHA clone: `bundle parity 11 files passed`.
+- Parsed each raw/accepted findings list and asserted every accepted object equals an original raw object, including confidence, type, quotes and explanation. No caller-added or rewritten findings. Counts (raw -> accepted): control read 2->1, simulate 2->1; retry read 5->3, simulate 7->4; ordinary read 1->0, simulate 2->1. Unavailable lists remain raw 2/2 and are NOT reviewed accepted lists. Every planned method/group remains present; ordinary reviewed empty read list is retained.
+- Independently recomputed raw hashes: control read `c8d8a9f1e644cb5a9b0e2859719ec7e5694af69f40e1e8963de3870ac6522ab1`, simulate `27634ec2fd56fd937a8e7225727bf80232bb6359da862e29cfbb94fd38be69e1`; retry read `956eacdfb7ae9ae7dce007e44d3e7a0c2640f0c638f6a530752d0adb4448c3ca`, simulate `74b26a1b3c075e5b9d14c4dd8c1efa1095b839a6cac3bd0561f3c222b71fbc12`; ordinary read `2aabe7cc3f308fb680795f377aa65b1b822a6959799b2f2ac05f8f2ba0e0991c`, simulate `7816c7531e5609a3985e5588c0d7806471ce7aec40e26375c93bfdb776d6b0b5`. Unavailable raw matches control. These match manifest historical sources, beyond executor self-description.
+- Re-ran actual exact-source merger for control/retry/ordinary into independent output O = `/var/folders/m5/4cb4p8h938qc4qcpdykwz2480000gn/T/acceptance-f8-cli-8mjt1hph`, never overwriting R. Command for each case: `python3 skill-dev-toolkit/skills/skill-consistency-check/scripts/merge_report.py --target R/projects/<case>/input-skill --plan R/projects/<case>/audit-run/plan.json --findings R/projects/<case>/audit-run/read-1.json R/projects/<case>/audit-run/simulate-1.json --model unknown --out O/<case>` (R/O expanded to absolute paths in actual subprocess argument list). Actual results: control exit1 `needs-revision`; retry exit1 `needs-revision`; ordinary exit0 `pass`; stderr empty in all three. `findings` arrays exactly equal recorded final report arrays. Exit1 is a finding verdict, not a crashed process.
+- No merge was run for unavailable. Independently checked its required catalog absent and both report files absent. Its plan was generated before deliberate withholding: this is a controlled local boundary test, not an historical host failure. Existing result names both unchecked F2 candidates and refuses whole-package verdict. Artifact absence and notes do not establish a complete invisible execution trajectory.
+- Read both independent artifact audits, `/private/tmp/toolkit-caller-local-blind-a.md` and `...-b.md`. Both initially judged raw/source before accepted output; A later disclosed seeing embedded executor summaries before saving its final artifact verdict, while B used a strict staged firewall. Neither is a complete exportable native-host transcript or a new detector/model calibration. This acceptance witness received their conclusions before its own source verification and does not claim a third blind audit.
+
+### 1. 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。
+
+- Re-tested in full using `test_creator_commands.py` in the 127-case command: actual packaging, aggregation and bounded optimization entrypoints, valid/invalid inputs, EOF/no-trailing-newline, backend errors, timeout and unknown-token branches passed. No paid backend exercised. Runtime source is unchanged across the fix diff.
+
+### 2. 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。
+
+- Carried over — full diff leaves comparator, equivalence protocol and tests unchanged. Prior actual ordered/reordered calls, same-vocabulary one-call tolerance and no-trace cases remain the evidence. No new execution claimed.
+
+### 3. 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。
+
+- Carried over — full diff leaves harness, neutral ordinary-file views, current-round map, invalid/clarification handling, EOF and blind protocol unchanged. Prior actual interactive/full-view evidence remains applicable.
+
+### 4. 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。
+
+- Carried over — exporter, source JSONL handling, ADOPT/baseline DROP selection, readiness stub, schema and human readiness statements unchanged. Prior positive/negative export/count/preservation executions retained.
+
+### 5. 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。
+
+- Carried over — all eight original authorities (description, metadata, vote reducer, resource extraction/accounting, ablation, human majority, multi-pick and blind artifact/trajectory separation) untouched. The new consistency-check reporting caller is distinct from the retained dogfood blind-auditor rule. Relevant text tests also passed incidentally in 127, but no fresh full eight-surface host exercise is claimed.
+
+### 6. 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。
+
+- Re-tested in full: entire planner/merger criterion files ran, including nominal boundaries 25000/25001/28000/30000/30001, frozen 25135 corpus, core/periphery grouping, uncovered pairs, over-limit warning, Markdown-only scope, model mismatch/match qualification and thorough second-run coverage. All passed within 127.
+- Directly read control/retry/ordinary delivered replies and exact-source fresh CLI reports. Size/scope/blind-spots and unknown-model limits remain visible. All three local targets are below nominal bound; over-bound behavior is covered by actual focused tests, not inferred from small outputs. New caller-review historical-calibration limitation is explicitly disclosed in final replies and current English/Japanese/Traditional Chinese README copies. Merger metadata itself is unchanged; no lexical family match establishes runtime/caller calibration.
+
+### 7. 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。
+
+- Works on its demonstrated verification scope: 127 focused tests, actual three CLI replays and two repository checks above passed; current authorities and actual commands are exercised rather than merely obsolete inline text locations. Same-source complete Build evidence is 715/191/5, separately attributed above. Automated checks do not establish caller semantic correctness; independent raw/source comparison catches the important finite false negative in row9. A green suite does not erase that result.
+- No complete suite was rerun by this witness. Required command `python3 -m pytest scripts/ -q` is recorded, not replaced by a promise that finalization will pass. No finalization or new attestation while the important failure remains.
+
+### 8. 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。
+
+- Carried over — creator/generation/selection/shared validator/package source and description authority unchanged. Prior real unjustified rejection and qualified normal/router exception results apply; mechanical packaging branches also ran successfully in127.
+- Separately re-read historical K = `/private/tmp/toolkit-release-host-fbn09d7i/projects/creator-workflow`, generated `release-fix-summary/SKILL.md` and actual archive. `ZipFile.testzip()` returned None; single entry `release-fix-summary/SKILL.md` still equals source bytes. Existing creator input/output and trace fidelity judgment is carried, not relabelled as a fresh creation/model run. Semantic eligibility still requires source-grounded review.
+
+### 9. 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。
+
+- **partly**, with successful sub-obligations separated from the remaining failure and host limitation. Local replay removes confirmed exception false positives; unknown detector identities remain unknown with caveats. No new Claude detector execution/host trajectory demonstrates the changed caller boundary end-to-end.
+- **False-positive controls now supported:** control R-F2/S-F2: catalog Auto/User-confirm does not mean no testing; apply automatically then test satisfies both. Ordinary R-F1/S-F1: multi-judge:150–166 is an explicit conditional Q1 exception, referenced by SKILL:102–104; global Q2/Q3 remain required at :153–164. Retry R-F5/S-F6: SKILL:525–527 delegates Cowork to platform-specific adjustments:34–42, resolving present-before-revise order. Retry S-F7: asking-user fallback:101–113/168–169/186–188 and iteration-automation:45–57 permit environmental handoff without forced skill repair/rerun. No confirmed residual false positive in this finite raw-candidate set; not a universal precision claim.
+- **True candidates retained:** control R-F1/S-F1: quick baseline skip in SKILL:20 conflicts with eval-methodology:5–7 paired comparison. Retry R-F1/S-F2: comparator:70–82/199 rubric primary conflicts with :176 assertion-rate primary; witness A rubric9/pass.5 versus B rubric7/pass1 selects opposite winners. Retry R-F2/S-F1 retains quick baseline conflict. Retry R-F3/S-F4: analyzer:203–209 names `configuration: old_skill`, incompatible with schemas:294–305 exact with_skill/without_skill. Retry S-F3: grader:101–105 always-recover transcript footer conflicts with SKILL:335–347 and schemas:197–215 only-notification/not-persisted. Ordinary S-F2 retains same-operation Low/Medium classification at SKILL:205–208 versus catalog:74–91/234; doing more checking cannot make classifications identical. Its `numeric` label is imprecise, but caller correctly preserves original payload/confidence.
+- **Confirmed important false negative:** retry raw-read-1.json F4 is excluded from accepted read-1.json and report. Input SKILL:206–226 explicitly says schemas defines an `assertions` field in evals.json; :327–333 directs assertions back into evals/evals.json. Schemas:7–35 names `evals[].expectations` and contains no assertions field in that same schema. `eval_metadata.json` is another file, not a reconciliation. Extra JSON keys can make a file executable, but cannot make this named-field contract claim true. review-decisions.md explicitly acknowledges incorrect field wording yet excludes it as no incompatible required action. The new caller rule SKILL:159–161 admits only incompatible required actions: it is too narrow to preserve this concrete supported schema/field conflict (and must not silently narrow numeric/factual coverage). No actual consumer crash, forbidden-extra-key syntax failure, or universal model error is claimed.
+- Both independent auditors confirm F4's substantive naming/contract miss; this witness independently read full relevant source and the actual raw/accepted payload. No additional candidate or confidence edit was introduced. Finite false-negative count is at least one, regardless of successful exception removal.
+- **Disagreement retained:** retry S-F5 packages skip/can operationally reconcile under SKILL:513–527 and platform:9–30. Auditor A treats local-toolchain versus Python/filesystem dependence as ambiguous; B sees a residual incompatible capability fact. Platform precedence resolves action, but may leave explanatory fact tension. This witness retains the qualified disagreement, does not count a second confirmed miss or assert runtime portability without script evidence. Original failed host packaging claim remains historically failed.
+- Model sub-obligation works locally: all three reports use `unknown`, not a copied parent alias; final replies qualify missing exact historical child identity, unvalidated model, and lack of caller calibration. No exact native model/version observed, no full exportable native transcript supplied.
+
+### 10. 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。
+
+- Carried over — full diff leaves quick Gate2, structural-redesign setup, missing/unsupported model and missing-timing paths unchanged. Previous five-case C evidence, observed outputs/stops and read-isolation deviations remain exactly as described above. No fabricated input/measurement is newly introduced by caller replay, and no fresh cold-entry host run is claimed.
+
+### 11. 代表性真實宿主流程可完成且產物符合其已宣告要求；尚未驗證的環境、條件與模型判斷限制明確保留。
+
+- **partly** after full affected-surface examination: unchanged real creation evidence remains applicable (row8); exact-source local reporting commands complete and preserve raw/subsets/empty groups, real positives and controlled unavailable stop. But the delivered retry artifact omits the confirmed F4 contract conflict, and fresh real-host execution of the new caller boundary is unverified. Old full-reading/retry/completion evidence cannot certify a boundary added afterward.
+- All current artifacts disclose recorded-data/native local replay, no new detectors/Claude calls, missing exact model identity and unvalidated caller variant. Historical creator self-review, ordinary sequential agents, read reuse, incomplete retry residuals and cold progressive-load deviations remain disclosed above, not erased. A limited successful local replay is neither installed-host validation nor new corpus calibration.
+- Current source was not repaired again; no new review pass, release readiness, publication, merge, installation or finalization claimed. Earlier failures and frozen corpus remain unchanged. Missing-source controlled case supports local stopping, not a claim that an historical host failed that way.
+
+### Findings handed back
+
+- **important — false-negative named-field contract (confirmed):** current consistency-check SKILL.md:159–161 and R/projects/retry/review-decisions.md F4 exclusion; actual target SKILL.md:226/329–333 versus references/schemas.md:7–35; accepted read-1.json lacks raw F4. Local exception filtering improved, but a real schema conflict was suppressed. Closing evidence must demonstrate this finite candidate's correct qualified disposition while preserving supported exception/numeric/factual behavior; this is a closure condition, not authorization for another implementation or replay.
+- **important — release evidence still incomplete (retained boundary):** row11 lacks fresh complete real-host execution of the added caller stage and has a confirmed defective artifact. Local CLI success and self-recorded notes cannot fill that gap. No important/fatal finding was dismissed.
+- **nit — evidence limits:** A's staged audit deviation, unavailable's controlled origin and missing complete native transcript are disclosed. Historical locator, exhausted-retry residual/recommendation and cold read-isolation nits remain historical; they were not freshly reproduced or silently fixed.

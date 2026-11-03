@@ -398,3 +398,125 @@ artifact judgments precede separate trajectory inspection. A deliberately
 withheld source case is labelled a controlled unavailable-context condition,
 not a historical host failure. One candidate only; a repeated semantic failure
 stops this batch. No external Claude/model call, installation or publication.
+
+### W8-01 single-candidate local replay results
+
+Source candidate: f8a686586ceef934bcc0462a99cca437955534ea. Fresh spec and
+plan reviewers passed their respective pre-build assignments; the actual
+plan/intake commands passed after filling omitted historical test-case
+mappings and trimming field lengths. These were documentation-readiness
+repairs, not additional implementation candidates or waived checks.
+
+The implementation changes seven existing prose files, with no production
+Python, functions, modules, output schema or additional runtime agent.
+Operational SKILL plus detector references: net+15 nonblank lines (+19
+physical, including four blank lines), +146 words; existing README copies
+add16 lines and changelog adds4. The repeated three-step detector procedure
+was removed. The original diagrams remain byte-identical. The implementation
+record is `/private/tmp/toolkit-caller-implementation.md`.
+
+Recorded input preparation and real pre-change merger invocations are at
+`/private/tmp/toolkit-caller-local-7f6_y3e2`: manifest.json carries50 source/copy
+hashes and baseline/*/execution.json records command/stdout/stderr/returncode.
+The old merger published the false candidates: control exit1/two findings,
+retry exit1/eight findings, ordinary exit0/two advisories. Exit1 is a verdict,
+not a process error. The unavailable-source condition was deliberately
+introduced after planning; it is not a historical host failure.
+
+Four fresh native executors each received only the revised operational bundle
+and their single project. No previous audits, truth keys or implementation
+rationale were supplied. They replayed existing independently generated
+candidate files, not new detector execution. Exact native backend model/version
+was unobserved; profiles were inherited without fabricated IDs. The bundled
+snapshot is pinned by replay-source.json.
+
+| Replay | Raw candidates by file | Retained candidates by file | Observable outcome |
+|---|---|---|---|
+| control | 2 read +2 simulate | 1 read +1 simulate | One genuine high-confidence baseline conflict after merge; Auto/testing candidates excluded. |
+| retry | 5 read +7 simulate | 3 read +4 simulate | Four merged findings: two high, two medium. Platform/Cowork/fallback claims excluded, but the named-field conflict was also excluded. |
+| ordinary | 1 read +2 simulate | 0 read +1 simulate | One medium classification discrepancy remains; the explicit ensemble exception is no longer reported as a bypass. |
+| unavailable | 2 read +2 simulate | No completed accepted lists | Missing catalog prevents complete review; no merger report or whole-package verdict. |
+
+These counts describe the finite recorded candidate lists, not precision or
+whole-package recall measurements. Original source files and raw outputs
+remain byte-identical to the preparation manifest. Every completed accepted
+object is an unchanged member of its corresponding raw list; all planned
+groups remain present, including ordinary's reviewed empty read list.
+Mechanical checks are retained in mechanical-replay-verification.json.
+The unavailable project deliberately lacks only the catalog; its original
+lists remain unreviewed, not accepted. No report was generated there.
+
+Two independent artifact audits at `/private/tmp/toolkit-caller-local-blind-a.md`
+and `toolkit-caller-local-blind-b.md` classified raw candidates from actual
+sources before comparing accepted output. Both find a false negative:
+retry raw-read-1 F4. The input's SKILL.md:226 names an `assertions` field
+in the evals schema and :329–333 instructs updating that same evals file;
+schemas.md:20,35 instead defines `expectations`. The caller's operational
+counterexample does not make the exact named-field statement agree with the
+schema. This is a documentation/field-contract conflict; no actual runtime
+consumer crash was tested. A rates the lost finding medium, B low–medium.
+
+Portable target reference: this is the unchanged historical fixture at
+`skill-dev-toolkit/tests/consistency-check-corpus/multi/pkg/SKILL.md:226`
+and its `references/schemas.md:20,35`, not a newly discovered defect in the
+current creator implementation. The tracked fixture matches the replay input
+byte-for-byte and was not modified by this repair.
+
+Both support the control and ordinary dispositions and unavailable-source
+stop. Preserve disagreements: A leaves packaging capability/dependency tension
+ambiguous and does not count a confirmed miss; B identifies a qualified
+factual conflict despite compatible optional packaging actions. A initially
+rejected the ordinary tier discrepancy, then transparently revised that
+judgment after checking its shared load condition and risk dimension. No
+input, raw candidate, confidence or historical oracle was changed to obtain
+these judgments.
+
+Audit limits: A saved initial source judgments before output review, but saw
+embedded executor read/command summaries before its final artifact verdict;
+that strict phase-order deviation is disclosed. B used the stricter phase
+separation. Subsequent inspection verifies supplied commands, stored output
+and current hashes, not a complete independently exported native-host
+transcript or every invisible action. Parent comparisons additionally match
+historical source preimages; the blind auditors did not receive those parent
+manifests and do not claim that stronger historical proof themselves.
+
+At f8a68658: focused merger/text31 passed; toolkit191 passed in11.22s;
+complete declared repository suite715 passed in53.04s; unchanged adversarial
+program5 passed in0.10s; hidden description4 passed; structure6, shared
+conventions3, manifest and version-bump checks passed. Trunk sync reports
+up-to-date with4cbf85a8841d7d52393a8bb4058284755e108e25. These mechanical
+passes do not erase the observed false negative.
+
+Conclusion for this bounded batch: the raw-preservation and stop mechanics
+work on the supplied cases, and several confirmed false positives are
+excluded, but the candidate does not meet the stated recall requirement.
+The caller's action-only compatibility test is insufficient for the named-field
+fact conflict shown here. One implementation candidate was attempted, with
+zero implementation redispatches. No further source fix or paid model call
+is authorized by this batch; W7-02 remains count2/exhausted. The failed
+behavior check blocks further Build hand-off, cumulative closing review and
+new attestation. The source remains unpublished and is not release-ready.
+
+### Independent acceptance of the local candidate
+
+A new witness cloned a clean copy at exact f8a68658 and inspected the full
+9853569a..f8a68658 runtime diff before carrying unaffected evidence. It ran
+127 focused tests (all passed in7.14s), repository checks and three actual
+merger calls against copied current accepted artifacts: control/retry return1,
+ordinary return0, with the same finding lists. It did not merge unavailable
+inputs, repair source, rerun full suites or make external model calls.
+It also checked all50 provenance records,11 bundled source files, exact
+accepted subsets and reviewed-empty group preservation.
+
+The current acceptance report has nine works rows and two partly rows (9
+and11). Exception handling and unknown-model reporting improve in the local
+replay, while the witness independently confirms the named-field false
+negative as important. Fresh complete real-host execution of the new boundary
+is also unverified. The packaging capability disagreement remains qualified,
+not a second consensus failure. No important finding was dismissed.
+
+The source candidate remains unchanged after these results. This completes
+the authorized one-candidate local experiment with a failed recall check,
+not completion of the overall release objective. No further repair or paid
+validation was attempted, no review/implementation counter reset and no new
+attestation or publication occurred.
