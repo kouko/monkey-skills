@@ -73,7 +73,9 @@ This step matters — bad eval queries lead to bad descriptions.
 
 ## Phase 3: Run the optimization loop
 
-Tell the user: "This will take some time — I'll run the optimization loop in the background and check on it periodically."
+First confirm an observable exact session model ID supported by the loop's Claude backend. If unknown or unsupported, stop only live optimization; drafting and query preparation may continue. Never send literal `unknown` as a provider ID or guess an OpenAI ID for Claude. A different supported target must be explicitly selected by the user; disclose that its results test that target rather than the current session model.
+
+Once a supported target is confirmed, tell the user: "This will take some time — I'll run the optimization loop in the background and check on it periodically."
 
 Save the eval set to the workspace, then run in the background:
 
@@ -81,12 +83,12 @@ Save the eval set to the workspace, then run in the background:
 python -m scripts.run_loop \
   --eval-set <path-to-trigger-eval.json> \
   --skill-path <path-to-skill> \
-  --model <model-id-powering-this-session> \
+  --model <supported-target-model-id> \
   --max-iterations 5 \
   --verbose
 ```
 
-Use the model ID from your system prompt (the one powering the current session) so the triggering test matches what the user actually experiences.
+Use the observed supported session ID, or the explicitly selected supported target above, as `--model`; a system-prompt ID is usable only if it meets those conditions.
 
 While it runs, periodically tail the output to update the user on which iteration it's on and the scores.
 

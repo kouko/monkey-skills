@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Apply the shared contextual description policy during packaging, retaining
+  qualified exceptions and rejecting ineligible descriptions before delivery.
+- Reconcile detector findings with explicit contextual exceptions and qualify
+  model-family metadata when exact child runtime identity is unobserved.
+- Define quick Gate 2 access, redesign setup without historical cases, and
+  bounded optimization/timing stops when model identity or telemetry is absent.
 - Restore skill packaging, benchmark aggregation, and bounded description
   optimization commands.
 - Fail trigger evaluation on backend errors, explicit aborts, incomplete

@@ -28,7 +28,7 @@ These anti-patterns recur across skill creation sessions. Each has a WHY clause 
 
 2. **Never use first/second person in the description.** The description is injected into the system prompt; pronoun inconsistency causes selection problems. [WHY: Anthropic best-practices doc has an explicit Warning block; "I can help you" confuses the matcher.]
 
-3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check) — except on the quick eval path, where only Gate 2 (smallest-end-state) is answered inline and the full reference protocol is skipped. [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
+3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check) — except on the quick eval path: read only the Gate 2 subsection of the reference below, answer it inline, and skip the other gates. [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
 
 4. **Never spawn baselines after with-skill runs.** Always launch baseline runs BEFORE or WITH with-skill runs in the same workflow turn. Spawning baselines after with-skill causes straggler waits and uneven timing data. [WHY: parallel execution ensures comparable conditions; baseline must match with-skill runtime environment. Evaluation-first workflows should run baselines first to establish ground truth before testing skill effectiveness. Exception: new skills on the quick eval path need no baseline.]
 
@@ -52,7 +52,7 @@ Users range from non-technical to expert. Gauge familiarity from context cues: "
 
 ### Pre-Creation Gates (recommended; skip only with stated reason)
 
-**Do NOT Load:** Skip this reference if the skill qualifies for the quick eval path (see the eval-path note above) — in that case, still answer the Gate 2 questions inline (they are short); the full reference protocol is only for the full creation workflow. Load only when starting a full skill creation workflow.
+**Do NOT Load:** On the quick eval path, read only §Gate 2 — Smallest-end-state check of the reference below and answer its questions inline; this narrow exception overrides the reference's full-load guards. Skip the remaining gates and full interview. Load the complete protocol only for the full creation workflow.
 
 The full Pre-Creation Gates protocol (Gate 1 Worth-it check, Gate 2 Smallest-end-state check, Gate 3 User-input check) is in [references/pre-creation-gates.md](references/pre-creation-gates.md).
 
@@ -171,7 +171,7 @@ Ask the user to clarify (or infer from their phrasing):
 |---|---|---|
 | **(a) Token / structure refactor** with output behavior unchanged | "shorten", "reduce tokens", "tidy up", "縮減 SKILL.md", "整理結構" — and **no behavior change desired** | Hand off to `skill-dev-toolkit:skill-refactor`. Do not handle here. |
 | **(b) Output quality / variant exploration** with human judgment | "test different phrasings", "improve outputs", "A/B variants", "輸出風格", "我來選哪個比較好" — taste-sensitive output dimensions | Hand off to `skill-dev-toolkit:skill-tuning`. Do not handle here. |
-| **(c) Structural change** — add / split / merge phases, change agent decomposition, change input/output contract | "rewrite", "redesign", "add a phase", "split this skill", "重新設計", "拆 skill" | Use the Structural Rewrite Flow below (steps 1–4), then evaluate using the iteration loop (quick or full eval path, depending on complexity). Skip Step 0 (Evaluation-First) — reuse existing eval cases from the original skill. |
+| **(c) Structural change** — add / split / merge phases, change agent decomposition, change input/output contract | "rewrite", "redesign", "add a phase", "split this skill", "重新設計", "拆 skill" | Use the Structural Rewrite Flow below (steps 1–4), then evaluate using the selected quick or full path. Reuse existing eval cases; if absent, prepare cases and the old-version baseline before editing as described below. |
 | **(d) Description optimization** | "improve description", "optimize triggering", "better trigger accuracy", "改善說明", "最佳化觸發" | Handle internally using the Description Optimization section below |
 
 If the user's intent is unclear, ask them to clarify which of (a), (b), (c), or (d) applies. Do **not** default into the creation flow without confirming — picking the wrong tool wastes time on the wrong type of work.
@@ -180,7 +180,7 @@ If the user's intent is unclear, ask them to clarify which of (a), (b), (c), or 
 
 **Do NOT Load:** Read [references/improvement-workflows.md](references/improvement-workflows.md) §Case (c): Structural Rewrite Flow only when the router above identified case (c) — a structural change (add/split/merge phases, change agent decomposition, change input/output contract).
 
-For case (c), use that flow (steps 1–4). **Skip Step 0 (Evaluation-First)** — the skill already has eval cases from its original creation or previous improvements; reuse those. Cases (a) and (b) hand off to the dedicated sibling skills above and do **not** use these steps. Case (d) is handled internally using the Description Optimization section below.
+For case (c), use that flow (steps 1–4). Reuse existing eval cases and skip Step 0 when they exist; otherwise use the selected quick/full setup to create representative cases and run an old-version baseline before editing. Preserve the old-version snapshot for comparison; newly created cases are not historical test evidence. Cases (a) and (b) hand off to the dedicated sibling skills above and do **not** use these steps. Case (d) is handled internally using the Description Optimization section below.
 
 ---
 

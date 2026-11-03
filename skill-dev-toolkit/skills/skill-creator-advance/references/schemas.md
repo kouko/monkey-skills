@@ -180,7 +180,7 @@ Output from the executor agent. Located at `<run-dir>/outputs/metrics.json`.
 
 Wall clock timing for a run. Located at `<run-dir>/timing.json`.
 
-**How to capture:** When a subagent task completes, the task notification includes `total_tokens` and `duration_ms`. Save these immediately — they are not persisted anywhere else and cannot be recovered after the fact.
+**How to capture:** Save observed task-notification fields immediately when available; hosts may omit `total_tokens` or `duration_ms`, and ephemeral telemetry may not be recoverable. Compute seconds only from measured duration. If notification duration is absent, use a finite, nonnegative numeric measurement from an identified source and disclose it; if none is available, disclose unavailable timing and stop the full timing comparison (quality may be presented separately). The legacy duration path defaults missing values to zero and does not support null; never write invented zero or null duration into it.
 
 `total_tokens` must be a finite, nonnegative JSON number; a captured `0` is valid. Missing files, malformed JSON or non-object timing data, and absent or invalid `total_tokens` mean token capture is unavailable. Do not substitute output character counts or zero for unavailable measurements. Duration precedence is unchanged: use grading timing first, then sibling timing when grading duration is zero.
 

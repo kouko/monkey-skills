@@ -75,7 +75,7 @@ Good assertions are objectively verifiable, with descriptive names that read cle
 
 ### Step 3: As runs complete, capture timing data
 
-When each subagent task completes, you receive a notification containing `total_tokens` and `duration_ms`. Save this data immediately to `timing.json` in the run directory:
+When each subagent task completes, capture only observed fields from its host notification. If it supplies `total_tokens` and `duration_ms`, save them immediately to `timing.json` in the run directory, for example:
 
 ```json
 {
@@ -85,9 +85,9 @@ When each subagent task completes, you receive a notification containing `total_
 }
 ```
 
-**Note:** The task notification provides `total_tokens` and `duration_ms` as base fields. `total_duration_seconds` is computed as `duration_ms / 1000`. For the complete timing.json schema including executor/grader timestamps (captured from other sources during execution), see [references/schemas.md](references/schemas.md).
+Compute `total_duration_seconds` as `duration_ms / 1000` only when duration was measured. Missing tokens remain unavailable under [references/schemas.md](references/schemas.md), never an invented zero. If notification duration is absent, use a finite, nonnegative numeric measurement from an identified timing source and disclose that source. If none is available, disclose unavailable timing and stop the full timing comparison; quality may be presented separately. The legacy duration aggregator defaults missing values to zero and does not support null: do not feed it invented zero or null duration.
 
-This is the only opportunity to capture this data — it comes through the task notification and isn't persisted elsewhere. Process each notification as it arrives rather than trying to batch them.
+Process notifications as they arrive; ephemeral host telemetry may not be recoverable later. See the timing schema for executor/grader timestamps captured from other observed sources.
 
 ### Step 3.5: Self-assessment pass
 
