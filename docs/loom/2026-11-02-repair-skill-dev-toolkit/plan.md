@@ -120,7 +120,7 @@ charter: 1.1
 **W6-01 Keep backend failures out of trigger scores** after: W5-06 acceptance: 1, 7
 - Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_eval.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_loop.py` (entry), `skill-dev-toolkit/tests/test_creator_commands.py`.
 - Test: A1 positive: creator_commands_valid; negative: creator_commands_invalid. Exercise real main/evaluator behavior with an offline backend, including a failed negative query. Run creator command tests.
-- Risk: REQ-1/7; agent-decided fail closed. Class: backend errors counted as non-triggers; searched changed files and creator acceptance surface. Instances: future exception False, incomplete/failed query returns, loop all_passed, internal-only tests and unsupported propagation evidence.
+- Risk: REQ-1/7; agent-decided fail closed. Class: backend errors counted as non-triggers; searched changed files and creator acceptance surface. Instances: future exception False, incomplete/failed query returns including explicit terminal abort reasons, loop all_passed and internal-only evidence.
 
 **W6-02 Align optimizer generation and application with description authority** after: W6-01 acceptance: 1, 5, 7
 - Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/improve_description.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/scripts/run_loop.py` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/description-optimization.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/plugin-conventions.md`, `skill-dev-toolkit/tests/test_creator_commands.py`.
