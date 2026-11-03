@@ -47,9 +47,11 @@ labeled = dict(zip(labels, shuffled))
 # Now: which letter = baseline is random per prompt
 ```
 
-Save the assignment to a side log (not shown to user) so the
-preference log can correctly identify which letter the user picked
-in terms of "baseline" vs "variant_N":
+Keep the assignment in memory until the pick is locked. Only after
+lock-in, save the assignment to the session or preference log so it can
+identify the picked letter in terms of "baseline" vs "variant_N".
+Never persist a pre-lock identity map in a side log or resume file.
+A post-lock log entry is:
 
 ```jsonl
 {"round": N, "prompt": M, "label_assignment": {"A": "variant_1", "B": "baseline", "C": "variant_2"}}
@@ -157,9 +159,18 @@ Asymmetric truncation introduces bias.
 ## Atomicity / lock-in
 
 Invalid input and a bare `m` (which still needs specific labels) do not
-lock a selection. The CLI returns a non-success status and saves only the
-prompt and failed/incomplete pick with its reason, without a label-to-identity
-assignment. No selection success is reported for these attempts.
+lock a selection. Interactive input is requested again within the same
+invocation until a valid pick or EOF. Retain the same display, full-output
+files and label assignment; do not render or randomize again for clarification.
+Pending records contain only the prompt and failed/incomplete pick with its
+reason, without a label-to-identity assignment. Decode and log identities
+only after a valid pick locks the selection.
+
+The testing option `--pick` is one-shot: invalid or incomplete input returns
+non-success without revealing identities. EOF aborts the interactive round
+with non-success and no selection success. Any pending record remains
+identity-free. Another invocation starts a newly displayed round with a
+fresh assignment; it does not resume a pending record.
 
 Once the user locks a pick (or the independent evaluators finish):
 

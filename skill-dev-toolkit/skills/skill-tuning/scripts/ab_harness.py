@@ -195,22 +195,26 @@ def main() -> int:
     rendered = render(label_map, args.prompt, args.max_display_lines)
     print(rendered)
 
-    if args.pick is not None:
-        raw = args.pick
-    else:
-        try:
-            raw = input("\nYour pick: ")
-        except EOFError:
-            print("error: no input received", file=sys.stderr)
-            return 2
+    while True:
+        if args.pick is not None:
+            raw = args.pick
+        else:
+            try:
+                raw = input("\nYour pick: ")
+            except EOFError:
+                print("error: no input received; round aborted", file=sys.stderr)
+                return 2
 
-    pick = parse_pick(raw, label_map)
-    write_session(args.session_out, args.prompt, label_map, pick)
+        pick = parse_pick(raw, label_map)
+        write_session(args.session_out, args.prompt, label_map, pick)
+        if pick["type"] not in {"invalid", "needs_clarification"}:
+            break
 
-    if pick["type"] in {"invalid", "needs_clarification"}:
         print(f"\nPick not locked: {pick['reason']}", file=sys.stderr)
-        print(f"Session record saved to {args.session_out} for retry.", file=sys.stderr)
-        return 2
+        if args.pick is not None:
+            print(f"Incomplete pick recorded at {args.session_out}; a new invocation starts a new round.",
+                  file=sys.stderr)
+            return 2
 
     print(f"\nSession written to {args.session_out}")
     return 0

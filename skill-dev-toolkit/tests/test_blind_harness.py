@@ -13,7 +13,7 @@ import pytest
 SCRIPT = Path(__file__).resolve().parents[1] / "skills/skill-tuning/scripts/ab_harness.py"
 
 
-def run_round(tmp_path, max_lines, pick="a"):
+def run_round(tmp_path, max_lines, pick="a", stdin=None):
     sources = {}
     for identity, tail in [("baseline-private-name", "first"), ("variant-private-name", "second")]:
         source = tmp_path / identity / "output.md"
@@ -26,9 +26,10 @@ def run_round(tmp_path, max_lines, pick="a"):
     result = subprocess.run([
         sys.executable, str(SCRIPT), "--variants-dir", str(tmp_path),
         "--prompt", "Compare", "--session-out", str(session),
-        "--max-display-lines", str(max_lines), "--pick", pick,
-    ], capture_output=True, text=True, env={**os.environ, "TMPDIR": str(viewing)})
-    record = json.loads(session.read_text())
+        "--max-display-lines", str(max_lines),
+        *(["--pick", pick] if pick is not None else []),
+    ], input=stdin, capture_output=True, text=True, env={**os.environ, "TMPDIR": str(viewing)})
+    record = json.loads(session.read_text()) if session.exists() else None
     paths = {label: Path(path) for label, path in re.findall(
         r"OUTPUT ([A-Z])\n[^\n]+\n.*?\[\.\.\. truncated; full output: ([^\n]+)\]",
         result.stdout, re.DOTALL,
@@ -36,10 +37,20 @@ def run_round(tmp_path, max_lines, pick="a"):
     return result, record, paths, sources, viewing
 
 
-@pytest.mark.parametrize("pick", ["a", "b", "a+b", "n", "r"])
-def test_blind_full_view_same_choice(tmp_path, pick):
-    result, record, paths, sources, viewing = run_round(tmp_path, 1, pick)
+@pytest.mark.parametrize("pick,stdin,locked_pick", [
+    *[(pick, None, pick) for pick in ["a", "b", "a+b", "n", "r"]],
+    (None, "m\ninvalid\na\n", "a"),
+    (None, "invalid\nm\na+b\n", "a+b"),
+])
+def test_blind_full_view_same_choice(tmp_path, pick, stdin, locked_pick):
+    result, record, paths, sources, viewing = run_round(tmp_path, 1, pick, stdin)
     assert result.returncode == 0
+    assert result.stdout.count("TEST PROMPT") == 1
+    assert len(list(viewing.iterdir())) == 1
+    if stdin:
+        assert result.stdout.count("Your pick:") == 3
+        assert result.stderr.count("Pick not locked:") == 2
+    pick = locked_pick
     assert set(paths) == {"A", "B"}
     assert len({path.parent for path in paths.values()}) == 1
     for label, path in paths.items():
@@ -64,21 +75,36 @@ def test_blind_full_view_same_choice(tmp_path, pick):
     assert paths["A"].parent != next_paths["A"].parent
 
 
-@pytest.mark.parametrize("max_lines,pick", [(1, "a"), (2, "a"), (200, "a"), (1, "invalid"), (1, "m")])
-def test_identity_path_not_displayed(tmp_path, max_lines, pick):
-    result, record, paths, sources, viewing = run_round(tmp_path, max_lines, pick)
-    if pick in {"invalid", "m"}:
+@pytest.mark.parametrize("max_lines,pick,stdin", [
+    (1, "a", None), (2, "a", None), (200, "a", None),
+    (1, "invalid", None), (1, "m", None),
+    (1, None, ""), (1, None, "m\n"), (1, None, "invalid\n"),
+])
+def test_identity_path_not_displayed(tmp_path, max_lines, pick, stdin):
+    result, record, paths, sources, viewing = run_round(tmp_path, max_lines, pick, stdin)
+    pending = pick if pick is not None else stdin.strip()
+    if pending in {"invalid", "m"}:
         assert "label_assignment" not in record
         assert record["prompt"] == "Compare"
-        assert record["pick"]["type"] == {"invalid": "invalid", "m": "needs_clarification"}[pick]
+        assert record["pick"]["type"] == {"invalid": "invalid", "m": "needs_clarification"}[pending]
         assert record["pick"]["reason"]
         assert result.returncode == 2
         assert "Session written to" not in result.stdout
         assert "not locked" in result.stderr
+        assert "for retry" not in result.stderr
+    elif pick is None:
+        assert record is None
+        assert result.returncode == 2
+        assert "Session written to" not in result.stdout
     else:
         assert result.returncode == 0
+    if pick is None:
+        assert "error: no input received" in result.stderr
+    assert result.stdout.count("TEST PROMPT") == 1
     for identity in sources:
-        assert identity not in result.stdout
+        assert identity not in result.stdout + result.stderr
+        if result.returncode:
+            assert identity not in json.dumps(record)
         assert str(tmp_path / identity) not in result.stdout
     assert "User-authored baseline wording" in result.stdout
     if max_lines >= 2:
