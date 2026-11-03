@@ -8,8 +8,8 @@ Purpose: Extracted from SKILL.md for token efficiency. The main skill file keeps
 
 **SKILL.md embedding instructions include explicit guards at these points:**
 
-- **After Step 0 (Evaluation-First)**: Do NOT load this reference if you selected the quick eval path
-- **Before Capture Intent section**: Load only when starting a full skill creation workflow
+- **Quick eval path**: Read only §Gate 2 — Smallest-end-state check and answer its questions inline; skip the remaining gates and full interview.
+- **Full creation workflow**: Load the complete protocol before Capture Intent.
 
 ---
 

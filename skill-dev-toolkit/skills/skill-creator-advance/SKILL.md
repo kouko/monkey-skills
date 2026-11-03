@@ -52,7 +52,7 @@ Users range from non-technical to expert. Gauge familiarity from context cues: "
 
 ### Pre-Creation Gates (recommended; skip only with stated reason)
 
-**Do NOT Load:** On the quick eval path, read only §Gate 2 — Smallest-end-state check of the reference below and answer its questions inline; this narrow exception overrides the reference's full-load guards. Skip the remaining gates and full interview. Load the complete protocol only for the full creation workflow.
+**Do NOT Load:** On the quick eval path, read only §Gate 2 — Smallest-end-state check of the reference below and answer its questions inline. Skip the remaining gates and full interview. Load the complete protocol only for the full creation workflow.
 
 The full Pre-Creation Gates protocol (Gate 1 Worth-it check, Gate 2 Smallest-end-state check, Gate 3 User-input check) is in [references/pre-creation-gates.md](references/pre-creation-gates.md).
 
