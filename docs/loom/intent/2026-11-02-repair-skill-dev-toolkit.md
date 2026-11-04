@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: yes — 盲測、偏好匯出與候選核對涉及多物件及證據保存，需要規格約束。
 evidence: [docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/independent-reassessment.md, docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/host-release-readiness.md]
-intent_confirmed_sha: e5b1f436c2f67b9de6924a8aa99fa3c6a17f2a70
+intent_confirmed_sha: e50ea646df90cc3ad55eed1c36fee6ca168295a8
 status: confirmed 2026-11-04
 publication: automatic — authorized 2026-11-02 by kouko
 
@@ -35,6 +35,7 @@ publication: automatic — authorized 2026-11-02 by kouko
 - 2026-11-04 使用者回答「同意」，確認由既有報告代理核對獨立偵測器的候選發現後才產生報告，並刪除重複核對指令；原始候選與排除理由須保留，不新增常駐代理或框架。
 - 前一批限一次實作候選與本機錄製資料重播，不增加 Claude CLI／API 等外部模型呼叫。先前兩次續修的計數及失敗保留；這是使用者確認的報告責任調整，不重設原修補或審查回合。
 - 使用者於 2026-11-04 再指示「繼續迭代吧」，允許延續同項報告核對工作，修正已確認的欄位契約漏報；沿用本機驗證與既有續修計數，不新增外部模型呼叫或發布授權。
+- 使用者隨後指示「繼續迭代最多五次 且都允許用 claude code 做 review」，明確延長同項修補最多五個新增迭代，各輪允許 Claude Code 審查及必要驗證；成功即可提前停止。沿用前述 Codex 代理 gpt-6.1-sol／high 提案，不以未知舊設定推定升級。此授權優先於技能預設續修上限；保留全部原有計數，以原累計加本次新增輪數記錄，不修改全域規則、不重啟舊失敗任務。資料範圍仍為工具包、公開案例與測試產物，不授權安裝、發布或合併。
 
 ## Out of scope
 - 已撤回的固定對照版本與逐輪退步比較問題。
