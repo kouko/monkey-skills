@@ -161,13 +161,13 @@ completed detector output, including thorough-mode runs:
    its shared conditions, and how those qualifications govern it. Duplicates
    may explicitly reuse a record only when claim and qualifications match.
 3. Judge the original `why` claim, not a different concern in its side quotes.
-   For action conflicts, try a concrete execution obeying both rules; compatible
-   execution can refute the claim. Extra keys, aliases or workarounds do not
-   reconcile conflicting facts, field definitions or values in the same scope.
-   Exclude unsupported or overstated claims (e.g. permission inferred as a duty),
-   even if quotes support a narrower concern. Record why retained claims remain
-   incompatible or the source-grounded exclusion reason. Never add findings
-   from the caller's own context.
+   For action conflicts, retain only a supported concrete situation requiring
+   incompatible actions under the same conditions after cited scope, precedence
+   and exceptions apply; otherwise exclude rather than retain speculative `low`.
+   Extra keys, aliases or workarounds do not reconcile conflicting facts, field
+   definitions or values in the same scope. Exclude unsupported or overstated
+   claims even if quotes support a narrower concern. Record incompatibility or
+   source-grounded exclusion reasons; never add findings from your own context.
 4. Only after every candidate's review is recorded, write subsets of each raw
    file's findings to its original planned filename; do not add or rewrite
    findings or change confidence. Use `low` only for uncertainty about a remaining
