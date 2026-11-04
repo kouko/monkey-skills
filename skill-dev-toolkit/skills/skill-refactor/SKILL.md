@@ -205,7 +205,7 @@ Quick reference:
 | Move | Effect | Equivalence risk |
 |---|---|---|
 | Dedupe prose | Same content stated once | Low |
-| Extract to `references/` | Move detail out of SKILL.md body | Low (if reference loaded on-demand correctly) |
+| Extract to `references/` | Move detail out of SKILL.md body | Medium (if reference loaded on-demand correctly) |
 | Compress lists / tables | Replace bullet duplication with concise table | Low |
 | Inline single-use definition | Remove indirection | Low |
 | Tighten verbose phrasing | "in order to" → "to" | Low |
