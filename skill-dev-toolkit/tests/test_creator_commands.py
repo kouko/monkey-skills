@@ -4,6 +4,7 @@ import importlib
 import io
 import json
 import os
+import shlex
 import subprocess
 import sys
 import zipfile
@@ -264,9 +265,9 @@ def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch, 
         assert error.value.code == 1
 
 
-@pytest.mark.parametrize("entry", ["run_eval", "run_loop"])
+@pytest.mark.parametrize("entry, holdout", [("run_eval", None), ("run_loop", 0), ("run_loop", 0.5)])
 @pytest.mark.parametrize("newline, exit_status", [(True, 0), (False, 0), (False, 7)])
-def test_creator_real_eof_completion(entry, newline, exit_status, tmp_path, skill, monkeypatch):
+def test_creator_real_eof_completion(entry, holdout, newline, exit_status, tmp_path, skill, monkeypatch):
     """Exercise the real CLI, process pool and backend when stdout closes first."""
     (tmp_path / ".claude").mkdir()
     project_scripts = tmp_path / "scripts"
@@ -274,7 +275,7 @@ def test_creator_real_eof_completion(entry, newline, exit_status, tmp_path, skil
     (project_scripts / "__init__.py").write_text("# User project package\n")
     creator_before = {p.relative_to(CREATOR): p.read_bytes() for p in CREATOR.rglob("*")
                       if p.is_file() and "__pycache__" not in p.parts}
-    context_log = tmp_path / "backend-context.json"
+    context_log = tmp_path / "backend-context.jsonl"
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     backend = fake_bin / "claude"
@@ -282,23 +283,34 @@ def test_creator_real_eof_completion(entry, newline, exit_status, tmp_path, skil
     payload = (payload + ("\n" if newline else "")).encode()
     backend.write_text(
         f"#!{sys.executable}\nimport json, os, time\nfrom pathlib import Path\n"
-        f"Path({str(context_log)!r}).write_text(json.dumps({{\n"
-        f"    'cwd': os.getcwd(), 'pythonpath': os.environ.get('PYTHONPATH'),\n"
-        f"    'commands': {{str(p.resolve()): p.read_text() for p in Path('.claude/commands').glob('*.md')}}\n"
-        f"}}))\n"
+        f"with Path({str(context_log)!r}).open('a') as log:\n"
+        f"    log.write(json.dumps({{\n"
+        f"        'cwd': os.getcwd(), 'pythonpath': os.environ.get('PYTHONPATH'),\n"
+        f"        'commands': {{str(p.resolve()): p.read_text() for p in Path('.claude/commands').glob('*.md')}}\n"
+        f"    }}) + '\\n')\n"
         f"os.write(1, {payload!r})\n"
         f"os.close(1)\ntime.sleep(0.2)\nos._exit({exit_status})\n"
     )
     backend.chmod(0o755)
+    browser_log = tmp_path / "browser.json"
+    browser = fake_bin / "browser stub"
+    browser.write_text(f"#!{sys.executable}\nimport json, sys\nfrom pathlib import Path\n"
+                       f"Path({str(browser_log)!r}).write_text(json.dumps(sys.argv[1:]))\n")
+    browser.chmod(0o755)
+    monkeypatch.setenv("BROWSER", shlex.join([str(browser), "%s"]))
     monkeypatch.setenv("PATH", str(fake_bin) + os.pathsep + os.environ["PATH"])
     monkeypatch.setenv("PYTHONPATH", str(tmp_path / "existing-imports"))
     env = dict(os.environ, PYTHONPATH=str(CREATOR) + os.pathsep + os.environ["PYTHONPATH"])
     evaluation = tmp_path / "negative.json"
-    evaluation.write_text(json.dumps([{"query": "negative query", "should_trigger": False}]))
+    queries = [{"query": "negative query", "should_trigger": False}]
+    if holdout:
+        queries.append({"query": "another negative query", "should_trigger": False})
+    evaluation.write_text(json.dumps(queries))
     argv = [sys.executable, str(CREATOR / "scripts" / f"{entry}.py"), "--eval-set", str(evaluation),
             "--skill-path", str(skill), "--num-workers", "1", "--runs-per-query", "1", "--timeout", "3"]
     if entry == "run_loop":
-        argv += ["--model", "offline", "--report", "none", "--holdout", "0",
+        report_path = tmp_path / "optimization-report.html"
+        argv += ["--model", "offline", "--report", str(report_path), "--holdout", str(holdout),
                  "--max-iterations", "1", "--results-dir", str(tmp_path / "saved")]
     result = subprocess.run(argv, cwd=tmp_path, env=env, capture_output=True, text=True, timeout=15)
     if exit_status:
@@ -313,14 +325,35 @@ def test_creator_real_eof_completion(entry, newline, exit_status, tmp_path, skil
         else:
             assert output["best_score"] == "1/1"
             assert output["exit_reason"] == "all_passed (iteration 1)"
+            rendered = report_path.read_text()
+            assert "Starting optimization loop" not in rendered
+            assert json.loads(next((tmp_path / "saved").rglob("results.json")).read_text()) == output
+            assert next((tmp_path / "saved").rglob("report.html")).read_text() == rendered
+            if holdout:
+                assert len(output["history"][0]["test_results"]) == 1
+                assert output["best_test_score"] == "1/1"
+                assert rendered.count('<span class="score score-good">1/1</span>') == 2
+                assert ">N/A</span>" not in rendered
+            else:
+                assert output["history"][0]["test_results"] is None
+                assert output["best_test_score"] is None
+                assert '<span class="score score-na">N/A</span>' in rendered
+                assert ">0/0</span>" not in rendered
+            assert '<span class="score score-good">1/1</span>' in rendered
+    if entry == "run_loop":
+        assert json.loads(browser_log.read_text()) == [str(report_path)]
     assert not list((tmp_path / ".claude/commands").glob("*.md"))
-    context = json.loads(context_log.read_text())
-    assert Path(context["cwd"]) == tmp_path.resolve()
-    assert context["pythonpath"] == env["PYTHONPATH"]
-    assert len(context["commands"]) == 1
-    for path, content in context["commands"].items():
-        assert Path(path).parent == tmp_path.resolve() / ".claude/commands"
-        assert "# example-skill" in content
+    contexts = [json.loads(line) for line in context_log.read_text().splitlines()]
+    assert contexts
+    if not exit_status:
+        assert len(contexts) == len(queries)
+    for context in contexts:
+        assert Path(context["cwd"]) == tmp_path.resolve()
+        assert context["pythonpath"] == env["PYTHONPATH"]
+        assert len(context["commands"]) == 1
+        for path, content in context["commands"].items():
+            assert Path(path).parent == tmp_path.resolve() / ".claude/commands"
+            assert "# example-skill" in content
     assert {p.relative_to(CREATOR): p.read_bytes() for p in CREATOR.rglob("*")
             if p.is_file() and "__pycache__" not in p.parts} == creator_before
 

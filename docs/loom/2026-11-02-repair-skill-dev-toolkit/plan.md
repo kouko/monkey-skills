@@ -228,7 +228,7 @@ charter: 1.1
 ### Wave 11 — Local cycle 4 optional report-cohort correction
 
 **W11-01 Render valid optimizer output without a held-out cohort** after: W10-01 acceptance: 1, 7
-- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/generate_report.py` (entry: generate_html, consumed by run_loop and its CLI), `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/generate_report.py` (entry: generate_html, consumed by run_loop and its CLI), `skill-dev-toolkit/tests/test_creator_commands.py`, `skill-dev-toolkit/CHANGELOG.md` (current Unreleased notes).
 - Test: A1 positive: finalized_html_without_holdout; negative: absent_cohort_not_failed_score. A7 positive: zero_and_nonzero_holdout_cli_reports; boundary: backend_failure_not_success. Extend the existing real-EOF entry case, preserving all original EOF/nonzero/context assertions. Generate real HTML; fake only provider and browser launch, never renderer/root discovery. Keep the original failed artifact unchanged.
 - Risk: REQ-1/7; class: optional cohort treated as iterable. Sweep renderer history/query/score consumers and loop producer. Existing creator tests widen to real HTML with nullable/nonempty holdout; no new helper framework or production module.
 

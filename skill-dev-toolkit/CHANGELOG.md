@@ -15,6 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   Missing, stale or malformed review is an input error (exit 2), with no new report.
   This changes the CLI contract: `--decisions` is required with no legacy bypass.
 
+### Fixed
+
+- Complete optimizer HTML reports with `--holdout 0`; show unavailable cohort
+  scores as neutral N/A.
+- Keep creator commands in the user's project execution context while resolving
+  bundled imports through command-local paths.
+
 ## [0.5.2] — 2026-11-03
 
 ### Fixed

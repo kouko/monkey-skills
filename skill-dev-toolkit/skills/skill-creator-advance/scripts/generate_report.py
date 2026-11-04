@@ -129,6 +129,7 @@ def generate_html(data: dict, auto_refresh: bool = False, skill_name: str = "") 
         .score-good { background: #eef2e8; color: #788c5d; }
         .score-ok { background: #fef3c7; color: #d97706; }
         .score-bad { background: #fceaea; color: #c44; }
+        .score-na { background: #e8e6dc; color: #666; }
         .train-label { color: #b0aea5; font-size: 10px; }
         .test-label { color: #6a9bcc; font-size: 10px; font-weight: bold; }
         .best-row { background: #f5f8f2; }
@@ -218,6 +219,8 @@ def generate_html(data: dict, auto_refresh: bool = False, skill_name: str = "") 
         description = h.get("description", "")
         train_results = h.get("train_results", h.get("results", []))
         test_results = h.get("test_results", [])
+        if test_results is None:
+            test_results = []
 
         # Create lookups for results by query
         train_by_query = {r["query"]: r for r in train_results}
@@ -242,6 +245,8 @@ def generate_html(data: dict, auto_refresh: bool = False, skill_name: str = "") 
 
         # Determine score classes
         def score_class(correct: int, total: int) -> str:
+            if total == 0:
+                return "score-na"
             if total > 0:
                 ratio = correct / total
                 if ratio >= 0.8:
@@ -252,13 +257,15 @@ def generate_html(data: dict, auto_refresh: bool = False, skill_name: str = "") 
 
         train_class = score_class(train_correct, train_runs)
         test_class = score_class(test_correct, test_runs)
+        train_score = f"{train_correct}/{train_runs}" if train_runs else "N/A"
+        test_score = f"{test_correct}/{test_runs}" if test_runs else "N/A"
 
         row_class = "best-row" if iteration == best_iter else ""
 
         html_parts.append(f"""            <tr class="{row_class}">
                 <td>{iteration}</td>
-                <td><span class="score {train_class}">{train_correct}/{train_runs}</span></td>
-                <td><span class="score {test_class}">{test_correct}/{test_runs}</span></td>
+                <td><span class="score {train_class}">{train_score}</span></td>
+                <td><span class="score {test_class}">{test_score}</span></td>
                 <td class="description">{html.escape(description)}</td>
 """)
 
