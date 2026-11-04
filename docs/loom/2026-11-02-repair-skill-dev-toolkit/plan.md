@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
 intent: 2026-11-02-repair-skill-dev-toolkit@c5d3e9f7
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@deb49c27
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@ea236fa3
 charter: 1.1
 
 ## Task DAG
@@ -210,10 +210,10 @@ charter: 1.1
 
 ### Wave 10 — Same-episode local cycle 2 review corrections
 
-**W10-01 State the creator module-command execution context** after: W9-01 acceptance: 1, 7
-- Files: `skill-dev-toolkit/skills/skill-creator-advance/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/description-optimization.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/eval-protocol.md`.
-- Test: A1 positive: module_commands_from_creator_root; negative: project_root_missing_module. A7 positive: absolute_paths_and_workspace_archive; boundary: creator_source_not_output. Preserve existing creator CLI tests; independently follow the new instructions from a fresh project with genuine inputs and no outside calls. No prose-pin or new test program.
-- Risk: REQ-1/7; class: unstated execution directory. Sweep creator entry, optimization and aggregation module commands. Existing test_creator_commands.py coverage retained. One shared path rule and explicit output location; no Python changes or new tests.
+**W10-01 Preserve creator import and project execution contexts** after: W9-01 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/description-optimization.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/eval-protocol.md`, `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: optimizer_uses_user_project; negative: project_scripts_cannot_shadow_creator. A7 positive: backend_command_in_project; boundary: creator_tree_unchanged. Extend the existing real-EOF entry case, preserving every old assertion. Record old-context RED safely in an isolated copy, then actual CLI/backend GREEN; no provider calls or new harness.
+- Risk: REQ-1/7; class: import and execution contexts conflated. Sweep creator commands, run_loop/evaluator project discovery and backend launch. Existing creator tests widen to real cwd/temporary-command placement; same cases, no production Python or new launcher.
 
 **W10-02 Align extraction's duplicate risk definition** after: W9-01 acceptance: 5
 - Files: `skill-dev-toolkit/skills/skill-refactor/SKILL.md` (entry).
@@ -264,3 +264,4 @@ charter: 1.1
 26. Five rounds complete. Final ecb9ddb7 replay retains fallback low; outside consultation is inconclusive, not PASS. No sixth candidate/host retry. Finish acceptance/evidence only. Preserve packaging ambiguity, field findings, prior failures and closed budget.
 27. User selected local decision-boundary redesign, maximum five cycles. W9-01 changes consumed data and unresolved outcomes; W8-01 remains failed/closed, not renamed. No new outside-model, installation, publication or merge authority. Record cycle counts and unmet semantic obligations.
 28. Cycle2 batches the confirmed cwd omission with two bounded review cleanups. Preserve program mechanisms and prior counters. No extra runtime or outside call; update original entry/risk/test authorities only. Full mechanical checks repeat.
+29. Cycle3 repairs cycle2's wrong-project regression, same W10-01 continuation1. Scope imports per command, keep project cwd, use existing absolute entries. Preserve counts and old failures. Verify actual offline backend location before same-reviewer fix verification; help is insufficient.
