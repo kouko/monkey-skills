@@ -819,3 +819,56 @@ threshold applied separately to preflight and review, not an invoice/hard
 limit; at most five review legs are planned in this window. Necessary host
 validation remains isolated and recorded, with no default-model fallback,
 truth-key leakage, silent retries, installation, publication or merge.
+
+### New-window round1/5 — fae804f5, global continuation2, failed
+
+Native implementer requested gpt-6.1-sol/high under the explicit user profile
+choice. Only checker SKILL and changelog changed; SKILL net+7 physical lines,
+no production Python/schema/module/function/agent/test added. Focused49,
+root715(52.99s), toolkit191(10.73s), existing adversarial5(0.09s) pass.
+Clean-worktree sync is up to date with origin/main4cbf85a8; original checkout's
+unrelated untracked file was preserved when moving the branch for sync.
+
+Actual-host root is `/private/tmp/toolkit-five-review-lmgnzvs3/rounds/r1/host`.
+Explicit Sonnet5.5/medium keeps the failed-profile comparison comparable.
+Preflight succeeds at USD0.0019387 estimate. Caller replay completes44.70s,
+USD0.183966 estimate, but keeps all read5/simulate7 and produces the same8
+merged findings, including previously unsupported claims. The new notes are
+written before merge but do not apply the required qualifications consistently.
+No subset filtering was exercised. All100 runtime/target hashes and original
+raw bytes remain unchanged. Remaining control/check cases were not run after
+this failure; no outcome is claimed for them. This is a failed source candidate,
+not a successful local phase or measurement failure.
+
+Crucial source correction: platform delegation at target SKILL527 is visible
+in caller JSONL9 via grep, although the bounded preceding view ends at525.
+It still does not govern the notes. The iteration view ends at45 and omits
+the environmental qualification45–57. Thus both visible-but-misapplied scope
+and incomplete relevant review remain; read-window size alone is not an oracle.
+The packaging disposition substitutes quoted factual tension for the raw
+`why` action allegation, despite the existing narrower-concern exclusion.
+
+The named external-review runner executed one scoped Sonnet5.5/high packet
+consultation, with successful2s probe and188s review, observed model5.5 and
+accepted explicit settings; effective effort unobserved. Root and consent
+remain `/private/tmp/toolkit-five-review-lmgnzvs3` and `consent/r1.json`.
+Raw result/receipt are `runs/r1-review.json` and `r1-review-raw.md`.
+The packet—not a formally reviewed commit/tree—is the audited material.
+Review correctly anchors delegation omitted from dispositions and note
+paraphrases; it recommends a minimal qualification change and no runtime
+framework. Its formal advisor output is rejected as `missing-field` because
+divergences lack required confidence/proposed_change/corroborated_by/resolution
+fields. Its invented incumbent implications and unsupported claim that all
+paraphrases are allowed are not accepted. Individual source anchors remain
+advisory and are checked independently. Its packaging retention opinion
+assesses narrower factual quotes rather than the original action `why`;
+this disagreement is preserved, not silently treated as consensus or PASS.
+
+No immediate format-only outside retry occurred. Round1 is consumed; four
+additional user-authorized rounds remain. Unmodified resolver feedback for
+global continuation2 says no-legal-redispatch under its default limits;
+the explicit five-round user extension governs the next attempt without
+resetting history or changing the shared resolver. Next global continuation3
+is new-window round2/5. The next narrow packet makes governing delegation
+and the original `why` explicit while replacing existing prose, not adding
+a case whitelist, receipt schema or another runtime agent.
