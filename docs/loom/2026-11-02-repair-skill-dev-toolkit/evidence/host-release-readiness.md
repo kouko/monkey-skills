@@ -913,3 +913,40 @@ USD1.00; preflight/control/check remain0.05/1.00/1.50, combined3.55, not a hard
 cap or invoice. Model remains explicit first-party claude-sonnet-5-5. All
 failures remain retained and the user window still stops after five trials
 unless actual release readiness is established earlier. No publication.
+
+### New-window round3/5 — same source, Sonnet high trial
+
+Source remains exactf00a04ef; no source or implementation redispatch occurs.
+Only CLI effort changes medium→high, with recorded accepted explicit settings
+and stream modelclaude-sonnet-5-5. Root `rounds/r3/host` under the same campaign
+preserves original targets/raws. Preflight estimateUSD0.0019387; replay158.50s,
+USD0.5401022. It completes with read3/5 and simulate6/7 accepted, merged6.
+Cowork readF5/simulateF6 is excluded on the platform delegation; named-field
+readF4 is also excluded, while packaging simulateF5 and fallbackF7 remain.
+Its fallback disposition recognizes compatibility/environmental handoff yet
+retains low confidence. This violates the declared no-compatible-findings rule;
+the field exclusion is challenged by a fresh source-first audit rather than
+blindly assuming historical labels. No general model-ranking conclusion is
+drawn from one replay. Remaining full workflows stop after this result.
+
+A new native blind audit uses only operational contract, original raw claims
+and full relevant source before freezing judgments, then compares artifacts
+and only afterward trajectories. It sees no earlier audit answers or author
+expectations. Requested profilegpt-6.1-sol/high is explicit; exact native
+backend/runtime remains unobserved. It is a new verification task, not a
+reset of implementation counters. A preparation command was blocked once by
+the local destructive-command guard because its Python subprocess argv used
+an unnecessary conditional expression. The safe replacement uses a literal
+argv and separated JSON preparation. No product/actor action or host retry
+was hidden as this operator error, and no safeguard was bypassed.
+
+Next round4/5 is another same-source execution comparison, explicit
+claude-opus-5-5/high within the authorized Anthropic review scope. Model
+availability and returned identifier must pass a fresh preflight; no default
+fallback is permitted. Estimate thresholds are preflight0.05, replay1.50,
+control2.00, larger workflow2.50, combinedUSD6.05, not hard limits/invoice.
+Disclosure precedes execution. No new product rule/framework, code churn or
+promised model-wide accuracy is justified by this trial. Implementation
+continuation remains3; profile comparisons still consume the user's five-round
+window. The fifth round is the last allowed unless release readiness is
+actually established earlier. No installation, publication or merge.
