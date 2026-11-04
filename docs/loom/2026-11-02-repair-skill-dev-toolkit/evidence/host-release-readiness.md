@@ -996,3 +996,65 @@ specific five-round user override remain recorded, never normalized away.
 Use the now-verified Opus5.5/high for comparable last-round host validation,
 same disclosed USD6.05 estimated thresholds. If it fails, stop without a new
 candidate, release claim or automatic sixth round.
+
+### New-window round5/5 — final sourceecb9ddb7 and closed trial budget
+
+Final sourceecb9ddb7e84e61f9382a2149bef9858cc341e5cb replaces only the
+existing Step3 action predicate and matching changelog. It requires a supported
+shared-condition incompatible-action situation after scope/precedence/exception
+qualifications; facts/fields/values remain separate. This final delta is
+net0 physical lines, no new production Python/functions/modules/schema/agent/
+test. Across this five-round window, operational SKILL is net+5 physical lines
+versus30d; changelog net+3. Three source candidates and two same-source profile
+comparisons consumed all five user-authorized iterations. W8 implementation
+continuation4 and exhausted W7-02 count2 remain; no counters reset.
+
+Focused49, root715(48.35s), toolkit191(9.99s), adversarial5(0.10s) pass.
+Clean sync is up to date with origin/main4cbf85a8. Actual host root is
+`/private/tmp/toolkit-five-review-lmgnzvs3/rounds/r5/host`. Opus5.5/high
+preflight succeeds, estimateUSD0.0038454. Replay completes165.86s,
+USD1.0432456 estimate, keeps read4/simulate6 and merges7 findings. It preserves
+the named-field finding and excludes Cowork, but again retains fallback as
+low because the environmental qualification may apply while the short example
+pre-classifies the behavior. Its record C8 does not establish a situation
+where incompatibility survives the quoted qualification; it leaves precedence
+uncertain. This is not enough to certify the new action-retention requirement.
+Packaging remains an explicitly disputed factual-versus-action interpretation,
+not a forced expected exclusion. Remaining full workflow cases were not run
+after this unresolved result. No sixth source or host replay is authorized.
+
+The last-round read-only consultation uses the named external-review runner
+and the same root, fresh `consent/r5.json`, explicit Sonnet5.5/high,
+USD1.50 estimate threshold per probe/review. It reviews existing source and
+artifacts only; it is not a sixth implementation or host experiment. Probe
+and134s review complete, observed model5.5/accepted explicit settings, actual
+effort unobserved. Full field-level report contract is now supplied inside
+the restricted root. The conforming attributed audit report is
+`runs/r5-review-raw.md`, receipt `runs/r5-review.json`; verdict is inconclusive,
+not formal closing-review or PASS. It finds the incumbent required-fix
+overstatement concern somewhat better supported by the rule structure but
+preserves ambiguity in the environmental wording. It confirms the field-name
+disagreement and sees factual support for packaging. It constructs no concrete
+same-condition incompatible-action situation for F7 and leans toward a narrower
+wording hazard. Its runtime-coverage limits remain explicit; it did not read
+the JSONL trajectory and cannot attest its ordering. Do not turn that nuanced
+result into consensus or a model-accuracy guarantee.
+
+`five-round-mechanical.json` verifies all500 runtime snapshot records,
+all190 target preimage records and10 original raw-file byte hashes across
+the five rounds, exact accepted finding objects/confidences, and unchanged
+non-findings metadata. Every process exits0; each report's needs-revision
+coarse verdict remains supported by independent genuine high findings. This
+does not establish that every included advisory is eligible. Ten host calls
+(one preflight and one recorded-caller replay per round) total
+USD3.1757429 CLI estimate, not invoice. Both separate code-consultation probes
+and reviews are additional; the shared runner retains probe usage but omits
+outer review-body usage, so consultation-body cost is unknown. Do not quote
+the reviewer's informal meter as an authoritative cost.
+
+Five-round budget is closed. No new functional candidate, package installation,
+marketplace refresh, publication, merge, cumulative closing-review or generated
+attestation follows from these results. Independent final acceptance will
+read the source and artifacts, retain any unresolved interpretation, and
+report the unmet release obligation without rewriting history or silently
+lowering the confirmed Acceptance requirements.
