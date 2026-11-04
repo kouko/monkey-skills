@@ -3,12 +3,14 @@
 
 Usage:
   python3 merge_report.py --target <skill_dir> --plan <plan.json>
-      --findings <f1.json> [<f2.json> ...] --model "<model>" --out <dir>
+      --findings <f1.json> [<f2.json> ...] --decisions <decisions.json>
+      --model "<model>" --out <dir>
 
 Writes <out>/consistency-report.json and <out>/consistency-report.md, never
-inside the target. Exit 0 pass, 1 needs-revision, 2 error.
+inside the target. Exit 0 pass, 1 needs-revision, 2 error, 3 indeterminate.
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -71,8 +73,12 @@ def _check_names(paths, plan):
             isinstance(groups.get(m), list) for m in ("read", "simulate")):
         raise InputError("plan has no groups.read / groups.simulate lists")
     seen = set()
+    names = set()
     for path in paths:
         name = os.path.basename(path)
+        if name in names:
+            raise InputError(f"duplicate findings basename: {name}")
+        names.add(name)
         m = NAME_RE.match(name)
         if not m:
             raise InputError(f"findings file name must match "
@@ -88,12 +94,42 @@ def _check_names(paths, plan):
                          + ", ".join(missing))
 
 
-def _load(path):
+def _load(path, hashes=None):
     try:
-        with open(path, encoding="utf-8") as fh:
-            return json.load(fh)
+        with open(path, "rb") as fh:
+            raw = fh.read()
+        data = json.loads(raw)
+        if hashes is not None:
+            hashes[os.path.basename(path)] = hashlib.sha256(raw).hexdigest()
+        return data
     except (OSError, ValueError) as exc:
         raise InputError(f"cannot read {path}: {exc}") from exc
+
+
+def _select(batches, hashes, review):
+    """Validate complete provenance and dispositions; never judge their prose."""
+    if not isinstance(review, dict) or not isinstance(review.get("sources"), dict) \
+            or review["sources"] != hashes:
+        raise InputError("decisions.sources must match every original findings basename and SHA256")
+    decisions = review.get("decisions")
+    if not isinstance(decisions, list):
+        raise InputError("decisions.decisions must be a list")
+    candidates = {(source, f["id"]) for source, findings in batches for f in findings}
+    statuses = {}
+    for decision in decisions:
+        if not isinstance(decision, dict) or not all(
+                isinstance(decision.get(k), str) and decision[k].strip()
+                for k in ("source", "id", "status", "reason")) \
+                or decision["status"] not in ("confirmed", "excluded", "indeterminate"):
+            raise InputError("malformed decision: needs source, id, status and nonempty reason")
+        key = decision["source"], decision["id"]
+        if key not in candidates or key in statuses:
+            raise InputError(f"unknown or duplicate decision: {key!r}")
+        statuses[key] = decision["status"]
+    if statuses.keys() != candidates:
+        raise InputError("missing decision for an original candidate")
+    return [[(source, [f for f in findings if statuses[source, f["id"]] == status])
+             for source, findings in batches] for status in ("confirmed", "indeterminate")]
 
 
 def _near(lines_a, lines_b):
@@ -126,20 +162,20 @@ def merge(findings_files):
     for group in groups:
         best = min((g for _, g in group), key=lambda g: RANK[g["confidence"]])
         merged.append({
-            "confidence": best["confidence"], "type": best.get("type"),
-            "side_a": best["side_a"], "side_b": best["side_b"],
-            "why": best.get("why", ""), "steps": best.get("steps", []),
+            **best,
             "sources": [{"file": s, "id": g.get("id")} for s, g in group],
         })
     merged.sort(key=lambda m: RANK[m["confidence"]])
     return merged
 
 
-def build_report(plan, merged, model):
+def build_report(plan, merged, indeterminate, review, model):
     counts = {k: sum(1 for m in merged if m["confidence"] == k) for k in RANK}
     return {
-        "verdict": "needs-revision" if counts["high"] else "pass",
+        "verdict": "needs-revision" if merged else "indeterminate" if indeterminate else "pass",
         "findings": merged,
+        "indeterminate": indeterminate,
+        "review": review,
         "counts": counts,
         "grouped": bool(plan.get("grouped")),
         "over_limit": bool(plan.get("over_limit")),
@@ -168,17 +204,22 @@ def _finding_md(n, m):
 
 def render_md(r):
     out = ["# Consistency report", "", f"Verdict: **{r['verdict']}**", ""]
+    totals = {status: sum(d["status"] == status for d in r["review"]["decisions"])
+              for status in ("confirmed", "excluded", "indeterminate")}
+    out += [f"Confirmed: {totals['confirmed']}; excluded: {totals['excluded']}; "
+            f"indeterminate: {totals['indeterminate']}",
+            "Pass means no confirmed or unresolved candidates in the checked scope; "
+            "it does not prove universal consistency.", ""]
     if r["over_limit"]:
         out += ["> Caution: At least one group exceeds the conservative nominal "
                 "reporting bound "
                 f"({r['reference']['nominal_reporting_bound_tokens']:,} estimated tokens); "
                 "interpret this run with the size qualification in Known limits.", ""]
-    high = [m for m in r["findings"] if m["confidence"] == "high"]
-    rest = [m for m in r["findings"] if m["confidence"] != "high"]
-    out += ["## High-confidence findings (blocking)", ""]
-    out += [line for i, m in enumerate(high, 1) for line in _finding_md(i, m)] or ["None."]
-    out += ["", "## Medium / low-confidence findings (advisory)", ""]
-    out += [line for i, m in enumerate(rest, 1) for line in _finding_md(i, m)] or ["None."]
+    out += ["## Confirmed findings (all confidence levels require revision)", ""]
+    out += [line for i, m in enumerate(r["findings"], 1) for line in _finding_md(i, m)] or ["None."]
+    out += ["", "## Indeterminate candidates", ""]
+    out += [line for i, m in enumerate(r["indeterminate"], 1)
+            for line in _finding_md(i, m)] or ["None."]
     out.append("")
     if r["grouped"]:
         out += ["## Not checked together", ""]
@@ -202,6 +243,7 @@ def main(argv=None):
     p.add_argument("--target", required=True)
     p.add_argument("--plan", required=True)
     p.add_argument("--findings", required=True, nargs="+")
+    p.add_argument("--decisions", required=True)
     p.add_argument("--model", required=True)
     p.add_argument("--out", required=True)
     args = p.parse_args(argv)
@@ -213,18 +255,27 @@ def main(argv=None):
         plan = _load(args.plan)
         _check_names(args.findings, plan)
         batches = []
+        hashes = {}
         for path in args.findings:
-            data = _load(path)
+            data = _load(path, hashes)
             if not isinstance(data, dict) or not isinstance(data.get("findings"), list):
                 raise InputError(f"{path}: expected {{\"findings\": [...]}}")
+            ids = set()
             for f in data["findings"]:
-                if not isinstance(f, dict) or f.get("confidence") not in RANK \
+                if not isinstance(f, dict) or not isinstance(f.get("confidence"), str) \
+                        or f["confidence"] not in RANK \
                         or not _is_side(f.get("side_a")) or not _is_side(f.get("side_b")):
                     fid = f.get("id") if isinstance(f, dict) else f
                     raise InputError(f"{path}: malformed finding {fid!r} (needs "
                                      "confidence and side_a/side_b with str file, int lines)")
+                fid = f.get("id")
+                if not isinstance(fid, str) or not fid.strip() or fid in ids:
+                    raise InputError(f"{path}: duplicate or invalid candidate id {fid!r}")
+                ids.add(fid)
             batches.append((os.path.basename(path), data["findings"]))
-        report = build_report(plan, merge(batches), args.model)
+        review = _load(args.decisions)
+        confirmed, indeterminate = _select(batches, hashes, review)
+        report = build_report(plan, merge(confirmed), merge(indeterminate), review, args.model)
         os.makedirs(args.out, exist_ok=True)
         json_path = os.path.join(args.out, "consistency-report.json")
         md_path = os.path.join(args.out, "consistency-report.md")
@@ -237,7 +288,7 @@ def main(argv=None):
         return 2
     print(md_path)
     print(report["verdict"])
-    return 1 if report["verdict"] == "needs-revision" else 0
+    return {"pass": 0, "needs-revision": 1, "indeterminate": 3}[report["verdict"]]
 
 
 if __name__ == "__main__":

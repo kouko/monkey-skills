@@ -4,6 +4,17 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Require hash-bound decisions for every original consistency-check candidate;
+  preserve raw detector files and retain all review reasons in report JSON.
+  Any confirmed conflict now requires revision, regardless of confidence.
+  Separately report reviewed but unresolved candidates as indeterminate (exit 3).
+  Missing, stale or malformed review is an input error (exit 2), with no new report.
+  This changes the CLI contract: `--decisions` is required with no legacy bypass.
+
 ## [0.5.2] — 2026-11-03
 
 ### Fixed

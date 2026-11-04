@@ -49,8 +49,10 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 - **Two detectors**, each an independent subagent: a read-through and an
   execution walk-through. Their specs are in [`references/`](references/).
 - **Caller review before merge**: the reporting agent checks candidates against
-  full context and exceptions, preserves raw outputs and exclusion reasons,
-  and passes every group's accepted list, even empty ones, to the merger.
+  full context and exceptions, preserves original outputs, and records one
+  decision and reason per candidate. The merger requires `--decisions` with
+  hashes for every original file, including empty groups; it selects confirmed
+  candidates and reports unresolved candidates separately, retaining the full review.
   Unavailable required source stops review without a whole-package verdict.
 - **Grouping**: packages up to 30,000 estimated tokens are read whole.
   Larger ones are split into groups aimed at 25,000 tokens each; every
@@ -60,8 +62,10 @@ skill folder ──► plan_groups.py ──► one group, or several groups
   tokens receives a size caution, including a whole-package group that
   was not split. This is a conservative nominal reporting bound; it
   does not change splitting or establish an accuracy cliff.
-- **Verdict**: "needs revision" only when a high-confidence finding
-  exists; medium and low findings are advisory.
+- **Verdict**: any confirmed finding means "needs revision" (exit 1), regardless
+  of detector confidence. Otherwise unresolved candidates mean "indeterminate"
+  (exit 3); no confirmed or unresolved candidates means "pass" (exit 0) in the
+  checked scope. Missing or malformed review is an input error (exit 2).
 - **Side effects**: none. Nothing is installed and nothing is written
   inside the checked folder; reports go to a run directory elsewhere.
   Findings are never auto-fixed.

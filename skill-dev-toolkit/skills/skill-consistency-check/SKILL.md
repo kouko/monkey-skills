@@ -151,15 +151,15 @@ one run per method.
 Before merging, the reporting caller must review every candidate from every
 completed detector output, including thorough-mode runs:
 
-1. Preserve each raw JSON file byte-for-byte outside `read-*.json` and
-   `simulate-*.json` (e.g. `raw-read-1.json`) before changing a planned file.
+1. Keep every original detector JSON file byte-for-byte at its planned name.
+   Do not replace it with a filtered list or rewrite candidate fields or confidence.
 2. Read each candidate's cited files in full, plus relevant entry-file and
-   delegated authorities. Before subset selection, record in run notes or a reply
-   its detector filename/original ID, exact governing entry-file scope/delegation,
-   precedence and exception quotes with file:line, or file:line ranges searched
-   if none applies. Explain why the claim is supported, excluded or unchecked,
+   delegated authorities. In each `decisions.json` entry's `reason`, cite the exact
+   governing entry-file scope/delegation, precedence and exception quotes with
+   file:line, or file:line ranges searched
+   if none applies. Explain why the claim is confirmed, excluded or indeterminate,
    its shared conditions, and how those qualifications govern it. Duplicates
-   may explicitly reuse a record only when claim and qualifications match.
+   may reuse reasoning only when claim and qualifications match.
 3. Judge the original `why` claim, not a different concern in its side quotes.
    For action conflicts, retain only a supported concrete situation requiring
    incompatible actions under the same conditions after cited scope, precedence
@@ -168,11 +168,15 @@ completed detector output, including thorough-mode runs:
    definitions or values in the same scope. Exclude unsupported or overstated
    claims even if quotes support a narrower concern. Record incompatibility or
    source-grounded exclusion reasons; never add findings from your own context.
-4. Only after every candidate's review is recorded, write subsets of each raw
-   file's findings to its original planned filename; do not add or rewrite
-   findings or change confidence. Use `low` only for uncertainty about a remaining
-   incompatibility, never for compatible rules. Reviewed empty `findings` lists
-   are valid; never omit a method/group.
+4. Write `decisions.json` as an object with `sources` mapping every exact input
+   basename to the SHA256 of its original bytes, and a `decisions` list containing
+   exactly one object per original candidate: `source` (basename), `id` (original
+   nonempty string), `status` and `reason` (nonempty source-grounded explanation).
+   Status is exactly `confirmed`, `excluded` or `indeterminate`. Confirm supported
+   incompatibilities; exclude reconciled or unsupported claims. Use `indeterminate`
+   only after required reading finishes but competing readings remain unresolved.
+   Every candidate needs its own entry, even duplicates; empty groups still need
+   their source hash. The script validates structure and coverage, not reason truth.
 
 If required review cannot finish, including when relevant source is unread
 or unavailable, stop before merge, name the unchecked candidates/groups and
@@ -181,29 +185,38 @@ give no whole-package verdict. JSON validity alone does not finish review.
 ```bash
 python3 scripts/merge_report.py --target "<target>" --plan "<run>/plan.json" \
   --findings <run>/read-*.json <run>/simulate-*.json \
+  --decisions "<run>/decisions.json" \
   --model "<model id from step 4, or unknown>" --out "<run>"
 ```
 
-Pass every planned group's reviewed output file to `--findings`, including
-empty lists and every thorough-mode run. The script merges
-duplicate findings, sets the verdict and writes
+Pass every planned group's original output file to `--findings`, including
+empty lists and every thorough-mode run. The script requires matching hashes
+and complete unique decisions, selects candidates, separately merges confirmed
+and indeterminate duplicates, sets the verdict and writes
 `<run>/consistency-report.md` and `<run>/consistency-report.json`.
-Exit 0 = pass, exit 1 = needs revision (a result, not an error),
-exit 2 = error: no report was written and there is no verdict. Relay the
-stderr message to the user; when it names missing groups or bad file
-names, re-dispatch those detectors with the correct output path and run
-this step again. On exit 2, never present a verdict.
+Exit 0 = pass (no confirmed or unresolved candidates in the checked scope),
+exit 1 = needs revision (any confirmed finding, regardless of confidence),
+exit 3 = indeterminate (unresolved candidates with no confirmed finding).
+Mixed results retain unresolved candidates even when exit 1 applies.
+Exit 2 = input error: no new report is written and there is no verdict. Relay
+stderr; correct missing or malformed decisions without rewriting raw findings.
+Missing/malformed detector output follows step 3's retry/stop rule. On exit 2,
+never present a verdict. Report JSON keeps `review` with all hashes and decisions,
+`findings`/confidence `counts` for confirmed items only, and `indeterminate` separately.
 <!-- /gate -->
 
 ### 7. Present the result
 
 <!-- gate: skill-consistency-check.present-verdict -->
-Read `<run>/consistency-report.md` and present it in the user's language:
+Read `<run>/consistency-report.md` and the JSON `review`, then present in the user's language:
 
-- The verdict. Only high-confidence findings block ("needs revision");
-  medium and low findings are advisory.
+- The verdict and disposition totals. Any confirmed finding requires revision;
+  otherwise unresolved candidates mean indeterminate. Pass applies only to the
+  checked scope and does not prove universal consistency.
 - Each finding with both sides as file:line, the quoted text, and the
-  one-sentence reason — high first, then medium and low marked advisory.
+  one-sentence reason — high first, then medium and low. Confidence remains the
+  detector's confidence, separate from the caller's disposition. Present unresolved
+  candidates separately, including when confirmed findings determine the verdict.
 - The "Not checked together" list when the package was grouped: those
   file pairs were never read in the same group, so contradictions
   between them could be missed.
@@ -225,7 +238,7 @@ Give the report's path in the run directory. Do not edit the target.
 Validated on: Claude Sonnet (200k context) on skill packages of about 25,000 tokens; other models are unvalidated until they pass the regression corpus.
 
 This historical detector/corpus calibration does not validate the step 6 caller
-review, even with matching model metadata. The CLI metadata remains unchanged.
+review, even with matching model metadata. The model metadata fields remain unchanged.
 
 The existing validated corpus fixture estimates to 25,135 tokens
 (approximately 25k) and is still read whole. The report JSON's

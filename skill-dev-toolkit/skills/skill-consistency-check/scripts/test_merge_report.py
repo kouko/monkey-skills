@@ -1,4 +1,5 @@
 """Tests for merge_report.py (stdlib + pytest; fixtures built in tmp_path)."""
+import hashlib
 import json
 import os
 import subprocess
@@ -47,10 +48,29 @@ def _setup(tmp_path, findings_by_file, plan_kwargs=None, fill=True):
     return target, plan, paths
 
 
-def _run(target, plan, findings, out, model="Claude Sonnet 4"):
+def _decisions(findings):
+    return {"sources": {Path(p).name: hashlib.sha256(Path(p).read_bytes()).hexdigest()
+                        for p in findings},
+            "decisions": [{"source": Path(p).name, "id": f.get("id"),
+                           "status": "confirmed", "reason": "Both rules govern the same action."}
+                          for p in findings
+                          for f in json.loads(Path(p).read_text())["findings"]]}
+
+
+def _run(target, plan, findings, out, model="Claude Sonnet 4", decisions="auto"):
     cmd = [sys.executable, "-B", str(SCRIPT), "--target", str(target),
            "--plan", str(plan), "--findings", *findings,
            "--model", model, "--out", str(out)]
+    if decisions == "auto":
+        # Invalid detector JSON must reach the CLI's input validation unchanged.
+        try:
+            decisions = _decisions(findings)
+        except ValueError:
+            decisions = {"sources": {}, "decisions": []}
+    if decisions is not None:
+        path = plan.parent / "decisions.json"
+        path.write_text(json.dumps(decisions))
+        cmd += ["--decisions", str(path)]
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
@@ -61,6 +81,133 @@ def _report(out):
 
 def _tree(path):
     return sorted(str(p.relative_to(path)) for p in path.rglob("*"))
+
+
+def test_reviewed_candidates_selected_and_raw_bytes_preserved(tmp_path):
+    candidates = [_finding("action", "medium", _side("SKILL.md", [3]),
+                           _side("a.md", [9])),
+                  _finding("field", "low", _side("SKILL.md", [30]),
+                           _side("b.md", [1])),
+                  _finding("exception", "high", _side("SKILL.md", [50]),
+                           _side("c.md", [5]))]
+    candidates[0]["detector_detail"] = {"original": [1, "unchanged"]}
+    target, plan, f = _setup(tmp_path, {"read-1.json": candidates})
+    raw = {p: Path(p).read_bytes() for p in f}
+    review = _decisions(f)
+    review["decisions"][2].update(status="excluded", reason="c.md:5 explicitly exempts this scope.")
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == 1, result.stderr
+    data, md = _report(out)
+    assert data["review"] == review
+    assert data["counts"] == {"high": 0, "medium": 1, "low": 1}
+    assert data["indeterminate"] == []
+    for original, merged in zip(candidates[:2], data["findings"]):
+        assert {k: merged[k] for k in original} == original
+        assert merged["sources"] == [{"file": "read-1.json", "id": original["id"]}]
+    assert "Confirmed: 2; excluded: 1; indeterminate: 0" in md
+    assert "advisory" not in md
+    assert {p: Path(p).read_bytes() for p in f} == raw
+
+
+def test_compatible_exceptions_excluded(tmp_path):
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
+        _finding("E1", "high", _side("SKILL.md", [3]), _side("a.md", [9]))]})
+    review = _decisions(f)
+    review["decisions"][0].update(status="excluded", reason="SKILL.md:3 delegates; a.md:9 supplies its exception.")
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == 0, result.stderr
+    data, md = _report(out)
+    assert data["verdict"] == "pass" and data["findings"] == []
+    assert data["review"] == review
+    assert data["counts"] == {"high": 0, "medium": 0, "low": 0}
+    assert "no confirmed or unresolved candidates" in md
+
+
+@pytest.mark.parametrize("confirmed", [False, True])
+def test_reviewed_ambiguity_indeterminate(tmp_path, confirmed):
+    a, b = _side("SKILL.md", [3]), _side("a.md", [9])
+    target, plan, f = _setup(tmp_path, {
+        "read-1.json": [_finding("R", "low", a, b)],
+        "simulate-1.json": [_finding("S", "high", b, a)]})
+    review = _decisions(f)
+    for decision in review["decisions"]:
+        decision.update(status="indeterminate", reason="Full reading leaves competing scope interpretations.")
+    if confirmed:
+        review["decisions"][0]["status"] = "confirmed"
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == (1 if confirmed else 3), result.stderr
+    data, md = _report(out)
+    assert data["verdict"] == ("needs-revision" if confirmed else "indeterminate")
+    assert len(data["findings"]) == int(confirmed)
+    assert len(data["indeterminate"]) == 1
+    assert len(data["indeterminate"][0]["sources"]) == (1 if confirmed else 2)
+    assert data["counts"] == {"high": 0, "medium": 0, "low": int(confirmed)}
+    assert "## Indeterminate candidates" in md and "a.md:9" in md
+    assert data["review"] == review
+
+
+@pytest.mark.parametrize("case", [
+    "missing", "object", "sources", "decisions", "missing-source", "extra-source",
+    "stale", "empty-group-stale", "omitted", "duplicate", "unknown-source", "unknown-id",
+    "status", "reason", "blank-reason", "entry", "blank-id", "numeric-id",
+    "duplicate-id", "duplicate-basename", "list-id", "list-confidence",
+    "list-status", "list-source", "extra-decision",
+])
+def test_missing_or_stale_decision_rejected(tmp_path, case):
+    candidate = _finding("F1", "high", _side("SKILL.md", [3]), _side("a.md", [9]))
+    if case == "blank-id":
+        candidate["id"] = " "
+    elif case == "numeric-id":
+        candidate["id"] = 1
+    elif case == "list-id":
+        candidate["id"] = []
+    elif case == "list-confidence":
+        candidate["confidence"] = []
+    target, plan, f = _setup(tmp_path, {"read-1.json": [candidate]})
+    if case == "duplicate-id":
+        Path(f[0]).write_text(json.dumps({"findings": [candidate, candidate]}))
+    if case == "duplicate-basename":
+        copy = tmp_path / "another" / "read-1.json"
+        copy.parent.mkdir()
+        copy.write_bytes(Path(f[0]).read_bytes())
+        f.append(str(copy))
+    review = _decisions(f)
+    if case == "missing":
+        review = None
+    elif case == "object":
+        review = []
+    elif case in ("sources", "decisions"):
+        review[case] = None
+    elif case == "missing-source":
+        del review["sources"]["simulate-1.json"]
+    elif case == "extra-source":
+        review["sources"]["read-9.json"] = "0" * 64
+    elif case in ("stale", "empty-group-stale"):
+        Path(f[1] if case == "empty-group-stale" else f[0]).write_bytes(b'{"findings": []}\n')
+    elif case == "omitted":
+        review["decisions"] = []
+    elif case == "duplicate":
+        review["decisions"] *= 2
+    elif case == "extra-decision":
+        review["decisions"].append(dict(review["decisions"][0], id="extra"))
+    elif case in ("unknown-source", "unknown-id", "status", "reason", "blank-reason",
+                  "list-status", "list-source"):
+        key, value = {"unknown-source": ("source", "read-9.json"),
+                      "unknown-id": ("id", "absent"), "status": ("status", "unchecked"),
+                      "reason": ("reason", None), "blank-reason": ("reason", " "),
+                      "list-status": ("status", []), "list-source": ("source", [])}[case]
+        review["decisions"][0][key] = value
+    elif case == "entry":
+        review["decisions"][0] = None
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == 2, (case, result.stderr)
+    assert "unrecognized arguments" not in result.stderr
+    assert "Traceback" not in result.stderr
+    assert not out.exists()
 
 
 # --- Acceptance 1 -----------------------------------------------------------
@@ -79,15 +226,15 @@ def test_high_gives_needs_revision(tmp_path):
     assert str(out / "consistency-report.md") in r.stdout
 
 
-def test_medium_low_only_pass(tmp_path):
+def test_confirmed_medium_low_require_revision(tmp_path):
     target, plan, f = _setup(tmp_path, {"read-1.json": [
         _finding("F1", "medium", _side("SKILL.md", [3]), _side("a.md", [9])),
         _finding("F2", "low", _side("SKILL.md", [30]), _side("b.md", [1]))]})
     out = tmp_path / "out"
     r = _run(target, plan, f, out)
-    assert r.returncode == 0, r.stderr
+    assert r.returncode == 1, r.stderr
     data, _ = _report(out)
-    assert data["verdict"] == "pass"
+    assert data["verdict"] == "needs-revision"
     assert [x["confidence"] for x in data["findings"]] == ["medium", "low"]
 
 
