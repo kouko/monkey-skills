@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
-intent: 2026-11-02-repair-skill-dev-toolkit@2e3ba44e
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@44719268
+intent: 2026-11-02-repair-skill-dev-toolkit@c5d3e9f7
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@a9ff145e
 charter: 1.1
 
 ## Task DAG
@@ -201,7 +201,15 @@ charter: 1.1
 - Test: A7 positive: existing_merger_routes; negative: unchecked_candidate_not_published. A9 positive: genuine_and_schema_conflicts_retained; negative: compatible_exception_removed. A11 positive: raw_preserved_with_accepted_subset; boundary: unavailable_review_no_verdict. Replay unchanged raw controls, including schema false negative, actual-host exception failures and unavailable source; run existing checks.
 - Risk: REQ-9/11; existing caller eligibility. Class: unverified findings. Searched caller, detectors, merger, presentation, README copies and tests. Preserve raw/schema/coverage/independence; consolidate checks. W7-02 remains exhausted. No Python, framework, prose-pin tests or external models.
 
+### Wave 9 — User-selected machine-consumed decision boundary
+
+**W9-01 Select report eligibility from complete immutable candidate decisions** after: W8-01 acceptance: 7, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/scripts/merge_report.py` (CLI entry), `skill-dev-toolkit/skills/skill-consistency-check/scripts/test_merge_report.py`, `skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py`, `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md`, checker and plugin README.md/README.ja.md/README.zh-TW.md, `skill-dev-toolkit/CHANGELOG.md`.
+- Test: A7 positive: reviewed_candidates_selected; negative: missing_or_stale_decision_rejected. A9 positive: genuine_action_and_field_conflicts_retained; negative: compatible_exceptions_excluded. A11 positive: raw_bytes_and_audit_preserved; boundary: reviewed_ambiguity_indeterminate. TDD at CLI: coverage/IDs/status/reasons/hash, duplicate basenames, mixed results, unchanged payloads, exits0/1/2/3. Preserve old merger/group/model/target safeguards; replay genuine raw controls separately from deterministic plumbing checks.
+- Risk: REQ-9/11; class: eligibility absent from consumed data. Sweep full repository merger callers and outcome consumers. Existing test_merge_report.py coverage widens; former medium-only pass changes intentionally. No new dependency/runtime role. Record production/test/prose cost.
+
 ## Simplicity check
+- W9-01 existing merger and tests; fresh reviewer found no simpler shape — taken
 - shared validation and existing input paths — taken
 - existing caller verification and raw-candidate replay — taken
 
@@ -236,3 +244,4 @@ charter: 1.1
 24. Round3/5 high effort filters Cowork but removes named-field claim and retains packaging/fallback. Fresh source-first audit challenges classifications. Round4/5 compares first-party Opus5.5/high on unchanged source/data; no product rules, implementation dispatch or counter reset. Window ceiling stays five.
 25. Round4 Opus retains schema and excludes Cowork but retains compatible fallback. Round5/5, global implementation continuation4, requires a supported incompatible action scenario after qualifications, separately preserving factual/field contradictions. Replace existing criterion only; preserve all failures and stop after this final round.
 26. Five rounds complete. Final ecb9ddb7 replay retains fallback low; outside consultation is inconclusive, not PASS. No sixth candidate/host retry. Finish acceptance/evidence only. Preserve packaging ambiguity, field findings, prior failures and closed budget.
+27. User selected local decision-boundary redesign, maximum five cycles. W9-01 changes consumed data and unresolved outcomes; W8-01 remains failed/closed, not renamed. No new outside-model, installation, publication or merge authority. Record cycle counts and unmet semantic obligations.
