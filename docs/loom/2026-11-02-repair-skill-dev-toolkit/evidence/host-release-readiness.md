@@ -872,3 +872,44 @@ resetting history or changing the shared resolver. Next global continuation3
 is new-window round2/5. The next narrow packet makes governing delegation
 and the original `why` explicit while replacing existing prose, not adding
 a case whitelist, receipt schema or another runtime agent.
+
+### New-window round2/5 — f00a04ef, global continuation3, failed
+
+Sourcef00a04ef21d59e09366446e40cf9917f7503e1b1 replaces existing prose,
+net-1 physical line across SKILL/changelog versus round1. It explicitly asks
+for full cited-file reading, governing delegation/exception quotes and original
+`why` judgment, with explicit duplicate-record reuse. No product Python,
+module/function/schema/agent/test is added. Focused49, root715(55.13s),
+toolkit191(11.02s), adversarial5(0.10s) pass; sync remains up to date.
+
+Host root `/private/tmp/toolkit-five-review-lmgnzvs3/rounds/r2/host` preserves
+same original raw data and genuine inputs. Sonnet5.5/medium preflight succeeds
+(USD0.0019387 estimate). Replay completes71.49s, USD0.3611934 estimate, still
+keeps all read5/simulate7 and the same8 merged findings. It reads much fuller
+sources but explicitly acknowledges analyzer1–149 unread before merging.
+It cites the platform delegation yet calls precedence uncertain, retains the
+Cowork allegation, and retains a compatible fallback as low despite recognizing
+the environmental exception. Low confidence cannot cure compatibility under
+the current contract. The final reply also miscounts raw candidates; counts
+come from actual arrays, not prose. This is another failed host result, not
+evidence that more procedural text has fixed interpretation. Remaining full
+workflow cases were stopped after this failure; no outside code consultation
+was run for round2, and no missing reviewer result is called PASS.
+
+Round1 consultation qualification: its packet asked for the advisor contract
+but did not copy the full field-level report contract into the restricted
+review root. That preparation omission contributed to missing fields; the
+formal output rejection is not proof of a model capability failure. The full
+contract has since been copied for any later consultation. Its concrete scope
+anchors remain advisory with the recorded packaging disagreement. No original
+review output or reported author claims were rewritten to hide that limitation.
+
+The next bounded experiment is round3/5, same sourcef00 and identical raw
+inputs, changing only actual Claude CLI requested effort medium→high.
+Implementation continuation remains3; a profile experiment is not another
+source redispatch or counter reset. This tests an execution-capability cause
+without more product rules or framework. The replay estimate threshold is
+USD1.00; preflight/control/check remain0.05/1.00/1.50, combined3.55, not a hard
+cap or invoice. Model remains explicit first-party claude-sonnet-5-5. All
+failures remain retained and the user window still stops after five trials
+unless actual release readiness is established earlier. No publication.
