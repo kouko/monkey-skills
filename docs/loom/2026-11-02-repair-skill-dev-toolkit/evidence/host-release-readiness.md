@@ -950,3 +950,49 @@ promised model-wide accuracy is justified by this trial. Implementation
 continuation remains3; profile comparisons still consume the user's five-round
 window. The fifth round is the last allowed unless release readiness is
 actually established earlier. No installation, publication or merge.
+
+### Source-first audit correction and round4/5 model comparison
+
+Fresh audit `/private/tmp/toolkit-five-source-blind-a.md` froze phase1 before
+outputs and phase2 before trajectories; neither earlier audit answers nor
+author expectations were supplied. It verifies original raw hashes and
+identical target trees across r1–r3, all accepted payloads unchanged, and
+procedural improvement in r3. It confirms r2's analyzer omission, r3's
+wrongful schema-field exclusion and compatible fallback retention, and the
+correct Cowork exclusion. Its own phase1 packaging exclusion is transparently
+corrected to unresolved: original `why` includes “workable,” reasonably
+supporting a factual capability reading. Neither initial frozen record was
+rewritten. Earlier packaging-false-positive assertions are now qualified by
+this interpretive disagreement; do not count it as confirmed wrongful
+retention or manufacture consensus. Other validated defects still stand.
+
+Round4 root `rounds/r4/host` uses the identical sourcef00 and original inputs,
+explicit first-party claude-opus-5-5/high. Fresh preflight returns HOST_READY
+and the requested model, estimateUSD0.0138996. Replay completes157.81s,
+USD1.0236746, accepting read4/simulate6 and merging7. It retains the supported
+assertions/expectations field claim and excludes Cowork on delegation, but
+still retains fallback as low because it is unsure the environmental carve-out
+covers this case. The concrete compatible execution in the independently read
+full protocol defeats the raw necessary-fix allegation; uncertainty about
+applying an exception does not itself establish incompatible obligations.
+Packaging remains a qualified factual/action interpretation dispute, not a
+clean positive/negative control. No remaining full workflow case was run after
+the confirmed fallback failure. No model-general superiority is inferred.
+
+Round5/5 is the last authorized iteration. It makes one narrow eligibility
+clarification in the current caller: retaining an action conflict requires a
+supported shared-condition situation still requiring incompatible actions
+after governing qualifications. Facts/fields/values retain their separate
+definition rule; do not repeat the original f8 action-only false-negative
+mistake. Replace existing prose and reuse current notes, with no new runtime
+component, parser, schema, test oracle or keyword exception. The bounded sweep
+of all cumulative changed paths and caller/detector/merger/README surfaces
+finds only Step6's caller action predicate; detector low-confidence guidance
+is an independent discovery rule and remains unchanged, not a retry of W7-02.
+Implementation continuation becomes4; rounds3/4 consumed window trials but
+were profile-only, so they did not increment source redispatches. The
+unmodified resolver rejects counts above2; actual global counters and the
+specific five-round user override remain recorded, never normalized away.
+Use the now-verified Opus5.5/high for comparable last-round host validation,
+same disclosed USD6.05 estimated thresholds. If it fails, stop without a new
+candidate, release claim or automatic sixth round.
