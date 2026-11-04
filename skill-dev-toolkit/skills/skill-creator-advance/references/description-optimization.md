@@ -77,14 +77,17 @@ First confirm an observable exact session model ID supported by the loop's Claud
 
 Once a supported target is confirmed, tell the user: "This will take some time — I'll run the optimization loop in the background and check on it periodically."
 
-Save the eval set to the workspace, then run in the background:
+Save the eval set to the workspace, then follow the
+[module-command context](../SKILL.md#running-bundled-module-commands) and run in the background:
 
 ```bash
 python -m scripts.run_loop \
-  --eval-set <path-to-trigger-eval.json> \
-  --skill-path <path-to-skill> \
+  --eval-set "<absolute-workspace>/trigger-eval.json" \
+  --skill-path "<absolute-skill-folder>" \
   --model <supported-target-model-id> \
   --max-iterations 5 \
+  --report "<absolute-workspace>/optimization-report.html" \
+  --results-dir "<absolute-workspace>/optimization-results" \
   --verbose
 ```
 

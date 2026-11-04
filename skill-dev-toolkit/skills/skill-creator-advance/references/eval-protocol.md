@@ -106,9 +106,9 @@ Once all runs are done:
 
 2. **Check for regressions** (iteration 2+) — compare results against the previous iteration (`references/iteration-automation.md` has the full protocol); lead with any regressions when reporting to the user.
 
-3. **Aggregate into benchmark** — run the aggregation script from the skill-creator-advance directory:
+3. **Aggregate into benchmark** — follow the [module-command context](../SKILL.md#running-bundled-module-commands):
    ```bash
-   python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <name>
+   python -m scripts.aggregate_benchmark "<absolute-workspace>/iteration-N" --skill-name <name>
    ```
    This produces `benchmark.json` and `benchmark.md` with pass_rate, time, and tokens for each configuration, with mean +/- stddev and the delta. If generating benchmark.json manually, see `references/schemas.md` for the exact schema.
    Put each with_skill version before its baseline counterpart.

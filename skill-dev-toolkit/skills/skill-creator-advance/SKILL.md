@@ -20,6 +20,15 @@ The core loop: **draft → test → review → improve → repeat**.
 
 Your job is to figure out where the user is in this process and help them progress — from scratch or from an existing draft. Be flexible: if they say "just vibe with me", skip the formal eval machinery.
 
+## Running bundled module commands
+
+Run every `python -m scripts.*` command from the loaded `skill-creator-advance`
+root (the directory containing this SKILL.md), not the user's target project.
+Before changing directory, resolve all skill, eval, workspace and output path
+arguments to absolute paths against the original project directory. Keep outputs
+in a writable project workspace, outside the creator root, and restore the
+original working directory afterward.
+
 ## NEVER (anti-patterns to avoid)
 
 These anti-patterns recur across skill creation sessions. Each has a WHY clause explaining the failure mode — violating it will waste tokens or produce a broken skill.
@@ -236,7 +245,7 @@ For the full step-by-step workflow, see [references/description-optimization.md]
 After the skill is complete, package it for distribution:
 
 ```bash
-python -m scripts.package_skill <path/to/skill-folder>
+python -m scripts.package_skill "<absolute-skill-folder>" "<absolute-workspace>/dist"
 ```
 
 This creates a `.skill` file that can be shared and installed.
