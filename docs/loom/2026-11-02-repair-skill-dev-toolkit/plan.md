@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
 intent: 2026-11-02-repair-skill-dev-toolkit@c5d3e9f7
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@ea236fa3
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@31c52cb2
 charter: 1.1
 
 ## Task DAG
@@ -225,7 +225,15 @@ charter: 1.1
 - Test: A2 positive: ordered_trace_tolerance; negative: reordered_trace_rejected. A7 positive: cli_report_exit_agree; negative: reordered_trace_rejected. Keep all fourteen parameterized cases and existing fixtures; run the actual CLI through the current compare helper, with no additional test functions.
 - Risk: REQ-2/7; class: tests bypass public entry. Existing test_equivalence_order.py coverage widens to argv/report/exit with identical cases; remove importlib scaffold, no new test or production change.
 
+### Wave 11 — Local cycle 4 optional report-cohort correction
+
+**W11-01 Render valid optimizer output without a held-out cohort** after: W10-01 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/scripts/generate_report.py` (entry: generate_html, consumed by run_loop and its CLI), `skill-dev-toolkit/tests/test_creator_commands.py`.
+- Test: A1 positive: finalized_html_without_holdout; negative: absent_cohort_not_failed_score. A7 positive: zero_and_nonzero_holdout_cli_reports; boundary: backend_failure_not_success. Extend the existing real-EOF entry case, preserving all original EOF/nonzero/context assertions. Generate real HTML; fake only provider and browser launch, never renderer/root discovery. Keep the original failed artifact unchanged.
+- Risk: REQ-1/7; class: optional cohort treated as iterable. Sweep renderer history/query/score consumers and loop producer. Existing creator tests widen to real HTML with nullable/nonempty holdout; no new helper framework or production module.
+
 ## Simplicity check
+- W11 existing renderer boundary and existing real CLI case — taken
 - W10 same-cycle existing command docs, one summary cell and existing test helper; no new mechanism — taken
 - W9-01 existing merger and tests; fresh reviewer found no simpler shape — taken
 - shared validation and existing input paths — taken
@@ -265,3 +273,4 @@ charter: 1.1
 27. User selected local decision-boundary redesign, maximum five cycles. W9-01 changes consumed data and unresolved outcomes; W8-01 remains failed/closed, not renamed. No new outside-model, installation, publication or merge authority. Record cycle counts and unmet semantic obligations.
 28. Cycle2 batches the confirmed cwd omission with two bounded review cleanups. Preserve program mechanisms and prior counters. No extra runtime or outside call; update original entry/risk/test authorities only. Full mechanical checks repeat.
 29. Cycle3 repairs cycle2's wrong-project regression, same W10-01 continuation1. Scope imports per command, keep project cwd, use existing absolute entries. Preserve counts and old failures. Verify actual offline backend location before same-reviewer fix verification; help is insufficient.
+30. Cycle3 correctly preserves project context but actual HTML/holdout0 fails; retain that failure and failed Acceptance1/7. Cycle4 repairs the existing nullable-cohort consumer, not another command launcher. No new outside call, counter reset or release inference.
