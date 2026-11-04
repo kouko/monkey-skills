@@ -153,21 +153,28 @@ completed detector output, including thorough-mode runs:
 
 1. Preserve each raw JSON file byte-for-byte outside `read-*.json` and
    `simulate-*.json` (e.g. `raw-read-1.json`) before changing a planned file.
-2. Read each candidate's full relevant sections and tables in the target,
-   including applicable scope, precedence and platform exceptions. Assess the
-   raw claim as written: opposing actions, facts, field names or values in the
-   same scope. For action conflicts, try a concrete execution obeying both rules.
-3. Retain only claims still supported after those qualifications. Compatible
-   execution can refute an action conflict; extra keys, aliases or workarounds
-   do not reconcile conflicting definitions. Exclude unsupported or overstated
-   claims (e.g. permission inferred as a duty), even if the quotes support a
-   narrower concern. Record qualifications, shared conditions, why retained
-   claims remain incompatible and source-grounded exclusion reasons in run
-   notes or the final reply. Never add findings from the caller's own context.
-4. Write subsets of each raw file's findings to its original planned filename;
-   do not add or rewrite findings or change confidence. Use `low` only for
-   uncertainty about a remaining incompatibility, never for compatible rules.
-   Reviewed empty `findings` lists are valid; never omit a method/group.
+2. Read each candidate's full relevant sections and tables, including delegated
+   authorities and applicable scope, precedence and platform exceptions. Before
+   selecting accepted subsets, record in run notes or a reply each detector
+   filename and original candidate ID, exact governing scope/exception quotes
+   with file:line, and whether the claim is supported, excluded or still
+   unchecked. Explain how those qualifications apply to the raw claim as written,
+   including its shared conditions; a general assertion of full review is not
+   enough.
+3. Retain only claims still supported after those qualifications. For action
+   conflicts, try a concrete execution obeying both rules; compatible execution
+   can refute the claim. For opposing facts, field names or values in the same
+   scope, extra keys, aliases or workarounds do not reconcile conflicting
+   definitions.
+   Exclude unsupported or overstated claims (e.g. permission inferred as a duty),
+   even if the quotes support a narrower concern. In each candidate's record,
+   explain why retained claims remain incompatible or give the source-grounded
+   exclusion reason. Never add findings from the caller's own context.
+4. Only after every candidate's review is recorded, write subsets of each raw
+   file's findings to its original planned filename; do not add or rewrite
+   findings or change confidence. Use `low` only for uncertainty about a remaining
+   incompatibility, never for compatible rules. Reviewed empty `findings` lists
+   are valid; never omit a method/group.
 
 If required review cannot finish, including when relevant source is unread
 or unavailable, stop before merge, name the unchecked candidates/groups and
