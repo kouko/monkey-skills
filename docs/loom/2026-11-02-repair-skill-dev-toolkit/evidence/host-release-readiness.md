@@ -1257,3 +1257,61 @@ installation, publication or merge is proposed. Task data is toolkit source
 and public cases; normal CLI startup/auth/settings/cache may access or write
 outside this test root. This preparation grants no outside authorization;
 the prior five-round outside window remains closed and no call was made.
+
+### Cycle5 — consented host batch stopped at the estimated-spend boundary
+
+The subsequent user「好」accepted that exact disclosed batch. `proposal.json`
+records this new authorization; it does not reopen older campaigns. Functional
+source stays35a6be1446a3636450a6d94886195d37018da9b1, CLI2.1.317,
+requested claude-opus-5-5/high. The runner removes inherited ANTHROPIC_* and
+CLAUDE_CODE_USE_* routing variables, uses local empty MCP/plugin settings,
+and reads the exact candidate runtime rather than the installed0.5.1 toolkit.
+Startup/cache access outside the root remains possible as disclosed; this
+is not an installed-plugin, automatic-trigger or filesystem-confinement test.
+
+| Call | Process / substantive result | CLI estimated USD |
+|---|---|---:|
+| preflight | HOST_READY; exact returned model matches | 0.0140116 |
+| caller-replay | completed; two independent audits qualified, no proven blocker | 1.5609158 |
+| control-full | completed; independent audits pass/qualified, no proven blocker | 1.0707436 |
+| refactor-full | error_max_budget_usd; incomplete, no final verdict | 2.4163886 |
+| package-existing | not started under the stop policy | — |
+
+Four result-event estimates sum to USD5.0620596, USD0.0620596 above the batch
+threshold. This is the disclosed client estimate, not an invoice or hard cap.
+The third task's process exits1 after585s; its last Bash tool request is
+followed immediately by the budget error, without a tool response. Its plan
+and two fresh raw candidate files exist, but decisions, merger execution and
+formal JSON/Markdown reports do not. A requested command is not an executed
+command. Preserve all partial artifacts; no retry, model fallback, final
+packaging call or sixth cycle occurred. The budget stop is not evidence of
+a runtime bug or architectural ceiling.
+
+Completed replay:12 original candidates,10 confirmed and2 excluded, merged
+to7 confirmed findings. Packaging-as-factual-definition is defensible under
+the original why claim; fallback F7 still admits competing specific-example
+and environmental-exception readings. Both independent audits retain that
+qualification, not a unique gold label or a proven false positive. The small
+full workflow has4 candidates,2 confirmed and2 indeterminate, merged to1
+confirmed and1 indeterminate. Independent detectors are sequential under
+the test boundary, fresh and not cross-seeded. The caller cannot see child
+runtime fields in its hand-back text and reports unknown; the outer test
+stream can separately observe the child's resolved Opus5.5 identity. Neither
+historical calibration nor these few samples validates the new caller variant.
+
+Evidence root: `/private/tmp/toolkit-boundary-host-35a6be14`, including
+`runs/{preflight,caller-replay,control-full,refactor-full}.{jsonl,summary.json}`,
+actual requests, stderr, project artifacts, `preimages.json` and
+`batch-status.json`. Two audit pairs are retained at
+`/private/tmp/toolkit-boundary-host5-{audit,control}-{a,b}.md`;
+the stop audit is `/private/tmp/toolkit-boundary-host5-stop-a.md`.
+All156 recorded preimages are unchanged. Audit A briefly generated one
+pycache during its own pure-function import, removed only that self-created
+file/directory, and verified the original tree bytes; its method must not be
+described as zero-write. No product source, target or original output was
+rewritten, and no packages were installed. Source/tests remain unchanged,
+so the prior715/223/5 mechanical checks remain source-specific evidence.
+
+The five-cycle limit is exhausted. Acceptance stays10 works/1 partly:
+the larger end-to-end task and this batch's packaging case are uncompleted.
+No new passing attestation, installation, publication or merge is earned.
