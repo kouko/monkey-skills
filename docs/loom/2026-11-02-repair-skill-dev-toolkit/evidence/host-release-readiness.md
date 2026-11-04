@@ -1227,3 +1227,33 @@ described as an observed backend or an automatic upgrade. All earlier
 failures/counters and the historical packaging interpretation dispute remain.
 No new outside-model call, installation, publication, merge or passing
 finalization occurred; the same reviewers still verify the final fix delta.
+
+### Same-identity final fix verification and remaining boundary
+
+Formal Round3 at397c9c53 (functional source35a6be14) is complete:
+code PASS_WITH_NOTES (12 dimensions, no unresolved finding, changed creator
+file47 independently passed13.00s); skill PASS (7 dimensions,0 findings).
+Both mark their Round2 wrong-project blockers fixed and inspect the actual
+context/HTML evidence; no reviewer identity or source counter was reset.
+Raw YAML is retained at
+`/private/tmp/toolkit-boundary-closing-{code,skill}-r3.yaml`.
+The skill review retains its previously disclosed historical-verdict
+exposure limitation; neither result certifies complete host behavior.
+
+All locally authorized repair, mechanical tests, direct source-based
+acceptance and independent fix verification now finish at4/maximum5 cycles.
+The remaining Acceptance11 gap requires actual new-interface host discovery
+and execution; finalization/release remains unearned, with no replacement
+attestation generated from these partial outcomes.
+
+A concrete next-batch proposal is prepared, not executed, at
+`/private/tmp/toolkit-boundary-host-35a6be14`:100 current runtime files,
+public/frozen targets, original recorded candidates, four case prompts,
+156 preimages and pending proposal.json. Planned fifth cycle is one
+first-party Claude Code preflight plus caller replay, two full checks and
+existing-skill packaging, using requested claude-opus-5-5/high and a USD5
+client-estimate stop threshold, not a hard billing cap. No live optimizer,
+installation, publication or merge is proposed. Task data is toolkit source
+and public cases; normal CLI startup/auth/settings/cache may access or write
+outside this test root. This preparation grants no outside authorization;
+the prior five-round outside window remains closed and no call was made.
