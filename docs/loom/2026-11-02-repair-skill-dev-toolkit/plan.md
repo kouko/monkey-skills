@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
-intent: 2026-11-02-repair-skill-dev-toolkit@7f27d665
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@ea526fd7
+intent: 2026-11-02-repair-skill-dev-toolkit@2e3ba44e
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@44719268
 charter: 1.1
 
 ## Task DAG
@@ -198,7 +198,7 @@ charter: 1.1
 
 **W8-01 Verify independent candidates at the existing reporting boundary** after: W7-05 acceptance: 7, 9, 11
 - Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-consistency-check/references/detector-read.md`, `skill-dev-toolkit/skills/skill-consistency-check/references/detector-simulate.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.ja.md`, `skill-dev-toolkit/skills/skill-consistency-check/README.zh-TW.md`, `skill-dev-toolkit/CHANGELOG.md`.
-- Test: A7 positive: existing_merger_routes; negative: unchecked_candidate_not_published. A9 positive: genuine_and_schema_conflicts_retained; negative: compatible_exception_removed. A11 positive: raw_preserved_with_accepted_subset; boundary: unavailable_review_no_verdict. Replay unchanged raw controls, including schema false negative and unavailable source; run existing checks.
+- Test: A7 positive: existing_merger_routes; negative: unchecked_candidate_not_published. A9 positive: genuine_and_schema_conflicts_retained; negative: compatible_exception_removed. A11 positive: raw_preserved_with_accepted_subset; boundary: unavailable_review_no_verdict. Replay unchanged raw controls, including schema false negative, actual-host exception failures and unavailable source; run existing checks.
 - Risk: REQ-9/11; existing caller eligibility. Class: unverified findings. Searched caller, detectors, merger, presentation, README copies and tests. Preserve raw/schema/coverage/independence; consolidate checks. W7-02 remains exhausted. No Python, framework, prose-pin tests or external models.
 
 ## Simplicity check
@@ -228,3 +228,5 @@ charter: 1.1
 16. Source30d local completed trials retain genuine/schema conflicts and exclude exceptions. Preserve malformed first execution and successful same-task retry separately. Independent acceptance: nine works, two partly; fresh Claude workflow evidence still awaits separate execution approval.
 17. User answered「同意」to the disclosed preflight and three Claude Code cases: first-party Sonnet5.5/medium, combined USD3.05 estimated thresholds, not hard cap. All four calls completed; no retry, further outside review, installation or publication is authorized by this batch.
 18. Source30d real-host results contradict local semantic success: caller replay and larger workflow retain unsupported exception claims; control filters correctly. Preserve failures and W8-01 continuation1/W7-02 exhausted counts. Research informs a bounded next repair; no automatic model escalation or release verdict.
+19. User permits five more same-task rounds with Claude Code review. Round1/5 is W8-01 continuation2; preserve older counters. Selected native gpt-6.1-sol/high overrides unknown-profile/default-budget stops; shared rules unchanged. No inferred upgrade or publication authority.
+20. Replace broad caller prose with visible dispositions in existing notes/reply. Retain real-host RED; source-first judgment/execution must earn GREEN. No new Python/schema/agent, exception whitelist or prose-pin tests. Outside Sonnet5.5/high reviews require scoped consent/receipts.
