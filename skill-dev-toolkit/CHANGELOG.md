@@ -11,13 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Apply the shared contextual description policy during packaging, retaining
   qualified exceptions and rejecting ineligible descriptions before delivery.
 - Require the existing reporting caller to verify independent candidates
-  against full context and delegated authorities before merge, recording each
-  original candidate's governing scope/exception quotes and review reason
-  before selecting accepted subsets. Cover opposing facts, field definitions
-  and values as well as actions; preserve raw outputs and exclusion reasons,
-  retain reviewed empty groups, and stop without a verdict when required source
-  cannot be reviewed. Consolidate duplicate detector review instructions;
-  historical calibration does not validate caller review.
+  against full cited files and governing authorities before merge, recording
+  entry-file delegation, scope/exception quotes (or ranges searched) and reasons
+  before subset selection. Judge original claims without substituting narrower
+  concerns; retain opposing facts, field definitions and values as well as
+  actions. Preserve raw outputs and exclusion reasons, retain reviewed empty
+  groups, and stop without a verdict when required review is incomplete.
+  Consolidate duplicate review instructions; historical calibration does not
+  validate caller review.
 - Qualify model-family metadata when exact child runtime identity is unobserved.
 - Define quick Gate 2 access, redesign setup without historical cases, and
   bounded optimization/timing stops when model identity or telemetry is absent.
