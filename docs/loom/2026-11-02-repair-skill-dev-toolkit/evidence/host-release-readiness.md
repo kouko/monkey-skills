@@ -1058,3 +1058,33 @@ attestation follows from these results. Independent final acceptance will
 read the source and artifacts, retain any unresolved interpretation, and
 report the unmet release obligation without rewriting history or silently
 lowering the confirmed Acceptance requirements.
+
+### Final independent witness and local stopping state
+
+Fresh witness tested clean clone34233847c1c91273061eb4f8d5cbd25c4e703344,
+after freezing its own source/raw and artifact judgments before trajectories,
+other reviewers and author history. Frozen phases and final audit are
+`/private/tmp/toolkit-five-final-blind-{phase1,phase2,audit}.md`. It reran49
+focused tests (1.68s), verified the full delta and same-runtime715/191/5 logs,
+independently checked500 runtime and190 target records plus15 plan/raw
+preimages, and reproduced the R5 merger in a new directory with identical
+seven findings and byte-identical Markdown. These are repeated records,
+not unique-file counts or a precision benchmark.
+
+The witness confirms full cited-source reading, preservation and write order
+in R5. The retained required-fix claim still lacks a supported incompatible
+case after qualifications; narrower wording concern and interpretation
+disagreement remain, not a proved global absence of every possible issue.
+Packaging certainty is narrowed transparently to unresolved/defensible factual
+reading. Current acceptance: nine works, #9 fails, #11 partly. All11 requirement
+strings are verbatim and the complete prior150406-byte evidence prefix is
+preserved. No serious finding is removed by reviewer vote or coarse verdict.
+
+Witness verification output is
+`/private/tmp/toolkit-five-final-verification/verification.json`. Ten host
+preflight/replays totalUSD3.1757429 estimate; two consultation probes add
+USD0.0069441, known subtotalUSD3.1826870. Consultation-body and native-witness
+costs remain unobserved; no complete bill or hard-cap claim is made. Current
+full detector workflows were not run after replay failures, rather than
+silently passed. Five trials are closed; only evidence commits/branch return
+remain, with no sixth candidate, new host call, release attestation or publish.
