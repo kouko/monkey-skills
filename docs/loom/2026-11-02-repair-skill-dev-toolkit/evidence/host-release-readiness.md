@@ -619,3 +619,106 @@ detector outputs, without credentials/private documents. This is a new
 external execution batch and awaits explicit consent; previous local-only
 authorization and earlier completed two-call approval do not authorize it.
 It adds no installation, publication, merge or outside code-review authority.
+
+### Approved real-host batch at30d — semantic failures retained
+
+The user answered「同意」to the immediately preceding disclosure: preflight
+and three cases, first-party Anthropic Claude Code claude-sonnet-5-5/medium,
+runtime/public historical examples/recorded detector JSON, combined USD3.05
+estimated thresholds (not a hard cap), no credentials/private documents or
+installation/publication. `source.json` records this scope and authorization;
+all four calls completed once, without automatic retries or another review.
+
+Runner root remains `/private/tmp/toolkit-host-pending-ll7bhexw`. Host CLI is
+2.1.317; sanitized-environment auth reports loggedIn=true, claude.ai,
+apiProvider=firstParty. Proxy/model-routing environment overrides were removed.
+Preflight returned exactly HOST_READY. All four parent streams report
+claude-sonnet-5-5 in message/modelUsage. The two fresh workflows each contain
+two distinct parent_tool_use_id child streams, whose assistant message.model
+also reports claude-sonnet-5-5. This is observed CLI model identification,
+not independent inspection of vendor internals or new statistical calibration.
+Actors conservatively use unknown in reports because their hand-backs do not
+expose that exact identifier to them; this is not fabricated model evidence.
+
+| Case | Actual duration | CLI estimate USD | Raw to accepted | Merged result |
+|---|---:|---:|---|---|
+| preflight | 3.14s | 0.0068938 | no tools | HOST_READY |
+| caller-replay | 42.38s | 0.1629656 | read5→5, simulate7→7 | 8 findings, needs-revision |
+| control-workflow | 58.30s | 0.2402282 | read1→1, simulate2→1 | 1 finding, needs-revision |
+| check-workflow | 153.59s | 0.5555960 | read2→2, simulate3→2 | 2 findings, pass/advisory |
+
+Total CLI cost estimate is USD0.9656836, not an invoice. All process exits
+are0, with no timeout, tool error or permission denial. Merger exits1 in the
+first two checks and0 in the third are result codes, not process failures.
+They do not establish semantic correctness. No added paid calls remain within
+this consent merely because actual estimates are below the proposed threshold.
+
+`mechanical-final.json` verifies all100 runtime bundle hashes and every
+recorded target preimage unchanged. Accepted lists are exact raw-object
+subsets, preserving confidence and all planned method outputs. Caller raw
+copies match original input digests. The complete raw streams, stderr,
+summaries, prompts and compact tool indexes remain under `runs/`; the original
+failed artifacts were not repaired or overwritten. Fresh detectors are
+sequential blocking Agent calls with separate contexts and no first-result
+payload supplied to the second detector.
+
+Initial independent staged audit A froze source/raw judgments before accepted
+artifacts, then artifact judgment before trajectories. Files are
+`/private/tmp/toolkit-realhost-blind-a{-phase1,-phase2,}.md` (final file is
+`toolkit-realhost-blind-a.md`). It confirms supported field/configuration
+claims survive, while unsupported claims remain:
+
+- Caller replay retains three distinct unsupported action concerns:
+  packaging (simulate F5/high), Cowork ordering (read F5 and simulate F6/medium),
+  unavailable-question fallback (simulate F7/low). Five distinct supported
+  concerns, including assertions/expectations, remain unchanged.
+- Fresh control correctly retains the baseline conflict and excludes the
+  Auto-versus-testing claim.
+- Larger fresh workflow retains read/simulate F1's unsupported structural_only
+  exception conflict and Q2/Q3 waiver allegation. The distinct extraction
+  Low-versus-Medium classification remains a supported advisory. Simulate F3
+  is correctly excluded.
+
+Concrete trajectory/source evidence: caller JSONL line17 reads SKILL515–524,
+omitting platform-routing525–527; its iteration view20–45 omits the applicable
+environmental exception45–57. It merges at line30 and claims full context
+review at33. In contrast, the larger caller visibly reads the ensemble
+exception before retaining its false allegation (JSONL85/87/93/101).
+`multi-judge-ensemble.md:3–4,150–166` scopes the exception to Q1 Layer2;
+SKILL153–165 and package-resource-mode76–81 preserve Q2/Q3. Thus this batch
+contains both an observed source-review omission and wrong adjudication after
+reading, not merely missing trajectory visibility. It is not solely a
+retrieval issue. Supported raw candidates were not improperly removed.
+
+Audit A's model limitation initially treats the child alias as the only
+child evidence. Parent inspection of raw assistant records grouped by
+parent_tool_use_id supplies the exact stream-reported child identifiers
+above. This corrects evidence precision, not the semantic verdict. The native
+Codex judges' own model/version remains unobserved; two independent judgments
+are not a pinned-model accuracy benchmark.
+
+The prior nine-works/two-partly local report is historical. Fresh real-host
+evidence now exists and exposes actual exception false positives. Current
+release blocking is semantic correctness, not merely absent host evidence.
+No source was changed to hide these results. Source remains30d, W8-01
+continuation1; W7-02 remains exhausted. No new attestation or publication.
+
+### Bounded industry check after the repeated semantic failure
+
+Official primary sources were checked in English and Japanese. Anthropic's
+[Building effective agents](https://www.anthropic.com/research/building-effective-agents)
+recommends the simplest viable design and adding complexity only for measured
+benefit; its dated2024 tooling examples are not current API guidance.
+Current [Reduce hallucinations](https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations)
+and its [Japanese version](https://platform.claude.com/docs/ja/test-and-evaluate/strengthen-guardrails/reduce-hallucinations)
+recommend extracting direct evidence before analysis, auditable claims and
+explicit uncertainty. These are recommendations, not proof that another prompt
+will fix these observed cases.
+
+Implication for this change: do not add another reviewer, generic framework,
+schema or hand-maintained exception list merely because an error survived.
+A bounded next proposal should make existing per-candidate scope/exception
+evidence easier to inspect, while separately addressing wrong interpretation
+after reading. Preserve factual/schema positives and raw payloads. Neither
+forcing larger reads alone nor a zero-finding report establishes correctness.
+No proposed repair, new model call or counter reset is represented as done.
