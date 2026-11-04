@@ -1562,3 +1562,106 @@ The station subsequently supplied additional frozen recorded inputs at `r1/contr
 - Programmatic comparison found exactly11 report rows, in original1-11 order, with every Acceptance string identical to the confirmed intent. Final verdict totals are10 works/1 partly; only row11 is partly. Re-run cells are exactly re-tested for6/7/9/11 and surface-reason carryovers for1/2/3/4/5/8/10.
 - Original170816-byte evidence prefix remains byte-identical with SHA256 `1ea59fd16135a7ae6dbde042916ae61643acc4b8792a6f0d97d2def9a8d8e49e`. Prior failures, judgments and all cost/counter records are preserved. Phase1/2 locks were not changed by subsequent history or control tests.
 - `git diff --check` exits0. Working-tree changes are exactly the canonical report and this evidence append. Tested source HEAD remains `1a59d926484ccdb35b8a6f4780995aa0546516bf`; no source, raw target or functional file edits, commit or attestation made by this witness.
+
+## Re-run on 2026-11-04, at d069fcf174e9b8981e00a121996f68eb220004ef — same-episode local cycle 2
+
+### Clean setup, scope and evidence boundaries
+
+- Fresh supplied worktree `/private/tmp/toolkit-boundary-acceptance-d069fcf1`: first status empty; exact HEAD `d069fcf174e9b8981e00a121996f68eb220004ef`. This witness never implemented source. Re-read installed loom-code acceptance-agent/report instructions, root/toolkit README, Codex setup note, updated intent and complete retained requirements/flows; inspected all spec/plan changes and the full `57f3aa8d..d069fcf1` fix diff before editing evidence.
+- README setup check repeated with existing `/Users/kouko/.conda/envs/dbt-redshift/bin/python3`: Python3.12.11, pytest9.1.1, PyYAML6.0.2 import and source commands work. No installation, environment modification, outside call, delegation, commit, publication, merge or functional edit. All Python calls set `PYTHONDONTWRITEBYTECODE=1`; pytest disables cache with `-p no:cacheprovider`.
+- Fix has7 paths: creator entry plus optimization/eval references; one refactor extraction-risk cell; existing order-test helper; spec/plan. No production Python changes. Command signatures remain unchanged. Current creator entry now supplies one module-cwd/path/output authority, referenced by both command references; live extraction summary now Medium like the existing catalog, retaining its loading qualification.
+- Retained explicit native profile gpt-6.1-sol/high, actual backend/exact execution version unknown. No paid provider execution, live optimization, statistical accuracy or installed-host behavior is claimed. Package-tests/finalize-review are **not skipped**; finalization remains ineligible while current-interface full real-host Acceptance11 is unmet. There is no new outside/model/installation/publication consent.
+- The station disclosed that the current skill reviewer accidentally saw an old108aa7d attestation verdict after major runtime reading. That is a limitation on full blind independence, not a current source-peer or implementation exposure. This witness did not inspect that old verdict or use it as proof; current conclusions rest on source/CLI/output evidence below. No important-or-worse finding was supplied as dismissed. The important cwd omission is tested as repaired, rather than waived.
+- Before append, inherited canonical evidence is195630 bytes, SHA256 `f3c7ff608a5d7954cf91756e71885878fd76a78b224a71676937111c0ecb4483`. All preceding trial results, disputes, costs/counters and cycle1 locks remain historical and unchanged.
+
+### Criterion-owned tests and repository checks actually run
+
+From the clean worktree, executed:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/kouko/.conda/envs/dbt-redshift/bin/python3 -m pytest skill-dev-toolkit/tests/test_creator_commands.py skill-dev-toolkit/tests/test_equivalence_order.py skill-dev-toolkit/tests/test_refactor_policy.py skill-dev-toolkit/tests/test_creator_metadata_contract.py skill-dev-toolkit/tests/test_tuning_policy.py skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py skill-dev-toolkit/skills/skill-refactor/scripts/test_package_mode_contract.py skill-dev-toolkit/skills/dogfood-skill-testing/test_skill_structure.py -q -p no:cacheprovider
+```
+
+- Result: **92 passed in5.66s**, exit0. Entire criterion files were run, not selected happy paths. Creator44 includes actual packaging/aggregation commands and existing bounded optimizer transport/parser stubs, backend error/abort/timeout/incomplete and actual EOF-before-exit newline/no-newline cases. No real optimization backend was called.
+- All existing14 order cases now execute the shipped equivalence CLI, parse stdout JSON and assert return status. Seven allowed cases cover identical/repeated calls, ordered one-call insert/delete, empty and no-trace; seven rejections cover reversals, changed repeated order, excess count, new vocabulary and removing the sole tool. Non-tool checks remain true in rejection cases.
+- Refactor-policy7 plus package-contract10 retain the original17 focused cases; metadata, tuning, description and dogfood checks cover the other Acceptance5/8 surfaces. These current-authority checks are not substituted for the direct policy probes below or for live host behavior.
+- Independently executed `scripts/check-skill-structure.py skill-dev-toolkit`: all6 PASS; `scripts/check-shared-conventions-drift.py`:3 checked, zero drift/read errors; `scripts/sync_codex_manifests.py --check skill-dev-toolkit`: exit0.
+- Inspected same-source parent Build logs, without running any full suite: `/private/tmp/toolkit-boundary-r2-root-tests.txt` **715 passed in51.90s**; `toolkit-boundary-r2-toolkit-tests.txt` **220 passed in11.70s**; `toolkit-boundary-r2-adversarial.txt` **5 passed in0.09s**. Full commands remain `python3 -m pytest scripts/ -q -p no:cacheprovider`, `python3 -m pytest skill-dev-toolkit/ -q -p no:cacheprovider`, and the existing graduated adversarial probe suite. The automated suite runs before acceptance and blocks on failure; these are supplied Build observations, not a fabricated formal finalizer result.
+
+### Direct fresh-project execution of the new command instructions
+
+- Created unused `/private/tmp/toolkit-r2-witness-7sux0bwh/fresh project`. Copied the genuine current `skill-consistency-check` skill tree without modifying it into `skills/skill-consistency-check`. This is a real existing skill with declared frontmatter/resources, not a fabricated minimal packaging input. Paths deliberately include spaces.
+- From the original project directory, resolved target and workspace/dist to absolute paths **before** changing directory. Negative control: invoking `python3 -m scripts.package_skill <absolute-target> <absolute-dist>` while still in project root returned exit1: `Error while finding module specification for 'scripts.package_skill' (ModuleNotFoundError: No module named 'scripts')`. No archive was created by that command. This reproduces why the missing cwd instruction mattered.
+- Followed current creator entry's module context: changed to `/private/tmp/toolkit-boundary-acceptance-d069fcf1/skill-dev-toolkit/skills/skill-creator-advance`, then executed the existing interpreter with `-m scripts.package_skill "/private/tmp/toolkit-r2-witness-7sux0bwh/fresh project/skills/skill-consistency-check" "/private/tmp/toolkit-r2-witness-7sux0bwh/fresh project/workspace/dist"`. **Exit0**.
+- Archive: `/private/tmp/toolkit-r2-witness-7sux0bwh/fresh project/workspace/dist/skill-consistency-check.skill`; ZipFile.testzip() returns None. All11 eligible files are present under the expected skill prefix, with each archive byte sequence equal to its copied source. The copied target, original checker source and entire creator source hashes remain unchanged. Explicit output prevents the default from writing into creator root. Restored cwd to the exact original fresh project and asserted it.
+- From creator root, actual `-m scripts.aggregate_benchmark --help` and `-m scripts.run_loop --help` both return0. Optimizer help accepts current documented `--eval-set`, `--skill-path`, `--report`, `--results-dir` flags. The complete existing offline creator tests above execute aggregation and bounded optimization success/error behavior using their existing stubs; help alone is not claimed to prove live optimization. No model ID was invented or sent to a provider.
+
+### Full eight-policy recheck and direct probe results
+
+- Re-read current description authority/creator routing, case metadata schema and grader input/dispatch, refactor entry/catalog/ensemble and ablation/golden qualifications, tuning agreement/atomicity and blind-auditor separation. The92-case command checks all corresponding current authorities; unchanged prior artifact/trajectory packets remain historical witness evidence, not a new blind-model run.
+- Re-executed the **three existing independent probe functions** from the reviewed evidence source above, changing only ROOT to this clean worktree and OUT to `/private/tmp/toolkit-r2-witness-7sux0bwh/policy-probes`. No new product tests or test framework were authored. Temporary candidate edits stay outside source.
+- Actual multi_judge CLI outcomes: EEU -> PASS_MODERATE/exit0; EEN -> FLAG_TIER_2/exit2; ENU with specific warning loss -> FLAG_TIER_2/exit2; vague ENU -> FAIL/exit1. Specific dissent still precedes counts; optional golden comparison cannot clear it.
+- Actual harness parser outcomes: a+b -> multiple/DEFER; n -> none/DROP; r -> REFINE; baseline a -> DROP; candidate b -> ADOPT. Only locked single nonbaseline ADOPT implies edit. Explicitly executed the read human-threshold interpretation:2/3=.6667 -> escalate,3/4=.75 -> majority. This arithmetic is a disclosed policy interpretation, not an invented product tally API.
+- Actual immutable-baseline/candidate extraction accounting: creator target words2970 ->2906 (-64), bytes21839 ->21372 (-467); package words24045 ->24045, bytes200062 ->200062. Accounting PASS, **whole-package reduction0%, Q2 REJECT**. Only a temporary isolated candidate was relocated; current tracked source untouched. Moving the new module-context paragraph does not become a claimed saving.
+- Current extraction entry208 says Medium with correct-load qualification; delegated catalog74-96 and summary234 also say Medium and require the same on-demand loading. Ensemble160 still consumes catalog Low for structural_only. Thus extraction no longer receives that Low eligibility from an opposing entry summary. The old ordinary input's Low cell remains byte-identical and remains a valid historical positive, not silently changed to make its earlier report pass.
+- Ablation still uses the current3-judge Q1 outcomes and keeps the old2-judge example explicitly historical. Blind auditor still receives explicit rubric/artifact without author rationale/trajectory; informed review keeps trajectory. No additional model call or invented blind-judge result was used to verify those declared role boundaries.
+
+### Carryover provenance and untouched historical controls
+
+- Complete diff confirms blind harness, preference consumers, checker planner/merger/detectors, model reporting, runtime manifests/workflow and root suite are unchanged. Creator cold-entry quick/history/missing-model/missing-duration stop conditions are unchanged; new module-cwd instructions govern command execution after valid prerequisites, not replacement inputs or fabricated measurements.
+- Recomputed all5 cycle1 checker runtime hashes against current checkout: byte-identical. Recomputed all37 additional preimages plus13 original target and2 original raw hashes: unchanged. Frozen ordinary historical Low/Medium conflict remains present. Phase1/Phase2 locks were not modified. No need to rerun unchanged checker recorded replays or pretend they validate current live refactor source.
+
+### 1. 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。
+
+- **works, re-tested** — complete creator44 tests cover all three real entrypoints, aggregation statistics/unknown capture/errors, bounded offline optimizer selection/eligibility/backend/EOF branches. Direct genuine-copy fresh-project package succeeds under new cwd/absolute/output/restore instructions; wrong-cwd negative fails as expected. Module help checks current aggregation/optimizer argv, without claiming live provider quality.
+
+### 2. 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。
+
+- **works, re-tested** — all14 existing cases run through the actual CLI with JSON/exit agreement. Same-sequence, allowed one-call relative-order difference, vocabulary restriction, empty and no-trace surfaces covered; all7 improper cases rejected with only the tool-call check failing.
+
+### 3. 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。
+
+- **works, carried over** — full fix diff leaves harness/display/neutral copies/map/clarification/invalid/EOF and their contracts/tests unchanged. Prior actual blind-full-view results retained; no new installed UI claim.
+
+### 4. 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。
+
+- **works, carried over** — all preference readers/exporters/eligibility/record-pair-readiness/schema/NOTICE/stub surfaces unchanged. Prior baseline/candidate exports, malformed exclusion and JSONL preservation retained; human-parser probes above additionally recheck the distinct adoption policy, not a new export suite.
+
+### 5. 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。
+
+- **works, re-tested in full** —(1) creator/judge description authority through hidden/current packaging/generation tests;(2) explicit case metadata schema/dispatch/grader tests;(3) actual vote CLI outcomes;(4) immutable whole-package relocation/accounting and synchronized extraction tier;(5) current3-judge ablation versus dated2-judge example;(6)70% source and actual parser/disclosed tally;(7) multiple/none/refine/baseline/adopt behavior;(8) explicit blind rubric/artifact versus informed trajectory sources/tests and retained independent historical packets. Passing these eight bounded rule obligations is not a claim all possible toolkit prose or LLM outputs are error-free.
+
+### 6. 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。
+
+- **works, carried over** — no checker runtime, grouping threshold, nominal notice, coverage, model metadata or size-report contract changes; all5 runtime hashes match. Prior78 focused tests and exact planner/report reproduction remain applicable. Current creator paragraphs do not alter checked fixture bytes or checker size behavior.
+
+### 7. 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。
+
+- **works, re-tested** —92 criterion-owned tests, three existing direct policy probes and structure/drift/manifest checks pass. New current-CLI order tests retain all14 cases rather than a private helper assertion. Fresh-project wrong-cwd negative and corrected-root package are actual user-path evidence, without prose-pin tests. Source-equivalent unchanged checker regression evidence retained; parent Build715/220/5 logs inspected. Full automated suite blocks acceptance on failure; formal finalization has not run or been waived.
+
+### 8. 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。
+
+- **works, re-tested in full** — complete creator44 and hidden description tests cover ordinary short eligibility,268-character unjustified rejection/no archive, qualified1024 normal exception, admitted500 router and missing-evidence refusal, generation/selection shared validation and actual archive/source identity. Current creation/description instructions re-read; no conflicting eligibility added by cwd authority. Genuine copied skill packages successfully from fresh project with all11 entries matching. Prior real creation output remains bounded historical semantic evidence, not a newly generated skill/model test; mechanical qualification still does not prove true semantic justification or trigger accuracy.
+
+### 9. 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。
+
+- **works, carried over** — checker entry/parser/model policy and all frozen recorded inputs unchanged, verified by hashes. Prior four-case native/direct-witness candidate judgments, exception exclusions and unavailable-source stop remain applicable. The frozen ordinary extraction mismatch stays a historical positive; live summary fix does not rewrite that evidence. Carryover remains limited to recorded cases, not independent new detector discovery, gold truth or a fresh Claude workflow. Historical packaging factual/action dispute persists unchanged.
+
+### 10. 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。
+
+- **works, carried over** — full diff does not change quick Gate2, missing-history baseline preparation, unknown/unsupported-model stop, absent-token/duration handling or cold-entry prerequisites. Module cwd/output guidance applies once prerequisites permit a command; no new default model/counters/input invented. Prior five-case cold-entry evidence and progressive-load deviations retained.
+
+### 11. 代表性真實宿主流程可完成且產物符合其已宣告要求；尚未驗證的環境、條件與模型判斷限制明確保留。
+
+- **partly, carried over** — new local command correction is directly exercised under1/8 and does not supply missing changed-interface discovery-to-report/representative Claude evidence. Earlier real creator/checker observations and their failures remain historical; old interface cannot validate `--decisions`. Full current-interface host gap remains important and unwaived; current local success and prior peer verdict exposure cannot close it. No new model/provider consent exists and no release readiness is claimed.
+
+### Current outcome and limits
+
+- **10 works,1 partly,0 fails,0 not verified**. Affected rows1/2/5/7/8 fully re-tested; other rows carry over for the checked full-diff reasons above. No important/fatal finding dismissed; reproduced cwd issue verified fixed, live extraction tier reconciled, historical positive retained.
+- This is **same-episode cycle2 of maximum5**, not a new requirement or reset. W8 old five-round failure/closure and all earlier continuation counts remain unchanged. No source, test, intent/spec/plan or historical input edits by this witness. Only canonical report and this append change.
+- Original Acceptance1-11 strings/order and inherited evidence-prefix integrity are checked programmatically before delivery. Finalizer remains pending Acceptance11, with no fabricated success or new outside approval.
+
+### Final cycle2 document verification
+
+- Programmatic validation confirms11 exact Acceptance strings in1-11 order;10 works and only11 partly. Re-tested cells are exactly1/2/5/7/8;3/4/6/9/10/11 each have checked carryover reasons.
+- Inherited195630-byte evidence prefix retains SHA256 `f3c7ff608a5d7954cf91756e71885878fd76a78b224a71676937111c0ecb4483`. `git diff --check` passes, exact tested HEAD is still `d069fcf174e9b8981e00a121996f68eb220004ef`, and the only two changed paths are canonical acceptance report/evidence. No commit or new attestation produced.

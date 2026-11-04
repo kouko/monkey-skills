@@ -1129,3 +1129,45 @@ Current report:10 works,1 partly (Acceptance11). Historical packaging
 factual/action interpretation disagreement remains; this is no settled gold
 truth, fresh detector discovery, current Claude host test or release pass.
 Full new-interface host validation and formal finalization remain outstanding.
+
+### Local cycle 2 — bounded review corrections
+
+The first source review at57f3aa8d passed with notes and independently ran
+216 cases across all14 changed normal test files. Its sole nit requested
+the existing order-test helper use the CLI. The skill review at the same
+target passed with notes but reproduced an important creator cwd omission.
+It also recorded the existing extraction tier discrepancy and generic gate
+marker applicability as non-blocking notes. Its late accidental exposure to
+old108aa7d attestation verdicts is disclosed: no current peer review or
+implementation role, but no claim of an entirely blind skill review.
+The actual cwd reproduction and opened source anchors support its finding;
+historical verdicts are not evidence for the current tree.
+
+Cycle2 batches these fixes under the existing obligations, not another
+decision mechanism or a reset of the five-cycle ceiling. Current source
+is d069fcf174e9b8981e00a121996f68eb220004ef. W10-01 adds12 prose lines
+across creator entry/optimizer/aggregation instructions: one shared creator
+cwd/absolute-path rule and explicit writable-workspace outputs. W10-02
+changes one summary cell to authoritative catalog Medium, retaining the
+same loading qualification and frozen historical positive fixtures. W10-03
+moves the existing14 order cases through the shipped CLI: test net+5 lines,
+no new test functions. Production Python and all five checker runtime files
+are byte-identical to cycle1; no new dependency, module or runtime role.
+
+At exactd069fcf1, sync-trunk is up to date with origin/main4cbf85a8.
+Complete Build checks:715 root passed51.90s;220 toolkit passed11.70s;
+existing unchanged adversarial5 passed0.09s. Logs:
+`/private/tmp/toolkit-boundary-r2-{root-tests,toolkit-tests,adversarial}.txt`.
+The independent witness used a second fresh clean worktree, reran92 focused
+cases and three existing policy probes, and followed the creator instructions
+from a new project with spaces in paths. Its real archive's11 entries match
+the genuine source bytes; output remains in workspace and original cwd is
+restored. Module help checks are parser evidence, not paid optimization.
+
+Canonical acceptance remains10 works/1 partly; rows1/2/5/7/8 were fully
+re-tested. The new-interface complete detector-to-report/real Claude host
+gap remains Acceptance11, with no inferred finalization or release pass.
+Old failure data, interpretation disagreements and counters remain intact.
+Two of at most five local cycles have been used; source2 fix verification
+continues with the same reviewer identities and only the fix delta.
+No additional outside execution, installation, publication or merge occurred.
