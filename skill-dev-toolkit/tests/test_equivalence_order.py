@@ -1,16 +1,14 @@
 """Layer 1 preserves tool invocation order within its count tolerance."""
 
-import importlib.util
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "skills/skill-refactor/scripts/equivalence_check.py"
-SPEC = importlib.util.spec_from_file_location("equivalence_check", SCRIPT)
-equivalence = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(equivalence)
 
 
 def compare(tmp_path, baseline, candidate):
@@ -22,7 +20,14 @@ def compare(tmp_path, baseline, candidate):
             (directory / "tool_calls.json").write_text(json.dumps({
                 "calls": [{"tool": name} for name in calls],
             }))
-    return equivalence.run_layer_1(*directories)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--baseline-dir", str(directories[0]),
+         "--candidate-dir", str(directories[1])],
+        capture_output=True, text=True, timeout=10,
+    )
+    report = json.loads(result.stdout)
+    assert result.returncode == (0 if report["pass"] else 1), result.stderr
+    return report
 
 
 @pytest.mark.parametrize("baseline,candidate", [
