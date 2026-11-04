@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
 intent: 2026-11-02-repair-skill-dev-toolkit@c5d3e9f7
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@a9ff145e
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@deb49c27
 charter: 1.1
 
 ## Task DAG
@@ -208,7 +208,25 @@ charter: 1.1
 - Test: A7 positive: reviewed_candidates_selected; negative: missing_or_stale_decision_rejected. A9 positive: genuine_action_and_field_conflicts_retained; negative: compatible_exceptions_excluded. A11 positive: raw_bytes_and_audit_preserved; boundary: reviewed_ambiguity_indeterminate. TDD at CLI: coverage/IDs/status/reasons/hash, duplicate basenames, mixed results, unchanged payloads, exits0/1/2/3. Preserve old merger/group/model/target safeguards; replay genuine raw controls separately from deterministic plumbing checks.
 - Risk: REQ-9/11; class: eligibility absent from consumed data. Sweep full repository merger callers and outcome consumers. Existing test_merge_report.py coverage widens; former medium-only pass changes intentionally. No new dependency/runtime role. Record production/test/prose cost.
 
+### Wave 10 — Same-episode local cycle 2 review corrections
+
+**W10-01 State the creator module-command execution context** after: W9-01 acceptance: 1, 7
+- Files: `skill-dev-toolkit/skills/skill-creator-advance/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-creator-advance/references/description-optimization.md`, `skill-dev-toolkit/skills/skill-creator-advance/references/eval-protocol.md`.
+- Test: A1 positive: module_commands_from_creator_root; negative: project_root_missing_module. A7 positive: absolute_paths_and_workspace_archive; boundary: creator_source_not_output. Preserve existing creator CLI tests; independently follow the new instructions from a fresh project with genuine inputs and no outside calls. No prose-pin or new test program.
+- Risk: REQ-1/7; class: unstated execution directory. Sweep creator entry, optimization and aggregation module commands. Existing test_creator_commands.py coverage retained. One shared path rule and explicit output location; no Python changes or new tests.
+
+**W10-02 Align extraction's duplicate risk definition** after: W9-01 acceptance: 5
+- Files: `skill-dev-toolkit/skills/skill-refactor/SKILL.md` (entry).
+- Test: A5 positive: loaded_extraction_catalog_medium; negative: historical_opposing_tiers_remain_detectable. Verify current entry/catalog/ensemble agree while the frozen ordinary fixture remains unchanged. Preserve resource loading, Q1/Q2/Q3, reduction accounting and voting obligations.
+- Risk: REQ-5; class: duplicate operation tier. Entry conflicts with authoritative catalog Medium for the same loaded extraction; ensemble consumes catalog. Align summary only, preserve historical inputs and resource/vote policy.
+
+**W10-03 Exercise ordered equivalence through its shipped CLI** after: W9-01 acceptance: 2, 7
+- Files: `skill-dev-toolkit/tests/test_equivalence_order.py`.
+- Test: A2 positive: ordered_trace_tolerance; negative: reordered_trace_rejected. A7 positive: cli_report_exit_agree; negative: reordered_trace_rejected. Keep all fourteen parameterized cases and existing fixtures; run the actual CLI through the current compare helper, with no additional test functions.
+- Risk: REQ-2/7; class: tests bypass public entry. Existing test_equivalence_order.py coverage widens to argv/report/exit with identical cases; remove importlib scaffold, no new test or production change.
+
 ## Simplicity check
+- W10 same-cycle existing command docs, one summary cell and existing test helper; no new mechanism — taken
 - W9-01 existing merger and tests; fresh reviewer found no simpler shape — taken
 - shared validation and existing input paths — taken
 - existing caller verification and raw-candidate replay — taken
@@ -245,3 +263,4 @@ charter: 1.1
 25. Round4 Opus retains schema and excludes Cowork but retains compatible fallback. Round5/5, global implementation continuation4, requires a supported incompatible action scenario after qualifications, separately preserving factual/field contradictions. Replace existing criterion only; preserve all failures and stop after this final round.
 26. Five rounds complete. Final ecb9ddb7 replay retains fallback low; outside consultation is inconclusive, not PASS. No sixth candidate/host retry. Finish acceptance/evidence only. Preserve packaging ambiguity, field findings, prior failures and closed budget.
 27. User selected local decision-boundary redesign, maximum five cycles. W9-01 changes consumed data and unresolved outcomes; W8-01 remains failed/closed, not renamed. No new outside-model, installation, publication or merge authority. Record cycle counts and unmet semantic obligations.
+28. Cycle2 batches the confirmed cwd omission with two bounded review cleanups. Preserve program mechanisms and prior counters. No extra runtime or outside call; update original entry/risk/test authorities only. Full mechanical checks repeat.
