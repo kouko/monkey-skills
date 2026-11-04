@@ -269,27 +269,38 @@ def test_creator_commands_invalid(entry, tmp_path, skill, request, monkeypatch, 
 def test_creator_real_eof_completion(entry, newline, exit_status, tmp_path, skill, monkeypatch):
     """Exercise the real CLI, process pool and backend when stdout closes first."""
     (tmp_path / ".claude").mkdir()
+    project_scripts = tmp_path / "scripts"
+    project_scripts.mkdir()
+    (project_scripts / "__init__.py").write_text("# User project package\n")
+    creator_before = {p.relative_to(CREATOR): p.read_bytes() for p in CREATOR.rglob("*")
+                      if p.is_file() and "__pycache__" not in p.parts}
+    context_log = tmp_path / "backend-context.json"
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     backend = fake_bin / "claude"
     payload = json.dumps({"type": "result", "subtype": "success", "is_error": False})
     payload = (payload + ("\n" if newline else "")).encode()
     backend.write_text(
-        f"#!{sys.executable}\nimport os, time\n"
+        f"#!{sys.executable}\nimport json, os, time\nfrom pathlib import Path\n"
+        f"Path({str(context_log)!r}).write_text(json.dumps({{\n"
+        f"    'cwd': os.getcwd(), 'pythonpath': os.environ.get('PYTHONPATH'),\n"
+        f"    'commands': {{str(p.resolve()): p.read_text() for p in Path('.claude/commands').glob('*.md')}}\n"
+        f"}}))\n"
         f"os.write(1, {payload!r})\n"
         f"os.close(1)\ntime.sleep(0.2)\nos._exit({exit_status})\n"
     )
     backend.chmod(0o755)
     monkeypatch.setenv("PATH", str(fake_bin) + os.pathsep + os.environ["PATH"])
-    monkeypatch.setenv("PYTHONPATH", str(CREATOR))
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path / "existing-imports"))
+    env = dict(os.environ, PYTHONPATH=str(CREATOR) + os.pathsep + os.environ["PYTHONPATH"])
     evaluation = tmp_path / "negative.json"
     evaluation.write_text(json.dumps([{"query": "negative query", "should_trigger": False}]))
-    argv = [sys.executable, "-m", f"scripts.{entry}", "--eval-set", str(evaluation),
+    argv = [sys.executable, str(CREATOR / "scripts" / f"{entry}.py"), "--eval-set", str(evaluation),
             "--skill-path", str(skill), "--num-workers", "1", "--runs-per-query", "1", "--timeout", "3"]
     if entry == "run_loop":
         argv += ["--model", "offline", "--report", "none", "--holdout", "0",
                  "--max-iterations", "1", "--results-dir", str(tmp_path / "saved")]
-    result = subprocess.run(argv, cwd=tmp_path, capture_output=True, text=True, timeout=15)
+    result = subprocess.run(argv, cwd=tmp_path, env=env, capture_output=True, text=True, timeout=15)
     if exit_status:
         assert result.returncode != 0
         assert "Query backend exited with status 7" in result.stderr
@@ -303,6 +314,15 @@ def test_creator_real_eof_completion(entry, newline, exit_status, tmp_path, skil
             assert output["best_score"] == "1/1"
             assert output["exit_reason"] == "all_passed (iteration 1)"
     assert not list((tmp_path / ".claude/commands").glob("*.md"))
+    context = json.loads(context_log.read_text())
+    assert Path(context["cwd"]) == tmp_path.resolve()
+    assert context["pythonpath"] == env["PYTHONPATH"]
+    assert len(context["commands"]) == 1
+    for path, content in context["commands"].items():
+        assert Path(path).parent == tmp_path.resolve() / ".claude/commands"
+        assert "# example-skill" in content
+    assert {p.relative_to(CREATOR): p.read_bytes() for p in CREATOR.rglob("*")
+            if p.is_file() and "__pycache__" not in p.parts} == creator_before
 
 
 @pytest.mark.parametrize("entry", ["run_eval", "run_loop"])
