@@ -722,3 +722,64 @@ evidence easier to inspect, while separately addressing wrong interpretation
 after reading. Preserve factual/schema positives and raw payloads. Neither
 forcing larger reads alone nor a zero-finding report establishes correctness.
 No proposed repair, new model call or counter reset is represented as done.
+
+### Independent confirmation and next bounded proposal
+
+Audit B independently froze source/raw and artifact phases before reading
+trajectories: `/private/tmp/toolkit-realhost-blind-b{-phase1,-phase2,}.md`.
+It confirms the same three unsupported replay concerns and larger-workflow
+exception claim, supported field/schema positives, correct control exclusion,
+exact subsets and raw-original Write preservation. It also confirms each
+fresh child stream reports claude-sonnet-5-5 while actor-visible hand-backs
+omit the exact identifier. Neither judge read the other's answers before
+forming its own result. Their own native model/version remains unobserved.
+
+Updated same-task W8-01 continuation1 failure feedback is retained at
+`/private/tmp/toolkit-realhost-w8-cont1-failure-routing.json`: completed=true,
+success=false, conforming=true, capability-quality, completed_redispatches=1,
+effective_profile=host-default/unverified. The installed shared resolver
+returns execution-failed/no-legal-escalation. It does not authorize guessing
+an upgrade from an unknown model/effort pair, resetting the task, or silently
+running another external call. Both audit tasks completed conformingly and
+their separate success feedback is retained. No implementation redispatch2
+has occurred.
+
+A concrete next local experiment would replace the existing broad review
+narrative with a short visible disposition for each raw candidate before
+subset selection: candidate ID; exact applicable scope/exception quote;
+supported, compatible or unchecked; source-grounded reason. Reuse existing
+run notes/final reply and stop for unchecked candidates. Retain action versus
+definition rules, byte-preserved raw data and unchanged accepted payloads.
+This would use the existing caller, not another agent/schema/framework, and
+is only a proposal: a ledger can still contain incorrect interpretation.
+
+Use the same unmodified raw cases plus genuine/schema positive and unavailable
+source controls, with two fresh source-first artifact judgments. Do not add
+prose-pin tests or make desired IDs part of actor prompts. A fixed, explicitly
+selected native execution profile could make the next test identifiable;
+it would not establish an upgrade over the unobserved current native pair.
+Any implementation remains W8-01 continuation2, preserving all exhausted and
+failed attempts, and a new corrected source would still require separately
+authorized real-host validation. Stop this repair approach if it cannot earn
+measured benefit within that bound. No release condition has been relaxed.
+
+### Fresh independent acceptance of the real-host results
+
+New witness cloned exact08c866efef2ad8abb57bccd51ef346c02add4b9b without
+hardlinks and verified the complete30d..08c runtime delta is empty. It ran
+49 focused tests (all passed1.85s), independently checked100 runtime hashes,
+41 input records, raw-original Write bytes and exact accepted subsets, and
+reran three merges in new output directories with identical findings. It
+recomputed USD0.9656836 and separately verified four child message.model
+identifiers against the hand-backs' missing identifiers. Same-runtime
+715/191/5 full/adversarial evidence remains applicable; no extra model calls.
+
+It challenged the serious findings against complete applicable sources and
+confirmed exception false positives and incomplete caller source review;
+neither finding is dismissed. Current acceptance is nine works, one fails
+(9), one partly(11). All eleven Acceptance strings remain verbatim, historical
+evidence is preserved as a byte prefix, and only the active report/appended
+evidence were updated by the witness. Parent clarified one sentence to say
+the witness made no *additional* outside call, distinguishing that from the
+four completed authorized host calls. No product source change or new review
+attestation occurred. The full host gap is now tested and failed, not absent.

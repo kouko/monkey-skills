@@ -1283,3 +1283,78 @@ All 6 skills PASS
 
 - **important — release evidence incomplete (retained):** row9/11 current detector-through-report boundary lacks fresh complete real-host execution, exact child model evidence and full native exported trajectory. Local semantic success closes the old F4 miss, but not this broader boundary. Close only with separately authorized applicable evidence or explicit scope decision; no new calls authorized here.
 - **nit — actor editing failure (observed):** first retry malformed JSON after two patch-content guards prevents delivery. Subsequent same-source redispatch completed, so do not mislabel the task unrecoverable or erase the first failure. Existing merger rejects malformed input; no source repair prescribed.
+
+## Re-run on 2026-11-04, at 08c866efef2ad8abb57bccd51ef346c02add4b9b — independent real-host acceptance
+
+### Clean setup, scope and immutable evidence
+
+- Fresh witness cloned `git clone --no-hardlinks /Users/kouko/GitHub/monkey-skills /private/tmp/toolkit-realhost-acceptance-clean`, checked out detached exact HEAD above, and read the installed loom-code3.57.0 acceptance-tester instructions/report template, confirmed eleven-line intent, retained spec/plan, previous report/evidence and canonical host-release-readiness record. Read root/toolkit setup documentation and `.codex/INSTALL.md`; source checkout works with existing `/Users/kouko/.conda/envs/dbt-redshift/bin/python3`. No dependencies installed or installed-host discovery claimed.
+- Entire30d255df6ca3f1b3b87d0700efab6e5a4f1aec33..08c866efef2ad8abb57bccd51ef346c02add4b9b diff has exactly four paths: active report, evidence, host-release-readiness and plan. No runtime, test, manifest, workflow, requirement or Acceptance change. All100 supplied runtime bundle hashes match both bundle and clean tested checkout. Post-clone parent canonical-evidence append is outside tested HEAD and changes no executable claim.
+- Initial dispatch: complex/inconsistent_evidence, main pair unknown, effective host-default/unverified, overrides null, count0. Feedback permits no legal escalation for unobserved native pair; no known model upgrade is asserted. W8-01 continuation1 is a semantic failure; W7-02 remains count2/exhausted. No reset or new review pass is inferred.
+- No source repair, external call, install, commit, finalization or publication performed. Original untracked Obsidian intent remains present. Existing prior evidence prefix is preserved; source batch `/private/tmp/toolkit-host-pending-ll7bhexw` never rewritten.
+
+### Commands, recomputation and direct observations
+
+- Executed `PYTHONDONTWRITEBYTECODE=1 /Users/kouko/.conda/envs/dbt-redshift/bin/python3 -m pytest -p no:cacheprovider skill-dev-toolkit/skills/skill-consistency-check/scripts/test_plan_groups.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_merge_report.py skill-dev-toolkit/skills/skill-consistency-check/scripts/test_skill_text.py -q` in clean checkout: **49 passed in1.85s**. Covers grouping/size boundaries, scope/model warnings, merger and current instruction authorities. Source-checkout CLI loading also succeeds in the three real merger executions below.
+- Inspected same-runtime Build logs, not rerun: `/private/tmp/toolkit-caller-cont1-package-tests.txt`715 passed54.06s; `/private/tmp/toolkit-caller-cont1-toolkit-tests.txt`191 passed11.42s; `/private/tmp/toolkit-caller-cont1-adversarial.txt`5 passed0.09s. Earlier127 focused tests and repository checks remain historical valid evidence on unchanged runtime; no new full suite/finalization pass claimed.
+- Actual independent probe `/private/tmp/toolkit_acceptance_realhost_probe.py`; output `/private/tmp/toolkit-realhost-acceptance-output/verification.json`. Recomputed100 runtime and41 recorded input hashes with SHA256; all match. Replay raw copies match initial supplied detector hashes. Each fresh detector's actual JSONL Write content byte-matches its raw file. Every accepted finding is an unchanged object from its own raw output, including confidence.
+- Probe copied each audit-run to new output, then ran exact clean-source `merge_report.py --target <original readonly input-skill> --plan <copied plan.json> --findings <copied read-1.json> <copied simulate-1.json> --model unknown --out <new case-merged>`. Full argv retained in each output `command.json`. Caller replay raw→accepted read5→5/simulate7→7, merged8/needs-revision/exit1; control1→1/2→1, merged1/needs-revision/exit1; check2→2/3→2, merged2/pass/exit0. All generated findings arrays exactly match original reports, stderr empty. Exit1 is a normal blocking-findings result. No artifact was repaired to force a pass.
+- Recomputed Decimal sum from raw JSONL terminal result `total_cost_usd`, independently of mechanical-final.json: preflight0.0068938 + caller0.1629656 + control0.2402282 + check0.555596 = **USD0.9656836**, CLI estimate, not invoice. Three workflows and preflight complete with process exit0; this proves execution only.
+- Raw assistant `message.model` grouped by `parent_tool_use_id` independently confirms `claude-sonnet-5-5` for all four fresh children: control `toolu_014QPRbidrVQNzRFY54QZBcj` and `toolu_01PV6To8NEeuCCxCkW4s3mfV`; check `toolu_01Funwm5t8K9Qh3vvXcqvTJh` and `toolu_01MRFfNrkNNwneveupbMwZAu`. Each fresh workflow has two returned Agent hand-backs with agentId/usage, no exact model identifier. Actor reports' unknown is conservative at that visibility boundary. Parent/model alias alone was not used as child proof. Supplied replay children's original identity remains unobserved; native witness model also unverified. Stream identity is neither vendor-internal attestation nor caller accuracy calibration.
+
+### 1. 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。
+
+- works, carried over — complete delta leaves all three command entries, consumed helpers/schemas, offline backend and error/EOF protocols unchanged; previous actual-command positive and error observations retained.
+
+### 2. 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。
+
+- works, carried over — comparator, order rule, one-call tolerance, vocabulary and no-trace behavior all unchanged; prior positive and negative executions remain applicable.
+
+### 3. 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。
+
+- works, carried over — full harness/protocol/display/full-copy/label-map/clarification/invalid/EOF surface unchanged; earlier actual interactive evidence retained, no new paid host run claimed.
+
+### 4. 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。
+
+- works, carried over — exporter, reader, both eligibility consumers, schemas and human readiness/count statements unchanged; existing valid/baseline/invalid preservation and graduated adversarial results retained.
+
+### 5. 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。
+
+- works, carried over — all original eight surfaces unchanged: description authority, metadata location, reducer, extraction/accounting, ablation, human-majority threshold, multi-pick, blind artifact/trajectory separation. Current checker adjudication failures are separate obligations, not evidence those eight source repairs reverted.
+
+### 6. 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。
+
+- works, re-tested — entire planner/merger tests passed within49, including size boundaries, grouping/coverage and unknown-model disclosures. All three actual reports independently regenerated unchanged; check workflow remains unsplit oversized corpus with qualified warning. Statistical calibration remains detector/corpus-only, not new caller validation. No threshold change or empirically validated model upgrade inferred.
+
+### 7. 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。
+
+- works, re-tested —49 focused executable/current-authority tests passed and real merger blocking/advisory results reproduced. Earlier same-runtime full715/toolkit191/adversarial5 and repository-check evidence retained against entire evidence-only delta. This row concerns declared regression checks; their green state does not certify new LLM semantic judgments. No additional mechanism-specific test or future suite promise replaces actual host inspection.
+
+### 8. 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。
+
+- works, carried over — complete creation, qualified description/router admission, shared validator, packaging and archive paths unchanged; previous actual creator source/archive fidelity and rejection/qualified-exception checks retained. No new creation execution claimed.
+
+### 9. 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。
+
+- **fails**, re-tested — fresh actual-host artifacts replace the earlier missing-host-only limitation. Read both independent staged audits `/private/tmp/toolkit-realhost-blind-{a,b}.md` plus their frozen phase1/phase2 records; independently challenged their important claims against actual raw findings, complete applicable packaging/platform/iteration/ensemble/Q1/Q2/Q3/package-protocol sections and trajectory commands. No answer key or fixed expected counts used.
+- Caller replay retains unsupported simulate F5/high packaging, read F5/simulate F6 medium Cowork ordering, simulate F7 low unavailable-question fallback. SKILL:525–527 delegates platform mechanics, platform-adaptations:9–42 supplies override and permission; `can run` is not a duty. Environment exception iteration-automation:45–57 allows human handoff. Narrower dependency-description tension cannot justify the raw action conflict as written. JSONL17 reads SKILL515–524 and iteration20–45, omitting applicable525–527/45–57, then merges at30 and claims full review at33. This is observable missing required review, not an assumed hidden-tool omission.
+- Check workflow retains both F1 ensemble allegations although ensemble:3–4,150–166 permits Q1-local structural_only; SKILL95–118 routes to that authority,153–165 still requires Q2/Q3; package-resource-mode8–22,76–81 combines all gates. Compatible execution passes narrow structural Q1 then Q2/Q3. Raw read F1 falsely says exception skips Q2/Q3; no source grants that waiver. Caller read exception before merge (JSONL85/87/93/101): semantic adjudication failure persists despite source access.
+- Audit B also notes check removal F3 exclusion is semantically correct while caller's own package protocol review is incomplete: keyword grep does not read the applicable overall-gate sections. Do not equate correct exclusion with completed review. Returned findings preserve this qualification within the source-review issue.
+- Supported candidates remain: replay comparator, quick baseline, configuration, eval field and timing; control baseline; check extraction Low/Medium classification. No supported raw finding improperly removed in this bounded set. Control filters Auto/testing compatible case correctly. Reports preserve unknown/not-validated warnings. Thus model sub-obligation passes but explicit exception guarantee fails. Coarse needs-revision/pass labels remain defensible and do not rescue false report content. No corpus-wide precision/recall or universal failure claimed.
+
+### 10. 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。
+
+- works, carried over — quick Gate2, structural redesign/history/baseline setup, missing/unsupported model, unknown token/timing and bounded-stop branches unchanged. Prior five-case cold-entry outcomes and progressive-load deviations retained exactly; new checker host run does not constitute a fresh cold-creation test.
+
+### 11. 代表性真實宿主流程可完成且產物符合其已宣告要求；尚未驗證的環境、條件與模型判斷限制明確保留。
+
+- **partly**, re-tested — representative fresh control and larger checker detector→caller→merge workflows now exist, both with two independent sequential fresh Agent contexts; replay intentionally begins at caller review. All three execute, all raw/accepted provenance is preserved; control artifact satisfies its bounded contract, replay/larger artifacts fail semantic/context obligations above. Existing actual creation and cold-entry evidence remains applicable by full unchanged-surface delta.
+- Earlier local first-retry malformed/no-report failure, subsequent completed retry, controlled unavailable stop, f8 named-field miss, original full-reading failures and exhausted counts remain historical. Historical successful local exception filtering is not erased, but cannot override new real-host failures. Ordinary Agent hand-back completion/CLI exit0 are not task-correctness proofs.
+- No installed marketplace cutover, other host UI coverage, new repeated statistical calibration, fresh attestation, release readiness or finalization claimed. Release condition now includes observed semantic defects and caller source-review noncompliance, rather than simply missing fresh-host evidence.
+
+### Findings returned
+
+- **important — exception false positives, confirmed:** replay three unsupported distinct concerns and larger ensemble/waiver claim survive source qualification. Closure requires supported dispositions in representative real-host artifacts, preserving valid positives and historical failures; no fix or new call authorized by this witness.
+- **important — caller source review incomplete, confirmed:** replay visibly omits governing sections before merge; larger removal exclusion also lacks complete applicable protocol review. Required unread-source stop was not followed. A deterministic merger cannot repair this semantic prerequisite.
+- **nit — presentation precision:** retained read F5 wrong line references and final replies paraphrasing instead of both exact quotations remain; no fresh rewrite attempted. Audit A's initial child-identity uncertainty is narrowed by raw message.model evidence above, without changing its semantic conclusions.
+- No fatal or important finding dismissed. No legal native model escalation established. Same W8-01 continuation1 is failed; W7-02 count2 remains exhausted; further product repair/host execution requires caller's scope/authorization decision.
