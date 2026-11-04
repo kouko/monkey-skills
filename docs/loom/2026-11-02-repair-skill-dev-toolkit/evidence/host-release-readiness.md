@@ -783,3 +783,39 @@ evidence were updated by the witness. Parent clarified one sentence to say
 the witness made no *additional* outside call, distinguishing that from the
 four completed authorized host calls. No product source change or new review
 attestation occurred. The full host gap is now tested and failed, not absent.
+
+### User-authorized five-iteration extension
+
+Latest verbatim request:「繼續迭代最多五次 且都允許用 claude code 做 review」.
+This authorizes up to five additional iterations, stopping early on real
+release readiness, including Claude Code independent review and necessary
+validation within the same active toolkit/source/public-fixture scope.
+The previously offered native gpt-6.1-sol/high profile is retained as an
+explicit selected setting, not an upgrade inferred from an unknown baseline.
+W8-01 continuation1 remains failed; next global continuation2 is new-window
+round1/5, then3..6 if needed. W7-02 remains count2/exhausted. The user's
+specific extension takes precedence over the skills' default two-redispatch
+limit and unknown-baseline selection stop. No shared resolver/rules are edited;
+its unmodified results and this user override are recorded separately.
+
+Bounded class sweep searched all78 cumulative changed paths and checker
+caller/detector/merger/README surfaces. Step6 is the only live operational
+caller-reconciliation procedure; README/changelog summaries remain valid,
+and historical quoted failures remain immutable. The defect class is a broad
+review assertion without per-candidate visible governing evidence: observed
+omission and incorrect exception interpretation can survive it. The first
+candidate replaces that narrative with dispositions in the existing carrier,
+preserving facts/definitions and original payloads. No new product parser,
+module, function, state, permanent test file or runtime agent is authorized
+by this narrow design choice. Existing actual host failures are the RED;
+word-placement tests are not semantic evidence.
+
+Each outside review uses the named external-review runner, first-party Claude
+Code Sonnet5.5/high, original source/public fixtures and test artifacts only,
+in a dedicated local review root. Read/Glob/Grep model tools are restricted
+to that root; startup/auth/configuration/cache may still access/write outside
+it. Disclosures were shown before discovery. USD1.50 is the client estimate
+threshold applied separately to preflight and review, not an invoice/hard
+limit; at most five review legs are planned in this window. Necessary host
+validation remains isolated and recorded, with no default-model fallback,
+truth-key leakage, silent retries, installation, publication or merge.

@@ -1,5 +1,5 @@
 # Repair skill-dev-toolkit — spec
-intent: 2026-11-02-repair-skill-dev-toolkit@7f27d665
+intent: 2026-11-02-repair-skill-dev-toolkit@2e3ba44e
 pre-build-review: required — Blind comparisons and preference exports affect evidence integrity; conflicting execution policies require an independent scope check.
 
 ## Requirements
@@ -28,6 +28,8 @@ REQ-11 — Release artifacts demonstrated in a real host
   The toolkit shall complete representative real-host creation and checking workflows with artifacts meeting their declared contracts, preserving failed observations, independent judgments and unverified environment limits → Acceptance #11
 
 ## Design decision
+- REQ-9/11 user-decided — The latest request「繼續迭代最多五次 且都允許用 claude code 做 review」extends the same W8-01 by up to five further iterations. Prior continuation1 remains failed; next global continuation2 is new-window round1/5. Retain W7-02 count2/exhausted and all review history. Explicit user budget/profile choice overrides default retry/unknown-profile stops without editing shared rules or claiming an inferred model upgrade. Publication remains separate.
+- REQ-9 agent-decided — Replace the existing caller's broad qualification narrative with a concise, visible disposition per original candidate before subset selection, citing the applicable scope/exception and same-condition incompatibility or compatible action. Reuse run notes/final reply; no schema, parser, extra runtime agent, Python or exception whitelist. Unchecked candidates stop the whole verdict. A completed disposition can still be wrong: real source-first audits and representative host execution must judge its meaning, not just format.
 - REQ-8 agent-decided — Relocate the existing description_violation function to the existing quick_validate module and call it from validation, generation and selection. Remove its old body and redundant angle/1024 checks; retain current contextual role/justification behavior. Do not put a YAML dependency into utils used by run_eval, add a module, or duplicate eligibility logic. Packaging refuses invalid input before producing an archive. Semantic voice/trigger/evidence review remains an applying-agent responsibility, not a new grammar classifier.
 - REQ-9 historical agent decision — W7-02 put the full candidate-reconciliation procedure inside both detectors. Real completed trials still publish exception and scope errors; its continuation count2 remains exhausted. This detector-only responsibility is superseded below, not silently retried or reset.
 - REQ-9 user-decided — On2026-11-04 the user confirmed one local implementation/replay of the existing caller-verification proposal. The two fresh independent detectors still discover candidates; the existing reporting caller owns final candidate verification before merge, without a third executor or new schema. This changes who establishes report eligibility, not the eleven Acceptance outcomes or prior retry counts. No additional external model calls are authorized.
