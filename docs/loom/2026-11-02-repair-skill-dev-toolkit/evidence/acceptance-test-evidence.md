@@ -1759,3 +1759,94 @@ PYTHONDONTWRITEBYTECODE=1 /Users/kouko/.conda/envs/dbt-redshift/bin/python3 -m p
 
 - Programmatic comparison confirms exact11 intent strings/order,8 works/2 fails/1 partly, re-tested1/7/8 and checked carryovers for the remaining rows. Inherited214398-byte prefix retains SHA256 `72c25141216dfbed7cd34426548badec48b8c8f549e1a0a7859d135efd779f88`.
 - `git diff --check` passes; exact tested HEAD stays `858cda1129c1651bf2f32a1ee87e000f19df15e7`. Only the canonical acceptance report/evidence are modified. Source3's failed HTML page/context/transcript and distinct context-only result remain preserved in the independent temporary workspace. No functional edit, new variant, commit or passing attestation.
+
+## Re-run on 2026-11-04, at 35a6be1446a3636450a6d94886195d37018da9b1 — local cycle 4
+
+### Clean source, setup, routing and retained failures
+
+- Fresh supplied worktree `/private/tmp/toolkit-boundary-acceptance-35a6be14`: first `git status --short` empty, exact HEAD `35a6be1446a3636450a6d94886195d37018da9b1`. Read current creator script authority/packaging/optimization/aggregation recipes and complete fix diff `858cda11..35a6be14`, updated spec/plan and inherited failed report/evidence. Re-read root/toolkit README setup. Existing supplied Python `/Users/kouko/.conda/envs/dbt-redshift/bin/python3` successfully loads source/tests; no installation.
+- Functional delta is restricted to existing generate_report.py: normalize optional test_results=None only inside the renderer and give zero-denominator scores a neutral N/A label/class. Producer JSON, normal measured score ratios, project discovery, script recipe, validation and entrypoints are unchanged. Existing real-EOF test case widens from6 to9 variants with actual HTML, zero/positive holdout, saved JSON/HTML, browser/backend context and cleanup assertions; no new test function, runtime module or dependency.
+- This is **global cycle4 of user maximum5**, actual completed implementation followups3. The station reports its resolver receipt returned exit2, `completed_redispatches must be ... 0 through 2`, for actual3. That legacy bound was **not** normalized/reset or edited; the explicit user-selected five-cycle budget governs this source4 witness. This witness did not fabricate a successful resolver receipt or imply an automatic model upgrade. Selected native gpt-6.1-sol/high remains; backend/exact execution version unobserved.
+- Same fresh witness identity, no implementation, delegation, outside model/network, installation, publication, commit or source/test edits. The old skill-review verdict exposure remains disclosed; no new blind-review claim. All Python runs use `PYTHONDONTWRITEBYTECODE=1`, pytest `-p no:cacheprovider`.
+- Source858 failed artifacts remain untouched in `/private/tmp/toolkit-r3-witness-il1arhz9/fresh project/workspace`: failed HTML still says `Starting optimization loop...`, failure transcript still contains the actual TypeError, prior backend context and separate context-only results remain. Newsource success does not convert that source3 run into a pass. Cycle2's all-passed-but-context-incomplete observations and earlier model/packaging disputes remain in the inherited prefix.
+- Inherited evidence before this append:231517 bytes, SHA256 `358fb39b6b799f7ae953b64a104084b68c0680a402565e2fe210b260421a5e85`.
+
+### Criterion-owned verification actually executed
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/kouko/.conda/envs/dbt-redshift/bin/python3 -m pytest skill-dev-toolkit/tests/test_creator_commands.py skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py -q -p no:cacheprovider
+```
+
+- **51 passed in12.67s**, exit0: complete creator47 plus description4. The9 real-EOF variants retain evaluator/optimizer real CLI and ProcessPool, newline/no-newline successful completions, nonzero backend failure, real project context, active command content/location, preserved imports, cleanup and creator-byte assertions. Optimizer variants now exercise **actual HTML** for both zero and0.5 holdout; no help-only or report-none substitute. Only provider/browser transports are fake.
+- Whole suites were not rerun by this witness. Inspected station-supplied same-source Build logs: `/private/tmp/toolkit-boundary-r4-root-tests.txt` **715 passed in48.12s**; `toolkit-boundary-r4-toolkit-tests.txt` **223 passed in17.35s**; `toolkit-boundary-r4-adversarial.txt` **5 passed in0.08s**. Package-tests/finalize-review **not skipped**, and formal finalization remains ineligible pending Acceptance11. Full automated tests block on failure before acceptance; no future or existing passing attestation is inferred from these Build logs.
+
+### Independent direct reproduction of the previously failed HTML recipe
+
+- New unused fixture `/private/tmp/toolkit-r4-witness-ygtetbb7/fresh project`, with `.claude`, own regular `scripts/__init__.py`, existing-import path, and a byte-identical copy of the genuine current checker skill at `skills/skill-consistency-check`. All outputs are under project/workspace. Creator root is `/private/tmp/toolkit-boundary-acceptance-35a6be14/skill-dev-toolkit/skills/skill-creator-advance`.
+- Kept user-project cwd; literal commands used command-local `PYTHONPATH="<creator>${PYTHONPATH:+:$PYTHONPATH}"`, absolute existing script/input/output paths, and preserved the project existing-import entry. Existing real-EOF provider fixture logs actual cwd/imports/temporary command content then returns a successful nontrigger result and closes stdout before exit0. Browser transport is an actual executable named `browser stub` under the spaced `offline bin` path, quoted as a command plus `%s`; it only logs argv. Root finder, renderer, CLI, file writes, saved results and cleanup remain production code. No real browser/provider/network call.
+- Actual package CLI under this recipe exits0; archive `workspace/dist/skill-consistency-check.skill` has11 entries, testzip() None and every byte matches genuine copied source. Actual aggregation CLI exits0 and writes JSON/Markdown under `workspace/iteration-1`; labelled4-run fixture recomputes0.75 versus0.25 pass means and+0.50 delta. Fixture statistics are not presented as observed model performance or timing.
+- **Original failure recipe, current source:** actual `run_loop.py --eval-set "<project>/workspace/zero-eval.json" --skill-path "<project>/skills/skill-consistency-check" --num-workers 1 --runs-per-query 1 --timeout 3 --model offline --holdout 0 --max-iterations 1 --report "<project>/workspace/zero-report.html" --results-dir "<project>/workspace/zero-results"`. This is the source3 command shape with the current creator root and independent output paths; report remains a real explicit HTML path. **Exit0**, `all_passed (iteration 1)`, best_score1/1.
+- Captured actual stdout at `workspace/zero-stdout.json`, stderr at `zero-stderr.txt`; final HTML is not the starting page. Saved results `/private/tmp/toolkit-r4-witness-ygtetbb7/fresh project/workspace/zero-results/2026-11-04_133015/results.json` parse exactly equal to stdout; corresponding saved report.html is byte-identical to explicit zero-report.html. `history[0].test_results` and best_test_score remain **null** in JSON. HTML contains `<span class="score score-na">N/A</span>` and no `>0/0</span>`. Training remains measured1/1, score-good. The absent cohort is not fabricated as a failed observation.
+- **Real held-out-cohort variant:** existing-style two negative queries, actual same CLI with `--holdout 0.5`, explicit `workspace/heldout-report.html` and `workspace/heldout-results`. **Exit0**, all_passed iteration1, train1/1 and held-out1/1. Real saved test_results has one element and best_test_score is1/1. Both cohorts have score-good1/1 spans and no N/A score. Saved `/private/tmp/toolkit-r4-witness-ygtetbb7/fresh project/workspace/heldout-results/2026-11-04_133016/results.json` equals heldout-stdout.json; saved report.html equals explicit heldout-report.html byte-for-byte. Stdout/stderr retained separately.
+- Browser logs `zero-browser.json` and `heldout-browser.json` each contain exactly the requested absolute HTML path. Provider logs `zero-backend.jsonl` (1 actual invocation) and `heldout-backend.jsonl` (2) all show exact user project cwd, loaded creator-prefix plus preserved existing-import path, and one correctly populated command under project `.claude/commands` with original skill name/description. After each run no command Markdown remains. Creator and genuine copied target snapshots are unchanged, excluding only __pycache__ as in the regression case. The project's regular scripts package cannot shadow imports.
+- Source inspection at generate_report.py:245-267 confirms the N/A condition is only denominator==0. For positive denominator, ratio>=0.8 remains good, >=0.5 remains ok, otherwise bad, and the numerator/denominator text remains numeric. Consequently measured0/N is still0/N/score-bad by the unchanged positive-denominator branch; **no new measured-zero backend result is invented or claimed as executed**. Current direct observations establish absent and actual held-out cohorts; existing backend failure variants still return non-success rather than fabricate scores.
+
+### Fix verification, provenance and unchanged obligations
+
+- New actual HTML/JSON results close the **source3 null-cohort renderer failure** on this exact source, preserving both its former failed artifact and its new passing reproduction. No report-none variant was used in this cycle. Both earlier wrong-project findings remain fixed by actual context logs, without rewriting cycle2's incomplete witness as success.
+- Full fix diff leaves checker/refactor/tuning/dogfood, command-context docs, producer model/JSON, validation/packaging and repository scripts/workflow unchanged. Recomputed5 checker runtime hashes equal frozen cycle1; all37 additional plus13 original target and2 original raw preimage records remain unchanged. Source-first phase1/phase2 locks untouched. Historical ordinary Low/Medium positive remains frozen, current live extraction Medium retained.
+- Therefore other rows carry over with their checked entire-surface reasons below, including finite recorded-case scope for9 and unresolved host gap for11. Real HTML repair does not provide new detector discovery, semantic gold truth, live model optimization, installed-plugin behavior or cross-host calibration.
+
+### 1. 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。
+
+- **works, re-tested in full** — complete creator47 covers all three actual entries, errors/aborts/timeout/EOF, aggregation unknown-versus-zero capture and optimizer eligibility/selection with existing offline seams. Independent genuine package, actual fixture aggregation and both zero/positive-heldout optimizer CLI+HTML paths pass under the correct project recipe. Source3's exact legal HTML failure shape now completes real output with JSON fidelity; no provider quality or live optimization claimed.
+
+### 2. 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。
+
+- **works, carried over** — comparator/protocol/order CLI/tests unchanged by complete diff. Earlier14 actual CLI cases with allowed-order/vocabulary/no-trace and rejection/exit agreement remain applicable.
+
+### 3. 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。
+
+- **works, carried over** — blind display/full copies/map/clarification/invalid/EOF contracts and implementation unchanged. Earlier actual interaction/full-view proof retained without a new UI/host claim.
+
+### 4. 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。
+
+- **works, carried over** — all preference records/readers/exporters/eligibility/schema/count/readiness/NOTICE/stub surfaces unchanged; earlier valid baseline/candidate, invalid-record and byte-preservation results retained.
+
+### 5. 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。
+
+- **works, carried over** — original description/metadata/votes/extraction/ablation/human/multi-pick/blind-evidence policies unchanged. Display-only optional cohort handling does not alter these outcomes. Cycle2 full eight-policy/source/direct-probe evidence and Medium extraction agreement remain applicable.
+
+### 6. 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。
+
+- **works, carried over** — planner/merger/group thresholds/model/coverage source and5 runtime hashes unchanged. Earlier78 tests and exact consistency-report reproduction remain applicable; creator optimization renderer is a separate artifact.
+
+### 7. 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。
+
+- **works, re-tested** —51 focused cases pass and the former direct HTML failure now passes without bypassing renderer. Current9 real-EOF variants explicitly exercise zero/positive holdout HTML/saved-data fidelity alongside original backend failure/context assertions. Parent same-source715/223/5 Build logs inspected; unaffected regression/check-routing evidence retained. This closes the specific source3 coverage gap, not all possible report bugs. Full automated checks still block on failure before acceptance; no formal-finalizer success claimed.
+
+### 8. 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。
+
+- **works, carried over** — source eligibility/generation/selection/packaging/archive contracts unchanged; renderer does not alter producer JSON or candidate choice. Prior full short/unjustified/qualified normal/router/no-evidence cases remain relevant and current creator tests pass; current actual archive also matches11 genuine-source files. Mechanical qualification still does not prove semantic justification or trigger accuracy.
+
+### 9. 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。
+
+- **works, carried over** — unchanged checker and frozen known inputs preserve prior four-case native/direct-witness positives, exception exclusions, unavailable-source stop and unknown-model record. Historical packaging interpretive dispute and finite sampled scope remain; no fresh detector or independent new-host claim.
+
+### 10. 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。
+
+- **works, carried over** — full diff leaves cold-entry/history/model/timing setup/stops and producer schema unchanged. Local renderer normalization keeps optional null JSON rather than fabricating measurements. Prior five-case cold-entry results and progressive-load deviations retained.
+
+### 11. 代表性真實宿主流程可完成且產物符合其已宣告要求；尚未驗證的環境、條件與模型判斷限制明確保留。
+
+- **partly, carried over** — unchanged requirement for full current-interface fresh detector-to-report/representative real Claude host remains unmet, with no new outside consent. Current actual offline transport/browser/HTML proof closes a bounded CLI defect only. Earlier host failures, different-interface evidence and unknown runtime identity remain; passing finalization/release readiness is not inferred.
+
+### Outcome and stopping point
+
+- **10 works,1 partly,0 fails,0 not verified**; re-tested1/7, other rows carry over with full-diff reasons. No important/fatal finding dismissed: null-cohort report bug verified repaired, current-interface real-host evidence gap retained. All prior source-specific failures stay failed in the prefix and their independent artifact directories.
+- Source4 witness complete within the existing explicit maximum5; actualfollowups3 retained despite legacy resolver0..2 rejection. No shared resolver/rule change, automatic model upgrade, source/test edit, new runtime variant beyond this boundary, commit or attestation. Finalization and package-tests not waived; Acceptance11 still prevents release.
+
+### Final source4 document checks
+
+- Programmatic comparison confirms11 exact intent strings/order,10 works/1 partly, re-tested1/7 and checked carryovers for2/3/4/5/6/8/9/10/11. Inherited231517-byte prefix keeps SHA256 `358fb39b6b799f7ae953b64a104084b68c0680a402565e2fe210b260421a5e85`.
+- `git diff --check` passes; exact tested HEAD remains `35a6be1446a3636450a6d94886195d37018da9b1`. Only canonical acceptance report/evidence are modified. Old failedStarting HTML/transcript and new actual final HTML/JSON/stdout/stderr/backend/browser records are preserved in separate source-specific temporary directories. No functional change or passing finalization by the witness.

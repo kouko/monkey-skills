@@ -1171,3 +1171,59 @@ Old failure data, interpretation disagreements and counters remain intact.
 Two of at most five local cycles have been used; source2 fix verification
 continues with the same reviewer identities and only the fix delta.
 No additional outside execution, installation, publication or merge occurred.
+
+### Local cycles 3 and 4 — execution context and real HTML evidence
+
+Both same-identity Round2 reviewers independently rejected874783b8's
+overbroad creator-cwd rule: project discovery and backend launch consume
+cwd, so absolute data paths did not preserve the user's project. The native
+rule check itself was a completed conforming assignment, not an inferred
+model escalation. Original YAML remains at
+`/private/tmp/toolkit-boundary-closing-{code,skill}-r2.yaml`.
+
+Cycle3 source858cda1129c1651bf2f32a1ee87e000f19df15e7 uses one uniform
+project-preserving recipe: command-local creator PYTHONPATH, existing
+absolute script entry, original project cwd and explicit workspace paths.
+Actual offline backend/active command paths now prove context; safe isolated
+reproduction shows the old wrong-context recipe could still say all_passed.
+The existing six EOF cases went RED then GREEN, including a same-named
+project scripts package; ordinary bytecode-enabled execution also passed.
+No production Python or new launcher was required for this correction.
+
+Build at858:715 root49.26s/220 toolkit11.57s/5 adversarial0.09s passed,
+but independent actual HTML acceptance exposed a separate legal holdout0
+failure: generate_report iterated test_results=None. Context-only success
+with report disabled did not replace that failure. The source858 report
+was committed as8 works/2 fails/1 partly; all starting pages, stdout/stderr,
+source pins and historical evidence remain preserved. Source858 was never
+passed to formal Round3; Build fixed the witnessed failure first.
+
+Cycle4 source35a6be1446a3636450a6d94886195d37018da9b1 fixes only the
+existing optional-cohort renderer boundary: production net+7 lines,
+no new functions/dependencies/modules. Producer JSON stays null; missing
+cohort scores are neutral N/A, while positive-denominator scoring is
+unchanged. The existing real CLI/EOF case now has9 variants (original6
+retained plus3 nonempty-holdout cases), actual HTML and only external
+provider/browser transports substituted. Renderer/root discovery execute.
+RED:2 failed/7 passed; final creator file47 passed. BROWSER transport uses
+a quoted spaced executable, so tests do not open a real browser or fetch
+report fonts. Actual earlier failure artifacts were never repaired in place.
+
+Build at35a: sync-trunk up to date with origin/main4cbf85a8;
+715 root48.12s/223 toolkit17.35s/5 adversarial0.08s passed. Logs:
+`/private/tmp/toolkit-boundary-r4-{root-tests,toolkit-tests,adversarial}.txt`.
+An independent fourth clean source witness reran51 focused cases, actual
+packaging/aggregation, both zero/nonzero-holdout HTML recipes, saved HTML/JSON
+fidelity, real offline backend/command location, cleanup and source bytes.
+Current acceptance returns to10 works/1 partly; only Acceptance11 lacks
+the complete new-interface discovery/real-Claude host evidence.
+
+This remains4/maximum5 local candidate/verification cycles. The witness's
+actual completed followups3 were fed to the shared resolver, which rejected
+its legacy0..2 input range. The user's explicit five-cycle ceiling governs
+the fourth witness assignment; actual3 was not normalized or reset, shared
+rules were not edited, and the retained requested gpt-6.1-sol/high was not
+described as an observed backend or an automatic upgrade. All earlier
+failures/counters and the historical packaging interpretation dispute remain.
+No new outside-model call, installation, publication, merge or passing
+finalization occurred; the same reviewers still verify the final fix delta.
