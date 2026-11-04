@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: yes — 盲測、偏好匯出與候選核對涉及多物件及證據保存，需要規格約束。
 evidence: [docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/independent-reassessment.md, docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/host-release-readiness.md]
-intent_confirmed_sha: e50ea646df90cc3ad55eed1c36fee6ca168295a8
+intent_confirmed_sha: dbc5d9b9fab7857cd644cb15e33b9056b6bac95e
 status: confirmed 2026-11-04
 publication: automatic — authorized 2026-11-02 by kouko
 
@@ -27,6 +27,7 @@ publication: automatic — authorized 2026-11-02 by kouko
 11. 代表性真實宿主流程可完成且產物符合其已宣告要求；尚未驗證的環境、條件與模型判斷限制明確保留。
 
 ## Constraints
+- 2026-11-04 使用者選擇「局部重設判定交界」，隨後限定「先最多迭代5輪」：保留偵測器與 Python 骨架，改由程式讀取逐項核對結果並產生報告，明確區分確認衝突、排除及已核對仍無法判定；不再手動改寫原始候選。此輪上限五個候選／驗證循環，成功即停，未達標也不得超過五輪。舊五輪已結束、所有失敗與計數保留；新工作改變程式消費的判定介面，並非第六次提示詞修補。不新增外部模型呼叫、安裝、發布或合併授權。
 - 分批修補，優先恢復三個入口、修正呼叫順序檢查及盲測身分洩漏，再完成其餘已保留項目。
 - 保留既有能力、原始偏好紀錄與無關未提交檔案；不以全面回退或重寫取代局部修補。
 - 測試優先，分開記錄程式測試、規則執行與尚未完成的真實宿主驗證。
