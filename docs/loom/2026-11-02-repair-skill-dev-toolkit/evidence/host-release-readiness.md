@@ -1088,3 +1088,44 @@ costs remain unobserved; no complete bill or hard-cap claim is made. Current
 full detector workflows were not run after replay failures, rather than
 silently passed. Five trials are closed; only evidence commits/branch return
 remain, with no sixth candidate, new host call, release attestation or publish.
+
+## User-selected decision-boundary redesign — local cycle 1 of at most 5
+
+On2026-11-04 the user selected「局部重設判定交界」and then「先最多迭代5輪」.
+Confirmed intent c5d3e9f7 records the concrete changed obligation: the program
+consumes complete per-candidate decisions and can represent a reviewed but
+unresolved outcome, instead of consuming caller-rewritten accepted subsets.
+This is W9-01, not a sixth W8 prompt-only attempt. All older failures and
+counts remain unchanged. The new ceiling is five candidate/verification
+cycles, early stop on success; this record covers only cycle1. No additional
+outside-model, installation, publication or merge consent is recorded.
+
+Fresh native spec+adversarial and plan reviewers passed a9ff145e and the
+subsequently committed5105088c plan. Native profiles were requested as the
+previously user-selected gpt-6.1-sol/high; actual backend identity is unobserved.
+Implementation1a59d926484ccdb35b8a6f4780995aa0546516bf adds51 production
+Python lines/one function,147 test lines/four functions,33 prose lines; no new
+dependency, module or runtime role. The decision input replaces manual raw
+rewrites and duplicate authoritative freeform notes, without a legacy bypass.
+RED before production:46 failed/5 passed; GREEN:51 merger,78 focused tests.
+
+Build at exact1a59d926: sync-trunk up to date with origin/main4cbf85a8;
+715 repository tests passed50.08s,220 toolkit tests passed11.19s, the existing
+unchanged adversarial program passed5 cases0.09s. Logs are
+`/private/tmp/toolkit-boundary-r1-{root-tests,toolkit-tests,adversarial}.txt`.
+No adversary re-dispatch or new program was needed; existing programs still
+run unchanged. Implementation/diagnostic record:
+`/private/tmp/toolkit-boundary-r1-implementation.md`.
+
+Local artifacts live at
+`/var/folders/m5/4cb4p8h938qc4qcpdykwz2480000gn/T/toolkit-boundary-y5pd2e1z/r1`.
+The fresh caller replay produces8 confirmed/4 excluded original candidates,
+merged to5 findings; model unknown and raw/payload/hash/coverage checks pass.
+A source-first independent witness locks judgments before output/trajectory,
+then completes the other three recorded controls by direct known-criteria
+execution. Canonical acceptance evidence details the distinct fidelities,
+unchanged37 additional preimages and source-unavailable no-verdict result.
+Current report:10 works,1 partly (Acceptance11). Historical packaging
+factual/action interpretation disagreement remains; this is no settled gold
+truth, fresh detector discovery, current Claude host test or release pass.
+Full new-interface host validation and formal finalization remain outstanding.
