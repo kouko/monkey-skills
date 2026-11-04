@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "id": "overstated-original-claim",
+  "purpose": "Preserve a real caller failure: a broader immutable original why was confirmed using only a narrower supported subset.",
+  "target": {
+    "git_ref": "35a6be1446a3636450a6d94886195d37018da9b1",
+    "path": "skill-dev-toolkit/skills/skill-refactor",
+    "sha256": {
+      "LICENSE": "ecd19b7ccb87a6bc9c954fc0f57c4d356bc7b8f52dd386abe818089b17e35af6",
+      "NOTICE": "0a37065923c0f1a332491621a4201adac09a5cb2384eeede046dd58af0a0ce40",
+      "README.ja.md": "18057e0bb0098ba2c44c188898daeb9b5ae4e90868d29d0917fe68ef8943d086",
+      "README.md": "25767d22e4beebdb4ad44d758ee186ff729bd0ab83fe9297cf8e2e5274ba65b2",
+      "README.zh-TW.md": "35ab6b2039063754ce9e072101e6a76e84d4bf57a884f4ffc34082b1bef4adb1",
+      "SKILL.md": "046534457617377215ce93b60398f1c426c15935bf010dc0d454b5e1b9b4760a",
+      "references/ablation-mode.md": "71199b82ef379aeb484f6f7001f6b8886a7ce132ba738c1c5165fac0863c71ca",
+      "references/constitution-schema.md": "72b02cad7d01bb951a618e7620a621022f66eb801be393ab25958234ebc151bc",
+      "references/equivalence-check-protocol.md": "3ef7f8c0445298b377f79677ebc407e365d55f7c63ee30e6dd19214e92d180ee",
+      "references/golden-anchor-protocol.md": "3db610515e74bf8b50a1fdeba53281bcb0d05a1e7c870a0cb5aa272711955db2",
+      "references/multi-judge-ensemble.md": "817d7b2f971435c2c4067c204645757ee3e0149fe393d2809754ca4122bd3473",
+      "references/package-resource-mode.md": "3d1852b2ac74704b76e25e53f7ca6f4c1ac2f97bf9cecda9c9fc77deeabf0a19",
+      "references/refactor-moves-catalog.md": "caa1cb2ebc1810a0ccf72cb5033b761f5af0d3a99763e2db8a026f2f4817aaea",
+      "references/test-prompts-schema.md": "c02259b2b6452fd424c9d76d352743abc6c608da87e10d85db190ec816baf08f",
+      "scripts/equivalence_check.py": "ccd738369d41c761e0db70d501b4f261512901b245f53b826f093f4d767490df",
+      "scripts/golden_compare.py": "1f568aaacf795c89507122297752761dfade268346fe29685cd779b04dfc17b7",
+      "scripts/multi_judge.py": "860380677f964c52859a9a79bb664d3d0ca941e190c3afbfd03a970703b343e6",
+      "scripts/package_gate.py": "479c7003b0e3f56fda432289d4866ef99700ba48237cf7b84247d30405454f83",
+      "scripts/test_package_gate.py": "7d9f18960d3609989ebe23d5d21261d1639f524121d64b37c5b600843e2eb8a4",
+      "scripts/test_package_mode_contract.py": "36f06beb23ba1824e739888d1874af3a96f7fbfbfa803552e9fccb82d1b4a716",
+      "test-prompts.json": "9d4ff169ad53e2039c0985940c2343fcfeecdae3999355e50fff39fa49389b29"
+    }
+  },
+  "raw_findings_sha256": {
+    "read-1.json": "3ee1d9c3703df33312f73e697679e5588c211b53d8a26b6e43a83f75ac946709",
+    "simulate-1.json": "5209204ec91b6c9a3a34eb89faaad0b39609add8bb30e0d03f9b0ebaa22e83c3"
+  },
+  "expected_dispositions": [
+    {
+      "source": "read-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "basis": "Original why includes prose as an alternative shared condition; the caller admitted it could only support creative/non-deterministic output. The checker requires exclusion of overstated original claims rather than confirming a narrower replacement.",
+      "contract": {
+        "git_ref": "35a6be1446a3636450a6d94886195d37018da9b1",
+        "path": "skill-dev-toolkit/skills/skill-consistency-check/SKILL.md",
+        "lines": [
+          163,
+          170
+        ]
+      },
+      "source_evidence": [
+        {
+          "path": "references/equivalence-check-protocol.md",
+          "lines": [
+            17
+          ]
+        },
+        {
+          "path": "SKILL.md",
+          "lines": [
+            358,
+            360
+          ]
+        }
+      ]
+    }
+  ],
+  "scoring_scope": "Only the listed original candidate has a contract-derived expected disposition. Retain every other raw candidate, but do not infer a complete gold answer or model accuracy from this one case.",
+  "not_unique_gold": [
+    {
+      "source": "simulate-1.json",
+      "id": "F1",
+      "reason": "Entry eligibility versus same-layer reference directives remains an interpretive dispute."
+    },
+    {
+      "source": "simulate-1.json",
+      "id": "F4",
+      "reason": "Worked-example applicability and judgment-call scope remain uncertain."
+    }
+  ],
+  "calibration_status": "Source-derived expectation supported by two independent model audits; no human calibration or complete caller-quality benchmark claimed.",
+  "context_firewall": {
+    "executor": "Only reconstructed target files and original raw finding files; exclude this manifest, expected labels and previous decisions/reports. Generate the plan from the reconstructed target.",
+    "grader": "This manifest, the same target and original raw findings, and new caller output/trajectory."
+  },
+  "observed_failure": {
+    "executor": "Claude Code",
+    "requested_model": "claude-opus-5-5",
+    "requested_effort": "high",
+    "status": "confirmed",
+    "original_decisions_sha256": "c08c4752671bf455ad96bd08cfad45978ef5dc043d3cce809ec3bbf63990efab",
+    "note": "The original failed host artifacts are preserved separately; a native local correction is not evidence of a successful Claude rerun."
+  }
+}

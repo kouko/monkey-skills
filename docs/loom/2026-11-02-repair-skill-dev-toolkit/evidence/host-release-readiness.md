@@ -1315,3 +1315,92 @@ so the prior715/223/5 mechanical checks remain source-specific evidence.
 The five-cycle limit is exhausted. Acceptance stays10 works/1 partly:
 the larger end-to-end task and this batch's packaging case are uncompleted.
 No new passing attestation, installation, publication or merge is earned.
+
+### Cycle6 — resumed adjudication exposes a caller contract breach
+
+The user subsequently requested「那就繼續迭代吧」. One additional bounded
+cycle was disclosed, preserving the first five cycles and using the same
+root, requested Claude Code/claude-opus-5-5/high, source/public data and
+USD5 client-estimate stop threshold. Runtime/source remain35a6be14.
+`continuation-1/proposal.json` records the renewed request and disclosures;
+it does not rewrite the prior budget stop. All204 previous files in the
+new preimage inventory remain byte-identical.
+
+Preflight completes atUSD0.0140116. `refactor-resume` then completes real
+Steps6-7 atUSD1.6780736, using the two valid original detector outputs and
+reading their cited authorities without rerunning discovery. Total new
+CLI estimate isUSD1.6920852, not a bill or hard cap. This is segmented host
+execution, not a new uninterrupted full workflow. Its genuine merger
+returns exit1 and produces9 dispositions:2 confirmed,1 indeterminate,
+6 excluded. The confirmed candidates describe one disputed underlying
+concern but have different cited file pairs, so the merger does not combine
+them. Caller unknown model metadata and all other limits remain disclosed.
+
+Two independent source/trajectory audits agree on a specific medium breach:
+read F1's original why asserts creative, prose OR non-deterministic output,
+yet its confirmed reason explicitly supports only the creative/non-deterministic
+subset. The existing checker contract requires exclusion of an overstated
+original why, even when a narrower concern is supported. It is not permitted
+to replace the original claim implicitly. Audit A grades the output
+QUALIFIED/no major blocker; audit B grades it FAIL. Preserve both grades;
+the agreed defect is sufficient to fail Acceptance11 rather than average
+the reviews into a pass. Simulate F1's entry-eligibility/reference-scope
+question remains interpretive; neither audit supplies a unique gold label.
+
+The failed-case policy stops the package-existing call; there is no further
+paid retry, new model selection or seventh cycle. The report failure is
+independent of the earlier cost stop. Original host outputs remain unchanged.
+At `projects/refactor-full/audit-run/local-correction-1`, the native host
+changes only read F1's status/reason to excluded and executes the same source
+merger. All other8 dispositions remain identical; the new report has
+1 confirmed,1 indeterminate,7 excluded and exit1. This corrects a current
+artifact, not production model behavior. Audit A's correction readback
+passes; the raw Claude trial remains failed and is not overwritten.
+
+The final document readback verifies the fixture, costs, failed-trial state
+and local correction, while identifying a stale simulate F1 cross-reference
+to read F1. At `local-correction-2`, remove only that introductory reference,
+retaining its full independent source reasoning and all statuses. Execute
+the existing merger again; counts stay1/1/7. Preserve correction1 as well as
+the original host report. This is cleanup caused by the artifact correction,
+not another caller trial or new finding. Final readback:
+`/private/tmp/toolkit-boundary-host6-final-readback.md`.
+
+Freeze the real9-candidate input under
+`skill-dev-toolkit/tests/caller-review-cases/overstated-original-claim/`:
+two byte-identical raw JSON files and one case manifest. The manifest pins
+all21 target-file hashes and git source35a6be14 without duplicating target
+code, and defines exactly one contract-derived expected exclusion. Its
+expected labels are grader-only; they must never enter the executor context.
+Disputed candidates are not assigned a gold answer. This is calibration
+data, not a new automated benchmark or human-calibrated accuracy claim.
+The historical detector calibration corpus and production runtime are
+untouched; the existing toolkit suite passes223 tests in18.27s after this
+data addition. Source-specific715 root/5 adversarial checks remain prior
+evidence, not newly executed results. A green mechanical suite does not
+override the real semantic RED.
+
+Evidence: same root `continuation-1/runs/{preflight,refactor-resume}.*`,
+proposal/preimages/batch-status, original failed reports under
+`projects/refactor-full/audit-run/continuation-1`, separate local correction,
+and `/private/tmp/toolkit-boundary-host6-{refactor-a,refactor-b,correction-a}.md`.
+Acceptance now records10 works/1 fails: a real report exists and violates
+its own original-claim rule. Installation, trigger routing, live optimizer,
+last packaging case and release/finalization remain unearned.
+
+#### Research informing the next repair, not claiming a new guarantee
+
+[Anthropic's agent-evaluation guidance](https://www.anthropic.com/research/demystifying-evals-for-ai-agents)
+separates deterministic checks from model judgment, recommends expert
+calibration and an unknown outcome, and cautions that ambiguous tasks or
+grader mistakes can distort scores. [Google Cloud's Japanese evaluation overview](https://cloud.google.com/blog/ja/topics/developers-practitioners/agent-factory-recap-a-deep-dive-into-agent-evaluation-practical-tooling-and-multi-agent-systems?hl=ja)
+likewise distinguishes schema checks, model judgment and expert review,
+combining them through calibration. Read2026-11-05.
+
+Our inference: preserve the observed error as a measured caller-quality
+case before adding another self-reported flag, prompt expansion or agent.
+Those changes have no measured benefit here yet; a flag supplied by the
+same model would still need semantic validation. No new framework, parser
+heuristic, runtime field, dependency or relaxed acceptance bar is introduced.
+The current evidence identifies a judgment-quality limitation; it does not
+prove that the whole architecture has reached its limit.

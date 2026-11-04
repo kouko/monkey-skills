@@ -1,0 +1,27 @@
+{"findings": [
+  {"id": "F1",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "SKILL.md", "lines": [346, 358, 359, 360], "quote": "**Skill output is creative / non-deterministic** (writing style,"},
+   "side_b": {"file": "references/multi-judge-ensemble.md", "lines": [165, 166], "quote": "For any non-deterministic / prose / creative output, run the full"},
+   "steps": [
+     "SKILL.md:346,358-360 lists creative / non-deterministic output (writing style, prose, design feel) under 'do NOT invoke', because the equivalence check is unreliable, and routes it to skill-tuning.",
+     "references/equivalence-check-protocol.md:119-122 agrees for the same condition: Layer 2's judge becomes unreliable, and 'The skill self-aborts and recommends `skill-tuning` instead.'",
+     "SKILL.md:84-88 also says the gate cannot run safely when output is purely creative.",
+     "references/multi-judge-ensemble.md:165-166 gives the opposite instruction for the same outputs: run the full ensemble."
+   ],
+   "why": "Shared condition: the target skill's output is creative, prose, or non-deterministic. SKILL.md and the equivalence protocol require aborting without running the check and routing to skill-tuning, while multi-judge-ensemble.md requires running the full ensemble on that output, so an agent cannot do both."},
+  {"id": "F2",
+   "type": "conditional",
+   "confidence": "medium",
+   "side_a": {"file": "SKILL.md", "lines": [157], "quote": "**PROCEED** — all three pass strictly."},
+   "side_b": {"file": "references/multi-judge-ensemble.md", "lines": [162], "quote": "In that case, Layer 1 pass = PROCEED."},
+   "steps": [
+     "references/multi-judge-ensemble.md:152-160 defines the case: exhaustive Layer 1, deterministic test prompts, and a Low-risk catalog move.",
+     "references/multi-judge-ensemble.md:162 then sets the verdict for that case: Layer 1 pass = PROCEED, with no reference to Q2 or Q3.",
+     "SKILL.md:106-107 requires structural OK and `PASS_HIGH` or `PASS_MODERATE` from the reducer for Q1, which a skipped ensemble does not produce.",
+     "SKILL.md:157 reserves PROCEED for all three checks passing strictly; SKILL.md:159-163 makes a 5-10% Q2 result RESHAPE ('Do not auto-merge') and makes increase / no reduction or a Q3 violation REJECT.",
+     "So a Low-risk deterministic candidate that passes Layer 1 but has no token reduction is PROCEED under multi-judge-ensemble.md:162 and REJECT under SKILL.md:162-163."
+   ],
+   "why": "Shared condition: all three skip conditions hold and Layer 1 passes, but Q2 is marginal or failing, or Q3 is violated. The ensemble file assigns PROCEED from Layer 1 alone, while the SKILL.md verdict rules require RESHAPE or REJECT, and the stated skip exception only covers the ensemble, not Q2 or Q3."}
+]}

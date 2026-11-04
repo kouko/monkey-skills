@@ -1,0 +1,89 @@
+{"findings": [
+  {"id": "F1",
+   "type": "direct",
+   "confidence": "high",
+   "side_a": {"file": "references/multi-judge-ensemble.md", "lines": [165], "quote": "For any non-deterministic / prose / creative output, run the full"},
+   "side_b": {"file": "references/equivalence-check-protocol.md", "lines": [119, 120, 121, 122], "quote": "becomes unreliable — taste enters. The skill self-aborts and"},
+   "steps": [
+     "Situation: the target skill's output is creative / non-deterministic (for example writing tone or prose).",
+     "SKILL.md:84-88 treats this as a case where the gate cannot run; report the blocker and suggest skill-tuning. SKILL.md:358-360 lists it as a do-NOT-invoke case because the equivalence check is unreliable.",
+     "references/equivalence-check-protocol.md:119-122 says for the same output class that the skill self-aborts and recommends skill-tuning.",
+     "references/multi-judge-ensemble.md:165-166 says that for the same output class the agent must run the full ensemble.",
+     "The agent cannot both self-abort before Q1 and run the full Q1 ensemble on that target."
+   ],
+   "why": "When a target skill's output is non-deterministic or creative, one file requires running the full judge ensemble while SKILL.md and the equivalence protocol require aborting and routing to skill-tuning."},
+  {"id": "F2",
+   "type": "numeric",
+   "confidence": "medium",
+   "side_a": {"file": "references/equivalence-check-protocol.md", "lines": [21, 23], "quote": "Within ±20% of baseline"},
+   "side_b": {"file": "references/equivalence-check-protocol.md", "lines": [85, 89], "quote": "Token count delta is suspiciously large (>30% reduction in"},
+   "steps": [
+     "Situation: a candidate's output is more than 30% shorter than baseline.",
+     "equivalence-check-protocol.md:21 and :23 make output token count within ±20% a required Layer 1 check; failure means REJECT immediately, without Layer 2.",
+     "equivalence-check-protocol.md:85 and :89-91 treat a >30% output reduction as a state that can occur 'Even if both layers pass' and only mark it suspicious.",
+     "A >30% reduction cannot pass the ±20% check, so the same quantity has two limits with different consequences: rejection beyond 20%, suspicion beyond 30%."
+   ],
+   "why": "For the output token delta on a candidate, the same file sets a hard ±20% pass limit and also describes a >30% reduction as coexisting with a Layer 1 pass, which the first limit makes impossible."},
+  {"id": "F3",
+   "type": "conditional",
+   "confidence": "medium",
+   "side_a": {"file": "references/multi-judge-ensemble.md", "lines": [162], "quote": "In that case, Layer 1 pass = PROCEED."},
+   "side_b": {"file": "SKILL.md", "lines": [157], "quote": "**PROCEED** — all three pass strictly."},
+   "steps": [
+     "Situation: a deterministic target and a Low-risk move, where multi-judge-ensemble.md:154-160 permits skipping the ensemble.",
+     "The agent runs Layer 1 only, and it passes; multi-judge-ensemble.md:162 assigns PROCEED.",
+     "SKILL.md:106-107 makes the Q1 pass rule 'structural OK and PASS_HIGH or PASS_MODERATE', and with no ensemble there is no such result, so the skipped-ensemble carve-out is not reflected in SKILL.md's Q1 rule.",
+     "Independently of Q1, SKILL.md:92-93 and :155-158 reserve PROCEED for rounds where Q1, Q2 and Q3 all pass, and SKILL.md:128 rejects a <5% reduction. Suppose that same round has a <5% reduction: Layer 1 pass = PROCEED but Q2 = REJECT.",
+     "The skip clause states an exception to running the ensemble, but it does not state an exception to Q2 or Q3, so the verdict conflict remains."
+   ],
+   "why": "On a structural-only round whose Layer 1 passes but whose Q2 or Q3 fails, the ensemble reference assigns PROCEED while SKILL.md requires all three checks to pass and otherwise REJECT."},
+  {"id": "F4",
+   "type": "conditional",
+   "confidence": "medium",
+   "side_a": {"file": "SKILL.md", "lines": [311], "quote": "**Input**: User says \"let me try this rewording — it's clearer\"."},
+   "side_b": {"file": "references/refactor-moves-catalog.md", "lines": [187, 194], "quote": "| Reword for \"clarity\" with judgment call | Taste, not refactor | `skill-tuning` |"},
+   "steps": [
+     "Situation: the user proposes a rewording because it is clearer.",
+     "SKILL.md:309-327 handles this input inside the skill: it runs Q1, Q2 and Q3, holds on FLAG_TIER_2, then rejects the round. SKILL.md:329-331 presents this as what the ensemble is for.",
+     "references/refactor-moves-catalog.md:185 and :187 say out-of-scope moves are not to be done in refactor and must be routed elsewhere if proposed; line 194 sends a clarity rewording with a judgment call to skill-tuning.",
+     "The agent cannot both route the proposal away as out of scope and process it through the refactor gate in this skill."
+   ],
+   "why": "For a user-proposed 'clearer' rewording, the catalog requires routing to skill-tuning without doing it in refactor, while SKILL.md's worked example runs that same proposal through the refactor gate."},
+  {"id": "F5",
+   "type": "conditional",
+   "confidence": "low",
+   "side_a": {"file": "SKILL.md", "lines": [84, 86, 87, 88], "quote": "gate cannot run safely. Report the blocker to the user and suggest"},
+   "side_b": {"file": "SKILL.md", "lines": [246], "quote": "| Skill has no `test-prompts.json` and user is unwilling to write any | The gate cannot run; revert to `skill-creator-advance` |"},
+   "steps": [
+     "Situation: the target has no test-prompts.json and the user will not write one, so baseline item (1) from SKILL.md:49-52 cannot be obtained.",
+     "SKILL.md:84-88 covers any of items (1)-(4) being unobtainable: suggest skill-tuning for a quality intent, or manual edit for a cosmetic one.",
+     "SKILL.md:246 gives a different destination for the same blocker: revert to skill-creator-advance. SKILL.md:355-357 repeats that destination.",
+     "references/test-prompts-schema.md:135-137 also says skill-tuning self-aborts with fewer than 3 prompts, so the skill-tuning suggestion from line 87 cannot complete under this condition unless the user supplies prompts."
+   ],
+   "why": "When test prompts are absent and the user refuses to write them, SKILL.md gives two different exits, skill-tuning or manual edit versus skill-creator-advance, and the skill-tuning exit self-aborts under the same condition."},
+  {"id": "F6",
+   "type": "conditional",
+   "confidence": "low",
+   "side_a": {"file": "references/golden-anchor-protocol.md", "lines": [109], "quote": "Accept the output as-is if it's truly good"},
+   "side_b": {"file": "references/golden-anchor-protocol.md", "lines": [192], "quote": "| Goldens that look identical to current skill output | Adds no information; just baseline-locks |"},
+   "steps": [
+     "Situation: during golden curation, the current skill's output on a representative prompt is truly good.",
+     "golden-anchor-protocol.md:106-109 runs the current best version and directs accepting that output as-is.",
+     "The saved golden (line 113) is then identical to current skill output.",
+     "golden-anchor-protocol.md:187-192 lists goldens identical to current skill output as an anti-pattern."
+   ],
+   "why": "When the current output is good and is accepted as-is, the curation process yields exactly the golden the same file names as an anti-pattern; the conflict is uncertain only because the process also offers editing or rewriting options."},
+  {"id": "F7",
+   "type": "chain",
+   "confidence": "low",
+   "side_a": {"file": "references/package-resource-mode.md", "lines": [78, 79], "quote": "record that acceptance as `PROCEED` before applying it."},
+   "side_b": {"file": "SKILL.md", "lines": [41, 42], "quote": "win; it does not auto-advance the ratchet."},
+   "steps": [
+     "Situation: a package-mode candidate has a 5-10% whole-package reduction, passes the other gates, and the user accepts the marginal win.",
+     "references/package-resource-mode.md:15 yields RESHAPE, and :77-79 requires recording the acceptance as PROCEED before applying it.",
+     "SKILL.md:157-158 defines PROCEED as all three checks passing strictly, followed by git commit, and states 'ratchet advances'. A literal PROCEED record therefore advances the ratchet.",
+     "SKILL.md:41-42 says a 5-10% reduction does not auto-advance the ratchet, and SKILL.md:131-132 says the 10% threshold prevents accumulating ratchet credit from micro-edits.",
+     "The result is incompatible if 'does not auto-advance' applies after user acceptance; it is compatible only if 'auto' means solely 'without user acceptance', which is why confidence is low."
+   ],
+   "why": "On an accepted 5-10% package-mode candidate, recording PROCEED brings the verdict definition 'ratchet advances' into conflict with the rule that a marginal reduction does not advance the ratchet automatically."}
+]}
