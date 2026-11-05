@@ -93,7 +93,7 @@ Upstream：[`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
 | `obsidian-markdown` | 撰寫 Obsidian Flavored Markdown —— wikilink、embed、callout、properties、註解 |
 | `obsidian-bases` | 建立與編輯 `.base` 檔，含 view、filter、formula、summary |
 | `obsidian-cli` | 透過官方 CLI 操作運行中的 Obsidian instance —— read / create / search / plugin 與 theme 開發 |
-| `defuddle` | 透過 Defuddle CLI 從網頁萃取乾淨 markdown（節省 token，取代 WebFetch） |
+| `defuddle` | 透過 Defuddle CLI 擷取網頁內容與 YouTube 逐字稿 |
 
 ### 引入自 axtonliu（Axton Liu）
 

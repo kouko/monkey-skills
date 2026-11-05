@@ -96,7 +96,7 @@ Upstream: [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
 | `obsidian-markdown` | Obsidian Flavored Markdown の作成 — wikilink、embed、callout、properties、コメント |
 | `obsidian-bases` | `.base` ファイルの作成・編集 — view、filter、formula、summary |
 | `obsidian-cli` | 起動中の Obsidian instance を公式 CLI で操作 — read、create、search、plugin / theme 開発 |
-| `defuddle` | Defuddle CLI で web ページから clean markdown を抽出（WebFetch の token 節約版） |
+| `defuddle` | Defuddle CLI で web ページと YouTube の文字起こしを抽出 |
 
 ### axtonliu（Axton Liu）からの import
 

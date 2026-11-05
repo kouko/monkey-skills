@@ -26,4 +26,4 @@ charter: 1.1
 ## Risks
 1. Public video captions and network access change; preserve test fixtures and report live checks separately from deterministic cases.
 2. Version 0.19.6 returns English when the Japanese preference has no matching track; report actual language without promising translation or availability.
-3. User authorized planning only; implementation, publication and merge require separate authorization.
+3. User authorized implementation on 2026-11-05 by saying “繼續吧”; publication and merge remain outside the authorization.

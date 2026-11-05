@@ -98,7 +98,7 @@ Upstream: [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
 | `obsidian-markdown` | Author Obsidian Flavored Markdown — wikilinks, embeds, callouts, properties, comments. |
 | `obsidian-bases` | Create and edit `.base` files with views, filters, formulas, and summaries. |
 | `obsidian-cli` | Drive a running Obsidian instance via the official CLI — read, create, search, plugin and theme dev. |
-| `defuddle` | Extract clean markdown from web pages via Defuddle CLI (token-saving alternative to WebFetch). |
+| `defuddle` | Extract web pages and YouTube transcripts with Defuddle CLI. |
 
 ### Imported from axtonliu (Axton Liu)
 
