@@ -273,9 +273,30 @@ instead of adding a human-acknowledgment flag or another model judge.
 The whole-content surface sweep covers87 cumulative changed/surface files
 and10 live notice surfaces; frozen evidence is excluded from policy edits.
 Implementer commit eb9065567 completes the ten scoped live files. Production
-merger growth is net7 lines with zero new functions/fields; operational entry
+merger growth is net6 lines with zero new functions/fields; operational entry
 adds8 lines and six guides add35 lines, with4 changelog lines. The existing
 limits CLI test expands to six verdict/model combinations; related assertions
 now expect the advisory limit. Focused RED is8 failed/48 passed; GREEN is
 56 passed in1.89s. No new model trial or claim of repaired judgment occurs.
 Current-scope integration, independent acceptance and closing review follow.
+
+Fresh integration worktree `/private/tmp/toolkit-preview-verify` at5eec1ad63
+syncs successfully: origin/main remains4cbf85a8 and no commit is added.
+Current source passes the complete repository suite715 in48.62s and the
+complete toolkit suite228 in13.89s; logs are
+`/private/tmp/toolkit-preview-closeout/{repository-suite,toolkit-suite}.log`.
+The five extra toolkit cases are the existing limit test's expanded
+verdict/model combinations, not five new model samples or accuracy evidence.
+The existing graduated adversarial program also passes5 tests in0.08s;
+its content remains unchanged and no passing program earns a redispatch.
+Build hands this current functional content to Closing Review, with
+independent current-scope acceptance in progress and no dismissed important
+findings. The known original caller-quality failure is retained under the
+old guarantee, not dismissed or fixed by advisory wording.
+Current-scope independent acceptance reports11 works. It executes83
+targeted tests, genuine source packaging (11 exact archive entries), planner
+and r08/r10 merger reproductions; the old outputs differ only by the
+new advisory notice, with original status/exit/provenance preserved.
+All100 baseline and161 original-input preimages match. The original
+Acceptance11 text and FAIL remain explicitly historical in the current
+report; new preview success does not regrade it or prove model improvement.
