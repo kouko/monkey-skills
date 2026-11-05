@@ -8,7 +8,7 @@ description: |
 
 Use Defuddle CLI to extract readable content from web pages. Prefer it over WebFetch for standard web pages; for URLs ending in `.md`, use WebFetch directly.
 
-The YouTube JSON, language preference, and frontmatter options were tested with Defuddle 0.19.6. Check `defuddle --version` if an option is unavailable. If the CLI is missing, report that it is required; installation: `npm install -g defuddle`.
+If the CLI is missing, report that it is required; install with `npm install -g defuddle`. Prefer the latest version for YouTube fixes, including those in 0.19.6; use `defuddle --version` to check the installed version.
 
 ## Usage
 
@@ -24,35 +24,26 @@ Save to file:
 defuddle parse '<url>' --md -o content.md
 ```
 
-Extract specific metadata:
+Extract a metadata property (`title`, `description`, or `domain`):
 
 ```bash
 defuddle parse '<url>' -p title
-defuddle parse '<url>' -p description
-defuddle parse '<url>' -p domain
 ```
 
-Add `--frontmatter` to include metadata with markdown. Local HTML can be supplied as a file path, or via standard input using `defuddle parse - --md`.
+Defuddle 0.19.0+ supports `--frontmatter` and standard input (`defuddle parse - --md`).
 
 ## YouTube transcripts
 
-For a video URL, request JSON to inspect the transcript and language metadata:
+Release notes introduced YouTube transcripts in 0.12.0 and preferred transcript language handling in 0.15.0.
+
+Use Markdown for a video URL:
 
 ```bash
-defuddle parse '<youtube-url>' --json --lang ja
+defuddle parse '<youtube-url>' --md
 ```
 
-`--lang` is a preference, not a translation request or a guarantee that a matching track exists. Omit it when no language was requested. The JSON `variables.transcript` contains the transcript when available. Treat the top-level `language` as a clue, not proof of the transcript language: it can fall back to page metadata. Check the transcript text; if you cannot determine its language, report it as unknown. The transcript can contain timestamps and chapters. Markdown output can also include the video link and description, so do not treat the entire page as the transcript. `-p transcript` does not retrieve the nested field in 0.19.6.
+To request a preferred language, add `--lang ja`. This is a preference, not a guarantee or a translation request. Verify that the output contains a transcript, check its actual language from the text, and report missing captions, a different language, or command failure. If the language cannot be determined, report it as unknown; video descriptions are not transcripts.
 
-Check both the command result and `variables.transcript`: a successful parse may still have a missing or empty transcript. Report an extraction error, missing transcript, unknown language, or different returned language explicitly. Do not invent or translate transcript text to fill a gap; use another available source only if appropriate and identify it.
+For structured output, use `--json`: `variables.transcript` holds the transcript when available. The top-level `language` may come from page metadata and is only a clue.
 
-## Output formats
-
-| Flag | Format |
-|------|--------|
-| `--md` | Markdown (default choice) |
-| `--json` | JSON with both HTML and markdown |
-| `--frontmatter` | Add metadata before output |
-| `--lang <code>` | Preferred language for the page and transcript |
-| (none) | HTML |
-| `-p <name>` | Specific metadata property |
+Without `--md` or `--json`, output is HTML.
