@@ -1,15 +1,15 @@
 # 更新 Defuddle skill — 驗收結果
 
-Tried on 2026-11-05, in a clean copy of the project at 5f7fd271. 測試方式與輸出：`docs/loom/2026-11-05-defuddle-skill-refresh/evidence/acceptance-test-evidence.md`。
+Tried on 2026-11-05, in a clean copy of the project at e6a9235f. 測試方式與輸出：`docs/loom/2026-11-05-defuddle-skill-refresh/evidence/acceptance-test-evidence.md`。
 
 ## 逐項驗收
 
 | # | 你的要求 | 結果 | 發生了什麼 | 重測 |
 |---|---|---|---|---|
 | 1 | 描述提到一般網頁和 YouTube 逐字稿，讓 agent 知道何時可以使用。 | works | 描述涵蓋兩種用途。 | re-tested |
-| 2 | 保留安裝、網頁擷取及 Markdown 輸出，補上影片與字幕語言的使用方式。 | works | 指引包含安裝、網頁、Markdown、影片和語言偏好用法。 | re-tested |
+| 2 | 保留安裝、網頁擷取及 Markdown 輸出，補上影片與字幕語言的使用方式。 | works | 指引包含各項用法；既有的 0.19.6 可執行，這次沒有重新安裝。 | re-tested |
 | 3 | 說明指定語言不保證取得該語言；取得結果後確認字幕內容，沒有字幕或擷取失敗時如實回報。 | works | 指引說明語言偏好及缺失、錯誤處理；取得英文字幕的實測與說明一致。 | re-tested |
-| 4 | 執行文件中的主要指令；用一般網頁及一兩部影片確認輸出，未測到的情況如實註明。 | works | 網頁和兩部影片的擷取成功；真實無字幕影片未測試。 | re-tested |
+| 4 | 執行文件中的主要指令；用一般網頁及一兩部影片確認輸出，未測到的情況如實註明。 | works | 網頁及一部影片擷取成功；真實無字幕影片未測試。 | re-tested |
 | 5 | 沿用現有 skill 結構；相關索引有需要時才同步更新，內容保持簡潔。 | works | 沿用原有檔案，並同步更新既有索引。 | re-tested |
 
 上一次驗收在較廣的條件下將四項列為 partly；使用者之後確認以上精簡條件。先前的失敗和未驗證結果仍保留在證據及 Git 歷史中。
@@ -25,7 +25,7 @@ Tried on 2026-11-05, in a clean copy of the project at 5f7fd271. 測試方式與
 
 ## 你要求跳過的步驟
 
-沒有。
+- 額外登錄驗收規則、保存完整 agent 執行軌跡及測量自動觸發率 — 依你的指示不列入驗收，2026-11-05。
 
 ## 尚不確定的事
 
