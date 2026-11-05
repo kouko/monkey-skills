@@ -1,5 +1,15 @@
 # Defuddle skill refresh — acceptance test evidence
 
+## Re-run on 2026-11-05, at 4f8f3915c3f4f51fcd0cfa8626ef11ec83956b34
+
+- Setup: created a fresh clone and checked out the exact commit detached. The existing CLI returned `0.19.6`; a local HTML article piped to `defuddle parse - --md` exited 0 with `Readable setup check.` The README's plugin and global CLI installation were not repeated because modifying the host installation is outside scope. Agent discovery and loading were not tested.
+- Diff audit: `git diff 46e26e2e..4f8f3915` changes the plan, both plugin manifests, changelog and version references in three READMEs; the Defuddle skill, its router entry and acceptance text are unchanged. The prior review target `fc8d8c3d` additionally differs in an attestation file, not the skill behavior.
+- 1: carried over — the skill description and its acceptance wording are unchanged; automatic selection and trigger rate remain unmeasured.
+- 2: carried over — installation instructions and all documented extraction commands are unchanged; the setup check above confirms the available CLI runs. Installation was not repeated.
+- 3: carried over — transcript, language and failure guidance is unchanged; prior live video output and its limitations remain below.
+- 4: carried over — the documented commands and acceptance criterion are unchanged; prior live page and video results remain below, including the untested real captionless case.
+- 5: re-tested — `ls obsidian/skills/defuddle` returned `LICENSE` and `SKILL.md`; the skill retains one instruction file. The router and English, Japanese and Traditional Chinese README entries still name web and YouTube extraction. Both manifests, both version references in each README, and the changelog show `3.25.0`. `python3 scripts/sync_codex_manifests.py --check obsidian` exited 0 with no output. The full package suite remains for finalization and no result is claimed here.
+
 ## Re-run on 2026-11-05, at ed5f61aeda8af50e847075e5b62a5e652926bc41
 
 - Setup: a new clean clone checked out the full tested commit. The plugin README still instructs plugin and global CLI installation; these were not repeated because modifying the host installation is outside scope. The existing `defuddle --version` returned `0.19.6`, and piping a local HTML article to `defuddle parse - --md` exited 0 with `Readable setup check.` Agent discovery and loading were not tested.
