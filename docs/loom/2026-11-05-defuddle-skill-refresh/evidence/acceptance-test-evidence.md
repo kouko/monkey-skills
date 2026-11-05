@@ -1,5 +1,15 @@
 # Defuddle skill refresh — acceptance test evidence
 
+## User-confirmed narrower acceptance — 2026-11-05
+
+The user confirmed that gate registration, complete agent execution traces, and trigger-rate testing are not acceptance conditions. Earlier partial results and sandbox failures below remain part of the record. The skill content tested is commit `5f7fd271`; the later commits before this section changed evidence only.
+
+1. The skill description names web pages and YouTube transcripts. This verifies the wording, not automatic skill selection.
+2. The skill documents the installation command, Markdown extraction, YouTube JSON and the language preference. The installed executable reports `0.19.6`; installation was not repeated.
+3. The skill states that the language is a preference and that the top-level language can reflect page metadata; it requires checking transcript text and reporting errors or absence. For `PO15YVVp5Mg`, `--json --lang ja` exited 0 and returned an English transcript (4,057 characters) and top-level language `en`.
+4. `defuddle parse 'https://example.com/' --md --frontmatter` exited 0 with the page body and frontmatter. `defuddle parse 'https://www.youtube.com/watch?v=jNQXAC9IVRw' --md` exited 0 with a timestamped transcript. The preceding Japanese-preference case also succeeded. A real video with no captions was not tested; synthetic absence and earlier sandbox errors are recorded below.
+5. The skill remains one `SKILL.md`; existing English, Japanese and Traditional Chinese README entries and the router entry were updated. No new skill runtime or test framework was added.
+
 Tried on 2026-11-05 in a clean clone at 5698f79f53f24ab62cc2749244136479d60cce27. `git worktree add` failed with `Operation not permitted` when creating repository worktree metadata; `git clone --no-local --no-checkout` followed by checkout of the tested commit succeeded. The clone was not installed into the user's host: doing so would change the existing plugin installation. Therefore discovery and loading by an agent were not tested. The README recommends plugin installation and a globally installed Defuddle CLI; the already available CLI reported version `0.19.6`.
 
 ## 1. 使用者要求讀取一般網頁或 YouTube 逐字稿時，skill 的描述與指引涵蓋對應用途。

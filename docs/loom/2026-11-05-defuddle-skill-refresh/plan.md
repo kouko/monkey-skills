@@ -11,9 +11,9 @@ charter: 1.1
 
 ## Task DAG
 
-**W1-01 Refresh extraction guidance and verify examples** after: none acceptance: 1, 2, 3, 4
+**W1-01 Refresh extraction guidance and verify examples** after: none acceptance: 1, 2, 3, 4, 5
 - Files: obsidian/skills/defuddle/SKILL.md, obsidian/README.md, obsidian/README.ja.md, obsidian/README.zh-TW.md, obsidian/skills/using-obsidian/SKILL.md
-- Test: A1 positive: article-and-video; negative: unrelated-request. A2 positive: requested-track; boundary: absent-or-different-track. A3 positive: article-markdown; boundary: failed-fetch. A4 positive: verified-cases; negative: missing-transcript.
+- Test: A1 positive: article-and-video; negative: unrelated-request. A2 positive: article-markdown; boundary: unavailable-option. A3 positive: requested-track; boundary: absent-or-different-track. A4 positive: verified-cases; boundary: missing-transcript. A5 positive: existing-structure; boundary: unnecessary-files.
 - Risk: agent-decided — retain one skill file; update existing inventories only where descriptions become inaccurate. Verify CLI behavior and language independently; `-p transcript` fails in 0.19.6.
 
 ## Simplicity check
@@ -27,3 +27,4 @@ charter: 1.1
 1. Public video captions and network access change; preserve test fixtures and report live checks separately from deterministic cases.
 2. Version 0.19.6 returns English when the Japanese preference has no matching track; report actual language without promising translation or availability.
 3. User authorized implementation on 2026-11-05 by saying “繼續吧”; publication and merge remain outside the authorization.
+4. On 2026-11-05 the user confirmed narrower acceptance: verify the documented commands and representative outputs; exclude gate registration, full agent traces and trigger-rate testing. Prior review and failed evidence remain in Git and acceptance evidence.
