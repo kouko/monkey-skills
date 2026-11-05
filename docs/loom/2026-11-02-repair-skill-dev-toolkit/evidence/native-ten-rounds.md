@@ -333,3 +333,37 @@ This validates the accepted human-reviewed preview scope. The original
 Acceptance11 remains failed; model judgment repair, installed-host
 activation, universal accuracy and automatic release eligibility remain
 unclaimed. Publication, installation and merge are still not authorized.
+
+### Release-readiness decision superseded by actual-usability requirement
+
+The user subsequently requests publication, then clarifies「但是我希望 release
+出去就是要能用啊」and accepts continued work with「進續吧」. Stop outward
+publication. The preview attestation above remains evidence of its specific
+tested disclosure contract, not evidence that known semantic failure is fixed
+or that the checker is useful enough for release. A human-review notice alone
+does not satisfy the clarified outcome. Preserve its historical11 works,
+the earlier original11 FAIL, all costs/counters and the closed ten trials.
+No branch push, PR, installation or merge has occurred in this continuation.
+
+First re-assess existing behavioral evidence independently: distinguish
+unique supported labels, disputed interpretations, repeatability and actual
+user-task utility. Neither one historical failure nor mechanical green tests
+alone settles general usefulness. Any further experiment needs a bounded
+question and source-grounded acceptance; do not add another prompt rule or
+pretend a notice repairs model judgment. The source-informed assessment is
+not a new full dogfood run or a release pass.
+
+Independent reassessment `/private/tmp/toolkit-usability-reassessment.md`
+confirms that corpus line-overlap scores cannot certify reason truth and
+notices cannot establish utility. Identical native replays alone do not
+close the installed-use boundary. A one-task packet is prepared at
+`/private/tmp/toolkit-usability-host/`: a separate runtime-only candidate
+snapshot, unchanged13-file real target, target hashes and task prompt.
+Answer keys are excluded from the selected runtime snapshot and project.
+A cleanup command was blocked before execution; no deletion was retried.
+The separate snapshot avoids deleting the unused first draft entirely.
+No installation or model call has run. First-party Codex provider and
+loaded candidate must be verified before execution. Existing plugins and
+global config must not be replaced. Installation scope remains explicitly
+excluded by the confirmed intent and therefore needs a scoped user decision;
+extra host usage is disclosed separately from the already closed trials.
