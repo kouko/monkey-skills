@@ -1,5 +1,15 @@
 # Defuddle skill refresh — acceptance test evidence
 
+## Re-run on 2026-11-05, at ed5f61aeda8af50e847075e5b62a5e652926bc41
+
+- Setup: a new clean clone checked out the full tested commit. The plugin README still instructs plugin and global CLI installation; these were not repeated because modifying the host installation is outside scope. The existing `defuddle --version` returned `0.19.6`, and piping a local HTML article to `defuddle parse - --md` exited 0 with `Readable setup check.` Agent discovery and loading were not tested.
+- Diff audit: `git diff 62de027c..ed5f61ae` changes only the confirmed intent SHA from abbreviated to full and the plan's intent reference. `git diff --name-only e6a9235f..ed5f61ae` also includes the previous acceptance report and evidence, but no skill, index, README, runtime, or acceptance text changes.
+- 1: carried over — the skill description is unchanged; automatic agent selection and trigger rate remain unmeasured.
+- 2: carried over — the documented installation and usage instructions are unchanged; the setup check above confirms the available CLI still runs, without repeating installation.
+- 3: carried over — the transcript, language and error guidance is unchanged; the previous video result and limitations remain recorded below.
+- 4: carried over — the commands, skill content and acceptance criterion are unchanged; the prior live page and video outputs remain the evidence, and a real captionless video remains untested.
+- 5: carried over — the skill structure and existing indexes are unchanged; no criterion-specific test was found in the prior run. The full package suite remains for finalization and no result is claimed here.
+
 ## Re-run on 2026-11-05, at e6a9235fdbaba36185879f10513dfb0f0f05447c
 
 - Setup: cloned the repository with `git clone --no-local --no-checkout`, checked out the exact commit detached, and read the plugin README and skill. The README instructs plugin installation and `npm install -g defuddle`; neither was repeated because changing the existing host installation is outside scope. The existing executable returned `0.19.6` from `defuddle --version`. Agent discovery/loading and the installation command were not exercised.
