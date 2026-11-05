@@ -55,7 +55,7 @@ flowchart TD
     Q1 -->|FLAG| H[Tier 2 升給人類]
     Q1 -->|PASS| Q2{Q2: Token 縮減 ≥10%?}
     Q2 -->|≥10%| Q3{Q3: Invariants 完好?}
-    Q2 -->|5-10%| WC[RESHAPE: 微弱 win, user 決定]
+    Q2 -->|5%以上、未滿10%| WC[RESHAPE: 微弱 win, user 決定]
     Q2 -->|<5% 或增加| R
     Q3 -->|PASS| K[PROCEED — 留下, ratchet 推進]
     Q3 -->|FAIL| R
@@ -70,7 +70,7 @@ flowchart TD
 | 檢查 | 機制 | 失敗 → |
 |---|---|---|
 | **Q1 等價性** | Layer 1 結構（決定性）+ Layer 2 LLM-judge ensemble（3 call, 不同框架）| REJECT 或 FLAG (Tier 2) |
-| **Q2 Token 縮減** | `wc -w` 前後比；≥10% 門檻 | REJECT（5-10% 為 RESHAPE）|
+| **Q2 Token 縮減** | `wc -w` 前後比；≥10% 門檻 | REJECT（5%以上、未滿10% 為 RESHAPE）|
 | **Q3 Invariants** | name / dependencies / contract / 結構不變 | REJECT |
 
 ### Verdict 詞彙
@@ -80,7 +80,7 @@ flowchart TD
 | Verdict | 條件 | 動作 |
 |---|---|---|
 | **PROCEED** | 三項全部嚴格 pass | Ratchet 推進、commit 留下 |
-| **RESHAPE** | Q2 微弱（5-10%）但 Q1+Q3 過 | 給 user 看、user 決定留或繼續 refactor |
+| **RESHAPE** | Q2 微弱（5%以上、未滿10%）但 Q1+Q3 過 | 給 user 看、user 決定留或繼續 refactor |
 | **REJECT** | Q1/Q2/Q3 任一失敗 | `git revert`、記 results.tsv、繼續 |
 | (Tier 2) | Q1 = `FLAG_TIER_2` | 升給人類 review |
 

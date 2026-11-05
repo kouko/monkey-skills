@@ -62,7 +62,7 @@ flowchart TD
     Q1 -->|FLAG| H[Tier 2 escalate to human]
     Q1 -->|PASS| Q2{Q2: Token reduction ≥10%?}
     Q2 -->|≥10%| Q3{Q3: Invariants intact?}
-    Q2 -->|5-10%| WC[RESHAPE: weak win, user decides]
+    Q2 -->|5% to below 10%| WC[RESHAPE: weak win, user decides]
     Q2 -->|<5% or increase| R
     Q3 -->|PASS| K[PROCEED — keep, ratchet advances]
     Q3 -->|FAIL| R
@@ -77,7 +77,7 @@ flowchart TD
 | Check | Mechanism | Failure → |
 |---|---|---|
 | **Q1 Equivalence** | Layer 1 structural (deterministic) + Layer 2 LLM-judge ensemble (3 calls, varied framing) | REJECT or FLAG (Tier 2) |
-| **Q2 Token reduction** | `wc -w` before vs after; ≥10% threshold | REJECT (or RESHAPE if 5-10%) |
+| **Q2 Token reduction** | `wc -w` before vs after; ≥10% threshold | REJECT (or RESHAPE if 5% to below 10%) |
 | **Q3 Invariants** | Name / dependencies / contract / structure unchanged | REJECT |
 
 ### The verdict vocabulary
@@ -87,7 +87,7 @@ Parallel to loom-workflow's critique skills:
 | Verdict | When | Action |
 |---|---|---|
 | **PROCEED** | All 3 checks strict pass | Ratchet advances; commit kept |
-| **RESHAPE** | Weak Q2 (5-10% reduction) but Q1+Q3 pass | Show user; decide keep or further-refactor |
+| **RESHAPE** | Weak Q2 (5% to below 10% reduction) but Q1+Q3 pass | Show user; decide keep or further-refactor |
 | **REJECT** | Any of Q1/Q2/Q3 fails | `git revert`; record in results.tsv; move on |
 | (Tier 2) | Q1 = `FLAG_TIER_2` | Escalate to human review |
 

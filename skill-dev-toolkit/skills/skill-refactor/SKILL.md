@@ -38,8 +38,8 @@ NO REFACTOR AUTO-SHIPS WITHOUT (1) EQUIVALENCE PROVEN
 ```
 
 If either behavior or invariant preservation fails, discard the candidate. A
-5–10% reduction may ship only after explicit user acceptance of the marginal
-win; it does not auto-advance the ratchet. Only refactors that **measurably
+reduction of at least 5% and below 10% may ship only after explicit user
+acceptance of the marginal win; it does not auto-advance the ratchet. Only refactors that **measurably
 preserve behavior while measurably shrinking the file** survive.
 
 ## Before You Begin — Establish Baseline
@@ -124,7 +124,7 @@ Entrypoint mode measures `wc -w` on candidate `SKILL.md` compared to baseline:
 | Reduction | Verdict |
 |---|---|
 | ≥10% reduction | OK |
-| 5–10% reduction | OK only if Q1 + Q3 also strictly pass; weak win |
+| 5% ≤ reduction <10% | OK only if Q1 + Q3 also strictly pass; weak win |
 | <5% reduction (or no reduction) | **REJECT** — refactor cost not worth it |
 | **Increase** | **REJECT** — this isn't a refactor; route elsewhere |
 
@@ -156,7 +156,7 @@ After Q1, Q2, Q3:
 
 - **PROCEED** — all three pass strictly. Apply the isolated candidate to the
   user's worktree, then `git commit` it; ratchet advances.
-- **RESHAPE** — Q1 and Q3 pass, Q2 marginal (5–10% reduction). Show
+- **RESHAPE** — Q1 and Q3 pass, Q2 marginal (5% ≤ reduction <10%). Show
   user the candidate + which dimension is weak; user decides keep
   or further-refactor. Do not auto-merge.
 - **REJECT** — Q1 fails (output not equivalent), or Q2 shows

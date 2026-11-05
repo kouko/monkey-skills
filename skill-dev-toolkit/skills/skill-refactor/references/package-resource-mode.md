@@ -12,7 +12,7 @@ Q2 uses **whole-package words** from `account`, not a target-file count.
 | Whole-package word reduction | Overall Q2 result |
 |---|---|
 | ≥10% | **PROCEED** when the other gates pass |
-| 5–10% | **RESHAPE** only when the other gates pass; the user decides whether to keep the weak win |
+| 5% ≤ reduction <10% | **RESHAPE** only when the other gates pass; the user decides whether to keep the weak win |
 | <5% or increase | **REJECT** |
 
 Bytes are report-only: retain them for diagnosis, but do not use them for the

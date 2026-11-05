@@ -60,7 +60,7 @@ flowchart TD
     Q1 -->|FLAG| H[Tier 2 人間にエスカレーション]
     Q1 -->|PASS| Q2{Q2: トークン削減 ≥10%?}
     Q2 -->|≥10%| Q3{Q3: Invariants 完全?}
-    Q2 -->|5-10%| WC[RESHAPE: 弱い win, user 判断]
+    Q2 -->|5%以上10%未満| WC[RESHAPE: 弱い win, user 判断]
     Q2 -->|<5% or 増加| R
     Q3 -->|PASS| K[PROCEED — 保持, ratchet 前進]
     Q3 -->|FAIL| R
@@ -75,7 +75,7 @@ flowchart TD
 | チェック | メカニズム | 失敗 → |
 |---|---|---|
 | **Q1 等価性** | Layer 1 構造（決定論的）+ Layer 2 LLM-judge ensemble（3 コール、フレーム異なり）| REJECT または FLAG (Tier 2) |
-| **Q2 トークン削減** | `wc -w` 前後；≥10% しきい値 | REJECT（5-10% は RESHAPE）|
+| **Q2 トークン削減** | `wc -w` 前後；≥10% しきい値 | REJECT（5%以上10%未満 は RESHAPE）|
 | **Q3 Invariants** | name / dependencies / contract / 構造が不変 | REJECT |
 
 ### Verdict 語彙
@@ -85,7 +85,7 @@ loom-workflow の critique skill と並行：
 | Verdict | 条件 | アクション |
 |---|---|---|
 | **PROCEED** | 3 つ全部厳密に pass | Ratchet 前進、commit 保持 |
-| **RESHAPE** | Q2 弱い（5-10%）が Q1+Q3 通過 | user に提示、保持 / 続行を判断 |
+| **RESHAPE** | Q2 弱い（5%以上10%未満）が Q1+Q3 通過 | user に提示、保持 / 続行を判断 |
 | **REJECT** | Q1/Q2/Q3 のいずれか失敗 | `git revert`、results.tsv に記録、次へ |
 | (Tier 2) | Q1 = `FLAG_TIER_2` | 人間 review にエスカレーション |
 

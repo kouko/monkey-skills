@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Clarify the refactor marginal reduction band as at least 5% and below 10%,
+  keeping exactly 10% in the existing strong-win band across live guides.
 - Complete optimizer HTML reports with `--holdout 0`; show unavailable cohort
   scores as neutral N/A.
 - Keep creator commands in the user's project execution context while resolving
