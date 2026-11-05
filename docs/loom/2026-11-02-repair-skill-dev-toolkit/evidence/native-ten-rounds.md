@@ -243,3 +243,39 @@ release attestation, publication, installation or merge. Further full
 workflow trials are outside this closed ten-round window. This does not
 claim that the architecture has reached its limit; the unclosed obligation
 is model judgment quality, not evidence of a missing Python mechanism.
+
+## User-approved advisory preview amendment
+
+After assessment, the user asks「可以基於放寬後的標準繼續嗎？」and accepts
+a preview requiring human source/reason review before edits or release
+decisions. Intent commit b600da2a changes only Acceptance11's delivery
+guarantee; the original Acceptance11 and report at b3517cde7 remain failed.
+The new scope is not proof of repaired Claude judgment, universal accuracy,
+installed-host routing or an automatic release gate. All REQ-1–10 and
+original-claim eligibility remain; no installation/publication/merge is
+authorized. The ten controlled trials and all older budgets remain closed.
+
+W14 is the distinct new disclosure obligation, not another iteration of
+the failed caller-quality task. Current-scope review is grounded in that
+substantive guarantee change; previous episodes/retries/failures/costs are
+retained, not reset. Spec78536158 and plan d4a89001 receive fresh independent
+spec+adversarial and plan PASS reviews, held at
+`/private/tmp/toolkit-preview-spec-review.yaml` and
+`/private/tmp/toolkit-preview-closeout/plan-review.yaml`.
+
+Complexity evaluation uses Design-is-taking-apart: separate advisory
+delivery from accuracy claims. The smallest equivalent end state reuses
+existing JSON limits, Markdown rendering and current language guides.
+Estimated production cost is at most ten lines, zero functions/modules/
+schema keys; no existing required behavior can safely be deleted. This
+small increase is accepted to expose the usage boundary at consumption,
+instead of adding a human-acknowledgment flag or another model judge.
+The whole-content surface sweep covers87 cumulative changed/surface files
+and10 live notice surfaces; frozen evidence is excluded from policy edits.
+Implementer commit eb9065567 completes the ten scoped live files. Production
+merger growth is net7 lines with zero new functions/fields; operational entry
+adds8 lines and six guides add35 lines, with4 changelog lines. The existing
+limits CLI test expands to six verdict/model combinations; related assertions
+now expect the advisory limit. Focused RED is8 failed/48 passed; GREEN is
+56 passed in1.89s. No new model trial or claim of repaired judgment occurs.
+Current-scope integration, independent acceptance and closing review follow.
