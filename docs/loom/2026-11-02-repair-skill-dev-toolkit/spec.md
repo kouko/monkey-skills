@@ -3,6 +3,8 @@ intent: 2026-11-02-repair-skill-dev-toolkit@c5d3e9f7
 pre-build-review: required — Blind comparisons and preference exports affect evidence integrity; conflicting execution policies require an independent scope check.
 
 ## Requirements
+Execution constraint update2026-11-05: the user's ten-round continuation excludes Claude Code review. Use host-native independent execution/review and local commands; preserve prior failed Claude trials and distinguish sampled native behavior from untested Claude/installed-host behavior. Requirements and Acceptance remain unchanged. This changes the permitted verification executor, not the original-claim judgment rule or release bar.
+
 REQ-1 — Restore advertised creator commands
   WHEN an advertised creator command receives valid inputs, the toolkit shall execute its declared packaging, benchmark aggregation, or bounded description-optimization responsibility rather than fail to parse → Acceptance #1
 REQ-2 — Ordered structural comparison
