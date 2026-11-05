@@ -300,3 +300,36 @@ new advisory notice, with original status/exit/provenance preserved.
 All100 baseline and161 original-input preimages match. The original
 Acceptance11 text and FAIL remain explicitly historical in the current
 report; new preview success does not regrade it or prove model improvement.
+
+### Current-scope closing review and finalization
+
+At910fe5b8, the computed reviewer floor is2 and trunk sync again confirms
+4cbf85a8 with no added content. Two distinct fresh native reviewers pass:
+code independently executes224 tests across14 cumulative changed test
+files; skill independently executes29 policy/structure and56 merger cases.
+Raw verdicts are `/private/tmp/toolkit-preview-closeout/closing-{code,skill}.yaml`;
+they are source-informed contract reviews, not an accuracy benchmark or
+another controlled workflow trial. No fatal/important finding remains.
+
+One code nit is retained: the optimizer HTML may highlight an ineligible
+baseline on a tie even though its explicit Best summary and JSON select
+the eligible candidate correctly. The reviewer reproduces it from existing
+test output using the actual report CLI. This is inconsistent emphasis,
+not a wrong selected description or authorization to apply the baseline;
+no extra fix/review round is opened for this non-blocking nit.
+
+The first owner input is rejected before execution because its test
+declaration puts Python's `-B` before `-m pytest`, outside the checker's
+accepted direct-run form. Preserve `finalize.log` and
+`finalize-input-first.json`. The temporary declaration alone is corrected
+to the supported `python3 -m pytest` form; bytecode suppression remains
+in the environment. No product, digest or verdict changes. The owner then
+successfully executes its required checks and generates the attestation
+for functional digest `0ae2db5545bafa20b65c4d7f71c70acbb3fbd47a`.
+The generated file, not a hand-edited replacement, is authoritative.
+`finalize-corrected.log` and `finalize-input.json` retain the exact call.
+
+This validates the accepted human-reviewed preview scope. The original
+Acceptance11 remains failed; model judgment repair, installed-host
+activation, universal accuracy and automatic release eligibility remain
+unclaimed. Publication, installation and merge are still not authorized.
