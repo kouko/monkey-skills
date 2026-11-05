@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v2",
   "change_id": "2026-11-05-defuddle-skill-refresh",
-  "content_digest": "5cdfc8ce0559310349423c6a892e64ba493e2df3",
+  "content_digest": "9b3a59223ed886d1847c0d24be1cf4a557589e69",
   "executions": [
     {
       "kind": "package-tests",
@@ -36,8 +36,8 @@
   "findings": [],
   "selection": null,
   "intent_confirmed_sha": "e7091b69f6ee056b446451e2dec1c7b54f5b0cad",
-  "tested_commit": "ed5f61ae",
-  "reviewed_commit": "fc8d8c3d9a54313af3713ec1fc720859c35e1bcb",
+  "tested_commit": "4f8f3915",
+  "reviewed_commit": "464218cb0780a1f465bba55a6f2035971a10c403",
   "acceptance_status": [
     {
       "acceptance": 1,
