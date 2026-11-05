@@ -367,3 +367,36 @@ loaded candidate must be verified before execution. Existing plugins and
 global config must not be replaced. Installation scope remains explicitly
 excluded by the confirmed intent and therefore needs a scoped user decision;
 extra host usage is disclosed separately from the already closed trials.
+
+### Authorized single Codex host attempt — invalid setup, stopped
+
+The user explicitly authorizes the107-file runtime candidate and13-file
+target being sent to OpenAI for one gpt-6.1-sol/high task, without automatic
+approval or target/global-setting edits. The earlier approve-for-me command
+was rejected before process creation; retain that rejection, not a model
+trial. The revised workspace-write/approval-never invocation starts exactly
+one host execution, thread01a1abd2-124f-7fb3-ba17-e9eff9558c2d, under CLI0.166.0.
+Provider/model/effort are explicit requests; the retained stream does not
+independently expose actual runtime model, total API requests or final cost.
+
+The operator failed to verify installation before execution: listing showed
+the0.5.2 candidate as available but not installed. Enabling its configured
+source did not load it. The executor searched existing Codex/Claude cache
+directory names and read the old0.5.1 checker/manifest/scripts, outside the
+specified candidate payload. It executed that old planner, not a candidate
+workflow. The parent stops PID65673 with SIGINT; exit1, no semantic verdict,
+no automatic retry or model substitution. This is an invalid host-setup
+attempt and scope breach, not evidence for or against candidate accuracy.
+
+All13 target hashes remain unchanged. Codex persisted the test project's
+trust entry despite the invocation override; the parent removes only that
+exact temporary entry. Config hash still differs from the preimage, so
+other unattributed/concurrent changes are preserved instead of overwriting
+the user's file. No existing plugin is replaced. The source code is unchanged.
+Exact command/events and limitations remain at
+`/private/tmp/toolkit-usability-host/{host-stream.jsonl,host-stderr.log,
+execution-summary.json,settings-preimages.json,payload-inventory.json}`.
+The single authorized host execution is consumed and closed; publication
+remains stopped. A future task must verify actual installed candidate
+identity before any model invocation. Notices and this failed setup do not
+establish practical usability or a release pass.
