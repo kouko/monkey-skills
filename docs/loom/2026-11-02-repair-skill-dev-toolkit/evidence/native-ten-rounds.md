@@ -35,19 +35,124 @@ or exact detector-runtime claim may be inferred from selected settings.
 
 | Native / total | Risk / predicted failure axis | Case | State |
 |---|---|---|---|
-| 1 / 7 | Caller may confirm a narrowed replacement for the original why | genuine current-refactor recorded9 | prepared |
-| 2 / 8 | Factual/field positives may be removed while exceptions are retained | genuine creator recorded12 | prepared |
-| 3 / 9 | Auto policy may incorrectly waive mandatory tests | genuine small control recorded4 | prepared |
-| 4 / 10 | Scope judgment may vary on the same unchanged input | repeat current-refactor9; retain source or earned minimal candidate | planned |
-| 5 / 11 | Positive/exception judgments may regress or vary | repeat creator12; same retained candidate | planned |
-| 6 / 12 | Historical medium conflict may be suppressed or silently repaired | frozen ordinary historical3 | planned |
-| 7 / 13 | Unavailable governing source may become false indeterminate/pass | genuine recorded unavailable-source case | planned |
-| 8 / 14 | New detector outputs may bypass independent review/completion | fresh full check of genuine current checker | planned |
+| 1 / 7 | Caller may confirm a narrowed replacement for the original why | genuine current-refactor recorded9 | QUALIFIED / QUALIFIED |
+| 2 / 8 | Factual/field positives may be removed while exceptions are retained | genuine creator recorded12 | QUALIFIED / QUALIFIED |
+| 3 / 9 | Auto policy may incorrectly waive mandatory tests | genuine small control recorded4 | PASS / PASS |
+| 4 / 10 | Scope judgment may vary on the same unchanged input | repeat current-refactor9; unchanged baseline retained | QUALIFIED / QUALIFIED |
+| 5 / 11 | Positive/exception judgments may regress or vary | repeat creator12; unchanged baseline retained | QUALIFIED / QUALIFIED |
+| 6 / 12 | Historical medium conflict may be suppressed or silently repaired | frozen ordinary historical3 | PASS / PASS |
+| 7 / 13 | Unavailable governing source may become false indeterminate/pass | genuine recorded unavailable-source case | stopped before merge; audits pending |
+| 8 / 14 | New detector outputs may bypass independent review/completion | fresh full check of genuine current checker | executing |
 | 9 / 15 | Packaging may lose project context or mutate its source | genuine existing checker package | planned |
 | 10 / 16 | Replays may hide integration/discovery failure | fresh full check of current refactor | planned |
 
 ## Current conclusion
 
-No round is scored yet. Historical Acceptance11 FAIL remains in force.
+Round1 executes the real merger with exit1 and retains1 medium confirmed
+finding. The known read-F1 overstatement is excluded, but another numeric
+claim is confirmed and awaits independent source review. All24 frozen
+target/raw/plan preimages match. Outputs: `r01/replay-review/` under the
+artifact root. One dynamic orchestration command was blocked by dcg before
+execution; the executor completed using an explicit direct merger command.
+This operator event is not a source/runtime defect or a second model trial.
+
+The first three rounds are independently scored below. Historical Acceptance11 FAIL remains in force pending the complete campaign and independent acceptance reassessment.
 The remaining rounds may adapt to demonstrated defects while retaining this
 window's actual counts, unchanged acceptance bar and no-Claude constraint.
+
+Round2 completes exit1:12 original candidates,8 confirmed/4 excluded,
+5 merged findings. Source/target/raw hashes remain unchanged; exact artifacts
+are `r02/replay-review/`. A Markdown-writing shell heredoc was blocked before
+execution, then replaced by a structured patch without retrying that command.
+This is another operator/tool guard event, not a product failure or erased run.
+
+Round3 completes exit1:4 original candidates,2 confirmed/2 excluded,
+1 merged high finding; `r03/replay-review/` holds actual outputs and command
+evidence. All input preimages remain unchanged. The first three trials used
+the same runtime source. Their semantic grades are deliberately deferred
+until two independent source-based audit passes; execution is not a pass.
+
+## Block1 independent judgments and retained source
+
+`audit-a-block1.md` and `audit-b-block1.md` independently grade r01/r02
+QUALIFIED and r03 PASS. Both reproduced all three mergers to separate audit
+directories; MD and JSON are byte-identical to original outputs, and raw
+hashes/coverage/confidence are intact. These deterministic reproductions do
+not prove the actors' historical reads or reason truth.
+
+Both reviewers find the original-claim exclusions and the preserved factual
+positives supportable. The numeric r01 confirmation judges the original
+factual description of a pass coexisting with a >30% reduction, not merely
+two different action thresholds. No unique negative gold label is added.
+Remaining qualifications concern golden accept-as-is versus anti-pattern
+guidance, and explicit inlined-question repair versus environmental fallback.
+One reviewer calls these medium interpretation concerns, the other low;
+neither establishes a checker-contract violation or an implementation defect.
+
+No product change is earned by this block. Rounds4-6 therefore retain exactly
+the baseline runtime and test repeated/held-out genuine inputs. The original
+Claude failure and the partial contract-derived fixture expectation remain
+unchanged. Selected native profiles/backend observability and agent-authored
+execution-note limitations still apply; no full calibration or release pass.
+
+## Repeated samples, unchanged runtime
+
+Round4 executes exit1 with1 confirmed/8 excluded/0 indeterminate. All nine
+disposition statuses match round1 exactly. The executor had a fresh context,
+was not supplied prior decisions, and its reason text differs. All24 original
+preimages match. Semantic grading remains pending
+the next two independent audits; matching labels alone is not correctness.
+
+During this window `git fetch origin main` succeeds. Both FETCH_HEAD and
+origin/main remain4cbf85a8841d7d52393a8bb4058284755e108e25, so no trunk
+functional delta is introduced into the frozen baseline or later samples.
+
+Round5 completes exit1 with8 confirmed/4 excluded/0 indeterminate and5
+merged findings; its12 disposition statuses match round2 exactly. Round6
+uses the distinct frozen historical ordinary target, not the current repaired
+refactor entry, and completes exit1 with1 confirmed/2 excluded. All original
+preimages for rounds4-6 match; outputs are each `replay-review/` directory.
+The historical Medium positive is retained rather than converting confidence
+into eligibility. Source-grounded audit grades remain pending.
+
+The existing plan checker exposed metadata-format blockers introduced during
+earlier evidence recording: W12 used a noncanonical Test label and several
+historical Risk fields exceeded40 words. Use the required label and concise
+records pointing to preserved detailed evidence; keep all counts, consent,
+failures and no-Claude constraints. The same plan command then exits0.
+This is plan maintenance, not another behavioral trial or product patch.
+
+## Block2 independent judgments
+
+`audit-a-block2.md` and `audit-b-block2.md` agree on QUALIFIED for rounds4/5
+and PASS for round6. Each auditor actually reproduces all three report pairs
+byte-for-byte. The historical Low/Medium conflict stays a positive despite
+the repaired current entry; no frozen input was silently fixed. Interpretation
+qualifications remain the golden accept-as-is and environmental fallback
+questions. No independently proven checker implementation/contract defect is
+found, so runtime remains unchanged for rounds7-10.
+
+Across the six replays49 raw candidate instances were reviewed, including
+repeated inputs; this is not49 independent ground-truth cases or an accuracy
+score. One provisional stdout-escaping suspicion was withdrawn after direct
+byte inspection (2 real LF,0 literal backslash-n); it is not a defect or repair.
+R06 retained an earlier report readback whose changed decision reason was
+later re-merged/read back consistently; original raw bytes remain intact.
+
+## Availability boundary and fresh workflows
+
+Round7 finds the genuinely unavailable target catalog and stops before merger,
+without decisions or a whole-package report/verdict. It names read/F2 and
+simulate/F2 as unchecked. All6 original preimages match and the missing
+file stays missing; no similarly named resource was borrowed. The copied
+original plan retains its grouping with only the absolute target rebased;
+its pre-rebase version is preserved separately. One evidence-writing command
+was blocked before execution and replaced by a structured patch, without a
+repeated blocked command. Outputs: `r07/replay-review/`.
+
+Round8 begins a new normal full check of the genuine checker, with no supplied
+detector outputs. Two required methods use fresh native contexts, sequential
+under the user's operational constraint, with no cross-seeded findings. This
+is meta-dogfood of a source already read to invoke it, not full blindness or
+installed activation. Actual artifacts and completion limits will determine
+its grade; no outcome is assumed.
