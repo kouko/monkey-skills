@@ -1,5 +1,5 @@
 # Defuddle skill refresh — plan
-intent: 2026-11-05-defuddle-skill-refresh@e89d6cdd
+intent: 2026-11-05-defuddle-skill-refresh@ab5951cc
 charter: 1.1
 
 ## Current State Evidence
