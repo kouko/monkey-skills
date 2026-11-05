@@ -8,7 +8,7 @@ description: |
 
 Use Defuddle CLI to extract readable content from web pages. Prefer it over WebFetch for standard web pages; for URLs ending in `.md`, use WebFetch directly.
 
-If the CLI is missing, report that it is required; install with `npm install -g defuddle`. Prefer the latest version for YouTube fixes, including those in 0.19.6; use `defuddle --version` to check the installed version.
+Defuddle 0.19.0 or later is required. If the CLI is missing, report that it is required; install with `npm install -g defuddle`. Prefer the latest version for YouTube fixes; use `defuddle --version` to check the installed version.
 
 ## Usage
 
@@ -30,11 +30,9 @@ Extract a metadata property (`title`, `description`, or `domain`):
 defuddle parse '<url>' -p title
 ```
 
-Defuddle 0.19.0+ supports `--frontmatter` and standard input (`defuddle parse - --md`).
+Use `--frontmatter` for metadata and standard input with `defuddle parse - --md`.
 
 ## YouTube transcripts
-
-Release notes introduced YouTube transcripts in 0.12.0 and preferred transcript language handling in 0.15.0.
 
 Use Markdown for a video URL:
 
