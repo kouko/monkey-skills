@@ -246,7 +246,15 @@ charter: 1.1
 - Test: A7 positive: focused_contract_suite; negative: overlapping_band_marker. A11 positive: exact_ten_unique; boundary: five_stays_marginal. Preserve R10 baseline; update existing numeric marker first (RED), clarify live mirrors, rerun (GREEN). No extra full-workflow trial.
 - Risk: REQ-7/11; class: inclusive endpoint ambiguity. Scan94 changed/surface files:13 live-policy occurrences,1 existing marker. Align marginal5≤r<10 with existing strong≥10; preserve frozen evidence. No Python/reducer-Q2 change, parser, field, agent or threshold-value addition.
 
+### Wave 14 — Prepare the user-approved human-reviewed preview
+
+**W14-01 Disclose advisory use in instructions and actual reports** after: W13-01 acceptance: 7, 11
+- Files: `skill-dev-toolkit/README{,.ja,.zh-TW}.md`, `skill-dev-toolkit/skills/skill-consistency-check/{SKILL.md,README.md,README.ja.md,README.zh-TW.md,scripts/merge_report.py,scripts/test_merge_report.py}` (merger entry), `skill-dev-toolkit/CHANGELOG.md`; existing acceptance/evidence documents.
+- Test: A7 positive: actual_report_notice; negative: missing_preview_notice. A11 positive: human_review_before_action; boundary: pass_known_model_still_advisory. Existing real CLI tests cover all three valid verdicts and known/unknown metadata; preserve raw decisions, exits, malformed-input refusal and old failure.
+- Risk: REQ-7/11; class: missing advisory-use boundary. Scan87 cumulative changed/surface files and10 live surfaces. Extend existing report limits and renderer; no schema key, flag, function, agent or model trial. Preserve test_merge_report.py coverage and frozen history.
+
 ## Simplicity check
+- W14 existing report limits, renderer and mirrored guides; fresh plan review found no smaller equivalent shape — taken
 - W13 clarify one existing interval across its mirrors; fresh plan review found no smaller equivalent shape or new product choice — taken
 - W12 three fixture data files, pinned existing target and existing merger; additional self-reported claim flags have no measured benefit yet — taken
 - W11 existing renderer boundary and existing real CLI case — taken
@@ -297,3 +305,5 @@ charter: 1.1
 35. Freeze the failure for calibration, not another unmeasured flag/prompt expansion. Hash/coverage validation cannot prove reason truth. Research informs testing, not model-accuracy or architectural-limit claims. Acceptance11 fails; no runtime change or release/finalization. Evidence: host-release-readiness.md.
 36. User2026-11-05「請先繼續迭代 10 次看看 不過不要用 claude code 做 review」authorizes native cycles7-16, no Claude CLI. Preserve six prior cycles/failures/costs and requested gpt-6.1-sol/high. Blinded trials/audits; only confirmed defects earn minimal changes. No install/publish/merge. Protocol: evidence/native-ten-rounds.md.
 37. Ten baseline executions complete; audits support a literal10% interval ambiguity, not observed implementation failure. Close round10 with minimal wording alignment to existing≥10 strong eligibility; no new controlled workflow trial or eleventh round. Preserve all raw judgments and prior Claude failure.
+38. User-approved preview changes Acceptance11's delivery guarantee, not judgment correctness. Original b3517cde7 Acceptance11 remains failed. W14 adds visible disclosure/manual-use duties; preserve all prior episode/retry/cost records. No new model workflow trial, installation, publication or merge authority.
+39. Fresh spec+adversarial review passes78536158; existing report limits suffice. Human source/reason review is required before action but not programmatically certified. Target production growth≤10 lines, no functions/files/schema keys; actual emitted notices must be tested, not only documentation markers.
