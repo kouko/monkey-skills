@@ -11,6 +11,13 @@ returns a list of contradictions, each with both sides as file:line, the
 quoted text, a confidence level and a one-sentence reason, plus an
 overall verdict.
 
+**Advisory preview — human review required.** A known false positive confirms
+an overbroad original claim using narrower evidence; that model failure remains
+unresolved. Review the original sources and decision reasons before edits or
+release decisions. `confirmed` is the reporting agent's judgment, not proof of
+human review. Do not use the report or exit code as an automatic release gate;
+cross-model reliability is not established.
+
 This README is for humans reading the skill on GitHub. The operational
 file the agent actually loads is [`SKILL.md`](SKILL.md).
 

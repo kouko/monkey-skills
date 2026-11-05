@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Prepare an advisory preview requiring human source/reason review before edits
+  or release decisions. Disclose the unresolved overbroad-claim false positive
+  in existing report limits and live guides; reports and exit codes are not
+  automatic release gates. This does not claim repaired model judgment.
 - Require hash-bound decisions for every original consistency-check candidate;
   preserve raw detector files and retain all review reasons in report JSON.
   Any confirmed conflict now requires revision, regardless of confidence.

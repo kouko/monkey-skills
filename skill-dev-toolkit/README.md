@@ -1,5 +1,11 @@
 # skill-dev-toolkit
 
+**Advisory preview — human review required.** The consistency checker has a
+known false positive: it can confirm an overbroad claim using narrower evidence.
+Review the original sources and decision reasons before edits or release
+decisions; do not use its report or exit code as an automatic release gate.
+The prior model failure remains unresolved; cross-model reliability is not claimed.
+
 A **self-contained** toolkit for authoring Claude Agent Skills end-to-end. Zero
 cross-plugin dependencies — install it alone and it works.
 

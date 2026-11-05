@@ -106,7 +106,7 @@ def test_reviewed_candidates_selected_and_raw_bytes_preserved(tmp_path):
         assert {k: merged[k] for k in original} == original
         assert merged["sources"] == [{"file": "read-1.json", "id": original["id"]}]
     assert "Confirmed: 2; excluded: 1; indeterminate: 0" in md
-    assert "advisory" not in md
+    assert "Advisory preview" in md
     assert {p: Path(p).read_bytes() for p in f} == raw
 
 
@@ -295,23 +295,42 @@ def test_different_file_pair_not_merged(tmp_path):
 
 # --- Acceptance 4 -----------------------------------------------------------
 
-def test_limits_and_models_listed(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read-1.json": []})
+@pytest.mark.parametrize("status,code,verdict", [
+    ("excluded", 0, "pass"),
+    ("confirmed", 1, "needs-revision"),
+    ("indeterminate", 3, "indeterminate"),
+])
+@pytest.mark.parametrize("model", ["claude-sonnet-4-5", "unknown"])
+def test_limits_and_models_listed(tmp_path, status, code, verdict, model):
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
+        _finding("F1", "medium", _side("SKILL.md", [3]), _side("a.md", [9]))]})
+    raw = {p: Path(p).read_bytes() for p in f}
+    review = _decisions(f)
+    review["decisions"][0].update(status=status, reason="Source review records this disposition.")
     out = tmp_path / "out"
-    r = _run(target, plan, f, out, model="claude-sonnet-4-5")
-    assert r.returncode == 0, r.stderr
+    r = _run(target, plan, f, out, model=model, decisions=review)
+    assert r.returncode == code, r.stderr
     data, md = _report(out)
-    assert data["model"] == "claude-sonnet-4-5"
+    assert data["verdict"] == verdict and data["review"] == review
+    assert {p: Path(p).read_bytes() for p in f} == raw
+    assert data["model"] == model
     assert data["reference"] == {"model": "Claude Sonnet (200k context)",
                                  "max_validated_tokens": 25000,
                                  "nominal_reporting_bound_tokens": 25000}
-    assert len(data["blind_spots"]) == 2
+    assert len(data["blind_spots"]) == 3
     assert any("conditional" in b for b in data["blind_spots"])
     assert any("multi-step" in b for b in data["blind_spots"])
     assert "Known limits" in md
     for b in data["blind_spots"]:
         assert b in md
-    assert "Model used: claude-sonnet-4-5" in md
+    notice = next(b for b in data["blind_spots"] if b.startswith("Advisory preview:"))
+    assert "confirming an overbroad claim from narrower evidence" in notice
+    assert "Human review of the original sources and decision reasons is required" in notice
+    assert "before edits or release decisions" in notice
+    assert "Do not use this report as an automatic release gate" in notice
+    assert md.index("> " + notice) < md.index("Verdict:")
+    assert data["model_matches_reference"] is (model != "unknown")
+    assert f"Model used: {model}" in md
     assert "packages of approximately 25k tokens" in md
     limits = md[md.index("Known limits"):md.index("Model used:")]
     assert "25,000" in limits and "nominal reporting bound" in limits
@@ -489,7 +508,7 @@ def test_markdown_only_coverage_note(tmp_path):
     note = ("Only Markdown files other than README*.md are checked; "
             "rules in other file types are not.")
     assert data["coverage_note"] == note
-    assert len(data["blind_spots"]) == 2 and note not in data["blind_spots"]
+    assert len(data["blind_spots"]) == 3 and note not in data["blind_spots"]
     assert note in md[md.index("Known limits"):]
 
 

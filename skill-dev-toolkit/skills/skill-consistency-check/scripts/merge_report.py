@@ -26,9 +26,14 @@ REFERENCE = {"model": "Claude Sonnet (200k context)", "max_validated_tokens": 25
 SIZE_NOTE = ("25,000 estimated tokens is a conservative nominal reporting bound, "
              "not a proven accuracy cliff; the existing validated corpus "
              "fixture estimates to 25,135 tokens (approximately 25k).")
+PREVIEW_NOTE = ("Advisory preview: known false positives include confirming an overbroad "
+                "claim from narrower evidence. Human review of the original sources and "
+                "decision reasons is required before edits or release decisions. "
+                "Do not use this report as an automatic release gate.")
 BLIND_SPOTS = [
     "conditional contradictions (conflict only under a shared condition)",
     "multi-step contradictions (need several inference hops or unstated background knowledge)",
+    PREVIEW_NOTE,
 ]
 COVERAGE_NOTE = ("Only Markdown files other than README*.md are checked; "
                  "rules in other file types are not.")
@@ -203,7 +208,8 @@ def _finding_md(n, m):
 
 
 def render_md(r):
-    out = ["# Consistency report", "", f"Verdict: **{r['verdict']}**", ""]
+    out = ["# Consistency report", "", f"> {PREVIEW_NOTE}", "",
+           f"Verdict: **{r['verdict']}**", ""]
     totals = {status: sum(d["status"] == status for d in r["review"]["decisions"])
               for status in ("confirmed", "excluded", "indeterminate")}
     out += [f"Confirmed: {totals['confirmed']}; excluded: {totals['excluded']}; "

@@ -12,6 +12,14 @@ succeed. Independent LLM detectors discover candidates by reading the text;
 the reporting caller verifies them before merge. Two stdlib-only Python scripts
 do the deterministic parts (grouping, merging, verdict, report).
 
+**Advisory preview.** A known false positive confirms an overbroad original
+claim using narrower evidence; that model failure remains unresolved. Present
+this limitation with the verdict. The maintainer must review the original
+sources and decision reasons before edits or release decisions. `confirmed`
+records the reporting caller's judgment, not completed human review. Do not use
+the report or exit code as an automatic release gate; cross-model reliability
+is not established.
+
 Two detectors, each calibrated in earlier blind experiments:
 
 | Detector | Spec | What it does |
