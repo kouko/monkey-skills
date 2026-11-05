@@ -1,15 +1,15 @@
 # 更新 Defuddle skill — 驗收結果
 
-Tried on 2026-11-05, in a clean copy of the project at 5698f79. 測試方式與輸出：`docs/loom/2026-11-05-defuddle-skill-refresh/evidence/acceptance-test-evidence.md`。
+Tried on 2026-11-05, in a clean copy of the project at 5f7fd271. 測試方式與輸出：`docs/loom/2026-11-05-defuddle-skill-refresh/evidence/acceptance-test-evidence.md`。
 
 ## 逐項驗收
 
 | # | 你的要求 | 結果 | 發生了什麼 | 重測 |
 |---|---|---|---|---|
-| 1 | 使用者要求讀取一般網頁或 YouTube 逐字稿時，skill 的描述與指引涵蓋對應用途。 | partly | 指引涵蓋兩種用途，但沒有實際驗證 agent 是否會選用它。 | — |
-| 2 | 影片逐字稿的指引能辨識實際回傳的語言、逐字稿缺失及擷取錯誤，不將其他內容當作逐字稿。 | partly | 要求日文時取得英文逐字稿；缺失情況和 agent 的判讀尚未驗證。 | — |
-| 3 | 現有網頁擷取用途保留，相關指令和新版功能的說明與可驗證行為一致。 | partly | 本機 HTML、公開網頁及影片擷取成功，但尚未逐一驗證所有指令。 | — |
-| 4 | 更新後的 skill 通過適用的檢查，並以代表性請求和輸出驗證上述用途與限制。 | partly | 已取得網頁及影片輸出；尚未驗證 agent 的實際行為和缺失逐字稿案例。 | — |
+| 1 | 使用者要求讀取一般網頁或 YouTube 逐字稿時，skill 的描述與指引涵蓋對應用途。 | partly | 指引涵蓋兩種用途，但沒有實際驗證 agent 是否自動選用它。 | re-tested |
+| 2 | 影片逐字稿的指引能辨識實際回傳的語言、逐字稿缺失及擷取錯誤，不將其他內容當作逐字稿。 | partly | 要求日文時取得英文逐字稿；合成資料也顯示頁面語言不能證明逐字稿存在，真實無字幕影片尚未測試。 | re-tested |
+| 3 | 現有網頁擷取用途保留，相關指令和新版功能的說明與可驗證行為一致。 | partly | 本機 HTML、公開網頁及影片擷取成功，但尚未逐一驗證所有指令。 | re-tested |
+| 4 | 更新後的 skill 通過適用的檢查，並以代表性請求和輸出驗證上述用途與限制。 | partly | 已取得網頁及影片輸出；自動觸發和真實無字幕影片尚未驗證。 | re-tested |
 
 ## 對你既有的資料做了什麼
 
@@ -26,4 +26,4 @@ Tried on 2026-11-05, in a clean copy of the project at 5698f79. 測試方式與�
 
 ## 尚不確定的事
 
-沒有待你決定的問題；agent 實際選用及逐字稿缺失處理仍待驗證。
+沒有待你決定的問題；agent 自動選用及真實無字幕影片仍待驗證。
