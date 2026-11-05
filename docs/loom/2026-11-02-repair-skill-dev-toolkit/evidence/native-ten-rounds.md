@@ -204,3 +204,42 @@ test function or Python behavior is proposed. Source ambiguity is being
 removed, not relabeled as an observed execution bug. The ten-round samples
 stay fixed; final source checks and independent close-out review are not an
 extra controlled workflow trial. Plan simplicity review precedes the edit.
+
+### Round10 close-out implementation and integration
+
+Fresh plan review passed. Independent implementer commit
+`bda91c55a9857f2cbcaf3716259a71f6c97751df` clarifies all13 live occurrences
+across the five documents, changes the existing numeric marker and adds an
+Unreleased note: seven files,16 insertions,14 deletions. No Python gate,
+test function, parser, dependency or agent was added. The existing focused
+test first reports1 failed/9 passed, then10 passed after the clarification.
+These are documentation-contract observations, not a reproduced runtime fix.
+
+Integration uses a new clean branch worktree at
+`/private/tmp/toolkit-native10-verify-bda91c55`. The first sync-trunk warns
+because the sandbox cannot write FETCH_HEAD; the narrowly authorized retry
+succeeds and confirms the branch already contains origin/main
+`4cbf85a8841d7d52393a8bb4058284755e108e25`, with no added commit.
+The existing conda interpreter runs the full repository suite:715 passed
+in47.87s, and the full toolkit suite:223 passed in13.10s. Logs and the focused
+RED/GREEN records are in the campaign root's `w13/` directory. The baseline's
+100 runtime files still match their original preimages. None of the ten
+original workflow outputs or historical frozen inputs was replaced.
+
+Independent acceptance reassessment follows the committed clarification;
+passing mechanical tests alone does not close the prior real-host failure.
+The existing graduated adversarial program also passes:5 tests in0.08s.
+Its content is unchanged; no adversary redispatch is earned by a passing
+program after this narrowly scoped clarification.
+
+Independent acceptance re-runs202 targeted tests, packages the checker from
+a fresh clean source copy with11 byte-matching archive entries, and reproduces
+r08/r10 merger report pairs byte-for-byte with current source. It verifies
+all100 baseline files and161 round-input preimage records unchanged.
+Its outcome remains10 works/1 fails: the confirmed historical caller's
+original-claim narrowing failure is not fixed by W13. Accordingly this
+window closes at exactly10 controlled workflow executions, with no passing
+release attestation, publication, installation or merge. Further full
+workflow trials are outside this closed ten-round window. This does not
+claim that the architecture has reached its limit; the unclosed obligation
+is model judgment quality, not evidence of a missing Python mechanism.
