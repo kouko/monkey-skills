@@ -239,7 +239,15 @@ charter: 1.1
 - Test: A7 positive: pinned_target_and_raw_hashes; negative: changed_input_rejected. A11 positive: separate_correction_provenance; negative: native_fix_not_Claude_pass. Reconstruct21 target files; retain9 candidates, score one supported exclusion. Original host case stays RED, not an automated LLM benchmark.
 - Risk: REQ-7/11; class: original-claim overstatement. Scope: raw findings, target, manifest, decisions and reports. Correct artifacts separately through the existing merger; preserve host failure. No runtime change; fixture integrity is not semantic accuracy.
 
+### Wave 13 — Close the measured native round10 wording boundary
+
+**W13-01 Make the existing marginal Q2 interval explicit** after: W12-01 acceptance: 7, 11
+- Files: `skill-dev-toolkit/skills/skill-refactor/SKILL.md` (entry), `skill-dev-toolkit/skills/skill-refactor/references/package-resource-mode.md`, `skill-dev-toolkit/skills/skill-refactor/README.md`, `skill-dev-toolkit/skills/skill-refactor/README.ja.md`, `skill-dev-toolkit/skills/skill-refactor/README.zh-TW.md`, `skill-dev-toolkit/skills/skill-refactor/scripts/test_package_mode_contract.py`, `skill-dev-toolkit/CHANGELOG.md`.
+- Test: A7 positive: focused_contract_suite; negative: overlapping_band_marker. A11 positive: exact_ten_unique; boundary: five_stays_marginal. Preserve R10 baseline; update existing numeric marker first (RED), clarify live mirrors, rerun (GREEN). No extra full-workflow trial.
+- Risk: REQ-7/11; class: inclusive endpoint ambiguity. Scan94 changed/surface files:13 live-policy occurrences,1 existing marker. Align marginal5≤r<10 with existing strong≥10; preserve frozen evidence. No Python/reducer-Q2 change, parser, field, agent or threshold-value addition.
+
 ## Simplicity check
+- W13 clarify one existing interval across its mirrors; fresh plan review found no smaller equivalent shape or new product choice — taken
 - W12 three fixture data files, pinned existing target and existing merger; additional self-reported claim flags have no measured benefit yet — taken
 - W11 existing renderer boundary and existing real CLI case — taken
 - W10 same-cycle existing command docs, one summary cell and existing test helper; no new mechanism — taken
@@ -288,3 +296,4 @@ charter: 1.1
 34. Cycle6 estimateUSD1.6920852: both audits confirm read-F1 overstatement; preserve QUALIFIED/FAIL grades and stop packaging. Native correction excludes only readF1; remove its stale cross-reference, preserve other dispositions and both correction versions. Original Claude failure remains failed; details: host-release-readiness.md.
 35. Freeze the failure for calibration, not another unmeasured flag/prompt expansion. Hash/coverage validation cannot prove reason truth. Research informs testing, not model-accuracy or architectural-limit claims. Acceptance11 fails; no runtime change or release/finalization. Evidence: host-release-readiness.md.
 36. User2026-11-05「請先繼續迭代 10 次看看 不過不要用 claude code 做 review」authorizes native cycles7-16, no Claude CLI. Preserve six prior cycles/failures/costs and requested gpt-6.1-sol/high. Blinded trials/audits; only confirmed defects earn minimal changes. No install/publish/merge. Protocol: evidence/native-ten-rounds.md.
+37. Ten baseline executions complete; audits support a literal10% interval ambiguity, not observed implementation failure. Close round10 with minimal wording alignment to existing≥10 strong eligibility; no new controlled workflow trial or eleventh round. Preserve all raw judgments and prior Claude failure.

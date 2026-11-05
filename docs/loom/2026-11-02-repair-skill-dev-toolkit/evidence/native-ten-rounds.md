@@ -20,6 +20,9 @@ or exact detector-runtime claim may be inferred from selected settings.
 - Two independent source-based auditors assess outputs and available execution
   evidence. Use coarse judgments and preserve disagreements. Do not infer
   semantic success from valid JSON or successful merger execution.
+- These are source-informed independent reviews, not the candidate dogfood
+  skill's artifact-only blind-auditor context. Full standalone ProbeA/ProbeC,
+  installed routing and an overall dogfood-pass are not claimed.
 - Keep original inputs byte-identical. Every replay uses all original groups,
   exact source hashes and the real planner/merger; no manual filtered findings.
 - Each round probes the named risk below. Repeated samples assess stability;
@@ -41,10 +44,10 @@ or exact detector-runtime claim may be inferred from selected settings.
 | 4 / 10 | Scope judgment may vary on the same unchanged input | repeat current-refactor9; unchanged baseline retained | QUALIFIED / QUALIFIED |
 | 5 / 11 | Positive/exception judgments may regress or vary | repeat creator12; unchanged baseline retained | QUALIFIED / QUALIFIED |
 | 6 / 12 | Historical medium conflict may be suppressed or silently repaired | frozen ordinary historical3 | PASS / PASS |
-| 7 / 13 | Unavailable governing source may become false indeterminate/pass | genuine recorded unavailable-source case | stopped before merge; audits pending |
-| 8 / 14 | New detector outputs may bypass independent review/completion | fresh full check of genuine current checker | executing |
-| 9 / 15 | Packaging may lose project context or mutate its source | genuine existing checker package | planned |
-| 10 / 16 | Replays may hide integration/discovery failure | fresh full check of current refactor | planned |
+| 7 / 13 | Unavailable governing source may become false indeterminate/pass | genuine recorded unavailable-source case | PASS / PASS |
+| 8 / 14 | New detector outputs may bypass independent review/completion | fresh full check of genuine current checker | QUALIFIED / QUALIFIED |
+| 9 / 15 | Packaging may lose project context or mutate its source | genuine existing checker package | PASS / PASS |
+| 10 / 16 | Replays may hide integration/discovery failure | fresh full check of current refactor | QUALIFIED / QUALIFIED; wording clarification planned |
 
 ## Current conclusion
 
@@ -156,3 +159,48 @@ under the user's operational constraint, with no cross-seeded findings. This
 is meta-dogfood of a source already read to invoke it, not full blindness or
 installed activation. Actual artifacts and completion limits will determine
 its grade; no outcome is assumed.
+
+## Block3 completed: stop, full discovery, packaging and current refactor
+
+The two independent reports `audit-{a,b}-block3.md` agree on PASS for r07/09,
+QUALIFIED for r08/10. R08 uses two distinct fresh native detector tasks;
+their empty raw lists bind into actual empty decisions and a merger exit0.
+Plan/report reproduction is byte-identical; all11 target-file hashes remain
+unchanged. Root task-tree observations and returned receipts support the
+reported delegation, but are not independent complete read/runtime traces.
+
+R09's documented absolute-script command exits0 in the intended project cwd,
+despite a regular project scripts package. Its archive contains11 original
+entries with exact identity/content. Both auditors reproduce the same ZIP
+bytes. The retained auxiliary python-c import failure uses different sys.path
+semantics and is not a failure of the documented invocation. No optimizer,
+installation, activation or target workflow is executed.
+
+R10's new read/walk detectors return3+1 candidates after full9-file receipts;
+the caller confirms1 and excludes3, with no indeterminate. Actual merger
+exit1 and report pairs reproduce. The supported literal concern is package
+Q2's ≥10% strong row overlapping its shorthand5–10% marginal row at10.
+Both auditors allow a conventional nonoverlapping reading and do not prove
+a Python fault, but support an explicit5%≤reduction<10% clarification.
+
+All10 baseline executions use the same8702e501 runtime. All57 raw candidate
+instances (including repeated cases and2 source-unavailable candidates)
+remain preserved; not57 independent calibrated gold examples. No Claude
+Code CLI or outside review is used. The original Claude scope-violation
+trial remains failed; current native observations do not repair that model.
+
+### Round10 close-out decision
+
+Keep the existing ≥10% strong threshold. Clarify its marginal complement
+as at least5% and strictly below10%, not a new numerical policy or reducer
+feature. Whole-content search of94 cumulative-change/surface files finds13
+live policy occurrences across entry/protocol/three guides plus1 existing
+test marker. Frozen fixtures/history are distinct observations and remain
+unchanged. The scan is `endpoint-surface-scan.json` under the artifact root.
+
+The proposed close-out touches those five live documents, their existing
+numeric-marker test and Unreleased notes. No new parser, field, agent,
+test function or Python behavior is proposed. Source ambiguity is being
+removed, not relabeled as an observed execution bug. The ten-round samples
+stay fixed; final source checks and independent close-out review are not an
+extra controlled workflow trial. Plan simplicity review precedes the edit.
