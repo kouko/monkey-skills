@@ -1,0 +1,63 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-11-05-defuddle-skill-refresh",
+  "content_digest": "5cdfc8ce0559310349423c6a892e64ba493e2df3",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "no_program": "No existing repository test covers Defuddle-specific behavior; no attack succeeded."
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "skill-review",
+      "vendor": "codex",
+      "model": "inherited",
+      "lens": "skill",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "docs-review",
+      "vendor": "codex",
+      "model": "inherited",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    }
+  ],
+  "findings": [],
+  "selection": null,
+  "intent_confirmed_sha": "e7091b69f6ee056b446451e2dec1c7b54f5b0cad",
+  "tested_commit": "ed5f61ae",
+  "reviewed_commit": "fc8d8c3d9a54313af3713ec1fc720859c35e1bcb",
+  "acceptance_status": [
+    {
+      "acceptance": 1,
+      "status": "works"
+    },
+    {
+      "acceptance": 2,
+      "status": "works"
+    },
+    {
+      "acceptance": 3,
+      "status": "works"
+    },
+    {
+      "acceptance": 4,
+      "status": "works"
+    },
+    {
+      "acceptance": 5,
+      "status": "works"
+    }
+  ]
+}
