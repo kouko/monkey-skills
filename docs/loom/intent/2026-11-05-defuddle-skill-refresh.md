@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — skill instructions change; no declared interface surface changes
 status: confirmed 2026-11-05
-intent_confirmed_sha: e7091b6
+intent_confirmed_sha: e7091b69f6ee056b446451e2dec1c7b54f5b0cad
 
 ## Problem
 現有 Defuddle skill 著重一般網頁，沒有說明影片逐字稿、語言選擇與擷取結果的限制，使用者可能無法從 agent 得到預期的內容，或誤認回傳的語言。
