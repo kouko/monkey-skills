@@ -400,3 +400,40 @@ The single authorized host execution is consumed and closed; publication
 remains stopped. A future task must verify actual installed candidate
 identity before any model invocation. Notices and this failed setup do not
 establish practical usability or a release pass.
+
+### Renewed Codex attempt — correct candidate loaded, host-policy scope stop
+
+User「繼續吧」renews one execution under the same payload/provider/approval
+boundaries; the prior invalid attempt stays closed. Before any model request,
+the operator actually installs the distinct test plugin with the supported
+CLI. Its107 source files match the cache byte-for-byte and no answer keys
+exist there. Inventory alone requires the enabled record; prematurely
+removing it makes the CLI regard the cache as uninstalled. Three temporary,
+test-only config tables and project-local plugin choices make the real
+runtime discover only the0.5.2 checker. Local app-server skills/list confirms
+the exact installed test-cache path before the next model execution.
+
+The single renewed execution explicitly requests OpenAI/gpt-6.1-sol/high,
+workspace-write and approval_policy=never. It reads the correct0.5.2 SKILL
+and manifest but stops before planner/detectors: inherited user AGENTS
+requires ~/.claude/rules/model-dispatch.md before delegation, while the
+authorized payload restricts reads to project/candidate resources. That
+extra policy file is not read. A mistaken relative detector-reference read
+also fails, but the executor distinguishes that path error from the policy
+blocker rather than claiming resources are missing. No target judgment,
+findings, decisions or merged report is produced. Exit0 means a completed
+blocked response, not a successful checker task or a usability pass.
+
+All13 target preimages match. All three temporary global config tables are
+removed; the file matches the exact pre-active-test snapshot. Existing
+plugin settings are not changed; the separate test cache remains inactive.
+No source modification or automatic retry occurs. Across these host attempts
+there are2 started executions, not2 semantic calibration cases. The second
+returns usage132337 input tokens (116736 cached),2796 output,937 reasoning;
+no monetary estimate or observed detector model is inferred from these counts.
+Records: `/private/tmp/toolkit-usability-host/{installed-verification.json,
+active-skills-discovery.json,run2-stream.jsonl,run2-summary.json}` and
+`marketplace/project-run2/consistency-check-run/blocked-report.md` there.
+The remaining blocker is test isolation versus inherited host policy; this
+does not justify patching the product or declaring the installed candidate
+semantically broken. Publication remains stopped pending useful-task evidence.
