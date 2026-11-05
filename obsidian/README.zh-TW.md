@@ -21,7 +21,7 @@ plugin 安裝的 subprocess 與 plugin MCP 在同一個 sandbox 內執行，因�
 
 ## Version
 
-3.24.0 — 參見 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)。
+3.25.0 — 參見 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)。
 
 ## 所屬
 
@@ -162,7 +162,7 @@ sequence diagram type、套用 Obsidian 11.4.1 的 quirk，輸出
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata，version 3.24.0
+│   └── plugin.json              # plugin metadata，version 3.25.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault 維運 agent
 ├── commands/

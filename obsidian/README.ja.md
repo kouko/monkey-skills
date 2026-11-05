@@ -21,7 +21,7 @@
 
 ## Version
 
-3.24.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
+3.25.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
 
 ## 所属
 
@@ -164,7 +164,7 @@ note 内に図を描く：
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata、version 3.24.0
+│   └── plugin.json              # plugin metadata、version 3.25.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault 保守 agent
 ├── commands/
