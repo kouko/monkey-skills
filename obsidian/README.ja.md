@@ -21,7 +21,7 @@
 
 ## Version
 
-3.24.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
+3.25.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
 
 ## 所属
 
@@ -96,7 +96,7 @@ Upstream: [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
 | `obsidian-markdown` | Obsidian Flavored Markdown の作成 — wikilink、embed、callout、properties、コメント |
 | `obsidian-bases` | `.base` ファイルの作成・編集 — view、filter、formula、summary |
 | `obsidian-cli` | 起動中の Obsidian instance を公式 CLI で操作 — read、create、search、plugin / theme 開発 |
-| `defuddle` | Defuddle CLI で web ページから clean markdown を抽出（WebFetch の token 節約版） |
+| `defuddle` | Defuddle CLI で web ページと YouTube の文字起こしを抽出 |
 
 ### axtonliu（Axton Liu）からの import
 
@@ -164,7 +164,7 @@ note 内に図を描く：
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata、version 3.24.0
+│   └── plugin.json              # plugin metadata、version 3.25.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault 保守 agent
 ├── commands/

@@ -4,6 +4,16 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.25.0] — 2026-11-05 Defuddle skill refresh
+
+### Added
+
+- Document YouTube transcript extraction, language preferences, and transcript verification in the Defuddle skill.
+
+### Changed
+
+- Update Defuddle CLI usage and require version 0.19.0 or later.
+
 ## [3.24.0] — 2026-10-06 rename obsidian-canvas-creator skill to obsidian-canvas
 
 ### Changed — `obsidian-canvas-creator` → `obsidian-canvas`

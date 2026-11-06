@@ -21,7 +21,7 @@ both paths get blocked equally on Cowork.
 
 ## Version
 
-3.24.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
+3.25.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
 
 ## Part of
 
@@ -98,7 +98,7 @@ Upstream: [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills)
 | `obsidian-markdown` | Author Obsidian Flavored Markdown — wikilinks, embeds, callouts, properties, comments. |
 | `obsidian-bases` | Create and edit `.base` files with views, filters, formulas, and summaries. |
 | `obsidian-cli` | Drive a running Obsidian instance via the official CLI — read, create, search, plugin and theme dev. |
-| `defuddle` | Extract clean markdown from web pages via Defuddle CLI (token-saving alternative to WebFetch). |
+| `defuddle` | Extract web pages and YouTube transcripts with Defuddle CLI. |
 
 ### Imported from axtonliu (Axton Liu)
 
@@ -169,7 +169,7 @@ sequence diagram type, applies Obsidian 11.4.1 quirks, and emits a
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata, version 3.24.0
+│   └── plugin.json              # plugin metadata, version 3.25.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault hygiene agent
 ├── commands/

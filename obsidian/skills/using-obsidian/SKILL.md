@@ -40,7 +40,7 @@ This plugin provides daily workflow skills and vault management for Obsidian.
 | `obsidian-mermaid-visualizer` | Create Mermaid diagrams in vault notes |
 | `obsidian-excalidraw-diagram` | Generate Excalidraw diagrams (Obsidian/Standard/Animated) |
 | `dashboard-design` | Design dashboards from requirements to prototyping |
-| `defuddle` | Extract clean markdown from web pages using Defuddle CLI |
+| `defuddle` | Extract web pages and YouTube transcripts using Defuddle CLI |
 
 ### Wiki layer (LLM knowledge distillation)
 
