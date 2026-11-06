@@ -437,3 +437,134 @@ active-skills-discovery.json,run2-stream.jsonl,run2-summary.json}` and
 The remaining blocker is test isolation versus inherited host policy; this
 does not justify patching the product or declaring the installed candidate
 semantically broken. Publication remains stopped pending useful-task evidence.
+
+### Next continuation — applicability clarified, approval boundary not passed
+
+User2026-11-06「請繼續」triggers local diagnosis only before execution.
+The operator re-reads the delegation policy header: it explicitly applies
+to Claude Code and is not ported to Codex. A run3 prompt records this
+applicability handoff without permitting additional private-file reads.
+Local Codex reports multi_agent enabled. The same107 candidate files and
+13 case files still match their authorized hashes.
+
+Automatic approval review refuses the proposed model command before process
+creation, citing private-data transfer authorization. The operator supplies
+the existing authorization request, user「授權」and later continuations,
+plus exact payload hash parity. Review refuses again because it cannot
+verify the user message from the assistant's local consent record. Stop;
+no indirect execution or third retry. There are zero new model executions,
+not another failed semantic test. All test-only config tables are removed
+and the global file exactly matches its pre-run3 snapshot. Records are
+`/private/tmp/toolkit-usability-host/{task-run3.txt,run3-consent-evidence.json,
+run3-summary.json}`. The remaining step requires directly verifiable scoped
+transfer authorization at the approval boundary; no product patch follows
+from this infrastructure refusal and publication remains stopped.
+
+### Explicitly authorized installed-host task completes
+
+On2026-11-06 the user directly authorizes the107 candidate files and13
+case files, including unpublished material, being sent to OpenAI for one
+gpt-6.1-sol/high task, outputs only and no automatic extra approvals.
+Candidate107-file cache parity and installed/enabled0.5.2 inventory are
+verified before execution. The fresh `project-run4/target` contains the
+same archived13-file corpus package, including six planted contradictions;
+answer keys are not exposed to the executor or either semantic auditor.
+The prompt carries only the operator-verified Claude-only applicability
+handoff, not permission to read another private policy file.
+
+One Codex0.166.0 execution completes, thread01a1aeb8-10c1-78c3-bf23-4cc4668af580.
+Native runtime rollout records two actual spawn_agent calls and distinct
+read_detector/simulate_detector handbacks. Their exact runtime models remain
+unobserved. The installed checker plans25135 estimated tokens with the
+nominal size caution, retains8 read/6 simulate candidates, records11
+confirmed/3 excluded/0 indeterminate, and merges them into6 findings.
+The real merger exits1/needs-revision for the target, not for the toolkit.
+No target edit occurs. Output includes source quotes, qualifications,
+decisions, exclusions, commands, provenance and limitations.
+
+Two fresh independent source-informed auditors both grade QUALIFIED and
+agree with every candidate disposition: all six retained findings and
+three exclusions are supported. They see source and final artifacts but
+not trajectory, earlier verdicts or the answer key. This is not strict
+artifact-only blind dogfood, activation testing or a whole-toolkit PASS.
+Presentation qualifications are low severity: Markdown's11 confirmed counts
+duplicate candidate records while listing6 distinct findings, and exclusion
+details require the JSON. No unsupported retained claim or substantive
+decision disagreement is found in this one artifact. The corpus line-match
+scorer catches6/6 planted issues in raw output but5/6 in the final report.
+Preserve this difference: X5 maps to read/F7, which the caller excludes as
+an authorized unavailable-question-tool fallback rather than a violation.
+Both auditors independently support that exclusion from the actual source.
+The frozen historical key still labels X5 a plant; do not edit the key,
+call it a proven false negative, or silently credit6/6 final recall.
+This case's oracle disagreement remains explicit and needs calibration;
+the line-match heuristic is not semantic accuracy or a precision estimate.
+
+Independent actual merger reproduction yields byte-identical JSON and
+Markdown. All original artifacts retain their frozen hashes; all13 target
+preimages match. Three test-only global config tables are removed and
+the config matches the exact pre-run4 snapshot. The separate installed
+test cache remains inactive; existing plugins are not replaced. Current
+installed-host execution counts are3 started:2 earlier stopped/incomplete,
+1 now complete; the previously closed ten native rounds are not reset.
+Returned parent usage is2990001 input tokens,2874496 cached input,21926
+output and7233 reasoning; this is not a verified aggregate monetary bill
+or independent child usage total. No further CLI/model test is retried.
+
+Evidence root `/private/tmp/toolkit-usability-host/`: `run4-summary.json`,
+`run4-stream.jsonl`, `run4-runtime-delegation-evidence.json`,
+`run4-independent-merge-verification.json`, `run4-semantic-{a,b}.md`,
+`run4-{raw,confirmed}-line-score.json`; artifacts are in
+`marketplace/project-run4/consistency-run-vcj08f/`. This supplies positive
+evidence of useful Codex task completion on the specified benchmark.
+It does not repair the old Claude failure, certify universal/model-wide
+accuracy, or retroactively turn preview-only acceptance into a broad
+release verdict. No publication or merge occurs in this authorized test.
+
+### Consented Claude two-stage check stops after first-stage failure
+
+After discussion the user accepts the prepared Anthropic batch:107 candidate
+runtime files,21 frozen caller-target files and2 original detector files,
+plus13 full-workflow case files only if stage1 succeeds; model
+claude-opus-5-5/high, USD8 CLI-estimate stopping threshold (not a hard bill
+cap). Scope is tests, not outside code review, installs or publication.
+Root `/private/tmp/toolkit-claude-usability-20261106/` excludes answer keys
+and prior reports. Existing source/prompt packet stays fixed during this
+batch. It is not a byte-identical prompt A/B with the historical trial.
+The frozen target/raw inputs match their pinned hashes; current candidate
+includes the existing preview notice, not a newly added semantic fix.
+
+Claude Code2.1.317 preflight returns HOST_READY at estimatedUSD0.0139556;
+caller completes after311.16s atUSD1.3558182. Both result modelUsage maps
+contain exactly claude-opus-5-5. Init identifies the actual inline candidate
+plugin0.5.2. Custom Anthropic routing environment is cleared; no fallback
+model is selected. Total new estimateUSD1.3697738 is distinct from all prior
+costs. The restricted replay performs existing caller review/merge only,
+not a new detector run or installed-marketplace activation test.
+
+Actual caller result is5 confirmed/3 excluded/1 indeterminate, merged into4
+confirmed findings and1 unresolved item; merger exit1 concerns the target.
+Both independent source-informed semantic audits FAIL on read/F1. The new
+reason claims all three categories appear in the Not-triggers sentence,
+but prose is a parenthetical example of creative/non-deterministic output,
+not an independent ban on every prose output. It then uses a narrower
+creative-output witness to confirm the broader original. This is the same
+original-breadth defect class, with a different rationale, not proof the
+old error was repaired. Genuine structural-only PROCEED and impossible
+numeric-description positives survive. Auditor B additionally recommends
+excluding simulate/F4 as overstated; that secondary disposition disagreement
+is preserved, not rewritten into the original outputs.
+
+The caller first creates a scratch run outside its project; restricted Write
+denies its decisions write there. It removes its own scratch directory and
+recreates the final run under caller/. Preserve this recovery and permission
+denial; do not describe it as perfect first-attempt boundary adherence.
+All prepared target/runtime/raw preimages and final artifact hashes match.
+No local correction, new product rule, model retry or full case is executed.
+The batch is closed with stage1 accepted=false; residual estimate budget is
+not permission to retry. Records: `batch-status.json`, `runs/{preflight,
+caller}.{jsonl,summary.json}`, `caller-semantic-{a,b}.md` and final artifacts
+at `caller/scc-run.wM8EY5/` under the root. Native audits validate source
+meaning, not runtime identity or all-host accuracy. This negative Claude
+result coexists with the qualified Codex success; neither certifies the
+other host. Publication remains stopped under the actual-usability outcome.
