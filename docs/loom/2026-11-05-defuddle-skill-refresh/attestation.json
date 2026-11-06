@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v2",
   "change_id": "2026-11-05-defuddle-skill-refresh",
-  "content_digest": "9b3a59223ed886d1847c0d24be1cf4a557589e69",
+  "content_digest": "b6fa0e428ea1c60e4cadc8fc7b3e52540a7a56f5",
   "executions": [
     {
       "kind": "package-tests",
@@ -12,7 +12,7 @@
     },
     {
       "kind": "adversarial",
-      "no_program": "No existing repository test covers Defuddle-specific behavior; no attack succeeded."
+      "no_program": "No attack succeeded; the existing Obsidian test is not part of the declared package suite."
     }
   ],
   "verdicts": [
@@ -31,13 +31,29 @@
       "lens": "docs",
       "verdict": "PASS_WITH_NOTES",
       "findings": []
+    },
+    {
+      "reviewer": "history-code-review",
+      "vendor": "codex",
+      "model": "inherited",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "obsidian/tests/test_canvas_plugin_docs.py:122",
+          "text": "note: The old-worktree check skipped because the untracked .worktrees directory was absent.",
+          "fix": "Report the skipped boundary explicitly in the final validation evidence."
+        }
+      ]
     }
   ],
   "findings": [],
   "selection": null,
   "intent_confirmed_sha": "e7091b69f6ee056b446451e2dec1c7b54f5b0cad",
-  "tested_commit": "4f8f3915",
-  "reviewed_commit": "464218cb0780a1f465bba55a6f2035971a10c403",
+  "tested_commit": "1d114108",
+  "reviewed_commit": "72d8ccc7ecda3470fe16d256c2f84116005a6fb0",
   "acceptance_status": [
     {
       "acceptance": 1,
