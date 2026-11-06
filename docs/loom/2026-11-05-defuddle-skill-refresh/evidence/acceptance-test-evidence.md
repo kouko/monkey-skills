@@ -1,5 +1,11 @@
 # Defuddle skill refresh — acceptance test evidence
 
+## Additional round authorized on 2026-11-06
+
+The user authorized one additional review round after three earlier rounds; those rounds and the failed CI result remain part of the record. The historical-documentation guard was fixed because an old release-specific test rejected the new changelog entry and new change records.
+
+The adversary and code reviewer independently ran an isolated-fixture trial against the changed test functions. Output: `modify reject`, `delete reject`, `rename reject`, `add accept`, `old_id reject`, `later_entry accept`. The code reviewer dismissed an initial concern about missing negative-case evidence after inspecting and rerunning the trial. The untracked `.worktrees/` boundary remained skipped because that directory was absent.
+
 ## Re-run on 2026-11-06, at 1d114108996e41a9dc665b664699ffb1852300a3
 
 - Setup: a fresh clone checked out the exact commit detached. The available `defuddle --version` returned `0.19.6`; local HTML piped to `defuddle parse - --md` exited 0 with `Readable setup check.` Plugin and global CLI installation were not repeated because they would modify the host; agent discovery and loading were not tested.
