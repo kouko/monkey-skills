@@ -87,14 +87,10 @@ def test_stale_name_absent_from_live_docs():
     assert OLD_ID not in ATTRIBUTION.read_text(encoding="utf-8"), (
         f"ATTRIBUTION.md still names {OLD_ID}"
     )
-    # CHANGELOG is the one sanctioned holder: the new rename entry at the
-    # top and historical entries below it. Nothing above the new entry.
+    # The rename entry and older history may contain the old id; newer
+    # entries above it must not.
     changelog = CHANGELOG.read_text(encoding="utf-8").splitlines()
     heading_line = changelog.index(NEW_CHANGELOG_HEADING)
-    assert heading_line == 6, (
-        f"new CHANGELOG entry must sit directly under the preamble "
-        f"(found at line {heading_line + 1})"
-    )
     first_old = next(
         i for i, line in enumerate(changelog) if OLD_ID in line
     )
@@ -132,29 +128,31 @@ def test_docs_loom_and_worktrees_retain_old_name():
 
 def test_git_diff_shows_no_edits_to_historical_records():
     """A5 boundary: the branch diff touches no historical record path."""
-    main_check = subprocess.run(
-        ["git", "-C", str(REPO_ROOT), "cat-file", "-e", "main"],
-        capture_output=True,
+    base = next(
+        (ref for ref in ("refs/remotes/origin/main", "refs/heads/main")
+         if subprocess.run(
+             ["git", "-C", str(REPO_ROOT), "show-ref", "--verify", "--quiet", ref],
+         ).returncode == 0),
+        None,
     )
-    if main_check.returncode != 0:
-        pytest.skip("no `main` ref in this checkout to diff against")
+    if base is None:
+        pytest.skip("no origin/main or main ref in this checkout to diff against")
+    # Fail rather than silently skipping if a present base has no merge base.
+    merge_base = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "merge-base", base, "HEAD"],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()
     out = subprocess.run(
-        ["git", "-C", str(REPO_ROOT), "diff", "--name-only", "main...HEAD"],
+        ["git", "-C", str(REPO_ROOT), "diff", "--no-renames", "--diff-filter=MDT",
+         "--name-only", "-z", merge_base, "HEAD"],
         check=True, capture_output=True, text=True,
     ).stdout
-    changed = set(line for line in out.splitlines() if line)
-    # This change's own loom records are allowed in the diff; historical
-    # records of prior changes are not. The whole change directory is
-    # allowed so every artifact this change produces (plan, acceptance
-    # report, attestation, evidence) passes the guard.
-    own_prefix = "docs/loom/2026-10-06-rename-canvas-skill/"
-    own_intent = "docs/loom/intent/2026-10-06-rename-canvas-skill.md"
+    # New records are additions, but edits, deletions, and renames of files
+    # present at the merge base must remain visible to this guard.
     forbidden = {
-        p for p in changed
-        if (p.startswith("docs/loom/") and p != own_intent
-            and not p.startswith(own_prefix))
-        or p.startswith(".worktrees/")
-        or p.startswith("docs/skill-dogfood/")
+        p for p in out.split("\0") if p and p.startswith(
+            ("docs/loom/", ".worktrees/", "docs/skill-dogfood/")
+        )
     }
     assert not forbidden, (
         f"branch diff edits historical records: {sorted(forbidden)}"
