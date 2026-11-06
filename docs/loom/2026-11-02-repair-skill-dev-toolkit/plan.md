@@ -253,7 +253,15 @@ charter: 1.1
 - Test: A7 positive: actual_report_notice; negative: missing_preview_notice. A11 positive: human_review_before_action; boundary: pass_known_model_still_advisory. Existing real CLI tests cover all three valid verdicts and known/unknown metadata; preserve raw decisions, exits, malformed-input refusal and old failure.
 - Risk: REQ-7/11; class: missing advisory-use boundary. Scan87 cumulative changed/surface files and10 live surfaces. Extend existing report limits and renderer; no schema key, flag, function, agent or model trial. Preserve test_merge_report.py coverage and frozen history.
 
+### Wave 15 — Same caller task: preserve asserted condition coverage
+
+**W15-01 Replace the existing caller coverage check** after: W14-01 acceptance: 7, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (caller entry), `skill-dev-toolkit/CHANGELOG.md`; existing acceptance/evidence documents.
+- Test: A7 positive: current_focused_suite; negative: obsolete_marker_not_semantics. A9 positive: genuine_numeric_and_field_claims; negative: example_promoted_to_category. A11 positive: frozen_caller_replay; boundary: existential_not_universal. Preserve raw bytes and disputed readings; recorded Claude failure is RED, not a prose-marker test.
+- Risk: REQ-9/11; same failed W9 caller task, no counter reset. Scan87 changed/surface files and7 live surfaces; step6 owns the defect. Replace its paragraph, ≤40 net words; no parser/field/agent. Detector specs and frozen tests stay unchanged.
+
 ## Simplicity check
+- W15 replaces the existing caller paragraph; fresh plan review found no smaller equivalent shape preserving asserted coverage and existential positives — taken
 - W14 existing report limits, renderer and mirrored guides; fresh plan review found no smaller equivalent shape — taken
 - W13 clarify one existing interval across its mirrors; fresh plan review found no smaller equivalent shape or new product choice — taken
 - W12 three fixture data files, pinned existing target and existing merger; additional self-reported claim flags have no measured benefit yet — taken
@@ -307,3 +315,5 @@ charter: 1.1
 37. Ten baseline executions complete; audits support a literal10% interval ambiguity, not observed implementation failure. Close round10 with minimal wording alignment to existing≥10 strong eligibility; no new controlled workflow trial or eleventh round. Preserve all raw judgments and prior Claude failure.
 38. User-approved preview changes Acceptance11's delivery guarantee, not judgment correctness. Original b3517cde7 Acceptance11 remains failed. W14 adds visible disclosure/manual-use duties; preserve all prior episode/retry/cost records. No new model workflow trial, installation, publication or merge authority.
 39. Fresh spec+adversarial review passes78536158; existing report limits suffice. Human source/reason review is required before action but not programmatically certified. Target production growth≤10 lines, no functions/files/schema keys; actual emitted notices must be tested, not only documentation markers.
+40. User2026-11-07 renews one minimal candidate continuation after the USD1.3697738 Claude failure. Original trial stays failed; remaining USD8 aggregate is not automatic retry permission. Keep same fixed data/model/request; no new private data or publication.
+41. Fresh spec+adversarial PASS67f9fdfc: actual asserted coverage and existential safeguard are necessary together. Native replay only protects supported positives/exclusions; it cannot certify repaired Claude behavior. Stop conditional full test if the renewed first stage fails; retain all counters.
