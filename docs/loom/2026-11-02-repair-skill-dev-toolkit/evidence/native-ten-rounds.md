@@ -568,3 +568,84 @@ at `caller/scc-run.wM8EY5/` under the root. Native audits validate source
 meaning, not runtime identity or all-host accuracy. This negative Claude
 result coexists with the qualified Codex success; neither certifies the
 other host. Publication remains stopped under the actual-usability outcome.
+
+
+### W15 minimal coverage candidate: renewed first stage remains unaccepted
+
+The user's renewed continuation authorizes one minimal same-task candidate,
+not a reset of previous failed trials, costs or counters. The current intent
+restores actual useful outcomes; the old preview-only acceptance and
+attestation are historical and do not establish current release readiness.
+Fresh spec/adversarial and plan simplicity reviews pass before implementation.
+The whole-content scan covers87 cumulative changed/surface files and7 live
+surfaces. Only the existing caller criterion owns this repair: examples keep
+their governing categories/qualifiers, counterexamples test asserted coverage,
+and compatible cases do not disprove an existential conflict. Implementation
+adds3 lines,32 whitespace words to the existing paragraph, plus4 changelog
+lines; no Python, schema, parser, fixture, agent or special-case whitelist.
+
+Trunk synchronization uses the current3.58 owner and rebases onto
+1a66cab0429ea120ca8053736e011a5267fe3793. The old88cc6e5b source remains
+historical; current tested source is315ac8b3f9cea0b5698e1e295cdefeb872f7a6a4.
+Only the operative spec intent pointer is re-pinned to9a42e29a; frozen
+historical source references are preserved. Post-sync repository checks:
+715 passed, toolkit228 passed, existing graduated adversarial program5 passed.
+Focused implementation checks65 passed. These are mechanical checks, not
+semantic acceptance. Logs and scan: /private/tmp/toolkit-coverage-iteration1/.
+
+A fresh native recorded-data replay returns1 confirmed/8 excluded/0 unresolved,
+with identical dispositions to the pre-change native r01 replay. It excludes
+read/F1 and retains simulate/F2's factual numeric concern. All21 target files
+and2 raw files keep their hashes/confidences. This protects a previous native
+behavior only; it supplies no observed improvement or repaired Claude verdict.
+Output: local-replay/caller-fresh/ under the iteration root.
+
+The renewed Anthropic stage uses the same frozen21 target files,2 raw files,
+and byte-identical caller request as the previous baseline. The runtime has
+only the candidate caller/changelog delta. Claude Code2.1.317 loads inline
+plugin0.5.2; result modelUsage contains exactly claude-opus-5-5, requested effort
+high. First-party login is retained and routing overrides cleared. No new paid
+preflight is run. Restricted permissions report no denials in this execution.
+Process completes successfully after338.56s, estimatedUSD1.4436224. Adding the
+previousUSD1.3697738 yieldsUSD2.8133962 against the original aggregateUSD8
+estimate stopping threshold, not a hard billing guarantee. Older closed-window
+costs remain separately preserved; this amount is not an all-history total.
+
+The actual result is4 confirmed/4 excluded/1 indeterminate, merged into3
+findings with1 unresolved; exit1 is a target verdict, not a toolkit quality
+pass. read/F1 is still confirmed. simulate/F2 is now excluded as unreachable
+warning text. Genuine PROCEED/Q2 concerns remain confirmed. Do not score all9
+as gold or automatically call the numeric disposition a regression: its
+factual-description versus dead-branch interpretation remains disputed.
+149 prepared input/runtime/config preimages all match. A separate actual
+merger invocation returns exit1 and byte-identical JSON/Markdown. Original
+outputs are frozen, never manually corrected to manufacture a passing run.
+
+Evidence root: /private/tmp/toolkit-claude-coverage-20261107/; request/model
+receipts in runs/caller.{request.json,jsonl,summary.json}; actual outputs in
+caller/run-ZkVDRO/; preimages.json and verification.json retain hashes.
+
+Both fresh source-informed native semantic audits independently FAIL. They
+agree simulate/F6's exclusion substitutes a different branch: the original
+claim concerns output already accepted as-is, while the caller argues a
+curator could choose editing instead. That compatible alternative does not
+resolve the claimed accepted branch. The underlying finding is not thereby
+automatically confirmed: whether an anti-pattern is guidance or a prohibition
+still requires source adjudication. Both audits also find F1's unqualified
+confirmation insufficient because governing Q1 scope can make creative-output
+instructions unreachable. Literal opposing text alone does not settle scope.
+Auditor A considers numeric F2's dead-text exclusion reasonable; B notes an
+under-addressed descriptive-fact reading. Preserve those qualifications and
+the previous audits; no universal answer key or accuracy rate is inferred.
+Records: caller-semantic-{a,b}.md. Native audit profiles are host-default /
+unverified with no model override; they do not independently certify runtime
+model identity, automatic activation or full-workflow completeness.
+
+Close this one-candidate continuation with stage1 accepted=false. Conditional
+full workflow is NOT executed; remaining estimated budget does not trigger
+another paid attempt. Do not add more prompt clauses or another mechanism on
+this result. The small source change remains an unvalidated candidate, not a
+measured improvement or release-ready fix. Current actual-usability
+Acceptance11 is unmet. No new closing attestation, publication, installation
+or merge is performed. Historical preview evidence remains visible with an
+explicit superseded-scope notice rather than being silently reclassified.

@@ -1,5 +1,7 @@
 # 分批修復 skill-dev-toolkit — 預覽版驗收結果
 
+> 狀態更新（2026-11-07）：以下是歷史預覽範圍的驗收報告，不是目前「實際可用」要求的通過證明。現行 intent 已恢復實際結果品質的第十一項；W15 修補及重播另見 `evidence/native-ten-rounds.md`。原預覽 attestation 不適用於目前內容，尚無新的發布通過結論。
+
 Tried on 2026-11-05, in a clean copy of the project at 5eec1ad63f691dbe350935671af538a33110d8dd.
 逐項操作與結果：`docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/acceptance-test-evidence.md`。
 
