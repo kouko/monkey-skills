@@ -1,5 +1,25 @@
 # Defuddle skill refresh — acceptance test evidence
 
+## Re-run on 2026-11-06, at 1d114108996e41a9dc665b664699ffb1852300a3
+
+- Setup: a fresh clone checked out the exact commit detached. The available `defuddle --version` returned `0.19.6`; local HTML piped to `defuddle parse - --md` exited 0 with `Readable setup check.` Plugin and global CLI installation were not repeated because they would modify the host; agent discovery and loading were not tested.
+- Diff audit: `git diff 7d5eb4ff..1d114108` adds only a comment describing the concern above the historical documentation test module. It changes no executable test behavior, skill, indexes, or acceptance wording.
+- 1: carried over — the skill description is unchanged; automatic selection and trigger rate remain unmeasured.
+- 2: carried over — installation and usage instructions are unchanged; the available CLI also passed the setup check above.
+- 3: carried over — transcript, language and failure guidance is unchanged; previous video evidence and limitations remain below.
+- 4: carried over — the documented commands and acceptance wording are unchanged; prior live page and video results remain below, including the untested real captionless case.
+- 5: carried over — the structure, indexes, version metadata and test behavior are unchanged by the added comment. The prior focused test results, skipped old-worktree check, and untested negative cases remain below. The full package suite remains for finalization; no suite result is claimed here.
+
+## Re-run on 2026-11-06, at 7d5eb4ffa45c5ca14c0bcd50ec7ea2a98807512a
+
+- Setup: cloned afresh and checked out the exact commit detached. The available `defuddle --version` returned `0.19.6`, and a local article piped to `defuddle parse - --md` returned `Readable setup check.` Installation and host discovery were not repeated; the plugin and global CLI installation would change the host.
+- Diff audit: `git diff 4f8f3915..7d5eb4ff` changes the report, evidence, attestation, plan and `obsidian/tests/test_canvas_plugin_docs.py`. The Defuddle skill, manifests, indexes and acceptance wording are unchanged.
+- 1: carried over — the description is unchanged; automatic selection and trigger rate remain unmeasured.
+- 2: carried over — installation instructions and documented extraction commands are unchanged; the setup check above confirms the available CLI still runs.
+- 3: carried over — transcript, language and error guidance is unchanged; previous live output and limitations remain below.
+- 4: carried over — documented commands and acceptance wording are unchanged; prior live page and video results remain below. A real captionless video remains untested.
+- 5: re-tested — `ls obsidian/skills/defuddle` returned `LICENSE` and `SKILL.md`; the router and three README entries still name web and YouTube extraction. Both manifests, three README version references and changelog show `3.25.0`; `python3 scripts/sync_codex_manifests.py --check obsidian` exited 0. `python3 -m pytest obsidian/tests/test_canvas_plugin_docs.py -q` failed because that Python lacks pytest; the available `pytest obsidian/tests/test_canvas_plugin_docs.py -q -rs` then returned 3 passed, 1 skipped. The skipped check requires the untracked `.worktrees/` directory, absent from the clean clone. The passed checks include the current newer changelog and the current Git diff against the available origin/main; separate deliberately modified or deleted historical records and old-name regression cases were not exercised. The full package suite remains for finalization; no suite result is claimed here.
+
 ## Re-run on 2026-11-05, at 4f8f3915c3f4f51fcd0cfa8626ef11ec83956b34
 
 - Setup: created a fresh clone and checked out the exact commit detached. The existing CLI returned `0.19.6`; a local HTML article piped to `defuddle parse - --md` exited 0 with `Readable setup check.` The README's plugin and global CLI installation were not repeated because modifying the host installation is outside scope. Agent discovery and loading were not tested.
