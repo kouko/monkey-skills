@@ -7,7 +7,7 @@ description: Research a topic on the web (English + Japanese, plus the topic's o
 
 Research a topic the user names and save one note a person can read end to end: conclusion first, a table of contents, chapters shaped by the topic, cited and checked claims, and next actions.
 
-**Self-contained**: uses only the host's own tools (`WebSearch`, `WebFetch`, subagents) and skills in this plugin. Never invoke a skill from another plugin — this skill must work when only `obsidian` is installed.
+**Self-contained**: uses the host's own tools (`WebSearch`, `WebFetch`, subagents) and skills in this plugin; optional video research can also use the `yt-dlp` CLI. Never invoke a skill from another plugin — this skill must work when only `obsidian` is installed.
 
 Frameworks are used at four layers; [references/frameworks.md](references/frameworks.md) lists them:
 
@@ -52,11 +52,27 @@ Examples: 台灣半導體補助政策 → 繁中 primary + EN + JA. 江戸時代
 
 - **User material** (URLs, files, a report produced by another tool): read it first. The URLs it cites join the source pool; only sources the note actually cites get a number.
 - **Web search** runs by default, even when the user gave material. The user can narrow it ("only verify key claims", "fill gaps only") or turn it off ("use only my material") — follow their scope. An angle the material already covers well needs no new search; Step 4 still runs.
+- **Video sources**: read a user-provided video as material first. When relevant, search YouTube for demonstrations, interviews, firsthand experience, or differing perspectives (for example, financial or current-events commentary). Video search is optional, not a replacement for web search; skip it when other sources already answer the question. Follow the user's source and search limits.
 - **Dispatch one subagent per angle, all in the same message.** Each gets: the question, its angle, the languages (primary first), and these instructions — write queries natively in each language (not translations of the English query); read 2–4 pages with `WebFetch` (or this plugin's `defuddle` skill when its CLI is installed); return each claim with a supporting quote, fact/opinion tag, how the source got the figure (measured by the author / reported from elsewhere / the vendor's own claim / estimate or model output / not stated), and the source's title, URL, publisher, language, and date; do not dispatch further subagents. If subagents are unavailable, follow the same instructions yourself, one angle after another, and say so in the method section.
 - If a required language yields no usable source, record it for the limitations section instead of dropping it silently.
 - Stop searching an angle when new sources stop changing its conclusions.
 
 **Merge**: remove duplicate URLs. Sources from the same origin — a syndicated press release, several articles quoting one report, several works by the same author or organization — count as one source when judging independence (Step 4); each still gets its own source-list entry.
+
+### Using YouTube as a source
+
+When useful and available, `yt-dlp` can search and retrieve metadata and captions without downloading video. If missing, installation is optional: `brew install yt-dlp` or see the [yt-dlp installation instructions](https://github.com/yt-dlp/yt-dlp#installation).
+
+```bash
+yt-dlp --ignore-config --flat-playlist --no-download --print '%(title)s | %(url)s' 'ytsearch5:<keywords>'
+yt-dlp --ignore-config --skip-download --no-playlist --dump-single-json '<youtube-url>'
+yt-dlp --ignore-config --list-subs '<youtube-url>'
+yt-dlp --ignore-config --skip-download --write-subs --write-auto-subs --sub-langs '<language-code>' '<youtube-url>'
+```
+
+For a selected video, use available original-audio information and caption tracks to prefer original-language human captions, then original-language automatic captions. Do not infer original language from the title, a default track, or caption availability alone; if it is unclear, say so. Label the language and whether captions are automatic or translated. Alternatively, the plugin's `defuddle` skill extracts a readable Markdown transcript; verify its actual language and transcript content, as its language option is a preference. If tools, metadata, or captions are unavailable, note the limitation and continue with other available sources; never treat a video description as its transcript.
+
+Record the video URL, creator, publication date, and relevant timestamps when available. Views, likes, ratings, and channel subscriber counts are optional, time-sensitive context, not proof of credibility; mark unavailable values as unknown. Distinguish commentary from fact, check important factual claims against independent or original sources, and apply the same source-packet and citation checks as for other sources. Watch the relevant segment when the claim depends on visuals rather than captions.
 
 ## Step 4 — Verify key claims
 
