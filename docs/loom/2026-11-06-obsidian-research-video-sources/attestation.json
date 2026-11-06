@@ -1,0 +1,61 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-11-06-obsidian-research-video-sources",
+  "content_digest": "8d0df5fc853c2db8dfdd91f2c7a8a65915450223",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "no_program": "No existing test covers this guidance; prose-mirroring tests were excluded and live YouTube was unavailable."
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "video_skill_review",
+      "vendor": "codex",
+      "model": "inherited",
+      "lens": "skill",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [],
+      "review_target_sha": "4a3ee9d6"
+    },
+    {
+      "reviewer": "video_docs_review",
+      "vendor": "codex",
+      "model": "inherited",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [],
+      "review_target_sha": "4a3ee9d6"
+    }
+  ],
+  "findings": [],
+  "selection": null,
+  "intent_confirmed_sha": "00ff79f",
+  "tested_commit": "c3cbbb7e9",
+  "reviewed_commit": "4a3ee9d6264cae949a4638954c8f7754ab509e9e",
+  "acceptance_status": [
+    {
+      "acceptance": 1,
+      "status": "not_verified"
+    },
+    {
+      "acceptance": 2,
+      "status": "not_verified"
+    },
+    {
+      "acceptance": 3,
+      "status": "not_verified"
+    },
+    {
+      "acceptance": 4,
+      "status": "not_verified"
+    }
+  ]
+}
