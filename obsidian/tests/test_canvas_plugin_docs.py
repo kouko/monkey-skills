@@ -1,3 +1,4 @@
+# concern: stale skill identifiers and changes to historical records
 """Ownership guard for the obsidian-canvas rename of plugin-level docs
 (loom change 2026-10-06-rename-canvas-skill, task W2-01, acceptance A2/A5).
 
