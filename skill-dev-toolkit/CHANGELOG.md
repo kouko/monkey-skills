@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Clarify the existing consistency-check caller review: examples retain their
+  governing categories and qualifiers, and counterexamples test only the original
+  claim's asserted coverage without universalizing existential conflicts.
+  This instruction change still requires fresh behavioral validation.
 - Prepare an advisory preview requiring human source/reason review before edits
   or release decisions. Disclose the unresolved overbroad-claim false positive
   in existing report limits and live guides; reports and exit codes are not

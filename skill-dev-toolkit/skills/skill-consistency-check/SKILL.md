@@ -169,6 +169,9 @@ completed detector output, including thorough-mode runs:
    its shared conditions, and how those qualifications govern it. Duplicates
    may reuse reasoning only when claim and qualifications match.
 3. Judge the original `why` claim, not a different concern in its side quotes.
+   Examples inherit their governing category and qualifiers, not just matching
+   words. Seek a source-permitted counterexample to the coverage actually asserted;
+   a compatible case does not refute an existential claim requiring one conflict.
    For action conflicts, retain only a supported concrete situation requiring
    incompatible actions under the same conditions after cited scope, precedence
    and exceptions apply; otherwise exclude rather than retain speculative `low`.
