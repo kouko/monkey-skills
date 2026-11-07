@@ -894,3 +894,73 @@ claude-opus-5-5/high and aggregateUSD8 estimated stopping boundary. Absence of
 a reply is not consent. CLI startup/cache access outside its working directory
 and the non-hard billing limit are disclosed. No data is sent by preparation.
 The priorUSD2.8133962 estimate remains unchanged; no new CLI/API cost is added.
+
+
+## W16 consented Claude replay: semantic failure retained (2026-11-07)
+
+User authorization: “繼續吧 開始 claude code 的測試”, replying to the disclosed conditional 143-file Anthropic packet. Source HEAD 5fb928a909c5d2d80b3a01a2a1f768c5bb76d6bf; runtime unchanged, 151-word Step6 items2–3. CLI2.1.317 loaded inline0.5.2; claude-opus-5-5/high requested and actual modelUsage matched. Native auditors use host-default/unverified, not independently verified model names.
+
+Caller process succeeded in287.15s, estimateUSD1.3025516. With priorUSD2.8133962, aggregateUSD4.1159478; unused estimate headroomUSD3.8840522 is not permission for retry and not a hard billing cap. Four confirmed, two excluded, three indeterminate are executor dispositions, not accuracy scores.
+
+All149 frozen preimages unchanged, runtime107 files unchanged. No permission denials recorded. Seven cited source files read in full plus keyword searches in remaining two reference files. Separately rerun merger exited1 needs-revision and byte-reproduced both JSON and Markdown. The original detectors were replayed, not re-executed; detector model remains unknown. Startup/cache confinement outside the test project was not asserted.
+
+Fresh sequential blind audits A and B read only original findings, target source, caller contract and new outputs. A:4PASS/3QUALIFIED/2FAIL. B:5PASS/3QUALIFIED/1FAIL. Both independently reject read/F1 confirmation: entry SKILL.md:358–360 describes creative/non-deterministic output, with prose as parenthetical example; protocol:17 admits prose as an ordinary artifact type; entry:9–12 permits prose tightening. The caller explicitly promoted that example to an independent all-prose prohibition and then used creative persuasive copy as the witness. That narrower witness does not establish original coverage. Root independently inspected those sources and agrees. This is the existing material failure class, not a parser crash or fabricated citation.
+
+Do not flatten auditor differences into extra gold labels. A rejects numeric simulate/F2 as a vacuous/dead conditional rather than a contradictory assertion; B qualifies its pragmatic reachability reading rather than forcing exclusion. Root preserves this dispute. Both qualify creative-only simulate/F1 on entry/delegation scope, and the added unconditional baseline-lock mechanism in simulate/F6; the selected permission/value tension itself remains supported. A qualifies simulate/F5 while B accepts its indeterminate treatment. Both support read/F2 and simulate/F3 indeterminate and F4/F7 excluded. No nine-label gold or majority accuracy is claimed.
+
+Integrated stage1 semantic verdict FAIL based on independently source-confirmed read/F1 overstatement alone. accepted remains false. The conditional full13-file case is NOT executed, and no automatic paid retry, candidate edit, fixture edit, installation, publication or merge occurs. All original outputs and both audits are retained without correction. The current practical-usability limitation and prior failure/cost/episode counters remain open; this host test is not a third functional digest or a new episode. Existing attestation is historical technical evidence, not acceptance of this failed host result.
+
+Evidence root: /private/tmp/toolkit-claude-loom-resume-20261107/.
+Raw: runs/caller.jsonl; outputs: caller/run-replay/; audits: semantic-a.md,
+semantic-b.md; provenance: verification.json and merge-verification.json.
+The earlier approved=false descriptions above are historical preparation
+states, superseded only by the explicitly quoted user authorization here.
+
+
+## W17 pre-implementation decision and falsification boundary (2026-11-07)
+
+User confirms the complete SESSION condition with「好」after mode selection.
+This is the same failed caller task: W16 failed Claude replay, two formal
+functional digests already reviewed; no round/cost/failure reset. The single
+W17 candidate replaces the current151-word Step6 items2–3 within153 words.
+No Python, schema, detector, persistent role or framework changes. Source
+eligibility must be decided before a conflict verdict, rather than merely
+listing qualifications inside a preselected contradiction explanation.
+Alternative: more reminders inside the old reconciliation pass is rejected
+because the current Claude output explicitly listed coverage yet widened it.
+Alternative: new typed intermediates or semantic solver is outside scope and
+has no measured need before this bounded replacement experiment.
+
+Actual RED is the preserved W16 Claude result read/F1, with two independent
+source audits and immutable inputs, not a new prose-marker assertion. Class:
+coverage substitution before reconciliation. Full-content sweep89 cumulative
+changed/surface text files,241 matches retained at
+/private/tmp/toolkit-scope-first-20261107/defect-sweep.json; live caller Step6
+is the owner, detectors already exclude exceptions and merger only validates
+structure. Existing test coverage and frozen cases will not be weakened.
+
+Pre-register success: original read/F1 excluded with complete source reason;
+real supported conflicts retained, not blanket exclusion/indeterminate; two
+new independent real-source controls include an overstated negative and a
+same-scope positive. Their expected evidence is frozen before the implementer
+sees any candidate source; no expected answer enters an executor packet.
+Ambiguous original findings retain competing interpretations rather than
+nine invented labels. Run at most three fresh sequential native executions
+of identical input bytes, then two fresh blind source auditors. One repeated
+overstatement is sufficient to reject and stop later executions; no second
+candidate. Passing all local cases still leaves Claude/actual-host and release
+acceptance unproven. Current relevant three-Claude estimateUSD4.1159478 stays
+unchanged, with no paid action authorized by this experiment.
+
+Before implementation, independent native control author freezes two full
+historical creator targets (33 files each) and two newly authored evaluation
+candidates, not detector outputs. Negative uses35a6be1 quick-path baseline
+exception; positive usescd2c2c02851f114559097f689892384332c69975 metadata
+ownership mismatch. Exact source hashes and quote spans verified;98 input,
+provenance and private expectation files frozen in input-preimages.json.
+Root source-checks the metadata/schema/grader boundaries. These are new to
+this experiment and hidden from implementer; absence from all unknown prior
+training/history is not asserted. Fresh plan reviewer PASS, no simpler
+shape, at plan-simplicity.md. TDD RED command inspects preserved actual
+W16 replay: read/F1 expected excluded, actual confirmed; candidate not yet
+written. This is behavioral RED, not text matching or a fabricated baseline.

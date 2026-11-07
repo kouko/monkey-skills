@@ -267,7 +267,15 @@ charter: 1.1
 - Test: A7 positive: existing_entry_and_merger_suite; negative: prose_marker_not_semantics. A9 positive: literal_proceed_and_factual_witnesses; negative: off_branch_reconciliation. A11 positive: frozen_native_reason_replay; boundary: native_not_claude_validation.
 - Risk: REQ-7/9/11; class: antecedent/coverage substitution and action-only narrowing. Scan87 changed text files and7 live surfaces; caller Step6 is sole owner. Replace items2-3 within153 words, remove W15 clauses; preserve existing tests/fixtures/interface. Same failed task, one candidate, no paid host retry.
 
+### Wave 17 — Test source applicability before a contradiction verdict
+
+**W17-01 Replace the existing caller decision order** after: W16-01 acceptance: 7, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (caller entry), `skill-dev-toolkit/CHANGELOG.md`; retained intent/spec/plan/evidence and acceptance records.
+- Test: A7 positive: existing_caller_merger_suite; negative: marker_only_not_behavior. A9 positive: heldout_same_scope_conflict; negative: original_and_heldout_overstatement. A11 positive: three_fresh_local_replays; boundary: first_failure_rejects_candidate. Existing tests/fixtures unchanged; frozen preimages verified, blind source audits required.
+- Risk: REQ-7/9/11; same failed coverage-substitution task, no reset. Sweep89 full changed/surface files; Step6 items2–3 sole owner. Replace within153 words; no new mechanism. Independent controls fixed first, implementer blind to them. One candidate, no paid tests; native evidence cannot prove Claude repaired.
+
 ## Simplicity check
+- W17 fresh plan reviewer found no simpler equivalent shape; three local replays is a ceiling under first-failure stop, not a quota — taken
 - W16 replacement-only153-word caller block; fresh plan reviewer found no smaller equivalent shape — taken
 - W15 replaces the existing caller paragraph; fresh plan review found no smaller equivalent shape preserving asserted coverage and existential positives — taken
 - W14 existing report limits, renderer and mirrored guides; fresh plan review found no smaller equivalent shape — taken
