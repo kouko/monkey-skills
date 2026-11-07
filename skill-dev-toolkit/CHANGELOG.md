@@ -8,9 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- Clarify the existing consistency-check caller review: examples retain their
-  governing categories and qualifiers, and counterexamples test only the original
-  claim's asserted coverage without universalizing existential conflicts.
+- Replace the consistency-check caller's reason construction: establish original
+  conditions, coverage and governing scope before reconciliation, keep selected
+  branches fixed, and judge non-action claims without requiring incompatible actions.
   This instruction change still requires fresh behavioral validation.
 - Prepare an advisory preview requiring human source/reason review before edits
   or release decisions. Disclose the unresolved overbroad-claim false positive

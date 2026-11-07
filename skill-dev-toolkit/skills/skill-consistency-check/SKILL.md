@@ -161,24 +161,22 @@ completed detector output, including thorough-mode runs:
 
 1. Keep every original detector JSON file byte-for-byte at its planned name.
    Do not replace it with a filtered list or rewrite candidate fields or confidence.
-2. Read each candidate's cited files in full, plus relevant entry-file and
-   delegated authorities. In each `decisions.json` entry's `reason`, cite the exact
-   governing entry-file scope/delegation, precedence and exception quotes with
-   file:line, or file:line ranges searched
-   if none applies. Explain why the claim is confirmed, excluded or indeterminate,
-   its shared conditions, and how those qualifications govern it. Duplicates
-   may reuse reasoning only when claim and qualifications match.
-3. Judge the original `why` claim, not a different concern in its side quotes.
-   Examples inherit their governing category and qualifiers, not just matching
-   words. Seek a source-permitted counterexample to the coverage actually asserted;
-   a compatible case does not refute an existential claim requiring one conflict.
-   For action conflicts, retain only a supported concrete situation requiring
-   incompatible actions under the same conditions after cited scope, precedence
-   and exceptions apply; otherwise exclude rather than retain speculative `low`.
-   Extra keys, aliases or workarounds do not reconcile conflicting facts, field
-   definitions or values in the same scope. Exclude unsupported or overstated
-   claims even if quotes support a narrower concern. Record incompatibility or
-   source-grounded exclusion reasons; never add findings from your own context.
+2. Read cited files in full and relevant entry/delegated authorities. In each
+   `decisions.json` entry's `reason`, establish the original `why` claim's unchanged
+   antecedent, coverage, categories, qualifiers and governing scope before testing
+   reconciliation. Cite exact entry-file scope/delegation, precedence and exception
+   quotes with file:line, or file:line ranges searched if none applies. Explain the
+   disposition; reuse duplicate reasoning only for matching claims and qualifications.
+3. Keep selected branches fixed; another permitted branch cannot reconcile them.
+   Counterexamples must refute asserted coverage; a compatible case cannot refute
+   an existential conflict. Action claims require a supported concrete witness of
+   incompatible actions under those same conditions after governing qualifications
+   apply; exclude speculative action conflicts.
+   Judge facts, permissions, classifications, field definitions and values on their
+   own terms, without substituting another concern or requiring incompatible actions.
+   Extra keys, aliases or workarounds do not reconcile same-scope contradictions.
+   Exclude unsupported or overstated originals despite narrower supported concerns.
+   Record source-grounded reasons; never invent findings.
 4. Write `decisions.json` as an object with `sources` mapping every exact input
    basename to the SHA256 of its original bytes, and a `decisions` list containing
    exactly one object per original candidate: `source` (basename), `id` (original
