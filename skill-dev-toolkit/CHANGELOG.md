@@ -8,10 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- Replace the consistency-check caller's reason construction: establish original
-  conditions, coverage and governing scope before reconciliation, keep selected
-  branches fixed, and judge non-action claims without requiring incompatible actions.
-  This instruction change still requires fresh behavioral validation.
+- Replace the consistency-check caller's decision order: derive applicability
+  independently from sources, check the original claim's full coverage, and only
+  then judge contradiction under those qualifications. Preserve selected branches
+  and judge non-action claims on their own terms. This instruction change still
+  requires fresh behavioral validation.
 - Prepare an advisory preview requiring human source/reason review before edits
   or release decisions. Disclose the unresolved overbroad-claim false positive
   in existing report limits and live guides; reports and exit codes are not
