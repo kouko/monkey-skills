@@ -1041,3 +1041,10 @@ Archive: docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/w17-scope-first-
 This negative experiment does not prove that source-first reasoning is impossible or the architecture exhausted. It shows this single instruction replacement did not deliver fully faithful original-scope reasons, despite repeatable labels and green tests. The accepted bounded outcome is a documented rejection, not repaired software.
 
 Archive SHA256: dac5102f2727dfe685aa548c251bad5023b4662d69d1b196c99972bc07305392
+
+Rejection bookkeeping correction: Risk44 initially exceeded the40-word plan
+cap (60 words). Root mistakenly committed it after a compound command left
+the later privacy check as the process exit status. The owner BLOCK is
+retained here; only Risk44 is shortened, then the plan check is rerun
+separately before its correction commit. No runtime, case, audit, expected
+answer, archive byte or measured output changes.
