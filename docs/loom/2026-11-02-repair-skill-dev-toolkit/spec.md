@@ -1,5 +1,5 @@
 # Repair skill-dev-toolkit — spec
-intent: 2026-11-02-repair-skill-dev-toolkit@9a42e29a
+intent: 2026-11-02-repair-skill-dev-toolkit@5740ab10c
 pre-build-review: required — Blind comparisons and preference exports affect evidence integrity; conflicting execution policies require an independent scope check.
 
 ## Requirements
