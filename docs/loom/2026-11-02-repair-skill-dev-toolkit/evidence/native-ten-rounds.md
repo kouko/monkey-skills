@@ -765,3 +765,77 @@ attempted. The implementation is committed but remains an unvalidated repair
 candidate; local execution and source-audit qualifications do not prove release
 readiness. This continuation adds zero paid CLI/API calls to the recorded
 USD2.8133962 batch estimate (not an all-history bill or a hard cap).
+
+
+### Loom continuation: formal closing review and unchanged-source follow-up
+
+User2026-11-07「可以走 loom 流程繼續嗎」authorizes continuing the existing
+change through Loom. Preserve prior failed candidates, local executions,
+review episodes, costs and closed paid windows; no new paid host call follows
+from this general request. No source/runtime/plan/requirement change is made.
+This is the first formal branch-end round on the current151-word candidate
+under the restored actual-usability guarantee, not a reset of earlier episodes
+or the same failed task's counters. The earlier source audits were not formal
+branch-end reviewers. Active station: Closing Review; no absent-item recovery.
+
+Owner sync-trunk reports up to date at c3299a77f8fe2ae34977ee2808c67b8b5cccb27c,
+base693cee88601b38b02e7022d4942ef3ea7f4a5de4. Installed3.59 digest helper proves
+tested b651d318 and reviewed c3299a77 both have functional identity
+3275f3b1985d4afae008ef476536048462ea9eca; only publication evidence differs.
+Thus existing715/228/5 Build results still bind this content. Review policy
+requires2 identities. Both native formal reviewers return PASS_WITH_NOTES:
+code runs all14 changed test files,224 passed17.98s; skill reads all27 changed
+skill prose files (6 entries,20 references,1 template), their authorities and
+base/current polarity changes. Its initially incomplete coverage is retained
+as closing-skill-initial.yaml; the same reviewer expands inspection within the
+same round/target, without a source edit or profile upgrade.
+
+Both reviewers independently retain one important output-reason coverage gap,
+not a demonstrated wrong exclusion or Python parser defect. They find no
+justification for another runtime clause, parser or field. Non-blocking nits:
+direct internal-helper assertions already covered through CLI tests, and a
+dogfood informed-check paragraph lacking the review convention's gate comment.
+These nits cause no functional patch or new formal round. No important finding
+is dismissed. All actual native profiles are host-default/unverified, with
+null model/effort overrides; no exact runtime-model receipt is inferred.
+
+The concrete important-finding fix first earns one fresh blind local execution
+on unchanged source: W16 native execution2, current Loom local followup1. It
+receives only the same21 target files,2 raw files and107 runtime files, with no
+labels/calibration/history. It actually plans/merges, returns2 confirmed and7
+excluded (same statuses), model unknown, needs-revision/exit1. Full read/F1
+coverage remains incomplete and duplicate reasons hide the raw-claim scope
+difference. The independent tester confirms QUALIFIED, not semantic PASS;
+Acceptance7/9/11 stay partly. No manual correction of either failed output is
+used as runtime evidence. No further native trial or prompt expansion is
+started. Frozen130 input/runtime files retain their hashes.
+
+Evidence root /private/tmp/toolkit-loom-resume-20261107/ includes the two formal
+YAMLs, changed-paths.txt, content-identity.json, native-followup-review.md,
+verification.json, and native-followup-1/project/caller-fresh/ actual outputs
+and merge-execution.json. The current and previous failed outputs remain
+separate and immutable. This follow-up adds no paid CLI/API cost to the
+previousUSD2.8133962 estimate; no automatic retry or budget reset is implied.
+
+First owner finalize-review attempt is fail-closed with
+`BLOCK intake.commit-identity: acceptance report needs one canonical Tried-on commit line`.
+The report embedded the full historical preview report, giving it two tested
+commit lines and two acceptance tables. The owning independent tester fixes
+only publication metadata: the old b651d318 canonical report is archived
+byte-exact as evidence/acceptance-preview-before-w16.md, SHA256
+0370354e19d29b2c7f121cea2aa30a33adb091534556417fb65e5ed10f2bda7e.
+The active report now contains one Tried-on line and11 rows, with7/9/11 partly.
+History and grades are not changed. The existing prior English evidence is
+retained and extended. This corrects report identity, not functional content;
+it earns no new functional digest/implementation or review round. Same
+reviewers confirm the publication-only target before finalization retries.
+
+A concrete conditional Anthropic test packet is prepared but NOT approved or
+executed at /private/tmp/toolkit-claude-loom-resume-20261107/:107 runtime files,
+21 caller-target files,2 raw files and13 conditional full-case files,143 data
+files total. Its proposal approved=false, requested claude-opus-5-5/high,
+prior estimateUSD2.8133962, original aggregateUSD8 estimate stopping threshold
+remainingUSD5.1866038 (not a hard bill cap). Runtime/data are fixed and do not
+contain answer keys or prior reports. Any execution requires fresh explicit
+consent for this private-data transfer and spend; a prepared packet is not
+consent. No installation, publication or merge is authorized by preparation.
