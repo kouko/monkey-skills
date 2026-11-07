@@ -260,7 +260,15 @@ charter: 1.1
 - Test: A7 positive: current_focused_suite; negative: obsolete_marker_not_semantics. A9 positive: genuine_numeric_and_field_claims; negative: example_promoted_to_category. A11 positive: frozen_caller_replay; boundary: existential_not_universal. Preserve raw bytes and disputed readings; recorded Claude failure is RED, not a prose-marker test.
 - Risk: REQ-9/11; same failed W9 caller task, no counter reset. Scan87 changed/surface files and7 live surfaces; step6 owns the defect. Replace its paragraph, ≤40 net words; no parser/field/agent. Detector specs and frozen tests stay unchanged.
 
+### Wave 16 — Preserve the original branch before reconciliation
+
+**W16-01 Replace caller reason construction** after: W15-01 acceptance: 7, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (caller entry), `skill-dev-toolkit/CHANGELOG.md`; retained calibration and evidence documents.
+- Test: A7 positive: existing_entry_and_merger_suite; negative: prose_marker_not_semantics. A9 positive: literal_proceed_and_factual_witnesses; negative: off_branch_reconciliation. A11 positive: frozen_native_reason_replay; boundary: native_not_claude_validation.
+- Risk: REQ-7/9/11; class: antecedent/coverage substitution and action-only narrowing. Scan87 changed text files and7 live surfaces; caller Step6 is sole owner. Replace items2-3 within153 words, remove W15 clauses; preserve existing tests/fixtures/interface. Same failed task, one candidate, no paid host retry.
+
 ## Simplicity check
+- W16 replacement-only153-word caller block; fresh plan reviewer found no smaller equivalent shape — taken
 - W15 replaces the existing caller paragraph; fresh plan review found no smaller equivalent shape preserving asserted coverage and existential positives — taken
 - W14 existing report limits, renderer and mirrored guides; fresh plan review found no smaller equivalent shape — taken
 - W13 clarify one existing interval across its mirrors; fresh plan review found no smaller equivalent shape or new product choice — taken
@@ -318,4 +326,5 @@ charter: 1.1
 40. User2026-11-07 renews one minimal candidate continuation after the USD1.3697738 Claude failure. Original trial stays failed; remaining USD8 aggregate is not automatic retry permission. Keep same fixed data/model/request; no new private data or publication.
 41. Fresh spec+adversarial PASS67f9fdfc: actual asserted coverage and existential safeguard are necessary together. Native replay only protects supported positives/exclusions; it cannot certify repaired Claude behavior. Stop conditional full test if the renewed first stage fails; retain all counters.
 
-42. W15 one-candidate continuation closes with Claude first-stage accepted=false and two independent semantic FAIL audits. Source315ac8b3 remains unvalidated; no prompt expansion, full case or automatic paid retry. Native unchanged labels and715/228/5 mechanical checks do not establish actual-usability Acceptance11. Aggregate disclosed estimateUSD2.8133962 includes priorUSD1.3697738; old counters/costs remain. Details: evidence/native-ten-rounds.md.
+42. W15 closes with two semantic FAIL audits; source315ac8b3 unvalidated. No paid retry/full case. Preserve prior counters/costs; aggregateUSD2.8133962 includesUSD1.3697738. Native unchanged labels and715/228/5 checks do not satisfy Acceptance11. Evidence: native-ten-rounds.md.
+43. User2026-11-07 authorizes one calibrated replacement/native replay, same failed task; preserve all counters. No paid host test/install/publish/merge. Existing W15 supplies behavioral RED; judge reasons, not nine fixed labels. Claude/Acceptance11 remains unverified.
