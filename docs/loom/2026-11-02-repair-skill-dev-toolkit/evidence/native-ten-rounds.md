@@ -863,3 +863,34 @@ The current canonical Tried-on identity is now e634669d with one11-row table;
 history stays in its exact separate snapshot. The old native reason gap,
 unknown model and unrepaired historical Claude failure remain open. No
 inspection, approval or test result is reset by this administrative repair.
+
+
+Formal Round2 uses the same two reviewer identities, preserving Round1 raw
+YAMLs. Both return PASS_WITH_NOTES on reviewed commit
+50d274ceffcc4bc7266727a2006b72f0766d4f49 after pin/evidence fix verification.
+New functional identity a3adf6cb9483f3816ef0a99c4d722f42cbfe561c is shared with
+tested e634669d. Runtime/SKILL behavior did not change. Independent preflight
+of all four owner evidence rules returns[] before finalization: coverage,
+commit identity, intent version and plan boundary tests. This is the second
+distinct reviewed functional digest of this episode, not a new episode.
+
+Installed finalize-review then succeeds, re-executing the declared repository
+suite and graduated adversarial program and recording both as pass. It alone
+generates the current attestation; no agent edits that JSON. Direct installed
+validate_attestation returns[] and the generated record preserves8 works with
+Acceptance7/9/11 partly, tested e634669d, reviewed50d274ce, confirmed normalized
+intent31a94eeb92f1a0b13b3e38726aae636f0c9ea3d1 and the new content identity.
+Two formal passing-with-notes verdicts are technical review evidence, not a
+claim that the actual-usability requirement passed. The important reason gap,
+unknown native model, historical Claude failure and two non-blocking nits
+remain visible. No functional fix, extra clause/parser or new host trial is
+claimed by this bookkeeping completion.
+
+Ship is not invoked: actual-usability acceptance is still partial and current
+scope does not authorize publication, installation or merge. The concrete
+conditional Anthropic packet remains approved=false and unexecuted; the user
+has been asked separately for its143-file private-data transfer, explicit
+claude-opus-5-5/high and aggregateUSD8 estimated stopping boundary. Absence of
+a reply is not consent. CLI startup/cache access outside its working directory
+and the non-hard billing limit are disclosed. No data is sent by preparation.
+The priorUSD2.8133962 estimate remains unchanged; no new CLI/API cost is added.

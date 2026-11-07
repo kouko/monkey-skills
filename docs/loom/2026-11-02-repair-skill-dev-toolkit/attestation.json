@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v2",
   "change_id": "2026-11-02-repair-skill-dev-toolkit",
-  "content_digest": "0ae2db5545bafa20b65c4d7f71c70acbb3fbd47a",
+  "content_digest": "a3adf6cb9483f3816ef0a99c4d722f42cbfe561c",
   "executions": [
     {
       "kind": "package-tests",
@@ -12,80 +12,102 @@
     },
     {
       "kind": "adversarial",
-      "command": "/Users/kouko/.conda/envs/dbt-redshift/bin/python3 -m pytest scripts/test_preferences_single_choice.py -q -p no:cacheprovider",
+      "command": "python3 -m pytest scripts/test_preferences_single_choice.py -q -p no:cacheprovider",
       "artifact": "scripts/test_preferences_single_choice.py",
       "result": "pass",
-      "command_digest": "d43d2346c5422bb5e1b0aec0b05836424a3f32e8a0f9cfd5254fc8158848e5a1"
+      "command_digest": "189292c39f87519e8f85a5c49e3cf96e9bb8f1d7e84f7068204e47f95b6b9b44"
     }
   ],
   "verdicts": [
     {
-      "reviewer": "/root/preview_closing_code",
+      "verdict": "PASS_WITH_NOTES",
       "lens": "code",
-      "reviewed_sha": "4cbf85a8841d7d52393a8bb4058284755e108e25",
-      "review_target_sha": "910fe5b8ea12f9e67e8884d6d7378ec18a714df3",
-      "verdict": "PASS",
+      "reviewed_sha": "693cee88601b38b02e7022d4942ef3ea7f4a5de4",
+      "review_target_sha": "50d274ceffcc4bc7266727a2006b72f0766d4f49",
       "dimension_scores": {
-        "security": "PASS — Checked the changed Python paths, argument handling, read-only raw-candidate selection, hash binding, output containment and blind-copy boundary; no new exploitable issue identified.",
-        "architecture": "PASS — Existing creator, comparator, tuning and checker modules retain their responsibilities; selection validates typed dispositions without pretending to validate their prose.",
-        "correctness": "PASS — Actual changed tests pass for restored commands, EOF handling, nullable holdout reports, eligibility, order tolerance, blind labels, preferences and report dispositions. One non-blocking HTML highlight inconsistency remains below.",
-        "naming": "PASS — Changed names describe their data and responsibility; the longer restored orchestration functions remain cohesive without a concrete split benefit.",
-        "tests": "PASS — Independently executed all fourteen added or changed ordinary test files, including the graduated single-choice regression: 224 passed in 12.97s, with no skips. Current CLI tests exercise all three valid verdicts with known and unknown model metadata and preserve input bytes.",
-        "refactoring": "PASS — Description eligibility and preference usability reuse their existing owning modules and consumers; no new framework or unjustified cross-module extraction identified.",
-        "cross-task-coherence": "PASS — Cumulative code implements the accepted creator, comparison, tuning, grouping and reviewed-candidate contracts; W14 changes disclosure without weakening eligibility, provenance or exit semantics.",
-        "external-surface-grounding": "PASS — Restored commands use the existing imports and invocation contracts; the changed backend-result interpretation cites the ResultMessage authority, and no new provider, external CLI flag or service is introduced. Live-provider behavior is not certified by this review.",
-        "principles-conformance": "PASS — Read ratified PRINCIPLES.md; no new violation identified. The accepted advisory limitation is visible before the report verdict, original failures remain explicit, and human review is not represented as a recomputed machine fact.",
-        "architecture-conformance": "N/A — No ratified ARCHITECTURE.md exists in this repository.",
-        "deliberate-simplification": "PASS — Existing limitations name their ceilings: mechanical eligibility is not semantic compliance, caller-supplied model metadata is not identity evidence, and preview use requires source/reason review without an acknowledgment mechanism or accuracy claim.",
-        "deletion-first": "PASS — The report notice reuses existing limits and rendering, shared eligibility removes duplicate policy, and the restored entrypoints and explicit decision interface have requested current consumers; no smaller equivalent mechanism identified."
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES — Deterministic changed tests pass, but the native caller still lacks complete original-coverage reasoning; historical Claude failure and actual-host usability remain unverified.",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES — Round1 ran all fourteen changed test files: 224 passed in 17.98s. Round2 changes no test or runtime file, so that evidence carries forward; semantic acceptance remains partial.",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES — REQ-7/9/11 remain partly met under the restored useful-result guarantee; the canonical acceptance report honestly preserves that boundary.",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS — Applicable data-preservation, bounded-mechanism and evidence-honesty obligations are preserved; Loom-specific checker rules are not generalized into toolkit runtime requirements.",
+        "architecture-conformance": "N/A — No ratified ARCHITECTURE.md exists in the reviewed checkout.",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/acceptance-test-evidence.md:2012",
+          "text": "issue (non-blocking): Unfixed in Round2: the native read/F1 exclusion still lacks complete original-coverage reasoning required by Step 6. The original why separately includes prose, but the executed reason ends with the fixed creative branch and never addresses deterministic prose admitted by the output-type table; the identical simulate/F1 reason conceals that difference. This is an execution-evidence gap, not an established wrong exclusion or parser defect.",
+          "fix": "Obtain a fresh source-grounded caller execution whose read/F1 reason separately resolves ordinary deterministic prose against target SKILL.md:358-360 and references/equivalence-check-protocol.md:17, while preserving the original claim, raw outputs, failed receipt and supported positives. Keep acceptance partial until that execution and the separately required actual-host evidence satisfy the restored guarantee; do not repair the failed receipt manually or add a natural-language parser."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "skill-dev-toolkit/tests/test_preference_export.py:49",
+          "text": "suggestion (non-blocking): Unfixed in Round2: tests still call judge_train_stub.extract_preference_pairs directly at lines 49 and 87 even though this behavior is reachable through the trainer entry already executed by the same tests. This couples the regression to an internal helper in addition to its real consumer.",
+          "fix": "Remove the direct extract_preference_pairs assertions and their import scaffold; retain the existing real exporter/trainer CLI assertions, which already check selected hashes, pair totals, readiness and skipped records."
+        }
+      ],
+      "notes": [
+        "Reviewed cumulative 88-path delta and ground truth. Fourteen changed test files, including graduated scripts/test_preferences_single_choice.py, ran with the supplied Python, bytecode disabled and pytest cache disabled; no skipped tests were reported. No full package suite, adversarial probe, provider call, install or publication was executed.",
+        "Reason-gap assessment checked original read/F1, actual caller decisions, target entry scope and the prose output-type row directly. Correct excluded status is supported; a deterministic-prose contradiction and a wrong final disposition are not established. Audit B's stronger blanket-ban paraphrase is not adopted.",
+        "Round2 fix verification, same reviewer and episode: 7847..50d274ce changes only the intent pin and three report/evidence files. Independently recomputed normalized intent blob identity 31a94eeb92f1a0b13b3e38726aae636f0c9ea3d1; body, all Acceptance and constraints equal Round1 and tested e634669d. Pin defect is fixed with existing authorization, not a new outcome or paid boundary. Owner-supplied digest a3adf6cb9483f3816ef0a99c4d722f42cbfe561c and empty evidence_preflight match the new target. Fresh tester's deterministic stored-report reproduction retains AC7/9/11 partly; no reviewer tests/probes/models rerun. Both prior findings remain unfixed, no counter reset or release approval; profile host-default/unverified, overrides null."
+      ],
+      "reviewer": "/root/loom_resume_code",
+      "vendor": "openai",
+      "model": "host-default/unverified"
+    },
+    {
+      "verdict": "PASS_WITH_NOTES",
+      "lens": "skill",
+      "reviewed_sha": "693cee88601b38b02e7022d4942ef3ea7f4a5de4",
+      "review_target_sha": "50d274ceffcc4bc7266727a2006b72f0766d4f49",
+      "dimension_scores": {
+        "omission": "PASS_WITH_NOTES — The actual replay omits a material part of read/F1's asserted coverage; see the finding. Step 6 already requires unchanged categories and coverage, so this observation does not establish a missing runtime instruction.",
+        "ambiguity": "PASS — Round 2 changes the confirmation pin and evidence provenance, introducing no new execution branch. The report explicitly carries forward partly results and separates stored-judgment reproduction from fresh semantic inference; Round 1 source assessment is retained.",
+        "inconsistency": "PASS — Direct comparison confirms the intent is byte-identical after excluding only its pin line, including all eleven Acceptance criteria and Constraints. The four-file fix delta changes no runtime or skill instruction, and the current report keeps Acceptance 7/9/11 partly.",
+        "incorrect-fact": "PASS — Inspected the exact four-file fix delta and round2-target.json: target 50d274ce, tested tree e634669d, digest a3adf6cb9483f3816ef0a99c4d722f42cbfe561c and empty evidence_preflight. Independently hashing the intent bytes with status/pin lines removed reproduces 31a94eeb92f1a0b13b3e38726aae636f0c9ea3d1. This normalized blob digest is not a Git commit or new user consent; no semantic-repair claim follows from it.",
+        "missing-population": "PASS — Round 2 preserves eleven acceptance rows, eight works and three partly, and labels old checks carried over rather than newly run. Reproducing two confirmed/seven excluded decisions is not represented as new model accuracy evidence.",
+        "user-judgment-leak": "PASS — The pin fix records the already explicit implementation and Loom-continuation authorization supplied in the packet; it asks no new technical question and grants no paid execution, installation, publication or merge authority.",
+        "deletion-first": "PASS — A single existing confirmation field is corrected; publication evidence is updated without adding runtime instructions, parser, schema, role or mechanism. The original output-reason finding still calls for a complete separately preserved caller result rather than prompt growth."
       },
       "findings": [
         {
           "severity": "nit",
-          "dimension": "correctness",
-          "anchor": "skill-dev-toolkit/skills/skill-creator-advance/scripts/generate_report.py:207",
-          "text": "issue (non-blocking): Best-row highlighting recomputes the maximum over all history, ignoring the eligibility filter used by run_loop. Rendering the existing invalid-baseline test's actual results highlights the ineligible first iteration on a tie, while the explicit Best summary and best_description correctly identify the eligible second iteration; this is inconsistent emphasis, not an incorrect selected description or authorization to apply the invalid baseline.",
-          "fix": "Filter the existing highlight calculation to eligible history entries, treating legacy entries without eligible as eligible and highlighting no row when none qualify; extend the existing invalid-baseline creator test to render its actual HTML and assert the highlighted iteration matches the eligible winner."
+          "dimension": "omission",
+          "anchor": "skill-dev-toolkit/skills/dogfood-skill-testing/SKILL.md:184",
+          "text": "note (non-blocking, unfixed): The new informed-workflow paragraph is an executable rule without the gate comment required by this review's skill-lens contract. Its behavior and informed/blind separation are specified, so this is a registration omission rather than evidence of wrong execution.",
+          "fix": "Wrap the existing informed-workflow rule in a named gate comment using the repository's existing registration convention; retain the rule text and existing checks rather than adding another runtime mechanism."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "/private/tmp/toolkit-branch-reason-20261107/project/caller-fresh/decisions.json:11",
+          "text": "issue (blocking acceptance, unfixed): read/F1's original why covers creative, prose, or non-deterministic output, but its exclusion reason establishes only the creative branch and reuses that reasoning verbatim for simulate/F1, whose why has different coverage. The entry's prose parenthetical qualifies creative/non-deterministic output, whereas the ensemble reference separately names prose; the reason never explains what happens for ordinary deterministic prose, leaving the required original-coverage argument incomplete.",
+          "fix": "Correct read/F1's existing reason to distinguish ordinary deterministic prose from the creative/non-deterministic entry exclusion: explain that ordinary prose is not independently banned at entry, and that creative/non-deterministic targets stop before the delegated Q1 rule. State why neither branch supports the original shared-condition action conflict; keep the exclusion if source review supports it and use claim-specific reasons for read/F1 and simulate/F1. Regenerate the separate replay report using the existing merger without editing frozen raw inputs, adding runtime clauses, fields or parsers, or treating this correction as fresh Claude validation."
         }
       ],
       "notes": [
-        "Reviewed the cumulative branch against current intent/spec/plan and the accepted preview amendment, not only W14. Original Acceptance11 remains failed historically; this verdict does not certify repaired Claude judgment, cross-model accuracy, installed routing or completion of human review.",
-        "For the highlight finding, reran four existing optimizer-authority cases (4 passed, 43 deselected in 0.24s) and ran the existing generate_report.py CLI on their actual saved results. Evidence: /private/tmp/toolkit-preview-closeout/code-existing-test-artifacts/invalid-baseline-report.html:124 and :158; underlying JSON is in test_creator_optimizer_authori0/results/2026-11-05_152547/results.json beneath that directory. No new executable probe was written.",
-        "No repository file was modified; HEAD was verified as the review target with clean status. No complete package suite, change-store probe, Claude CLI, provider/model request, installation, publication or merge was performed; finalization checks remain required."
+        "Formal Round 2, same reviewer and review episode; the intent-pin fix changes functional digest to a3adf6cb9483f3816ef0a99c4d722f42cbfe561c while runtime remains unchanged. Round 1 is preserved as closing-skill-round1.yaml. Both earlier findings remain unfixed, including the important reason-coverage gap; one important plus one nit maps to PASS_WITH_NOTES. Acceptance 7/9/11 remain partly; no release or actual-usability upgrade is made.",
+        "The finding concerns actual output reason completeness, not a demonstrated wrong disposition or a demonstrated runtime instruction defect. Current Step 6 lines 164-179 already require preserved coverage and source-grounded reasons; another prompt expansion is not justified by this evidence.",
+        "Round 2 inspected only 7847..50d fix provenance and the supplied target evidence; the 27-file source assessment from Round 1 is retained, not rerun. Existing failure, native-follow-up, cost and profile counts remain; host-default/unverified with null model/effort overrides. No tests, full suite, probe, host/model call, network, install, publication, commit or repository edit was performed by this reviewer."
       ],
-      "vendor": "codex",
-      "model": "unknown"
-    },
-    {
-      "reviewer": "/root/preview_closing_skill",
-      "lens": "skill",
-      "reviewed_sha": "4cbf85a8841d7d52393a8bb4058284755e108e25",
-      "review_target_sha": "910fe5b8ea12f9e67e8884d6d7378ec18a714df3",
-      "verdict": "PASS",
-      "dimension_scores": {
-        "omission": "PASS — The cumulative live instructions specify required inputs, caller dispositions, missing-source stops, model-identity qualification, cold-entry paths and the new human-review requirement; report production retains the notice for every valid verdict.",
-        "ambiguity": "PASS — Confirmed means caller judgment rather than completed human review; confidence, eligibility, indeterminate results and the 5%-to-below-10% marginal interval have distinct operational meanings.",
-        "inconsistency": "PASS — Entry instructions and delegated description, grading, refactor, tuning and dogfood authorities agree on the repaired boundaries. The current preview obligation explicitly preserves the historically failed original Acceptance 11 and does not reopen its trial window.",
-        "incorrect-fact": "PASS — The merger's required decisions, hashes, statuses, report populations and exit meanings agree with its live instructions. The preview neither certifies unobserved detector identity nor claims the known original-claim failure was repaired.",
-        "missing-population": "PASS — Token summaries distinguish captured observations from loaded runs, preference readiness counts usable records separately from pairs, and the native campaign states that repeated candidate instances are not independent calibrated examples or accuracy measurements.",
-        "user-judgment-leak": "PASS — The added human check discloses a consequential usage limit accepted by the user; it does not ask the user to settle implementation or reviewer correctness. Existing original-claim eligibility remains an agent duty before report generation.",
-        "deletion-first": "PASS — The cumulative repairs reuse existing runtime roles, entry points, report limits and shared authorities. The advisory obligation is satisfied by one report notice and its live instruction/guide mirrors; no smaller equivalent shape was identified."
-      },
-      "findings": [],
-      "notes": [
-        "Independent focused verification at the exact target: 29 structure/metadata/policy tests passed in 0.38s and 56 merger CLI tests passed in 1.78s, using the existing Python with -B and no pytest cache. No complete package suite or change-store probe was run.",
-        "This verdict judges current-scope instructions and artifact contracts. The original Acceptance 11 remains failed; historical Claude judgment, cross-model reliability, installed-host activation and a full standalone dogfood pass are not established by this review. No new workflow/model trial was performed.",
-        "Reviewer identity: /root/preview_closing_skill; native profile host-default/unverified; model override null; effort override null; backend unknown. No other closing reviewer's verdict was read and no repository file was edited."
-      ],
-      "vendor": "codex",
-      "model": "unknown"
+      "reviewer": "/root/loom_resume_skill",
+      "vendor": "openai",
+      "model": "host-default/unverified"
     }
   ],
   "findings": [],
   "selection": null,
-  "intent_confirmed_sha": "602f15eb44405babee812ddc8dc589cfc80bce7b",
-  "tested_commit": "5eec1ad63f691dbe350935671af538a33110d8dd",
-  "reviewed_commit": "910fe5b8ea12f9e67e8884d6d7378ec18a714df3",
+  "intent_confirmed_sha": "31a94eeb92f1a0b13b3e38726aae636f0c9ea3d1",
+  "tested_commit": "e634669de4c72aea19de7c12b66537f3e79968a9",
+  "reviewed_commit": "50d274ceffcc4bc7266727a2006b72f0766d4f49",
   "acceptance_status": [
     {
       "acceptance": 1,
@@ -113,7 +135,7 @@
     },
     {
       "acceptance": 7,
-      "status": "works"
+      "status": "partly"
     },
     {
       "acceptance": 8,
@@ -121,7 +143,7 @@
     },
     {
       "acceptance": 9,
-      "status": "works"
+      "status": "partly"
     },
     {
       "acceptance": 10,
@@ -129,7 +151,7 @@
     },
     {
       "acceptance": 11,
-      "status": "works"
+      "status": "partly"
     }
   ]
 }
