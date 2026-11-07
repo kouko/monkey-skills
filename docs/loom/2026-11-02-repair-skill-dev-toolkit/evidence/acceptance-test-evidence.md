@@ -1958,3 +1958,59 @@ The interpreter above ran `-B -m pytest skill-dev-toolkit/tests/test_creator_com
 ### Outcome
 
 - **11 works under the newly accepted preview scope; original Acceptance11 remains fails.** This result warrants only further current-scope closing review, not a claim of stable cross-model operation, repaired Claude judgment, completed human review, installation or publication. Canonical report mirrors all11 current intent lines verbatim and preserves the old failed guarantee in a separate section.
+
+## Current evidence index — independent re-run 2026-11-07 at b651d318643a96f08b67aa1695ec1ccc7fdbfe46
+
+The dated re-run section appended at the end is current. Earlier sections remain historical, including failed real-host results and the narrower preview acceptance; none is reclassified by the current native replay.
+
+## Re-run on 2026-11-07, at b651d318643a96f08b67aa1695ec1ccc7fdbfe46 — independent acceptance A
+
+### Provenance, setup, and limits
+
+- Independent tester did not implement. Station supplied newly created clean worktree `/private/tmp/toolkit-branch-reason-accept1`; initial `git status --short` empty and `git rev-parse HEAD` returned the exact SHA above. Reports were edited only in owning worktree `/private/tmp/toolkit-branch-reason-verify1`.
+- Read root README and toolkit README. Root clean setup calls for a venv plus dependency installation; current authorization excludes installation. Reused existing `/Users/kouko/.conda/envs/dbt-redshift/bin/python3` with `-B` and `PYTHONDONTWRITEBYTECODE=1`. Actual local stdlib planner/merger and focused pytest load from the fresh source tree. This is source-checkout setup, not marketplace installation or host activation.
+- Current intent Acceptance11 restores useful real-host quality. The prior report is retained verbatim below the new current report as historical preview material. All prior evidence above remains unchanged except an index; historical failures and counters/costs are not regraded or reset.
+- Inspected full fix diff `5740ab10c..50f9d5de8`: only toolkit CHANGELOG and consistency-check SKILL Step6 items2–3. No Python, schema, tests, fixtures or other skill authorities changed. This supports the carried-over rows below, but not carrying over prior preview AC9/11 as current quality passes.
+- Profile `host-default/unverified`; model override null, effort override null. Parent metadata is not child-runtime evidence. No paid CLI/API, network, package install, publish, merge or product repair. No important dismissed finding was supplied.
+- Full suite not rerun. Station reports repository715/toolkit228/adversarial5 passes with logs `/private/tmp/toolkit-branch-reason-20261107/{repository-suite,toolkit-suite,adversarial}.log`; these are station-supplied mechanical evidence, not this tester's semantic findings or proof of completed finalize-review. Package-tests/finalize-review are not user-skipped; absent real usability evidence prevents asserting acceptance/attestation completion.
+
+### Commands and observations
+
+From the clean repository root:
+
+`PYTHONDONTWRITEBYTECODE=1 /Users/kouko/.conda/envs/dbt-redshift/bin/python3 -B -m pytest -p no:cacheprovider skill-dev-toolkit/skills/skill-consistency-check/scripts/test_merge_report.py -k 'reviewed_candidates_selected or compatible_exceptions or reviewed_ambiguity or limits_and_models or model_mismatch' -q`
+
+Result: `11 passed, 45 deselected in 0.56s`, exit0. These are criterion-specific selected/excluded/indeterminate/model/report checks; their decision text is test input, not a semantic oracle.
+
+From clean tree `skill-dev-toolkit/skills/skill-consistency-check`, using the same interpreter/environment:
+
+1. `scripts/plan_groups.py /private/tmp/toolkit-branch-reason-20261107/project/target` redirected to `/private/tmp/toolkit-branch-reason-20261107/acceptance-a/plan.json`: exit0.
+2. `scripts/merge_report.py --target /private/tmp/toolkit-branch-reason-20261107/project/target --plan /private/tmp/toolkit-branch-reason-20261107/acceptance-a/plan.json --findings /private/tmp/toolkit-branch-reason-20261107/project/read-1.json /private/tmp/toolkit-branch-reason-20261107/project/simulate-1.json --decisions /private/tmp/toolkit-branch-reason-20261107/project/caller-fresh/decisions.json --model unknown --out /private/tmp/toolkit-branch-reason-20261107/acceptance-a`: exit1, prints report path and `needs-revision`. Report retains two confirmed, seven excluded, zero indeterminate, unknown model and qualifications. The merger consumes the audited original decisions; no input or existing report was rewritten.
+
+Source-first audit of every original `why`, current SKILL Step6, caller-fresh decisions/report JSON/report Markdown/merge execution, and full cited source files is preserved at `/private/tmp/toolkit-branch-reason-20261107/semantic-a.md`. Seven PASS, two QUALIFIED, zero confirmed material FAIL. Disputed simulate/F4 and F5 are not gold-label errors. Frozen read/F1 overstatement is excluded; output-token factual and selected-branch permission/classification positives remain. This fixture does not independently establish action-conflict or named-field recall. The caller-fresh execution receipt records unchanged source hashes and byte-identical raw copies; profile remains unverified.
+
+### Acceptance rows
+
+- **1 works, carried over:** complete prior creator packaging/aggregation/optimization evidence remains applicable; two-file diff touches none of those surfaces.
+- **2 works, carried over:** equivalence executable, order rules and fourteen order cases unchanged.
+- **3 works, carried over:** blind truncation/full-read/selection/invalid-input paths and identity map unchanged.
+- **4 works, carried over:** preference export, record/pair counts, readiness and original records unchanged.
+- **5 works, carried over:** the original eight repaired instruction authorities remain unchanged; caller reconciliation wording does not alter their policies.
+- **6 works, carried over:** planner, report bounds, grouping and scope notices unchanged. Actual fresh planner/merge also loaded successfully, without claiming a renewed large-target test.
+- **7 partly, re-tested:** eleven affected deterministic checks plus actual planner/merger pass their declared behavior. Current reason audit improves local evidence but does not prove actual-host quality; no completed acceptance attestation is claimed. The automated suite runs before formal acceptance and blocks on failure, but cannot settle semantic quality alone.
+- **8 works, carried over:** creator eligibility, contextual exceptions, validation and packaging refusal unchanged.
+- **9 partly, re-tested:** all nine frozen claims reviewed against sources; exclusion of frozen overstatement and honest unknown-model reporting observed. Two disputed reasons qualified; original failed Claude host not rerun, so full real-case obligation remains open.
+- **10 works, carried over:** cold-entry historical-eval/model/timing/setup/stop policies and output formats unchanged; prior complete missing-input cases retained.
+- **11 partly, re-tested:** native caller exclusions and supported positives provide bounded useful-result evidence; no fresh Claude, installed-host trigger, complete model workflow, or repaired historical-host claim is established. Original Claude failure remains failed. Current actual-usability acceptance remains incomplete, not eleven preview passes.
+
+No skipped-by-instruction step was found in the supplied current intent/plan. The user excludes additional paid host work in this authorization; that boundary is not a waiver of the actual-quality requirement. No publish/install/merge or external review was attempted. No new cost or retry-window reset.
+
+### Integration of independent audit B — 2026-11-07
+
+New evidence `/private/tmp/toolkit-branch-reason-20261107/semantic-b.md` rates the native result QUALIFIED. Source-based integration is `/private/tmp/toolkit-branch-reason-20261107/semantic-reconciliation.md`. This is evidence reconciliation, not another blind audit or execution. Profile host-default/unverified; model/effort overrides null. Original audits A/B, product sources, caller outputs and raw candidates are unchanged.
+
+Important concern remains open: read/F1's correct excluded status has an incomplete original-coverage rationale. Its why includes prose separately; SKILL.md:358-360's prose example inherits creative/non-deterministic scope, while equivalence-check-protocol.md:17 permits prose artifact types. The caller fixes the creative branch without explicitly analyzing ordinary deterministic prose. Its narrower delegation reconciliation is defensible but does not demonstrate review of the full asserted coverage. The literal reason does not expressly ban all prose, so audit B's blanket-ban paraphrase is not adopted as a direct quote or established fact. No standalone-prose conflict or wrong excluded label has been established; incomplete source-grounded reasoning is itself material to this change's contract.
+
+Identical reasons for read/F1 and simulate/F1 obscure different why coverage; the read/F2/simulate/F3 duplicate adds marginal coverage absent from the latter's why, although it still covers the actual failing branch. Audit A's initial PASS/QUALIFIED grades remain historical independent judgments; integrated trial quality is QUALIFIED, not unqualified PASS. Simulate/F4/F5 interpretations remain legitimately disputed; no majority vote or nine-label gold oracle resolves them. Root has not dismissed the important concern.
+
+AC7/9/11 remain partly; none upgrades. Correct frozen exclusion and supported factual/classification witnesses do not prove complete reason fidelity, repaired Claude behavior or actual-host usability. No new cost, counter reset, execution, paid retry, prompt expansion, source repair, install, publication or merge. The authorized one-candidate window closes after this evidence integration.

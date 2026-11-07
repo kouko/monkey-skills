@@ -649,3 +649,119 @@ measured improvement or release-ready fix. Current actual-usability
 Acceptance11 is unmet. No new closing attestation, publication, installation
 or merge is performed. Historical preview evidence remains visible with an
 explicit superseded-scope notice rather than being silently reclassified.
+
+
+### W16 calibrated branch-preservation implementation
+
+User2026-11-07「進入新方案實作吧」authorizes one actual replacement candidate
+and native recorded-data replay after source calibration. This renews local
+implementation, not the closed paid window or any retry/review count. Actual
+Acceptance11 and all previous failures remain. No external CLI/API call,
+installation, publication or merge is performed in this continuation.
+
+Fresh spec+adversarial and plan-lens reviews PASS. The whole-content search
+covers87 cumulative changed text files and7 live surfaces: caller SKILL,
+two detector references, merger, existing text/merger tests and frozen-case
+manifest. Class: antecedent/coverage substitution and action-only narrowing.
+Only Step6 owns the fix; historical evidence and fixture/README mentions stay
+unchanged. The implementer replaces items2-3 instead of appending more rules:
+establish original conditions/coverage/categories/scope before reconciliation,
+keep selected branches fixed, separate action from non-action allegations.
+The same reason field and statuses remain; no Python, field, parser, detector,
+fixture, new runtime role or test marker is introduced.
+
+Actual two-file implementation: SKILL and existing Unreleased CHANGELOG entry,
+19 lines added/21 removed across both. Combined caller block185→151 whitespace
+words, below pre-W15 ceiling153. No tests change. Existing W15 real host failure
+is behavioral RED; focused65 tests pass2.52s but are not semantic GREEN.
+The implementer's Git add/commit was blocked by sandbox index.lock access;
+root completed the exact authorized commit ecabc85d8 after privacy scan. This
+is a local Git permission recovery, not a failed product or silent retry.
+
+Current3.59 sync-trunk rebases onto693cee88601b38b02e7022d4942ef3ea7f4a5de4.
+Only upstream Obsidian/research/release files differ; toolkit content does not.
+Rebased implementation is50f9d5de8; operative live intent/spec references are
+re-pinned, while historical tested SHAs remain unchanged. Final tested content
+is b651d318643a96f08b67aa1695ec1ccc7fdbfe46. Pre-sync commit remains reachable
+through local archive/toolkit-branch-reason-pre-sync-20261107. A second owner
+sync reports up to date. Required reviewer floor computes2, but that is not
+itself a review verdict or attestation.
+
+Post-sync mechanical checks from the clean verification worktree: repository
+715 passed52.73s; toolkit228 passed18.70s; existing graduated adversarial
+program scripts/test_preferences_single_choice.py5 passed0.10s. The program
+continues to pass without changed coverage or execution failure; no adversary
+redispatch or new prose-marker program is earned by this fix. These checks
+prove mechanics only. Logs and exact source identity are under
+/private/tmp/toolkit-branch-reason-20261107/.
+
+Fresh native executor receives only the frozen21-file target,2 raw files and
+current runtime snapshot, not calibration/labels/reviews/history. It actually
+runs the planner and merger, reads emitted JSON/Markdown, and returns2 confirmed,
+7 excluded,0 indeterminate;2 retained findings, needs-revision/exit1. Confirmed
+items are simulate/F2 and simulate/F6. read/F1 is excluded. These are observed
+choices, not all-nine gold or a measured model-accuracy gain. In F6 it now
+addresses the selected accept-as-is permission/classification branch rather
+than defeating it with editing alternatives; the underlying final label still
+has legitimate interpretive uncertainty. Fresh source audits judge reasons,
+not agreement with a predetermined disposition vector.
+
+The executor's first long inline command is guard-blocked once; it writes
+inspectable local replay files and executes successfully. Preserve that
+recovery, not a claim of perfect first-attempt execution. The helper files
+are temporary test artifacts under project/caller-fresh/, not production
+runtime mechanisms. Parent/native model identity is unobserved; outputs keep
+model unknown, profile host-default/unverified and no overrides. No new
+installed-host activation, fresh detector run or Claude validation occurs.
+
+Independent actual merger reproduction returns exit1 and byte-identical JSON
+and Markdown. All23 project inputs and107 runtime snapshot files retain their
+preimages. Original output files are frozen at verification.json; no correction
+is applied to manufacture a pass. Evidence root contains candidate.json,
+surface-scan.json, implementation.md, spec-review.yaml, plan-review.yaml,
+project-preimages.json, runtime-preimages.json, verification.json and actual
+project/caller-fresh/{decisions.json,consistency-report.json,
+consistency-report.md,merge-execution.json}.
+
+
+Closing-review acceptance testing uses a newly created clean b651d318 copy.
+The independent tester runs11 affected merger tests and actual planner/merge
+reproduction, leaving the complete suite to its owner. It carries unchanged
+criteria forward with diff-grounded reasons and replaces the canonical report's
+current header/rows while retaining the entire prior preview report below it.
+Current result:8 works; Acceptance7,9,11 partly. Fresh Claude/installed-host
+quality is not inferred from a native recorded-data replay.
+
+Two fresh sequential source audits are distinct from formal branch-end
+reviewers. A reports seven PASS/two QUALIFIED reasons and no confirmed major
+status error. B reports QUALIFIED with an important read/F1 reason-coverage
+omission: the excluded label matches the sole fixed expectation, but its
+creative-branch scope explanation does not explicitly adjudicate standalone
+prose. Copied reasons also hide differences between the read/simulate originals.
+Most other labels remain defensible source readings, not a complete answer key.
+The tester rechecks B's concern rather than adopting it by vote: a creative
+counterexample can help reject an overstated universal, but the actual reason
+never makes that coverage argument or addresses the general-prose alternative.
+The important completeness concern therefore stays open. It is not proof of
+an incorrect excluded label, and is not dismissed as mere style.
+
+Records semantic-a.md, semantic-b.md and semantic-reconciliation.md preserve
+the initial disagreement and its source-grounded integration; neither initial
+audit nor the raw/replayed outputs is rewritten. Canonical acceptance report
+and appended English evidence now disclose the unresolved reason gap. Native
+model identity remains unknown with host-default/unverified and no overrides.
+No native semantic PASS, accuracy improvement, or repaired Claude claim is
+earned by this one candidate. Local stage accepted=false; close this bounded
+candidate without another source prompt clause, paid retry or conditional full
+workflow. Existing costs/counters and the earlier failed windows remain intact.
+
+Build mechanical hand-off is715/228/5 passing at b651d318, focused65 passing,
+base693cee88601b38b02e7022d4942ef3ea7f4a5de4, sync up to date, two runtime
+files changed, no adversary re-dispatch and no dismissed important finding.
+Closing-review stops at incomplete actual-usability acceptance; no formal
+passing branch-end review or fresh attestation is claimed, and the old preview
+attestation is stale for this content/scope. No finalization, Ship or merge is
+attempted. The implementation is committed but remains an unvalidated repair
+candidate; local execution and source-audit qualifications do not prove release
+readiness. This continuation adds zero paid CLI/API calls to the recorded
+USD2.8133962 batch estimate (not an all-history bill or a hard cap).
