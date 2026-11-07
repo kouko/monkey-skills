@@ -964,3 +964,80 @@ training/history is not asserted. Fresh plan reviewer PASS, no simpler
 shape, at plan-simplicity.md. TDD RED command inspects preserved actual
 W16 replay: read/F1 expected excluded, actual confirmed; candidate not yet
 written. This is behavioral RED, not text matching or a fabricated baseline.
+
+
+### W17 single candidate and three frozen native executions
+
+Candidate commit1a7c51c29ad43df55690fb4717f16abdc439ec82, functional identity
+42196723d124df51bde1d9298f78e3a57e965623. Combined caller items2–3 shrink
+151→143 whitespace words, below153; no Python/schema/test/fixture/role change.
+Only SKILL items2–3 and the existing first Unreleased entry differ. All107
+runtime files were compared against the candidate tree before execution.
+Initial copied runtime still had old CHANGELOG; preparation check caught it,
+it was updated and all107 files rechecked/frozen before any executor ran.
+Independent implementer focused tests83 passed3.65s, quick_validate and diff
+check pass. Toolkit228 passed19.62s; repository715 passed54.52s and graduated
+adversarial5 passed0.10s. sync-trunk first BLOCKs because original tree has
+candidate changes and preserved unrelated untracked work. After candidate
+commit, the existing clean verification worktree runs it successfully:
+branch contains origin/main693cee88601b38b02e7022d4942ef3ea7f4a5de4; no
+content change. Branch restored to original worktree. Required post-sync
+repository715 passed53.84s and existing adversarial5 passed0.10s. Existing
+adversarial program remains applicable and passing; no redispatch earned.
+
+Three fresh sequential native caller executions consume identical runtime
+and original inputs, with independent contexts and host-default/unverified
+profiles; no exact backend-model sameness is asserted. Each handles original
+nine saved detector claims, then the two new authored evaluation claims.
+All three yield original2 confirmed/7 excluded/0 indeterminate, K0/1/0,
+M1/0/0. Original read/F1 is excluded in all three. This is33 repeated decision
+instances over11 distinct claims, NOT an accuracy estimate or11 gold labels.
+All205 input/provenance/runtime preimages unchanged after execution;19,20,19
+new output files frozen respectively. Root separately replays all9 mergers;
+every JSON and Markdown output is byte-identical. Merger exits1/0/1 refer to
+target needs-revision/pass/needs-revision, not caller-quality scores.
+
+Run1 request had missing slash notation in target paths. Executor asked
+before inventorying parent; parent supplied exact child paths in the same
+attempt. ENOENT and correction retained, no source or answers changed.
+Runs2/3 use corrected notation. No completed verdict is edited or retried;
+original outputs remain immutable. No additional outside-host CLI/API trial,
+installation, publication or merge added; native host billing unmeasured. Prior
+three-Claude estimateUSD4.1159478 unchanged. No fourth local execution or
+second candidate is authorized. Earlier W16 native calls, old windows,
+failures and formal review counts remain separate and retained.
+
+
+### W17 final decision: reject and restore prior product bytes
+
+## Decision
+
+Reject the single candidate as satisfying the promised full-original reason-fidelity repair. This is not a demonstrated wrong excluded label. All three original read/F1 outputs exclude the overbroad original, both held-out controls receive source-supported dispositions, and real non-action positives remain. Nevertheless all three reasons characterize the whole alleged target as entry-excluded, while its independent prose disjunct is not barred merely for being prose. That source-applicability summary is central to this specific repair, not an incidental demand for wording or universal zero errors. A better argument constructed by a reviewer does not repair the original artifacts. No second candidate or fourth native execution follows.
+
+## Evidence and adversarial reconciliation
+
+Candidate1a7c51c29ad43df55690fb4717f16abdc439ec82 changes only existing Step6 items2–3 and the first Unreleased entry;151→143 words within153. Frozen runtime107 files and98 input/provenance files remain unchanged. Three independent sequential native executions on identical bytes produce33 instances of11 distinct claims; native profiles and exact backend identity are unverified. All nine real merger re-executions reproduce JSON and Markdown byte-exactly. Expected hold-out evidence was fixed before implementation and hidden from implementer/executors; historical sources are real, while the two new candidates are independently authored evaluation inputs, not detector discoveries. These controls are new to this experiment, not proven absent from all unknown training/prior history.
+
+Initial blind audit A gives27PASS/6QUALIFIED/0FAIL, B26PASS/7QUALIFIED/0FAIL. Root deliberately attacks their read/F1 coverage with the unchanged original union and actual source lines, without sharing either audit with the other reviewer. Both retain their original reports and add separate stress supplements. A revises three F1 PASS ratings to QUALIFIED (24PASS/9QUALIFIED/0FAIL), preserving support for a general disjoint-scope interpretation. B revises those same three to FAIL for substantive reason fidelity (23PASS/7QUALIFIED/3FAIL), not wrong disposition. This disagreement is retained; no majority score or accuracy rate is inferred. Both acknowledge the original audits themselves expanded the qualified prose example too broadly.
+
+Root verifies: original why explicitly includes creative OR prose OR non-deterministic. Entry SKILL.md:358–360 gives prose as a parenthetical under creative/non-deterministic, not an independent all-prose ban; equivalence protocol:119–123 uses only the qualified predicate. Protocol:17 permits prose as an ordinary compared artifact type. Entry:9–12's prose tightening refers to instruction/input text and is NOT used as proof about output type. Ensemble:3–4 and entry:102–104 support Q1 delegation, but cannot turn a prose-only target into an excluded creative target. For otherwise eligible deterministic prose, the original abort premise is unsupported; that is distinct from saying the target is outside entry scope. Run1 says the original treats an excluded target as admitted; Run2 calls the alleged target outside scope and the complete claim creative-target; Run3 says the unchanged claim requires an out-of-scope Q1 target. Those are the actual explanations, unchanged. Their blanket applicability statements leave the very full-coverage issue under test unresolved. A defensible final label does not meet the preregistered complete-source-reason obligation on its own. Root adopts the stricter reason-fidelity objection for this targeted repair, while preserving A's contrary materiality assessment.
+
+Other interpretations remain limited: both auditors qualify Q1-local versus global PROCEED; B also qualifies run1's extra clarity counterexample. Previous numeric-warning pragmatic-versus-vacuous-conditional disagreement remains historical evidence, not settled by current audit votes. No nine-label oracle is fabricated. Supported golden permission/classification tension and held-out metadata facts demonstrate that the experiment did not simply exclude every claim. No detector recall, cross-model reliability, host repair or release readiness is claimed.
+
+## Disposition of code and workflow
+
+The rejected candidate commit and143-word runtime snapshot are retained. Revert only its two product files to their exact pre-candidate bytes (573c8697, same functional caller151-word block as before W17). This is rejection cleanup, not a second candidate. Preserve all inputs, expectations, outputs, audits, earlier failed trials and unrelated user work. The new evidence archive is passive test data, not a product interface, parser, role or additional runtime field.
+
+Build stops on the material semantic objection because the accepted experiment permits one candidate. Do not hand off a failing candidate to Closing Review or Ship. This is a dependent gate not reached, not a user-requested skipped step. No third formal reviewed functional digest is consumed; the earlier two and all older episodes remain. Canonical acceptance stays its previous partial historical record; no row is elevated and no attestation is hand-edited or regenerated. Existing attestation does not certify this new intent/plan or experiment. Publication, install and merge remain unauthorized.
+
+Mechanical evidence is positive but insufficient: focused83 passed3.65s, toolkit228 passed19.62s, repository715 passed54.52s; clean sync confirms source includes main693cee88601b38b02e7022d4942ef3ea7f4a5de4; required post-sync repository715 passed53.84s and graduated adversarial5 passed0.10s. Rejected trial has no code test failure or fabricated source citation claim. Restoring exact prior bytes does not create a new implementation to retest. Final diff/JSON/provenance checks verify cleanup and archive.
+
+No outside-host CLI/API trial, installation, publication, merge or model change added. The three earlier Claude estimates totalUSD4.1159478, unchanged; native billing is unmeasured. The conditional13-file Claude full case remains unexecuted. All counters and failed-task continuity remain.
+
+## Durable reproduction evidence
+
+Archive: docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/w17-scope-first-results.json. It preserves candidate patch/commit, all source refs and hashes, exact new control JSON and private preregistered expectations, all33 actual decisions, nine plans and report hashes, three execution records, mechanical results, and four unmodified audit/stress documents. Original nine-candidate raw JSON stays in the existing frozen repository fixture. Runtime/target sources can be reconstructed from retained Git references. Temp originals and comparison artifacts remain /private/tmp/toolkit-scope-first-20261107/. No failed output has been corrected.
+
+This negative experiment does not prove that source-first reasoning is impossible or the architecture exhausted. It shows this single instruction replacement did not deliver fully faithful original-scope reasons, despite repeatable labels and green tests. The accepted bounded outcome is a documented rejection, not repaired software.
+
+Archive SHA256: dac5102f2727dfe685aa548c251bad5023b4662d69d1b196c99972bc07305392

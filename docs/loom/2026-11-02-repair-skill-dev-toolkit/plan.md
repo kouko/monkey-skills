@@ -336,3 +336,5 @@ charter: 1.1
 
 42. W15 closes with two semantic FAIL audits; source315ac8b3 unvalidated. No paid retry/full case. Preserve prior counters/costs; aggregateUSD2.8133962 includesUSD1.3697738. Native unchanged labels and715/228/5 checks do not satisfy Acceptance11. Evidence: native-ten-rounds.md.
 43. User2026-11-07 authorizes one calibrated replacement/native replay, same failed task; preserve all counters. No paid host test/install/publish/merge. Existing W15 supplies behavioral RED; judge reasons, not nine fixed labels. Claude/Acceptance11 remains unverified.
+
+44. W17 single candidate1a7c51c2 rejected after three native executions and two blind audits plus source stress. Labels stable; full-original applicability reasons remain qualified/failed. Restore only its two product files; preserve candidate and all evidence. No second candidate, extra external test, Closing Review handoff or Ship. Earlier two formal digests and all failure/retry/cost records remain; no episode reset. Evidence: native-ten-rounds.md and w17-scope-first-results.json.
