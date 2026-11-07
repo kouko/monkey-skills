@@ -839,3 +839,27 @@ remainingUSD5.1866038 (not a hard bill cap). Runtime/data are fixed and do not
 contain answer keys or prior reports. Any execution requires fresh explicit
 consent for this private-data transfer and spend; a prepared packet is not
 consent. No installation, publication or merge is authorized by preparation.
+
+
+The next owner attempt then fails closed on intake.intent-version: W16's
+already-authorized Constraints record was committed without updating the old
+confirmation byte pin. Root repairs only intent_confirmed_sha, using the
+user's existing explicit implementation/Loom-continuation consent; all11
+Acceptance lines and the normalized intent body remain byte-identical.
+New confirmation commit e634669de4c72aea19de7c12b66537f3e79968a9 pins
+31a94eeb92f1a0b13b3e38726aae636f0c9ea3d1. No new requirements, episode,
+failed-task count or paid boundary is invented. Because intent is functional
+content for the digest, this is formal Round2 fix verification, not a Round1
+metadata continuation. Owner sync is up to date. Build re-runs repository715
+passed50.49s and existing graduated adversarial5 passed0.10s; runtime code
+still matches the151-word candidate exactly, so no new native/model replay
+or program redispatch is earned by the pin fix.
+
+A fresh independent acceptance tester uses a newly created clean e634669d
+copy, successfully loads the existing planner/merger and byte-reproduces the
+stored report JSON with the same raw hashes. It checks the pin-only fix and
+records per-row carry-over rationale for all11 criteria:8 works,7/9/11 partly.
+The current canonical Tried-on identity is now e634669d with one11-row table;
+history stays in its exact separate snapshot. The old native reason gap,
+unknown model and unrepaired historical Claude failure remain open. No
+inspection, approval or test result is reset by this administrative repair.

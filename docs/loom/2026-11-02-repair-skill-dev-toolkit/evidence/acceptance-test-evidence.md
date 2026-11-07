@@ -2026,3 +2026,36 @@ New report: needs-revision, model unknown, two confirmed/seven excluded/zero ind
 Supported positives remain the same-quantity output-token factual tension (protocol:13-24 “Within ±20%” and :83-91 “Even if both layers pass” with >30% reduction) and selected golden accept-as-is branch versus identical-output anti-pattern (golden protocol:104-113,187-192). Other interpretation limits from both prior audits remain. Full follow-up analysis: `/private/tmp/toolkit-loom-resume-20261107/native-followup-review.md`.
 
 AC7/9/11 remain partly; important reason-quality gap stays open and is not dismissed. Native repetition does not establish repaired Claude behavior, full-host usability, general action-conflict/field recall or release readiness. No runtime/raw/test/grade change, paid CLI/API/network, installation, commit, publication or merge. Owner reruns mechanical checks separately.
+
+## Re-run on 2026-11-07, at e634669de4c72aea19de7c12b66537f3e79968a9 — independent acceptance B, confirmation-pin verification
+
+### Provenance and exact fix boundary
+
+- Independent acceptance witness; not the implementation author or a fresh model-test caller. Station-created clean worktree `/private/tmp/toolkit-loom-resume-accept2` had empty status before and after execution; exact HEAD was the full SHA above. Writing worktree is `/private/tmp/toolkit-branch-reason-verify1`.
+- Read root and toolkit READMEs, current intent/spec/plan, canonical report, earlier evidence and native-followup integration. Full `git diff 7847e804..e634669d` changes exactly one intent line: `intent_confirmed_sha` from b8f164a597911f2e489f472d8f4222fe447d6689 to31a94eeb92f1a0b13b3e38726aae636f0c9ea3d1. A direct normalized-content comparison excluding status/pin was equal; all eleven Acceptance lines and constraints are unchanged. `git diff` over the complete toolkit runtime is empty. The existing151-word block is therefore byte-identical, with no new source candidate.
+- This is formal Round2 fix-verification evidence for the stale confirmation pin, not another failed-caller iteration or cost/retry reset. User2026-11-07 implementation and Loom-continuation authorization is retained; no new outcome is asserted. Profile host-default/unverified; model override null, effort override null.
+
+### Mandatory clean setup and reproduction
+
+- README source setup normally creates an environment and installs requirements. Current authorization excludes installation; reused existing `/Users/kouko/.conda/envs/dbt-redshift/bin/python3`, `-B`, `PYTHONDONTWRITEBYTECODE=1`. The actual stdlib planner and merger loaded and executed from the clean source copy. This verifies local source usability, not installation, routing or live model quality.
+- From clean `skill-dev-toolkit/skills/skill-consistency-check`: `scripts/plan_groups.py /private/tmp/toolkit-loom-resume-20261107/native-followup-1/project/target`, using that interpreter/environment, redirected to `/private/tmp/toolkit-loom-resume-20261107/acceptance2/plan.json`: exit0.
+- Then actual `scripts/merge_report.py --target /private/tmp/toolkit-loom-resume-20261107/native-followup-1/project/target --plan /private/tmp/toolkit-loom-resume-20261107/acceptance2/plan.json --findings /private/tmp/toolkit-loom-resume-20261107/native-followup-1/project/read-1.json /private/tmp/toolkit-loom-resume-20261107/native-followup-1/project/simulate-1.json --decisions /private/tmp/toolkit-loom-resume-20261107/native-followup-1/project/caller-fresh/decisions.json --model unknown --out /private/tmp/toolkit-loom-resume-20261107/acceptance2`: exit1, stdout reports new Markdown path and `needs-revision`.
+- Parsed reproduced JSON equals the stored native-followup report in every field. Nine decisions retain two confirmed, seven excluded, zero indeterminate; both source SHA256 values recompute equal to the supplied provenance. Model unknown and qualifications remain. Raw files, target, decisions and old outputs were not changed. This replay consumes stored judgments; it is no fresh inference, semantic oracle or ninth-label calibration.
+
+### Carry-over review against the entire one-line diff
+
+- 1 works, carried over: creator packaging/aggregation/optimization authorities and executable paths unchanged; prior full command evidence retained.
+- 2 works, carried over: comparator, ordered traces, tolerances and fourteen cases unchanged.
+- 3 works, carried over: truncation/full viewing, identity metadata, label assignment and selection unchanged.
+- 4 works, carried over: preference inputs/export/counts/readiness untouched; originals retained.
+- 5 works, carried over: all eight repaired instruction authorities and applicable contexts untouched.
+- 6 works, carried over: size/grouping/report qualifications unchanged; fresh load/replay supports setup only, not a renewed large-target test.
+- 7 partly, carried over: prior eleven targeted checks remain relevant because no test, code or contract changed. Fresh CLI reproduction confirms artifact mechanics only. No full suite run by this witness; package-tests and finalize-review remain required, executed by the owner and blocking formal acceptance on failure. Their green result cannot establish reason quality.
+- 8 works, carried over: description eligibility, contextual exceptions, validation and packaging refusal unchanged.
+- 9 partly, carried over: scope/exception and unknown-model policies unchanged. Reproduced report is identical; the important read/F1 full-coverage reason gap and copied-reason precision concerns remain, with no renewed historical Claude test.
+- 10 works, carried over: cold-entry historical-data/model/timing/setup/stop paths and output formats unchanged.
+- 11 partly, carried over: useful-result obligation and all native/historical artifacts unchanged. Latest native follow-up stays QUALIFIED; source-supported exclusion and positives do not prove complete reason fidelity, repaired Claude or full-host utility. No important concern was dismissed; the formal reviews retain one important reason gap and two nonblocking nits.
+
+### Preservation and limits
+
+All old evidence, raw output, failures, snapshots, counters and costs remain historical and unchanged. Canonical report is updated to this exact tested tree with one Tried-on line and eleven rows; no historical table is embedded. No repairs to product/SKILL/code/raw/replayed judgments/grades. No extra targeted test was needed for an authorization-pointer-only diff; prior targeted evidence is carried, not reported as newly run. No full package suite, paid host/native caller/model request, network, installation, publish, merge or commit by this witness. Two guard checks confirmed the clean tree remained empty; all report mutations are confined to the two owning acceptance documents.
