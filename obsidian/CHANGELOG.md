@@ -4,6 +4,12 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.26.0] — 2026-11-06 Research video sources
+
+### Added
+
+- Guide optional YouTube source discovery, captions, and source evaluation in `obsidian-research`.
+
 ## [3.25.0] — 2026-11-05 Defuddle skill refresh
 
 ### Added
