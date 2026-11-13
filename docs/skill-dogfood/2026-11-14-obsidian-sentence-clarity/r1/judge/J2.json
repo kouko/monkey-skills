@@ -1,0 +1,42 @@
+{
+  "samples": {
+    "S01": {"sentences": 11, "readability": 4, "flags": [
+      {"n": 1, "type": "P2", "quote": "保存、整理並取用自己讀過與想過的東西的一套工具和習慣", "why": "名詞前的修飾語過長，讀到「工具和習慣」前要先記住一大串"},
+      {"n": 10, "type": "P4", "quote": "缺的是流程裡輸出的那一端", "why": "「輸出的那一端」說法抽象，要停下來想指的是什麼"}
+    ]},
+    "S02": {"sentences": 11, "readability": 5, "flags": []},
+    "S03": {"sentences": 11, "readability": 5, "flags": []},
+    "S04": {"sentences": 13, "readability": 5, "flags": []},
+    "S05": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 12, "type": "STOCK", "quote": "這個問題的答案不是全有或全無", "why": "空泛的總結句，用「不是…」製造對比但沒有新資訊"},
+      {"n": 12, "type": "REREAD", "quote": "所以這個問題的答案", "why": "前文從未提出問題，「這個問題」找不到指涉對象"}
+    ]},
+    "S06": {"sentences": 13, "readability": 4, "flags": [
+      {"n": 7, "type": "REREAD", "quote": "等於只讓遺忘變慢一次", "why": "推論壓縮成一句，要回頭對照上一句才懂為何只變慢一次"}
+    ]},
+    "S07": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 6, "type": "STILTED", "quote": "但是人要用上一則筆記", "why": "以泛稱「人」當主語，讀起來像翻譯腔"}
+    ]},
+    "S08": {"sentences": 12, "readability": 5, "flags": [
+      {"n": 1, "type": "P2", "quote": "分成好幾次複習，而且每次之間隔上一段時間的學習方法", "why": "長串修飾語壓在「學習方法」前，要讀到句尾才知道主幹"}
+    ]},
+    "S09": {"sentences": 14, "readability": 5, "flags": []},
+    "S10": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 10, "type": "REREAD", "quote": "因為搜尋的前提是記得自己存過什麼", "why": "因果跳了一步，要重讀才接上「想不起來」與「搜尋」的關係"}
+    ]},
+    "S11": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 5, "type": "STILTED", "quote": "之後才慢慢變慢", "why": "「慢慢變慢」重複用字，讀起來彆扭"},
+      {"n": 10, "type": "REREAD", "quote": "只要最後想得起來，學習者回想得越費力", "why": "條件句疊上越…越句型，要重讀才分清條件與結論"}
+    ]},
+    "S12": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 1, "type": "P2", "quote": "分散在好幾天、好幾週裡反覆複習的方法", "why": "名詞「方法」前修飾語過長"},
+      {"n": 3, "type": "REREAD", "quote": "遺忘本身有用", "why": "反直覺的斷言沒先交代，讀到後文才懂，需回頭再讀"},
+      {"n": 8, "type": "P1", "quote": "熟悉感會騙人", "why": "抽象的感受被寫成會「騙人」的行動者"}
+    ]}
+  },
+  "rankings": [
+    {"topic": "個人知識管理只進不出", "easiest_to_hardest": ["S04", "S07", "S10", "S01"]},
+    {"topic": "資料倉儲分層與小團隊", "easiest_to_hardest": ["S03", "S02", "S09", "S05"]},
+    {"topic": "間隔重複與集中複習", "easiest_to_hardest": ["S08", "S06", "S12", "S11"]}
+  ]
+}

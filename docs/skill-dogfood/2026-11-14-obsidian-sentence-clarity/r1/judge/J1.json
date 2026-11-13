@@ -1,0 +1,51 @@
+{
+  "samples": {
+    "S01": {"sentences": 11, "readability": 4, "flags": [
+      {"n": 10, "type": "P4", "quote": "因為缺的是流程裡輸出的那一端", "why": "「輸出的那一端」是抽象比喻，讀者要自己轉譯成「拿筆記去用」"}
+    ]},
+    "S02": {"sentences": 11, "readability": 4, "flags": [
+      {"n": 1, "type": "P4", "quote": "資料倉儲的分層模型", "why": "「資料倉儲」是專業術語，全文未解釋"}
+    ]},
+    "S03": {"sentences": 11, "readability": 4, "flags": [
+      {"n": 1, "type": "P4", "quote": "資料倉儲的分層模型", "why": "「資料倉儲」是專業術語，全文未解釋"}
+    ]},
+    "S04": {"sentences": 13, "readability": 4, "flags": [
+      {"n": 13, "type": "STILTED", "quote": "再只收集這件事需要的資料", "why": "「再只」語序不自然，讀起來卡頓"}
+    ]},
+    "S05": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 6, "type": "STILTED", "quote": "團隊就得逐一修改每份報表", "why": "句首「因為」接上句，且「每份報表」重複，顯得機械"},
+      {"n": 12, "type": "STOCK", "quote": "這個問題的答案不是全有或全無", "why": "空泛的總結句，「不是全有或全無」不增加資訊"},
+      {"n": 12, "type": "REREAD", "quote": "所以這個問題的答案", "why": "前文從未提出問題，「這個問題」指涉不明，需回頭找"}
+    ]},
+    "S06": {"sentences": 13, "readability": 4, "flags": [
+      {"n": 7, "type": "P4", "quote": "集中複習把所有次數擠在同一天", "why": "「所有次數」「讓遺忘變慢一次」用語抽象少見"},
+      {"n": 7, "type": "REREAD", "quote": "等於只讓遺忘變慢一次", "why": "長句兩段對比且概念抽象，需重讀才懂推論"}
+    ]},
+    "S07": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 6, "type": "REREAD", "quote": "但是人要用上一則筆記", "why": "「用上一則」可誤讀為「用 上一則筆記」，需重讀斷詞"}
+    ]},
+    "S08": {"sentences": 12, "readability": 4, "flags": [
+      {"n": 1, "type": "P2", "quote": "而且每次之間隔上一段時間的學習方法", "why": "「學習方法」前掛一長串修飾語，要記住整段才知道主名詞"}
+    ]},
+    "S09": {"sentences": 14, "readability": 5, "flags": [
+      {"n": 1, "type": "P4", "quote": "資料倉儲的分層模型", "why": "「資料倉儲」是專業術語，全文未解釋"}
+    ]},
+    "S10": {"sentences": 14, "readability": 5, "flags": []},
+    "S11": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 5, "type": "STILTED", "quote": "之後才慢慢變慢", "why": "「慢慢變慢」字面重複，讀起來彆扭"},
+      {"n": 10, "type": "STILTED", "quote": "學習者回想得越費力", "why": "全文反覆以「學習者」當主語，機械感重"},
+      {"n": 10, "type": "REREAD", "quote": "只要最後想得起來，學習者回想得越費力", "why": "條件句再套「越…越…」，需重讀理清關係"}
+    ]},
+    "S12": {"sentences": 14, "readability": 3, "flags": [
+      {"n": 3, "type": "REREAD", "quote": "第一個原因是遺忘本身有用", "why": "反直覺的論點，後文只間接說明，需回頭對照"},
+      {"n": 5, "type": "P1", "quote": "間隔重複刻意等到快要忘記時才複習", "why": "方法當主語卻做「刻意等待」這種人的動作"},
+      {"n": 8, "type": "P1", "quote": "熟悉感會騙人", "why": "抽象的感覺被寫成會「騙人」的主體"},
+      {"n": 14, "type": "P3", "quote": "也許撐得過明天的考試，間隔重複才留得住", "why": "兩句是轉折對比，卻缺「但」，讀者要自己補"}
+    ]}
+  },
+  "rankings": [
+    {"topic": "個人知識管理系統為何只進不出", "easiest_to_hardest": ["S10", "S04", "S01", "S07"]},
+    {"topic": "小型團隊是否採用資料倉儲三層模型", "easiest_to_hardest": ["S09", "S03", "S02", "S05"]},
+    {"topic": "間隔重複 vs 考前集中複習", "easiest_to_hardest": ["S08", "S06", "S11", "S12"]}
+  ]
+}
