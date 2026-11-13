@@ -4,6 +4,13 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.27.0] — 2026-11-14 Sentence clarity rules
+
+### Added
+
+- Four sentence-level writing rules in `obsidian-markdown` (`references/sentence-clarity.md`), linked from its "Write content" step so they apply to any note written through that skill. Based on arXiv:2610.29162. Blind tests: fewer flagged sentences on short essays, no measurable difference when rewriting real notes.
+- `obsidian-research` Step 5 points to those rules when writing the note.
+
 ## [3.26.0] — 2026-11-06 Research video sources
 
 ### Added

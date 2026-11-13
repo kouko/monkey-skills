@@ -13,6 +13,7 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 1. **Survey the vault first** when the request implies cross-references — Glob/search for existing related notes BEFORE drafting, so wikilink targets and `related_notes` candidates are confirmed up front rather than bolted on (this is the discovery half of §Internal Links' existence rule, which only gates emission).
 2. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
 3. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
+   - For the sentences in paragraphs, follow the [sentence-clarity rules](references/sentence-clarity.md).
    - When unsure whether content should be a diagram, table, callout, list, or prose, see the [visualization decision guide](references/viz-decision-guide.md). It picks the form only.
    - Each time the note needs a **diagram**, read [mermaid-quirks.md](references/mermaid-quirks.md) and check §Diagrams for whether to invoke `obsidian:obsidian-mermaid-visualizer` or write inline. Repeat for every diagram in the note — inline and delegate decisions are made per diagram, not per note.
 4. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.

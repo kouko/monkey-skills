@@ -89,7 +89,7 @@ Record the video URL, creator, publication date, and relevant timestamps when av
 
 ## Step 5 — Write the note
 
-Write in the **user's conversation language**, whatever the source languages were. Quotes may stay in the original language with a translation. Match the style of the vault's recent research notes: open the two or three newest files in `research/` and follow their heading style and tone (if `research/` is empty, use plain numbered headings); write plainly, define terms on first use.
+Write in the **user's conversation language**, whatever the source languages were. Quotes may stay in the original language with a translation. Match the style of the vault's recent research notes: open the two or three newest files in `research/` and follow their heading style and tone (if `research/` is empty, use plain numbered headings); write plainly, define terms on first use. For the sentences in paragraphs, follow the sentence-clarity rules in the `obsidian-markdown` skill.
 
 **Reading order differs from research order**: the conclusion and TOC come first; the chapters after them follow the skeleton from Step 1 (or the topic's dimensions). Drop skeleton steps that have nothing to say — never write an empty chapter. Inside a chapter, use a layer-2 tool when it makes the material clearer (options × criteria → a comparison table; causes → a fishbone-style breakdown).
 
