@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - `obsidian-research` Step 5: a quote kept in its original language is always followed by its translation; the method section is written without this skill's process names; the "most likely reason it would turn out wrong" line no longer carries a label. In blind tests on two research topics, notes written with these changes had about a third of the flagged sentences.
+- `obsidian-research` Step 5 asks for the written register of an analytical report: plain means clear and precise, not conversational. Added after the vault's owner found the best-scoring test notes too conversational.
 
 ## [3.26.0] — 2026-11-06 Research video sources
 

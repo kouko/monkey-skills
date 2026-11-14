@@ -24,7 +24,7 @@ Each rule removes a place where the reader has to stop and read the sentence aga
    - ✗ 「先把資料放進 Redis。」 → ✓ 「先把資料放進 Redis（一種把資料存在記憶體裡的資料庫）。」
    - ✗ 「日本的個人編號卡普及率上升。」 → ✓ 「日本的マイナンバーカード（個人編號卡，日本政府發的身分識別卡）普及率上升。」
 
-**After drafting**, read each paragraph once against the four rules and rewrite every sentence that breaks one. Never shorten a sentence in a way that breaks a rule: a longer sentence the reader understands in one pass is the better one. Then check the opposite fault: a sentence that sounds translated, or that repeats the same subject or word as its neighbours, is rewritten the way a native writer would say it.
+**After drafting**, read each paragraph once against the four rules and rewrite every sentence that breaks one. Never shorten a sentence in a way that breaks a rule: a longer sentence the reader understands in one pass is the better one. Then check the opposite fault: a sentence that sounds translated, or that repeats the same subject or word as its neighbours, is rewritten the way a native writer would write it in that kind of document. These rules make a sentence clear; they do not make it casual. Keep the register the document calls for.
 
 ## Source and limits
 

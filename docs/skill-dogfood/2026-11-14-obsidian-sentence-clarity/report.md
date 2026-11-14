@@ -30,7 +30,9 @@
 | Writing a full note from research: the four rules again made no difference | round 4, both judges: 7.6/8.4 with rules vs 7.4/7.9 without |
 | Three additions the judges' comments pointed to cut flags to about a third | round 5 (same topic): 1.9/1.5 vs 7.6/6.8 · round 6 (fresh topic): 2.2/2.7 vs 6.1/5.4 |
 
-Shipped: rules v2 (four rules) plus the round 5–6 additions — see FINDING-005.
+| The notes the judges ranked best read as too conversational to the vault's owner | one R/V pair read by the owner after round 6 — see FINDING-006 |
+
+Shipped: rules v2 (four rules) plus the round 5–6 additions (FINDING-005), with a report-register requirement added after the owner's reading (FINDING-006).
 
 ## Method
 
@@ -148,6 +150,15 @@ In round 5 both judges ranked the two V notes first and second of six; in
 round 6 both ranked a V note first of four. Round 5 is optimistic (the
 additions were written from round 4's comments on that topic); round 6 is
 the independent check. Note bodies and research packets are not kept here.
+
+### FINDING-006 — the model judges rewarded a conversational tone; the vault's reader rejected it
+
+- **Severity**: High · evaluation method, and output quality
+- **Evidence**: the vault's owner read one R note and one V note from round 6 and preferred R: the V note read like speech, not like an analysis report. That V note was the one both judges had ranked first of four. A count of an ad-hoc list of spoken turns of phrase (到底, 我們, 一筆錢, 跌掉, 沒找到 …) per 10,000 characters gives R 11.3 / 11.7, V 17.6 / 30.6 on the round-6 topic; the round-5 topic shows no such gap, so part of it is writer-to-writer variation.
+- **Root cause**: no flag type covers register. Shorter, plainer sentences collect fewer flags, so a casual note scores best. The round 5–6 additions included "write this section in the reader's words", and the rules file said to rewrite "the way a native writer would say it".
+- **Fix applied**: `obsidian-research` Step 5 now asks for the written register of an analytical report ("plain means clear and precise, not conversational"), with example pairs; the method-section line no longer says "in the reader's words"; the rules file states that the rules make a sentence clear, not casual. First-use explanations and quote translations are kept — the reader objected to tone only.
+- **Check**: two notes rewritten from the same packet (W) score 2.9 / 5.9 on the same count, below R. The reader accepted this version and asked for no further tightening. No model judge was used for this check.
+- **For the next test of a writing rule**: have the actual reader read at least one pair before trusting flag counts, and add a register criterion to the judges' rubric.
 
 ## Limits
 
