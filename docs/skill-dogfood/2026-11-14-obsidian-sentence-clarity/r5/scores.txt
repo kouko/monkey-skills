@@ -1,0 +1,14 @@
+== J1.json ==
+arm   sents      P1      P2      P3      P4   QUOTE   STOCK STILTED  REREAD  total  /100s  read  rank
+N       485       0       1       1      17      10       0       1       3     33    6.8  3.50  4.50
+R       471       0       1       1      17      11       0       3       3     36    7.6  3.50  4.50
+V       590       0       0       0       8       0       0       2       1     11    1.9  5.00  1.50
+per sample: D1-N-1=8f/r4  D1-N-2=25f/r3  D1-R-1=16f/r4  D1-R-2=20f/r3  D1-V-1=3f/r5  D1-V-2=8f/r5
+
+== J2.json ==
+arm   sents      P1      P2      P3      P4   QUOTE   STOCK STILTED  REREAD  total  /100s  read  rank
+N       481       0       6       1      11      13       0       3       2     36    7.5  3.50  4.50
+R       468       0       5       1      12      12       0       0       2     32    6.8  3.50  4.50
+V       585       0       3       0       1       0       1       4       0      9    1.5  5.00  1.50
+per sample: D1-N-1=12f/r4  D1-N-2=24f/r3  D1-R-1=9f/r4  D1-R-2=23f/r3  D1-V-1=3f/r5  D1-V-2=6f/r5
+

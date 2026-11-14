@@ -1,0 +1,82 @@
+{
+  "samples": {
+    "S01": {"sentences": 11, "readability": 5, "flags": []},
+    "S02": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 14, "type": "P3", "quote": "集中複習也許撐得過明天的考試，間隔重複才留得住", "why": "兩個分句是對比關係，卻缺「但／而」等轉折詞"}
+    ]},
+    "S03": {"sentences": 15, "readability": 5, "flags": []},
+    "S04": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 14, "type": "STILTED", "quote": "團隊才是用分層解決了實際遇到的問題", "why": "「才是用…解決了」句式彆扭，不像自然口語"}
+    ]},
+    "S05": {"sentences": 12, "readability": 5, "flags": []},
+    "S06": {"sentences": 13, "readability": 4, "flags": [
+      {"n": 7, "type": "STILTED", "quote": "把所有次數擠在同一天", "why": "「所有次數」省略了「複習」，搭配不自然"},
+      {"n": 7, "type": "REREAD", "quote": "等於只讓遺忘變慢一次", "why": "「遺忘變慢一次」的推論需要回頭再讀才懂"}
+    ]},
+    "S07": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 5, "type": "STILTED", "quote": "之後才慢慢變慢", "why": "「慢慢變慢」重複累贅"},
+      {"n": 11, "type": "STILTED", "quote": "學習者不需要費力回想，所以他們容易", "why": "「學習者」全篇反覆當主詞，讀來機械"}
+    ]},
+    "S08": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 6, "type": "P4", "quote": "內容沒有在時間裡被多次取出來", "why": "「在時間裡被取出來」是少見的自創說法"},
+      {"n": 6, "type": "REREAD", "quote": "因為內容沒有在時間裡被多次取出來", "why": "因果與用詞都不直觀，需要重讀"}
+    ]},
+    "S09": {"sentences": 13, "readability": 4, "flags": [
+      {"n": 6, "type": "STILTED", "quote": "收集不斷發生，運用卻一直被往後推延", "why": "「收集不斷發生」不自然，「往後推延」語意重複"},
+      {"n": 13, "type": "STOCK", "quote": "系統的價值不在於存了多少，而在於", "why": "口號式收尾，不增加新資訊"}
+    ]},
+    "S10": {"sentences": 13, "readability": 5, "flags": []},
+    "S11": {"sentences": 12, "readability": 5, "flags": []},
+    "S12": {"sentences": 11, "readability": 5, "flags": []},
+    "S13": {"sentences": 14, "readability": 5, "flags": []},
+    "S14": {"sentences": 11, "readability": 3, "flags": [
+      {"n": 1, "type": "P2", "quote": "自己讀過與想過的東西的一套工具和習慣", "why": "名詞前疊了兩層「的」修飾，要暫記才讀得通"},
+      {"n": 6, "type": "STILTED", "quote": "可是理解並沒有發生", "why": "「理解沒有發生」是翻譯腔"},
+      {"n": 10, "type": "P4", "quote": "缺的是流程裡輸出的那一端", "why": "「輸出的那一端」抽象，未說明指什麼"}
+    ]},
+    "S15": {"sentences": 13, "readability": 5, "flags": [
+      {"n": 13, "type": "STOCK", "quote": "而不是看裡面存了多少", "why": "格言式收尾，重述前文"}
+    ]},
+    "S16": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 3, "type": "STILTED", "quote": "團隊在這一層把多張表合併", "why": "連續幾句都用「團隊在這一層」開頭，句型機械重複"}
+    ]},
+    "S17": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 3, "type": "STILTED", "quote": "團隊在這一層…並且寫入商業規則", "why": "句型與上句重複；「寫入商業規則」搭配不自然"},
+      {"n": 12, "type": "STOCK", "quote": "這個問題的答案不是全有或全無", "why": "空泛總結句，下一句才給實質內容"}
+    ]},
+    "S18": {"sentences": 11, "readability": 3, "flags": [
+      {"n": 8, "type": "P4", "quote": "先建立最小的分界", "why": "「最小的分界」是不常見的說法，要看冒號後才懂"},
+      {"n": 9, "type": "P4", "quote": "放進版本控制，否則分層只會停留在命名上", "why": "「版本控制」未解釋；「停留在命名上」語意模糊"},
+      {"n": 9, "type": "REREAD", "quote": "否則分層只會停留在命名上", "why": "條件與結果的關係不清，需要重讀"},
+      {"n": 11, "type": "STILTED", "quote": "三者都偏低時", "why": "第三項是「有沒有人負責」，用「偏低」形容不通"}
+    ]},
+    "S19": {"sentences": 13, "readability": 5, "flags": []},
+    "S20": {"sentences": 13, "readability": 4, "flags": [
+      {"n": 3, "type": "P4", "quote": "記錄下保留率的下降趨勢，這也是此領域的起點", "why": "「保留率」未解釋；「此領域」指涉模糊"},
+      {"n": 7, "type": "STILTED", "quote": "剛讀完時表現很好，幾天後卻大量流失", "why": "後半缺主詞，「表現」不會「流失」"}
+    ]},
+    "S21": {"sentences": 11, "readability": 3, "flags": [
+      {"n": 3, "type": "STILTED", "quote": "這種現象的根源，常被歸因於", "why": "「根源被歸因於」語意重疊，句子不通順"},
+      {"n": 4, "type": "STILTED", "quote": "於是行動被推遲", "why": "被動且未說明什麼行動，含糊"},
+      {"n": 7, "type": "P2", "quote": "一則筆記若沒有明確的使用情境，例如…，它就", "why": "主詞與後句之間插入長串舉例，要暫記主詞"},
+      {"n": 8, "type": "STOCK", "quote": "讓知識從倉庫變成工具", "why": "口號式句子，沒有具體做法"},
+      {"n": 11, "type": "STILTED", "quote": "若只是覺得「也許以後有用」，多半就是", "why": "前半講人的感覺，後半主詞變成東西，主語錯置"}
+    ]},
+    "S22": {"sentences": 16, "readability": 4, "flags": [
+      {"n": 7, "type": "STILTED", "quote": "時間會大多花在搬運資料", "why": "語序不自然，應為「大多會花在」"},
+      {"n": 13, "type": "STOCK", "quote": "要問的不是「要不要分層」，而是", "why": "為效果設的「不是…而是」對比，重述前段"},
+      {"n": 16, "type": "STOCK", "quote": "沒有通用的答案", "why": "空泛收尾，不增加資訊"}
+    ]},
+    "S23": {"sentences": 16, "readability": 4, "flags": [
+      {"n": 2, "type": "P4", "quote": "一張來源表對應一張模型", "why": "「模型」是 dbt 術語，未解釋就使用"}
+    ]},
+    "S24": {"sentences": 14, "readability": 4, "flags": [
+      {"n": 6, "type": "STILTED", "quote": "但是人要用上一則筆記", "why": "全篇以「人」當泛稱主詞反覆出現，讀來機械"}
+    ]}
+  },
+  "rankings": [
+    {"topic": "資料倉儲分層", "easiest_to_hardest": ["S12", "S01", "S04", "S23", "S16", "S17", "S22", "S18"]},
+    {"topic": "間隔重複", "easiest_to_hardest": ["S03", "S11", "S19", "S02", "S07", "S08", "S06", "S20"]},
+    {"topic": "個人知識管理", "easiest_to_hardest": ["S05", "S13", "S10", "S15", "S24", "S09", "S14", "S21"]}
+  ]
+}

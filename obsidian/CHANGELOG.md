@@ -4,6 +4,19 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.27.0] — 2026-11-14 Sentence clarity rules
+
+### Added
+
+- Four sentence-level writing rules in `obsidian-markdown` (`references/sentence-clarity.md`), linked from its "Write content" step so they apply to any note written through that skill. Based on arXiv:2610.29162. Blind tests: fewer flagged sentences on short essays, no measurable difference when rewriting real notes.
+- `obsidian-research` Step 5 points to those rules when writing the note.
+- The rules also cover first-use explanation of terms, wording by the conventions of the user's language, proper nouns kept in their original language with a translation or explanation at first use, and long bracketed asides.
+
+### Changed
+
+- `obsidian-research` Step 5: a quote kept in its original language is always followed by its translation; the method section is written without this skill's process names; the "most likely reason it would turn out wrong" line no longer carries a label. In blind tests on two research topics, notes written with these changes had about a third of the flagged sentences.
+- `obsidian-research` Step 5 asks for the written register of an analytical report: plain means clear and precise, not conversational. Added after the vault's owner found the best-scoring test notes too conversational.
+
 ## [3.26.0] — 2026-11-06 Research video sources
 
 ### Added
