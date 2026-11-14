@@ -27,7 +27,10 @@
 | Rewriting itself was the large effect | round 3: original passages 70.1/73.8 flags per 100 sentences |
 | A fifth rule against stock phrasing had no effect | round 3: STOCK 2/1 with it, 2/1 without — dropped |
 
-Shipped: rules v2 (four rules).
+| Writing a full note from research: the four rules again made no difference | round 4, both judges: 7.6/8.4 with rules vs 7.4/7.9 without |
+| Three additions the judges' comments pointed to cut flags to about a third | round 5 (same topic): 1.9/1.5 vs 7.6/6.8 · round 6 (fresh topic): 2.2/2.7 vs 6.1/5.4 |
+
+Shipped: rules v2 (four rules) plus the round 5–6 additions — see FINDING-005.
 
 ## Method
 
@@ -113,6 +116,39 @@ remaining flag is P4, mostly terms that all three versions share.
 - **Evidence**: added after round 2 because haiku texts kept slogan-like closing lines; in round 3 STOCK counts were identical with and without it.
 - **Action**: removed before shipping. Text of the dropped rule: "Every sentence tells the reader something new. Cut a sentence that only restates, announces or decorates: a slogan-like closing line, an empty summary placed before the real answer, or a 'not X but Y' contrast when no reader believed X."
 
+### FINDING-005 — what makes a full research note hard to read is not the four sentence patterns
+
+- **Severity**: Medium · output quality
+- **Evidence**: round 4 judges, all four notes regardless of arm: foreign-language quotes left untranslated; terms and product names unexplained at first use (including in the summary); a word a Taiwanese reader misreads (列式 for columnar); the method section written in the skill's own process names (子代理, 缺口檢查, Step 6, 事前驗屍).
+- **Root cause**: `obsidian-research` Step 5 said quotes "may" carry a translation, named its own steps and tools in checkpoint 7 and 8, and nothing asked for first-use explanation.
+- **Fix applied**: `sentence-clarity.md` rule 4 adds first-use explanation and wording by the conventions of the user's language; rule 2 treats a long bracketed aside as an insertion. `obsidian-research` Step 5 makes the quote translation mandatory, asks for the method section in the reader's words, and drops the "pre-mortem" label.
+- **Result**: rounds 5 and 6 tables below.
+- **Not retested**: after round 6 the wording rule was generalised (conventions of the user's language; proper nouns in the original language with a translation or explanation at first use). Rounds 5–6 tested the earlier wording ("the word the reader's region uses").
+- **Side effects the judges noted, not fixed**: bracketed explanations can themselves split subject and verb; a quote plus its translation lengthens the sentence.
+
+### Rounds 4–6 — full notes written from research
+
+One research run per topic (the skill's Steps 1–4) produced a fixed source
+packet and plan; each writer then ran Step 5 only, from a copy of the skills
+folder that differed in nothing but the text under test. No writer was told
+the rules file exists; every writer in the rules arms reported reading it.
+Step 6 (citation check) was not run.
+
+| Round | Topic | Arm | Flags per 100 sentences (J1 / J2) | Readability (J1 / J2) |
+|---|---|---|---|---|
+| 4 | DuckDB for a small data team | N no rules ×2 | 7.4 / 7.9 | 3.5 / 4.0 |
+| 4 | same | R rules v2 ×2 | 7.6 / 8.4 | 3.5 / 4.0 |
+| 5 | same, new judges, QUOTE flag added | N ×2 | 6.8 / 7.5 | 3.5 / 3.5 |
+| 5 | same | R ×2 | 7.6 / 6.8 | 3.5 / 3.5 |
+| 5 | same | V additions ×2 | 1.9 / 1.5 | 5.0 / 5.0 |
+| 6 | film photography revival (not used to write the additions) | R ×2 | 6.1 / 5.4 | 3.5 / 3.5 |
+| 6 | same | V ×2 | 2.2 / 2.7 | 4.0 / 4.0 |
+
+In round 5 both judges ranked the two V notes first and second of six; in
+round 6 both ranked a V note first of four. Round 5 is optimistic (the
+additions were written from round 4's comments on that topic); round 6 is
+the independent check. Note bodies and research packets are not kept here.
+
 ## Limits
 
 - Rounds 1–2 use three topics the tester chose, and v2 was written from the judges' comments on those same topics, so round 2 is optimistic.
@@ -126,3 +162,4 @@ remaining flag is P4, mostly terms that all three versions share.
 - `blind.py`, `score.py`, `score3.py` — blinding and scoring scripts. Re-run: `python3 score.py r1 --flags`.
 - `r1/`, `r2/` — raw texts, `key.json`, judge output. `r2/raw/` holds only the texts round 2 added; its A and B texts are `r1/raw/`.
 - `r3/scores.txt`, `r3/lengths.txt` — aggregate tables only.
+- `r4/`, `r5/`, `r6/` — `key.json`, judge output, `scores.txt`; `notestats.txt` gives each note's size and sentence counts (`notestats.py`).

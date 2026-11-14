@@ -1,0 +1,514 @@
+{
+  "samples": {
+    "S01": {
+      "sentences": 231,
+      "readability": 3,
+      "flags": [
+        {
+          "n": 20,
+          "type": "STILTED",
+          "quote": "補上共用能力的三條路，要嘛是…要嘛是",
+          "why": "說三條路卻用「要嘛…要嘛」二分，數不起來"
+        },
+        {
+          "n": 54,
+          "type": "P2",
+          "quote": "嵌入式（in-process，直接跑在你的程式…）的列式",
+          "why": "兩段長括號插在修飾語與中心名詞之間"
+        },
+        {
+          "n": 54,
+          "type": "P4",
+          "quote": "列式（columnar，按欄位存放",
+          "why": "台灣「列」指 row，「列式」與「按欄位」字面矛盾"
+        },
+        {
+          "n": 65,
+          "type": "P4",
+          "quote": "第三方 RFC",
+          "why": "RFC 未解釋"
+        },
+        {
+          "n": 65,
+          "type": "P2",
+          "quote": "以執行它的作業系統使用者的權限執行",
+          "why": "「的」字鏈過長，要回頭拆"
+        },
+        {
+          "n": 87,
+          "type": "REREAD",
+          "quote": "表中每個數字各只有一個來源",
+          "why": "表還沒出現就先談「表中」，指涉要回頭找"
+        },
+        {
+          "n": 130,
+          "type": "P4",
+          "quote": "\"any SQL-compatible database …",
+          "why": "長英文引文未翻譯，中途切換語言"
+        },
+        {
+          "n": 137,
+          "type": "P4",
+          "quote": "讀取擴充的預設池大小是 4",
+          "why": "「讀取擴充」「池」未說明是什麼"
+        },
+        {
+          "n": 142,
+          "type": "P4",
+          "quote": "\"Built and managed by our open",
+          "why": "長英文引文未翻譯"
+        },
+        {
+          "n": 143,
+          "type": "P4",
+          "quote": "\"Foreign-key relationships and",
+          "why": "長英文引文未翻譯"
+        },
+        {
+          "n": 144,
+          "type": "P4",
+          "quote": "Evidence 有經同一端點的 MotherDuck 連接",
+          "why": "Evidence 是什麼工具未說明"
+        },
+        {
+          "n": 164,
+          "type": "P4",
+          "quote": "Snowflake 的 Iceberg 資料表",
+          "why": "Iceberg 未解釋"
+        },
+        {
+          "n": 164,
+          "type": "REREAD",
+          "quote": "作者查到 10 次登入、0 筆查詢紀錄",
+          "why": "這兩個數字證明什麼沒有交代"
+        },
+        {
+          "n": 172,
+          "type": "P3",
+          "quote": "重讀整個目錄的統計資料，單一資料表的寫入",
+          "why": "因果缺「所以」，「以及」接得生硬"
+        },
+        {
+          "n": 172,
+          "type": "REREAD",
+          "quote": "必須在每次查詢前先決定機器大小",
+          "why": "為何這是問題沒說，讀不懂"
+        },
+        {
+          "n": 172,
+          "type": "P4",
+          "quote": "\"about 2 PB: roughly 1 trillio",
+          "why": "英文引文未翻譯"
+        },
+        {
+          "n": 173,
+          "type": "P4",
+          "quote": "改用 dbt 或 Airflow",
+          "why": "Airflow 未解釋"
+        },
+        {
+          "n": 181,
+          "type": "P4",
+          "quote": "\"Some features available in th",
+          "why": "長英文引文未翻譯"
+        },
+        {
+          "n": 207,
+          "type": "STILTED",
+          "quote": "「目前」（官方用字是 currently）",
+          "why": "中英夾雜的註記打斷句子"
+        },
+        {
+          "n": 219,
+          "type": "P2",
+          "quote": "雇用核心開發者的阿姆斯特丹公司 DuckLabs",
+          "why": "主語前修飾鏈加括號過長，動詞很晚才出現"
+        },
+        {
+          "n": 226,
+          "type": "STILTED",
+          "quote": "這是「沒找到」，不等於「確定沒有」",
+          "why": "同一免責句型反覆出現"
+        },
+        {
+          "n": 256,
+          "type": "STILTED",
+          "quote": "有作者群「可用於正式環境」的自述",
+          "why": "名詞化的「自述」句法生硬"
+        },
+        {
+          "n": 274,
+          "type": "P4",
+          "quote": "Hakky 說「代替というより補完」",
+          "why": "日文原句夾在中文句中未翻譯"
+        },
+        {
+          "n": 308,
+          "type": "P4",
+          "quote": "缺口檢查補上的",
+          "why": "「缺口檢查」是流程術語，未解釋"
+        },
+        {
+          "n": 311,
+          "type": "P4",
+          "quote": "引用核對（技能的 Step 6）",
+          "why": "「技能的 Step 6」讀者無從理解"
+        },
+        {
+          "n": 314,
+          "type": "STILTED",
+          "quote": "沒有任何必要語言是空手而回",
+          "why": "「必要語言」說法不自然"
+        }
+      ]
+    },
+    "S02": {
+      "sentences": 220,
+      "readability": 4,
+      "flags": [
+        {
+          "n": 13,
+          "type": "REREAD",
+          "quote": "自架的那兩層在 2026 年才有",
+          "why": "「那兩層」前文未提，指涉不明"
+        },
+        {
+          "n": 13,
+          "type": "P2",
+          "quote": "第一個標示可用於正式環境的版本",
+          "why": "名詞前修飾鏈過長"
+        },
+        {
+          "n": 15,
+          "type": "P4",
+          "quote": "Quack 在 2.0 的官方頁面",
+          "why": "Quack／DuckLake／MotherDuck 首次出現未說明"
+        },
+        {
+          "n": 15,
+          "type": "STILTED",
+          "quote": "沒有被寫成穩定版",
+          "why": "被動「被寫成」不自然"
+        },
+        {
+          "n": 38,
+          "type": "P2",
+          "quote": "也就是團隊分析資料存放的地方、人和 BI",
+          "why": "同位語過長，「人和 BI 工具…查詢的對象」難斷句"
+        },
+        {
+          "n": 49,
+          "type": "P4",
+          "quote": "以欄為單位儲存（列式儲存",
+          "why": "台灣「列」指 row，「欄」「列式」並置矛盾"
+        },
+        {
+          "n": 49,
+          "type": "REREAD",
+          "quote": "適合一次彙總很多列",
+          "why": "欄／列用語打架，需重讀確認"
+        },
+        {
+          "n": 55,
+          "type": "P4",
+          "quote": "認證與授權掛勾",
+          "why": "「掛勾」(hook) 未解釋"
+        },
+        {
+          "n": 55,
+          "type": "P2",
+          "quote": "以執行它的作業系統使用者的完整權限執行",
+          "why": "「的」字鏈過長"
+        },
+        {
+          "n": 56,
+          "type": "P2",
+          "quote": "一篇日文實測（DuckDB 1.5.5、M4 Pro…）顯示",
+          "why": "主語與動詞間插入超長括號"
+        },
+        {
+          "n": 104,
+          "type": "P1",
+          "quote": "一篇日文實作文章就遇到這個麻煩",
+          "why": "文章當主語「遇到麻煩」，擬人"
+        },
+        {
+          "n": 108,
+          "type": "STILTED",
+          "quote": "發布日期與目錄需求則是 信心度 High",
+          "why": "信心標記硬嵌成句子謂語"
+        },
+        {
+          "n": 110,
+          "type": "STILTED",
+          "quote": "（日期與 beta 歷程為 High）",
+          "why": "信心標記夾在引言句中，讀來機械"
+        },
+        {
+          "n": 127,
+          "type": "P4",
+          "quote": "Evidence 有走同一個端點",
+          "why": "Evidence 是什麼工具未說明"
+        },
+        {
+          "n": 147,
+          "type": "P4",
+          "quote": "Snowflake 的 Iceberg 資料表",
+          "why": "Iceberg 未解釋"
+        },
+        {
+          "n": 147,
+          "type": "REREAD",
+          "quote": "作者記錄到 10 次登入、0 次查詢",
+          "why": "數字代表什麼沒有交代"
+        },
+        {
+          "n": 155,
+          "type": "REREAD",
+          "quote": "必須在每次查詢前先決定機器大小",
+          "why": "為何是問題沒說，讀不懂"
+        },
+        {
+          "n": 157,
+          "type": "P4",
+          "quote": "適合用 dbt 或 Airflow",
+          "why": "Airflow 未解釋"
+        },
+        {
+          "n": 201,
+          "type": "STILTED",
+          "quote": "這只代表沒有讀到，不代表功能不存在",
+          "why": "與 115 行同句重複"
+        },
+        {
+          "n": 269,
+          "type": "P4",
+          "quote": "缺口檢查補上了",
+          "why": "「缺口檢查」未解釋"
+        }
+      ]
+    },
+    "S03": {
+      "sentences": 260,
+      "readability": 5,
+      "flags": [
+        {
+          "n": 49,
+          "type": "P4",
+          "quote": "的列式 SQL 資料庫",
+          "why": "台灣「列」指 row，「列式」易誤讀為列儲存"
+        },
+        {
+          "n": 118,
+          "type": "P1",
+          "quote": "同一篇第三方文章做過一次 2.0 之前的測試",
+          "why": "文章當主語「做測試」，擬人"
+        },
+        {
+          "n": 129,
+          "type": "P4",
+          "quote": "讀取擴充的副本池預設 4 個",
+          "why": "「讀取擴充」「副本池」未說明"
+        },
+        {
+          "n": 137,
+          "type": "P4",
+          "quote": "Evidence 有走同一個端點",
+          "why": "Evidence 是什麼工具未說明"
+        },
+        {
+          "n": 145,
+          "type": "P2",
+          "quote": "一家販售 DuckDB 產品的廠商寫的「GCP",
+          "why": "引文前修飾鏈過長"
+        },
+        {
+          "n": 174,
+          "type": "P3",
+          "quote": "重讀整個目錄的統計資料，單一資料表的寫入",
+          "why": "因果關係缺「所以」"
+        },
+        {
+          "n": 174,
+          "type": "REREAD",
+          "quote": "必須在每次查詢前先決定機器大小",
+          "why": "為何是問題沒說，讀不懂"
+        },
+        {
+          "n": 178,
+          "type": "P4",
+          "quote": "指向 dbt 或 Airflow",
+          "why": "Airflow 未解釋"
+        },
+        {
+          "n": 231,
+          "type": "P2",
+          "quote": "聘用核心開發者的阿姆斯特丹公司 DuckLabs",
+          "why": "主語前修飾鏈加括號過長"
+        },
+        {
+          "n": 306,
+          "type": "P4",
+          "quote": "最後一個角度是缺口檢查補上的",
+          "why": "「缺口檢查」未解釋"
+        },
+        {
+          "n": 311,
+          "type": "STILTED",
+          "quote": "只確認來源確實這樣說，2 項都確認",
+          "why": "「確認」重複，語句繞"
+        },
+        {
+          "n": 314,
+          "type": "STILTED",
+          "quote": "所以本筆記沒有引用核對的數字",
+          "why": "同一件事連說三次"
+        },
+        {
+          "n": 316,
+          "type": "STILTED",
+          "quote": "沒有哪一種必搜語言一無所獲",
+          "why": "「必搜語言」說法不自然"
+        }
+      ]
+    },
+    "S04": {
+      "sentences": 256,
+      "readability": 4,
+      "flags": [
+        {
+          "n": 15,
+          "type": "P4",
+          "quote": "MotherDuck 超過 3 人後每月 250 美元起",
+          "why": "MotherDuck／DuckLake／Quack 首次出現未說明"
+        },
+        {
+          "n": 49,
+          "type": "P4",
+          "quote": "的列式 SQL 資料庫",
+          "why": "台灣「列」指 row，「列式」易誤讀為列儲存"
+        },
+        {
+          "n": 55,
+          "type": "P4",
+          "quote": "執行者的作業系統使用者權限",
+          "why": "多個名詞堆疊無連接詞"
+        },
+        {
+          "n": 55,
+          "type": "P4",
+          "quote": "可自行替換的認證與授權掛鉤",
+          "why": "「掛鉤」(hook) 未解釋"
+        },
+        {
+          "n": 72,
+          "type": "STILTED",
+          "quote": "三份測試都是各自的執行者實際量測的結果",
+          "why": "冗餘補述，讀來機械"
+        },
+        {
+          "n": 109,
+          "type": "P4",
+          "quote": "\"any SQL-compatible database …",
+          "why": "長英文引文未翻譯"
+        },
+        {
+          "n": 116,
+          "type": "P4",
+          "quote": "\"a polished version of the Qua",
+          "why": "長英文引文未翻譯"
+        },
+        {
+          "n": 118,
+          "type": "P4",
+          "quote": "\"a ceiling, not a production S",
+          "why": "英文引文未翻譯，SLA 未解釋"
+        },
+        {
+          "n": 127,
+          "type": "P4",
+          "quote": "\"Foreign-key relationships and",
+          "why": "長英文引文未翻譯"
+        },
+        {
+          "n": 128,
+          "type": "P4",
+          "quote": "Evidence 有走同一個端點",
+          "why": "Evidence 是什麼工具未說明"
+        },
+        {
+          "n": 153,
+          "type": "P4",
+          "quote": "\"about 2 PB: roughly 1 trillio",
+          "why": "英文引文未翻譯"
+        },
+        {
+          "n": 153,
+          "type": "REREAD",
+          "quote": "每次查詢前都得先決定機器大小",
+          "why": "為何是問題沒說，讀不懂"
+        },
+        {
+          "n": 155,
+          "type": "P4",
+          "quote": "改用 dbt 或 Airflow",
+          "why": "Airflow 未解釋"
+        },
+        {
+          "n": 159,
+          "type": "P4",
+          "quote": "\"Some features available in th",
+          "why": "長英文引文未翻譯"
+        },
+        {
+          "n": 178,
+          "type": "P4",
+          "quote": "\"approximately every 6 months\"",
+          "why": "英文片語嵌在中文句中段"
+        },
+        {
+          "n": 188,
+          "type": "P2",
+          "quote": "聘用核心開發者的阿姆斯特丹公司 DuckLabs",
+          "why": "主語前修飾鏈加括號過長"
+        },
+        {
+          "n": 194,
+          "type": "STILTED",
+          "quote": "這同樣是「文件裡沒找到」",
+          "why": "同一免責句第三次出現"
+        },
+        {
+          "n": 200,
+          "type": "STOCK",
+          "quote": "而不是取決於速度",
+          "why": "重複開頭的「共用而非速度」對比，無新資訊"
+        },
+        {
+          "n": 271,
+          "type": "P4",
+          "quote": "缺口檢查補上了第 ⑥ 個角度",
+          "why": "「缺口檢查」未解釋"
+        },
+        {
+          "n": 274,
+          "type": "P4",
+          "quote": "引用核對（Step 6）",
+          "why": "「Step 6」讀者無從理解"
+        }
+      ]
+    }
+  },
+  "rankings": [
+    {
+      "topic": "overall",
+      "easiest_to_hardest": [
+        "S03",
+        "S04",
+        "S02",
+        "S01"
+      ]
+    }
+  ],
+  "notes": "S03 幾乎每個術語首次出現就在句內解釋，英文引文都附中譯，長內容拆成短句，讀來一次到位。\nS01 最難：長英文引文多半未翻譯、首段括號插入多、還有日文原句與「技能 Step 6」等內部用語直接外露。\nS04 句子結構清楚（第一／第二／所以），扣分主要來自未翻譯的英文引文。\nS02 英文全部中譯，但開頭摘要與幾段長括號句（如 56、108、110 行）需要回頭讀。\n四篇共同問題：「列式」對台灣讀者易誤讀、Evidence／Airflow／缺口檢查未解釋、PostHog「先決定機器大小」交代不清。"
+}

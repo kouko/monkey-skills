@@ -89,7 +89,7 @@ Record the video URL, creator, publication date, and relevant timestamps when av
 
 ## Step 5 — Write the note
 
-Write in the **user's conversation language**, whatever the source languages were. Quotes may stay in the original language with a translation. Match the style of the vault's recent research notes: open the two or three newest files in `research/` and follow their heading style and tone (if `research/` is empty, use plain numbered headings); write plainly, define terms on first use. For the sentences in paragraphs, follow the sentence-clarity rules in the `obsidian-markdown` skill.
+Write in the **user's conversation language**, whatever the source languages were. A quote may stay in its original language, but its translation into the note's language always follows it. Match the style of the vault's recent research notes: open the two or three newest files in `research/` and follow their heading style and tone (if `research/` is empty, use plain numbered headings); write plainly, define terms on first use. For the sentences in paragraphs, follow the sentence-clarity rules in the `obsidian-markdown` skill.
 
 **Reading order differs from research order**: the conclusion and TOC come first; the chapters after them follow the skeleton from Step 1 (or the topic's dimensions). Drop skeleton steps that have nothing to say — never write an empty chapter. Inside a chapter, use a layer-2 tool when it makes the material clearer (options × criteria → a comparison table; causes → a fishbone-style breakdown).
 
@@ -101,8 +101,8 @@ The note must pass these checkpoints (layer 3 — they play the role a reporting
 4. **Chapters follow the skeleton or the topic's dimensions**. A comparison gets a comparison table; when rows were produced under different conditions (hardware, version, configuration, measurement method), state them in the column headers or the line directly above the table.
 5. **Citations**: every non-obvious claim cites a numbered source `[n]`; key claims show their confidence.
 6. **Disagreements and open questions**: where sources disagree, which claims were refuted or outdated, and what remains unresolved (omit only if none).
-7. **Method and limitations**: the angles, the skeleton used, how many claims were checked and refuted, the Step 6 counts copied from its table (never claim a check that has no table), languages searched and any that yielded nothing, source bias, time sensitivity.
-8. **Next actions**: concrete recommendations for the reader, most important first. When the note recommends something, add the key assumptions it rests on and a pre-mortem line (if this turns out wrong, the most likely reason).
+7. **Method and limitations**: the angles, the skeleton used, how many claims were checked and refuted, the Step 6 counts copied from its table (never claim a check that has no table), languages searched and any that yielded nothing, source bias, time sensitivity. Write this section in the reader's words: no names from this skill's own process (subagent, gap check, layer, step numbers).
+8. **Next actions**: concrete recommendations for the reader, most important first. When the note recommends something, add the key assumptions it rests on and one line saying the most likely reason it would turn out wrong.
 9. **Source list**: a numbered list matching the `[n]` citations — `1. Title — publisher — URL — language — accessed YYYY-MM-DD`, one URL per entry (a mirror may follow as `; mirror: URL`).
 
 Use `obsidian-markdown` for Obsidian syntax (callouts, wikilinks). Link other vault notes only if they exist.

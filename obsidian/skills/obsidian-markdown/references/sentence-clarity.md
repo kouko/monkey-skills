@@ -11,7 +11,7 @@ Each rule removes a place where the reader has to stop and read the sentence aga
    - ✗ 「數據在訴說一個不同的故事。」 → ✓ 「數據顯示的結果和預期不同。」
    - This rule removes personification; it does not ask for a person in every sentence. In Chinese and Japanese, leave the subject out when the sentence before already makes it clear, and do not add a generic one (「人」「使用者」「團隊」) sentence after sentence.
    - ✗ 「使用者打開設定頁。使用者找到通知選項。使用者把它關掉。」 → ✓ 「使用者打開設定頁，找到通知選項，把它關掉。」
-2. **Keep words that belong together close.** The subject and its verb, or a noun and the words describing it, should not be separated by a long insertion. If they are, split the sentence in two. In Chinese and Japanese the usual case is a long description placed before the noun: name the noun first, then describe it.
+2. **Keep words that belong together close.** The subject and its verb, or a noun and the words describing it, should not be separated by a long insertion. If they are, split the sentence in two. In Chinese and Japanese the usual case is a long description placed before the noun: name the noun first, then describe it. A long aside in brackets is an insertion too: give it its own sentence.
    - ✗ "The guitar sitting in the corner because you are still deciding teaches you zero chords." → ✓ "You are still deciding, so the guitar sits in the corner. You have not learned a single chord."
    - ✗ 「番茄鐘工作法是把工作切成二十五分鐘一段，而且每段之間休息五分鐘的時間管理方法。」 → ✓ 「番茄鐘工作法是一種時間管理方法：把工作切成二十五分鐘一段，每段之間休息五分鐘。」
 3. **Keep the connecting words and the steps.** Do not drop the words that say how two parts relate (because, so, but, that; 因為、所以、但是; ので、しかし) to make a sentence shorter. Do not skip a step of the reasoning either: if the reader needs B to get from A to C, write B.
@@ -20,6 +20,9 @@ Each rule removes a place where the reader has to stop and read the sentence aga
 4. **Use ordinary word combinations.** Do not stack three or more nouns, do not turn a noun into a verb, and prefer the usual phrase over an invented one.
    - ✗ "user retention improvement strategy review" → ✓ "a review of the strategy for improving user retention"
    - ✗ "Calendar it." → ✓ "Put it on the calendar."
+   - A technical term, product name or abbreviation the reader may not know is explained in a few words where it first appears; the summary at the top counts as a first appearance. Choose words by the conventions of the language variety the note is written in, which is the one the user writes in. A proper noun (a person, organization, product, law, institution or place) is written in its original language, and where it first appears a translation or a short explanation in the user's language follows it. The same ordinary word can mean different things across varieties: a table column is 欄 in Traditional Chinese as written in Taiwan and 列 in Simplified Chinese, where Taiwan's 列 means a row.
+   - ✗ 「先把資料放進 Redis。」 → ✓ 「先把資料放進 Redis（一種把資料存在記憶體裡的資料庫）。」
+   - ✗ 「日本的個人編號卡普及率上升。」 → ✓ 「日本的マイナンバーカード（個人編號卡，日本政府發的身分識別卡）普及率上升。」
 
 **After drafting**, read each paragraph once against the four rules and rewrite every sentence that breaks one. Never shorten a sentence in a way that breaks a rule: a longer sentence the reader understands in one pass is the better one. Then check the opposite fault: a sentence that sounds translated, or that repeats the same subject or word as its neighbours, is rewritten the way a native writer would say it.
 

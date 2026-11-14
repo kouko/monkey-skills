@@ -1,0 +1,534 @@
+{
+ "samples": {
+  "S01": {
+   "sentences": 252,
+   "readability": 3,
+   "flags": [
+    {
+     "n": 15,
+     "type": "P4",
+     "quote": "Quack 在 2.0 是否已穩定",
+     "why": "Quack、DuckLake 首次出現未說明是什麼（第 4 章才解釋）"
+    },
+    {
+     "n": 55,
+     "type": "P4",
+     "quote": "可自行替換的認證與授權掛鉤",
+     "why": "「掛鉤」是 hook 直譯，台灣讀者不易懂"
+    },
+    {
+     "n": 56,
+     "type": "P4",
+     "quote": "對 1.7 GB 的 Parquet 檔",
+     "why": "Parquet 首次出現未解釋，到第 102 行才說明"
+    },
+    {
+     "n": 109,
+     "type": "QUOTE",
+     "quote": "any SQL-compatible database … ",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 115,
+     "type": "QUOTE",
+     "quote": "still in beta state",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 116,
+     "type": "QUOTE",
+     "quote": "a polished version of the Quac",
+     "why": "長英文引文未附中譯，另兩段 FAQ 引文亦同"
+    },
+    {
+     "n": 117,
+     "type": "QUOTE",
+     "quote": "a single point of failure",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 118,
+     "type": "QUOTE",
+     "quote": "a ceiling, not a production SL",
+     "why": "英文引文未附中譯，SLA 也未解釋"
+    },
+    {
+     "n": 127,
+     "type": "QUOTE",
+     "quote": "Third-party tool support is in",
+     "why": "兩段英文引文都未附中譯"
+    },
+    {
+     "n": 153,
+     "type": "QUOTE",
+     "quote": "about 2 PB: roughly 1 trillion",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 159,
+     "type": "QUOTE",
+     "quote": "Some features available in the",
+     "why": "長英文引文未附中譯"
+    },
+    {
+     "n": 178,
+     "type": "QUOTE",
+     "quote": "until at least October 2027",
+     "why": "英文引文未附中譯（同段另一句亦同）"
+    },
+    {
+     "n": 188,
+     "type": "QUOTE",
+     "quote": "joined AWS in September 2026",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 242,
+     "type": "QUOTE",
+     "quote": "The only limitation is the cat",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 232,
+     "type": "P4",
+     "quote": "事前驗屍",
+     "why": "流程標籤直接當標題用，未解釋意思"
+    },
+    {
+     "n": 270,
+     "type": "P4",
+     "quote": "章內工具用了對照表和決策矩陣",
+     "why": "「章內工具」是內部流程用語，讀者不懂"
+    },
+    {
+     "n": 271,
+     "type": "P4",
+     "quote": "缺口檢查補上了第 ⑥ 個角度",
+     "why": "「缺口檢查」「盲點」為未說明的流程標籤"
+    },
+    {
+     "n": 271,
+     "type": "REREAD",
+     "quote": "對應「時間」…兩個盲點",
+     "why": "角度、盲點、括號解釋疊在一起，需重讀"
+    },
+    {
+     "n": 272,
+     "type": "P4",
+     "quote": "每個角度各派一個子代理",
+     "why": "「子代理」未解釋"
+    },
+    {
+     "n": 274,
+     "type": "P4",
+     "quote": "引用核對（Step 6）",
+     "why": "Step 6 是哪個流程的步驟，讀者無從得知"
+    }
+   ]
+  },
+  "S02": {
+   "sentences": 258,
+   "readability": 4,
+   "flags": [
+    {
+     "n": 129,
+     "type": "P4",
+     "quote": "讀取擴充的副本池",
+     "why": "「讀取擴充」「副本池」直譯術語未解釋"
+    },
+    {
+     "n": 231,
+     "type": "QUOTE",
+     "quote": "joined AWS in September 2026",
+     "why": "英文引文未附中譯（全文唯一一處）"
+    },
+    {
+     "n": 270,
+     "type": "P4",
+     "quote": "事前驗屍",
+     "why": "流程標籤未解釋意思"
+    },
+    {
+     "n": 304,
+     "type": "P4",
+     "quote": "章內工具用了比較表、取捨表",
+     "why": "「章內工具」是內部流程用語"
+    },
+    {
+     "n": 306,
+     "type": "P4",
+     "quote": "最後一個角度是缺口檢查補上的",
+     "why": "「缺口檢查」未解釋"
+    },
+    {
+     "n": 306,
+     "type": "P4",
+     "quote": "每個角度由一個子代理研究",
+     "why": "「子代理」未解釋"
+    },
+    {
+     "n": 311,
+     "type": "STILTED",
+     "quote": "只確認來源確實這樣說，2 項都確認",
+     "why": "「確認」重複，句子機械"
+    },
+    {
+     "n": 316,
+     "type": "P4",
+     "quote": "沒有哪一種必搜語言一無所獲",
+     "why": "「必搜語言」是自創詞"
+    }
+   ]
+  },
+  "S03": {
+   "sentences": 227,
+   "readability": 3,
+   "flags": [
+    {
+     "n": 20,
+     "type": "P4",
+     "quote": "自架方案（Quack、DuckLake）",
+     "why": "兩個產品名首次出現未說明是什麼"
+    },
+    {
+     "n": 54,
+     "type": "P2",
+     "quote": "嵌入式（in-process，…）的列式（",
+     "why": "兩段長括號插在修飾語與中心語之間"
+    },
+    {
+     "n": 54,
+     "type": "REREAD",
+     "quote": "DuckDB 是嵌入式…分析用 SQL 資料庫",
+     "why": "括號太長，讀到句尾才找到主幹"
+    },
+    {
+     "n": 65,
+     "type": "P4",
+     "quote": "第三方 RFC",
+     "why": "RFC 未解釋"
+    },
+    {
+     "n": 66,
+     "type": "P4",
+     "quote": "Quack 伺服器上的 token",
+     "why": "英文 token 未譯未解釋"
+    },
+    {
+     "n": 71,
+     "type": "P4",
+     "quote": "對 1.7 GB 的 Parquet 檔",
+     "why": "Parquet 首次出現未解釋，第 114 行才說明"
+    },
+    {
+     "n": 130,
+     "type": "QUOTE",
+     "quote": "any SQL-compatible database …",
+     "why": "兩段英文引文都未附中譯"
+    },
+    {
+     "n": 137,
+     "type": "P4",
+     "quote": "讀取擴充的預設池大小是 4",
+     "why": "「讀取擴充」「池」未解釋"
+    },
+    {
+     "n": 142,
+     "type": "QUOTE",
+     "quote": "Built and managed by our open-",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 143,
+     "type": "QUOTE",
+     "quote": "Third-party tool support is in",
+     "why": "兩段英文引文都未附中譯"
+    },
+    {
+     "n": 164,
+     "type": "P3",
+     "quote": "作者查到 10 次登入、0 筆查詢紀錄",
+     "why": "沒說這個數字證明了什麼，關係留給讀者猜"
+    },
+    {
+     "n": 164,
+     "type": "REREAD",
+     "quote": "10 次登入、0 筆查詢紀錄",
+     "why": "讀第一次不懂此數據的用意"
+    },
+    {
+     "n": 170,
+     "type": "QUOTE",
+     "quote": "DuckDB didn't support concurre",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 172,
+     "type": "QUOTE",
+     "quote": "about 2 PB: roughly 1 trillion",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 181,
+     "type": "QUOTE",
+     "quote": "Some features available in the",
+     "why": "長英文引文未附中譯"
+    },
+    {
+     "n": 207,
+     "type": "QUOTE",
+     "quote": "until at least October 2027",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 219,
+     "type": "QUOTE",
+     "quote": "joined AWS in September 2026",
+     "why": "英文引文未附中譯"
+    },
+    {
+     "n": 224,
+     "type": "P4",
+     "quote": "2.0.0 不會匯出 trigger",
+     "why": "英文術語未譯"
+    },
+    {
+     "n": 274,
+     "type": "QUOTE",
+     "quote": "「代替というより補完」",
+     "why": "日文引文未附中譯"
+    },
+    {
+     "n": 307,
+     "type": "P4",
+     "quote": "章內工具：比較表、取捨表",
+     "why": "「章內工具」是內部流程用語"
+    },
+    {
+     "n": 308,
+     "type": "P4",
+     "quote": "最後一個是缺口檢查補上的",
+     "why": "「缺口檢查」「盲點」未解釋"
+    },
+    {
+     "n": 308,
+     "type": "REREAD",
+     "quote": "對應「時間」與「可行性與可逆性」",
+     "why": "未說明兩個盲點的意思，需重讀"
+    },
+    {
+     "n": 309,
+     "type": "P4",
+     "quote": "每個角度由一個子代理研究",
+     "why": "「子代理」未解釋"
+    },
+    {
+     "n": 311,
+     "type": "P4",
+     "quote": "引用核對（技能的 Step 6）",
+     "why": "「技能的 Step 6」讀者無從得知"
+    },
+    {
+     "n": 316,
+     "type": "P4",
+     "quote": "沒有任何必要語言是空手而回",
+     "why": "「必要語言」用法怪，語意不清"
+    }
+   ]
+  },
+  "S04": {
+   "sentences": 272,
+   "readability": 5,
+   "flags": [
+    {
+     "n": 65,
+     "type": "P4",
+     "quote": "可以自己替換的認證與授權掛勾",
+     "why": "「掛勾」是 hook 直譯，不易懂"
+    },
+    {
+     "n": 147,
+     "type": "P4",
+     "quote": "Metabase 的權限模擬功能",
+     "why": "「權限模擬」未解釋"
+    },
+    {
+     "n": 223,
+     "type": "P4",
+     "quote": "Lambda 語法、SQL 解析器",
+     "why": "Lambda 語法未解釋"
+    }
+   ]
+  },
+  "S05": {
+   "sentences": 219,
+   "readability": 4,
+   "flags": [
+    {
+     "n": 13,
+     "type": "P4",
+     "quote": "自架的那兩層",
+     "why": "「那兩層」指什麼，前文沒交代"
+    },
+    {
+     "n": 13,
+     "type": "REREAD",
+     "quote": "第一個標示可用於正式環境的版本",
+     "why": "指涉不明加長修飾語，需重讀"
+    },
+    {
+     "n": 15,
+     "type": "P4",
+     "quote": "Quack 在 2.0 的官方頁面",
+     "why": "Quack、DuckLake、MotherDuck 首次出現未說明"
+    },
+    {
+     "n": 15,
+     "type": "STILTED",
+     "quote": "沒有被寫成穩定版",
+     "why": "「被寫成」被動語態不自然"
+    },
+    {
+     "n": 55,
+     "type": "P4",
+     "quote": "可自行改寫的認證與授權掛勾",
+     "why": "「掛勾」是 hook 直譯，不易懂"
+    },
+    {
+     "n": 56,
+     "type": "P2",
+     "quote": "一篇日文實測（DuckDB 1.5.5、…）顯示",
+     "why": "主詞與動詞間夾一大段括號條件"
+    },
+    {
+     "n": 56,
+     "type": "P4",
+     "quote": "1.7 GB 的 Parquet 檔",
+     "why": "Parquet 全文未解釋"
+    },
+    {
+     "n": 108,
+     "type": "STILTED",
+     "quote": "目錄需求則是 信心度 High：目錄可以是",
+     "why": "信心標籤插在句中當述語，結構生硬"
+    },
+    {
+     "n": 108,
+     "type": "REREAD",
+     "quote": "發布日期與目錄需求則是 信心度 High",
+     "why": "要重讀才知冒號後是在支持哪個說法"
+    },
+    {
+     "n": 147,
+     "type": "P3",
+     "quote": "作者記錄到 10 次登入、0 次查詢",
+     "why": "沒說明這組數字代表什麼"
+    },
+    {
+     "n": 153,
+     "type": "P4",
+     "quote": "Kubernetes 上的容器",
+     "why": "產品名未解釋"
+    },
+    {
+     "n": 186,
+     "type": "P4",
+     "quote": "lambda 語法與除以零的行為",
+     "why": "lambda 語法未解釋"
+    },
+    {
+     "n": 269,
+     "type": "P4",
+     "quote": "缺口檢查補上了「時間」",
+     "why": "「缺口檢查」是流程標籤"
+    },
+    {
+     "n": 269,
+     "type": "P4",
+     "quote": "每個角度由一個子代理研究",
+     "why": "「子代理」未解釋"
+    },
+    {
+     "n": 269,
+     "type": "STILTED",
+     "quote": "成熟度與廠商風險與可逆性",
+     "why": "「與」連用，讀來生硬"
+    },
+    {
+     "n": 270,
+     "type": "P4",
+     "quote": "章內工具用了比較表",
+     "why": "「章內工具」是內部流程用語"
+    }
+   ]
+  },
+  "S06": {
+   "sentences": 318,
+   "readability": 5,
+   "flags": [
+    {
+     "n": 79,
+     "type": "P4",
+     "quote": "1.7 GB 的 Parquet 檔",
+     "why": "Parquet 全文未解釋"
+    },
+    {
+     "n": 167,
+     "type": "P4",
+     "quote": "DuckDB 的權限不能在 Metabase 裡模擬",
+     "why": "「權限模擬」未解釋"
+    },
+    {
+     "n": 167,
+     "type": "REREAD",
+     "quote": "權限不能在 Metabase 裡模擬",
+     "why": "語意不清，需重讀仍難懂"
+    },
+    {
+     "n": 193,
+     "type": "P4",
+     "quote": "Tokyo 地區",
+     "why": "中文句中夾英文地名，表中其他處都寫東京"
+    },
+    {
+     "n": 263,
+     "type": "P4",
+     "quote": "Lambda 語法、SQL 解析器",
+     "why": "Lambda 語法未解釋"
+    },
+    {
+     "n": 292,
+     "type": "STILTED",
+     "quote": "資料量在小團隊的常見範圍內，通常不是問題",
+     "why": "重複上一句的意思"
+    },
+    {
+     "n": 352,
+     "type": "STILTED",
+     "quote": "只確認來源確實這樣寫，2 項都確認",
+     "why": "「確認」重複，句子機械"
+    },
+    {
+     "n": 364,
+     "type": "P4",
+     "quote": "沒有哪一種必搜的語言完全沒有結果",
+     "why": "「必搜的語言」是自創詞"
+    }
+   ]
+  }
+ },
+ "rankings": [
+  {
+   "topic": "overall",
+   "easiest_to_hardest": [
+    "S04",
+    "S06",
+    "S02",
+    "S05",
+    "S01",
+    "S03"
+   ]
+  }
+ ],
+ "notes": "最大分野是外文引文有沒有附中譯：S04、S06、S02 幾乎每句英日文引文都附中譯，S01、S03 留下 9–11 處未譯英文長句。\n其次是術語與產品名是否在首次出現就解釋：S04、S06 首段即說明 Quack／DuckLake／MotherDuck 與「行程」，S01、S03、S05 首段直接丟出名稱。\n方法章是各篇共同的弱點：「缺口檢查」「子代理」「章內工具」「Step 6」「必搜語言」等內部流程標籤未經翻譯就寫給讀者。\n句法層面差異小：六篇都很少有 P1、STOCK；長括號插入（S03 第 54 行、S05 第 56 行）是少數 P2。\nS05 把信心度標籤塞進句中當述語，造成重讀；S04 全文以短句加括號解釋，最接近一讀就懂。"
+}

@@ -12,7 +12,7 @@ from pathlib import Path
 round_dir = Path(sys.argv[1])
 show_flags = "--flags" in sys.argv
 key = json.loads((round_dir / "key.json").read_text(encoding="utf-8"))
-TYPES = ["P1", "P2", "P3", "P4", "STOCK", "STILTED", "REREAD"]
+TYPES = ["P1", "P2", "P3", "P4", "QUOTE", "STOCK", "STILTED", "REREAD"]
 
 
 def arm_of(label):
