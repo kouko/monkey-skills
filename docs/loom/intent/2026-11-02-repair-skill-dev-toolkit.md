@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: yes — 盲測、偏好匯出與候選核對涉及多物件及證據保存，需要規格約束。
 evidence: [docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/independent-reassessment.md, docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/host-release-readiness.md]
-intent_confirmed_sha: e8d997a242c58bf638b94a128a076c815b9864ce
+intent_confirmed_sha: a8926f6b0a04d91274fccbb029ca9d36250d0cfd
 status: confirmed 2026-11-07
 
 ## Problem
