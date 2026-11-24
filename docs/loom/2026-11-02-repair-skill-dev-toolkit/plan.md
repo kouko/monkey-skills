@@ -350,3 +350,4 @@ charter: 1.1
 44. W17 candidate1a7c51c2 rejected: three native executions retain full-scope reason gaps. Restore its two product files; preserve all evidence/counters. No second candidate, external retry or Closing Review/Ship. Details: native-ten-rounds.md and w17-scope-first-results.json.
 
 45. W18 continues the same failed caller task without resetting counters. Judgment-stage evidence: three runs quoted the qualification yet generalized it. Three native replays, stop at first repeat; native evidence cannot prove Claude repaired.
+46. User2026-11-24 accepted W18 after replays and audits; recorded, not fixed: run-2's unsupported F2/F3 confirmations and cross-run disagreement. F1 veto never triggered. No new wording, no counter reset, no install/publication/merge.
