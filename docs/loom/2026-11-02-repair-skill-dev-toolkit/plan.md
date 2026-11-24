@@ -1,6 +1,6 @@
 # Repair skill-dev-toolkit — plan
-intent: 2026-11-02-repair-skill-dev-toolkit@5740ab10c
-spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@5740ab10c
+intent: 2026-11-02-repair-skill-dev-toolkit@404e0794c
+spec: docs/loom/2026-11-02-repair-skill-dev-toolkit/spec.md@90f492cf9
 charter: 1.1
 
 ## Task DAG
