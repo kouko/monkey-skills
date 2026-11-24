@@ -1,4 +1,4 @@
-Tried on 2026-11-24, in a clean copy of the project at 2a6f311cd8a0d8afb807d939572c01322e41f9e4.
+Tried on 2026-11-24, in a clean copy of the project at c8d6de0ad7357a50da276d7b92b7fc3a7deb7a.
 
 # 分批修復 skill-dev-toolkit — 驗收測試證據
 
@@ -313,6 +313,30 @@ This re-run follows fix commit 2a6f311cd8a0d8afb807d939572c01322e41f9e4 ("docs(l
 - 6: carried over — fix only moved research .py tooling, no planner change
 - 7: carried over — fix only moved research .py tooling; suite re-ran at new HEAD and passed
 - 8: carried over — fix only moved research .py tooling, no description validation change
-- 9: re-tested in full — re-verified W18 verdict chain (w18-native-replays.json/.md, audit-a/b.md, synthesis.md) at evidence/ after research .py move; decisions & identity unchanged; verdict stays partly
+- 9: carried over — full re-test completed at prior re-run (HEAD 2a6f311cd); this fix edits only the intent pin line, no Acceptance wording, W18 evidence, code, or test changed
 - 10: carried over — fix only moved research .py tooling, no cold-entry logic change
-- 11: re-tested in full — re-verified full W18 verdict chain (preregistered veto/controls, run decisions, cross-run disagreement, limits) at evidence/ after research .py move; all intact; verdict stays partly
+- 11: carried over — full re-test completed at prior re-run (HEAD 2a6f311cd); this fix edits only the intent pin line, no Acceptance wording, W18 evidence, code, or test changed
+
+## Re-run on 2026-11-24, at c8d6de0ad7357a50da276d7b92b7fc3a7deb7a
+
+This second re-run follows fix commit c8d6de0ad7357a50da276d7b92b7fc3a7deb7a ("docs(loom): intent 2026-11-02-repair-skill-dev-toolkit confirmed"), fix range 2a6f311cd..c8d6de0ad.
+
+### What the fix did
+
+- Edited exactly one frontmatter line in `docs/loom/intent/2026-11-02-repair-skill-dev-toolkit.md`: `intent_confirmed_sha` corrected from `e8d997a242c58bf638b94a128a076c815b9864ce` to `a8926f6b0a04d91274fccbb029ca9d36250d0cfd`.
+- No Acceptance wording, no requirement, no product code, no skill content, no test, no evidence changed.
+- Verified the pin is now self-consistent: recomputing the intent content identity (`grep -v -e '^status:' -e '^intent_confirmed_sha:' <intent> | git hash-object --stdin`) yields `a8926f6b0a04d91274fccbb029ca9d36250d0cfd`, matching the declared value.
+
+### What this re-run checked
+
+- Diffed `2a6f311cd..c8d6de0ad`: only the single pin-line change in the intent file; all three loom-files (report, evidence, intent) appear in the diff because report/evidence were updated as part of this same re-anchoring deliverable, not because acceptance reasoning changed.
+- Confirmed the Acceptance section of the intent is byte-identical between 2a6f311cd and c8d6de0ad.
+- Evidence chain intact: all W18 verdict JSONs, replay markdown, and audit files remain under `docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/` (untouched by this fix).
+- The confirmation suite command re-ran at the new HEAD in the clean worktree at `/tmp/at-c8d6de0ad`:
+  - `python3 -m pytest scripts/ -q -p no:cacheprovider` → 715 passed in 49.92s
+
+### Per-row re-run disposition
+
+- 1-8, 10: carried over — fix only edits intent pin line; no Acceptance wording, code, test, or evidence changed; suite re-ran at new HEAD and passed (row 7)
+- 9: carried over — full re-test completed at prior re-run (HEAD 2a6f311cd); this fix edits only the intent pin line; W18 verdict chain unchanged; verdict stays partly
+- 11: carried over — full re-test completed at prior re-run (HEAD 2a6f311cd); this fix edits only the intent pin line; W18 verdict chain unchanged; verdict stays partly
