@@ -70,7 +70,7 @@ the batch. This amendment reduces repeatability evidence and is not hidden.
 ## Evidence and execution
 
 Codex CLI reports version `0.167.0`. The retained
-[runner](scope-diagnostic-20261109/corrected/run.py) explicitly requests OpenAI
+[runner](../../evidence/research/2026-11-02-repair-skill-dev-toolkit/scope-diagnostic-20261109/corrected/run.py) explicitly requests OpenAI
 `gpt-6.1-sol`, `high`, ignores user config and removes provider override environment
 variables. Executor approval is `never`, sandbox read-only, web search disabled,
 project instruction loading disabled, tools forbidden. Source workflows are data.
