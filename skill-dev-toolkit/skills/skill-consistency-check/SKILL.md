@@ -174,8 +174,8 @@ completed detector output, including thorough-mode runs:
    permissions, classifications, field definitions and values on their own terms
    without substituting another concern. Extra keys or workarounds reconcile no
    same-scope contradiction. Exclude unsupported or overstated originals despite
-   narrower supported concerns. An example keeps the category its source assigns;
-   a parenthetical adds none. Record source-grounded reasons; never invent findings.
+   narrower supported concerns. An example or parenthetical keeps only the category
+   and scope its source assigns. Record source-grounded reasons; never invent findings.
 4. Write `decisions.json` as an object with `sources` mapping every exact input
    basename to the SHA256 of its original bytes, and a `decisions` list containing
    exactly one object per original candidate: `source` (basename), `id` (original

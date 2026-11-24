@@ -9,7 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - Review each consistency-check candidate in isolation: finish one candidate's
-  reason before starting the next, quoting the governing source verbatim.
+  reason before starting the next, quoting the governing source verbatim and
+  keeping any quoted example or parenthetical within the scope its source assigns.
 - Replace the consistency-check caller's reason construction: establish original
   conditions, coverage and governing scope before reconciliation, keep selected
   branches fixed, and judge non-action claims without requiring incompatible actions.
