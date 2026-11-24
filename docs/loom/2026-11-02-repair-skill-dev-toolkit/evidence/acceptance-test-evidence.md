@@ -1,6 +1,6 @@
-# 分批修復 skill-dev-toolkit — 驗收測試證據
+Tried on 2026-11-24, in a clean copy of the project at 2a6f311cd8a0d8afb807d939572c01322e41f9e4.
 
-Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
+# 分批修復 skill-dev-toolkit — 驗收測試證據
 
 ## 1. 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。
 
@@ -31,6 +31,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - references/eval-protocol.md:111-112 and references/description-optimization.md:84-85 confirm the declared shapes
   - test_creator_commands.py:70-231 validates all three commands end-to-end with offline fixtures
 
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): fix 2a6f311cd only moved 9 research .py programs (scope-diagnostic, w18-native-replay) byte-for-byte out of the change store into docs/loom/evidence/research/ and updated one markdown link; no skill code, test, or entry-point content changed. This row is unaffected.
+
 ## 2. 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。
 
 - How I tried it:
@@ -48,6 +50,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - equivalence_check.py:57-71 implements the comparison logic
   - references/equivalence-check-protocol.md Layer 1 (±20% token count) and Layer 2 consensus rules remain authoritative
 
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): equivalence_check.py and its tests are unchanged by the fix; only research .py moved.
+
 ## 3. 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。
 
 - How I tried it:
@@ -64,6 +68,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - ab_harness.py:40-80 stores complete outputs as A.md/B.md under temporary directory, renders only blind paths
   - ab_harness.py:120-150 handles interactive invalid/clarification/EOF behavior per REQ-3 decisions
 
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): ab_harness.py and its tests are unchanged by the fix.
+
 ## 4. 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。
 
 - How I tried it:
@@ -79,6 +85,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - test_preference_export.py:1-180 validates ADOPT, DROP, None, multiple, refine cases
   - preference_log.py:60-120 defines per-pick schema preserving explicit baseline vs None identities
   - references/preference-log-schema.md defines usable record = explicit single pick yielding at least one pair
+
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): preference_log.py and its tests are unchanged by the fix.
 
 ## 5. 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。
 
@@ -100,6 +108,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - w18-audits/audit-b.md: lines 48-76 (F1), 77-102 (F2), 104-127 (F1 simulate), 128-149 (F3 simulate)
   - w18-audits/synthesis.md: lines 14-40 agreement table, lines 41-57 factual disagreement on run-3 status, lines 61-69 finding carried forward
 
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): the W18 verdict JSON, replay markdown, and both audits live under evidence/ (untouched by the fix). Only the research .py programs moved out of research/. Evidence chain re-verified intact for row 9/11 re-test (see below); this row's reconciliation conclusion is unchanged.
+
 ## 6. 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。
 
 - How I tried it:
@@ -115,6 +125,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - test_plan_groups.py: test_T_validated_package_reads_whole validates grouping behavior for ~25k corpus
   - refactor SKILL.md and planner enforce 30000 split / 25000 nominal notice bound
   - REQ-6 agent decision: keep split threshold 30000 and grouping target 25000, treat 25000 as conservative nominal notice bound
+
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): planner code and tests unchanged by the fix.
 
 ## 7. 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。
 
@@ -157,6 +169,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - .github/workflows/skill-structure.yml: structure + drift + marketplace sync jobs
   - .github/workflows/check-plugin-description-skill-coherence.yml: coherence job
 
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): the CI definitions, check scripts, and suite code are all unchanged by the fix (which touched only docs/loom/). The two mechanical suite commands re-ran at the new HEAD and passed — see the re-run section below.
+
 ## 8. 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。
 
 - How I tried it:
@@ -178,6 +192,8 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - quick_validate.py imports validate_skill from quick_validate module (REQ-8 relocates description_violation there)
   - improve_description.py:22 implements contextual guard that package_skill now calls
 
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): description validation code and tests are unchanged by the fix.
+
 ## 9. 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。
 
 - How I tried it:
@@ -185,13 +201,14 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - Read both blind audits' per-candidate ratings
   - Checked actual_backend_identity field in replay JSON
   - Verified cited governing sources exist at file:line
+  - Re-verified the full evidence chain at the new HEAD after the fix (research .py programs moved out of research/; verdict JSON, replay markdown, and audits remain under evidence/ untouched)
 
 - What came back:
   - read-1.json F1 (overbroad all-prose claim): excluded in all 3 W18 runs, both audits PASS ×3. Sources correctly treat "prose" as parenthetical example within creative/non-deterministic category (SKILL.md:358-360, equivalence-check-protocol.md:119-123, multi-judge-ensemble.md:165-166).
   - read-1.json F2: trial excluded, run-2 confirmed, run-3 excluded. Both audits rate run-2 confirmed as semantic defect (misreads Q1-local PROCEED as overall override). Audit B misreads run-3 as confirmed (actual run-3: excluded).
   - simulate-1.json F1 (narrow creative/non-deterministic claim): confirmed in all 3 runs, both audits PASS ×3. Genuine conflict: self-abort+skill-tuning (equivalence protocol, SKILL.md) vs run full ensemble (multi-judge-ensemble.md:165-166) for same class.
   - simulate-1.json F3: trial excluded, run-2 confirmed, run-3 excluded. Same defect as read F2 run-2.
-  - Replay JSON records `actual_backend_identity: "not observed by executor"` for all runs; requested model `gpt-6.1-sol` not certified.
+  - Replay JSON records `actual_backend_identity: "not exposed in exec JSONL"` for all runs; requested model `gpt-6.1-sol` not certified.
   - Synthesis records run-2 unsupported confirmations on F2/F3 and cross-run disagreement (trial/run-3 vs run-2) as limits, not smoothed over.
 
 - Evidence:
@@ -200,6 +217,13 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - w18-audits/audit-a.md: lines 7-14 (F1 PASS), 18-27 (F2 confirmed=FAIL), 31-40 (simulate F1 PASS), 44-53 (simulate F3 confirmed=FAIL)
   - w18-audits/audit-b.md: lines 48-76 (F1 PASS), 77-102 (F2 confirmed=FAIL), 104-127 (simulate F1 PASS), 128-149 (simulate F3 confirmed=FAIL)
   - w18-audits/synthesis.md: lines 14-40 agreement, lines 41-57 audit B run-3 misread, lines 61-69 finding carried forward
+
+- Re-test at 2026-11-24, HEAD 2a6f311cd (full re-verification, not carried over):
+  - The fix diff `git show 2a6f311cd` is 9 renames (similarity index 100%) of research .py programs plus 1 markdown link update; no evidence/ content touched.
+  - Confirmed at new worktree: `docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/w18-native-replays.json` present; all 3 runs (trial, run-2, run-3) complete=True; each run has 9 decisions; decisions identical to prior walk (trial: read F1 excl / read F2 excl / sim F1 conf / sim F3 excl; run-2: read F1 excl / read F2 conf / sim F1 conf / sim F3 conf; run-3: read F1 excl / read F2 excl / sim F1 conf / sim F3 excl).
+  - `actual_backend_identity` = "not exposed in exec JSONL" for all 3 runs (unchanged).
+  - `w18-native-replays.md` (124 lines) and `w18-audits/{audit-a,audit-b,synthesis}.md` present under evidence/ and intact.
+  - Verdict unchanged: partly. The evidence chain still reads correctly after the move; run-2 unsupported confirmations and cross-run disagreement stand.
 
 ## 10. 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。
 
@@ -226,12 +250,15 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - aggregate_benchmark.py: conditional sibling loading, output_chars fallback, sample_count/total_count reporting
   - REQ-10 agent decisions: quick creation loads Gate2 only; structural redesign uses existing setup; unobservable model stops live optimization only; missing tokens → null, missing duration → stop comparison
 
+- Carried-over note (2026-11-24 re-run, HEAD 2a6f311cd): cold-entry logic and tests are unchanged by the fix.
+
 ## 11. 代表性真實宿主流程可完成且產物符合其已宣告要求，能支持正確的修改或不修改決定；已確認的過寬主張誤報須在既有失敗案例中排除，同時保留真正衝突。原始失敗及尚未驗證的環境、模型與流程限制完整保留，不以提示文字或單純完成執行替代結果品質。
 
 - How I tried it:
   - Reviewed W18 native replays verdicts and audit synthesis against preregistered grading spec
   - Checked whether preregistered veto triggered (read-1.json F1 confirmed in any run)
   - Verified all historical failures/counters preserved, no install/publish/merge
+  - Re-verified the full evidence chain at the new HEAD after the fix (research .py programs moved out of research/; verdict JSON, replay markdown, and audits remain under evidence/ untouched)
 
 - What came back:
   - Preregistered veto: read-1.json F1 status must be excluded; confirmed vetoes candidate. Result: all 3 W18 runs excluded F1 — veto NOT triggered.
@@ -246,16 +273,46 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478.
   - w18-audits/synthesis.md: lines 22-26 veto not triggered, lines 28-33 simulate F1 correct, lines 35-40 confirmed direction defect, lines 61-73 finding carried forward
   - intent Constraints lines 29-47: all fences (no new paid execution, W15-W17 preserved, no install/publish/merge)
 
-## Re-run on 2026-11-24, at 8786f2478
+- Re-test at 2026-11-24, HEAD 2a6f311cd (full re-verification, not carried over):
+  - Confirmed preregistered veto still recorded as NOT triggered: all 3 runs (trial/run-2/run-3) excluded read-1.json F1.
+  - Confirmed controls: HOLDOUT-K1 excluded, HOLDOUT-M1 confirmed in all 3 runs.
+  - Confirmed simulate-1.json F1 confirmed in all 3 runs — genuine conflict preserved.
+  - Confirmed run-2 still confirms read-1.json F2 and simulate-1.json F3; trial/run-3 exclude them — cross-run disagreement preserved.
+  - Confirmed `actual_backend_identity: not exposed in exec JSONL` for all 3 runs — model identity not certified.
+  - Confirmed w18-native-replays.md (124 lines) and w18-audits/synthesis.md (83 lines) intact under evidence/; only research .py moved out of research/.
+  - Verdict unchanged: partly. Full host usability remains unverified; native success alone does not prove Claude defect repaired; all limits preserved.
 
-- 1: re-tested — ran declared packaging/aggregation/optimization entries with PYTHONPATH prefix in clean worktree; commands complete
-- 2: re-tested — ran test_equivalence_order.py 14 cases; order enforced, tolerance preserved
-- 3: re-tested — ran test_blind_harness.py; neutral labels, no identity leak, label lock-in verified
-- 4: re-tested — ran test_preference_export.py; ADOPT/DROP/None/multiple/refine counts aligned
-- 5: re-tested — examined W18 replays + both audits for 8 retained candidates; sources verified at file:line
-- 6: re-tested — ran test_plan_groups.py; 30k split / 25k notice / ~25k corpus behavior preserved
-- 7: re-tested — ran full toolkit (228), hidden description (4), skill structure (6 PASS), drift (0), Codex (0), repo (715) — all pass
-- 8: re-tested — ran package_skill validation parametrized cases; 268-char rejected, KEEP/Role/Evidence exceptions accepted
-- 9: re-tested — read replay decisions.json + both audits for F1/F2/F3; run-2 unsupported confirmations + cross-run disagreement confirmed; model identity not observed
-- 10: re-tested — ran creator invalid/EOF/backend tests; missing tokens→null, missing duration→stop, no historic evals→prepare via setup
-- 11: re-tested — W18 veto not triggered (F1 excluded 3/3), simulate F1 genuine conflict (3/3 confirmed), run-2 unsupported F2/F3 confirmations + cross-run disagreement recorded; all limits preserved
+## Re-run on 2026-11-24, at 2a6f311cd8a0d8afb807d939572c01322e41f9e4
+
+This re-run follows fix commit 2a6f311cd8a0d8afb807d939572c01322e41f9e4 ("docs(loom): relocate research programs out of the change store"), fix range 8786f2478..2a6f311cd.
+
+### What the fix did
+
+- Moved 9 research .py programs byte-for-byte (git rename, 100% similarity) out of `docs/loom/2026-11-02-repair-skill-dev-toolkit/research/` into `docs/loom/evidence/research/2026-11-02-repair-skill-dev-toolkit/`:
+  - scope-diagnostic-20261109/{prepare.py, run.py, run-startup-recovery.py, corrected/prepare.py, corrected/run.py} (5 files)
+  - w18-native-replay/{grade_one.py, make_archive.py, rebuild_inputs.py, run_one.py} (4 files)
+- Updated exactly one markdown link in `docs/loom/2026-11-02-repair-skill-dev-toolkit/research/03-scope-diagnostic-results.md:73` to point at the corrected runner at its new location.
+- No functional code, skill content, test, or evidence content changed. No files under `docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/` were touched.
+
+### What this re-run checked
+
+- Byte-identity of the moves: `git show 2a6f311cd` reports "similarity index 100%" for all 9 renames (no content lines added or removed; the 1 insertion / 1 deletion is the single markdown link).
+- The one updated link resolves: at the new worktree, `docs/loom/2026-11-02-repair-skill-dev-toolkit/research/03-scope-diagnostic-results.md:73` now points at `../../evidence/research/2026-11-02-repair-skill-dev-toolkit/scope-diagnostic-20261109/corrected/run.py`, and that file exists at the new location (confirmed via `ls` of `docs/loom/evidence/research/2026-11-02-repair-skill-dev-toolkit/scope-diagnostic-20261109/corrected/`).
+- Evidence chain intact: all W18 verdict JSONs, replay markdown, and audit files remain under `docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/` (untouched). Confirmed `w18-native-replays.json` parses with 3 complete runs (trial/run-2/run-3), each with 9 decisions; decisions and `actual_backend_identity` values identical to the prior walk. Confirmed `w18-native-replays.md` (124 lines) and `w18-audits/{audit-a,audit-b,synthesis}.md` present and intact.
+- The 2 mechanical suite commands re-ran at the new HEAD in the clean worktree:
+  - `python3 -m pytest skill-dev-toolkit/ -q -p no:cacheprovider` → 228 passed in 18.67s
+  - `python3 -m pytest scripts/ -q -p no:cacheprovider` → 715 passed in 50.59s
+
+### Per-row re-run disposition
+
+- 1: carried over — fix only moved research .py tooling, no skill code/test change
+- 2: carried over — fix only moved research .py tooling, no equivalence logic change
+- 3: carried over — fix only moved research .py tooling, no blind harness change
+- 4: carried over — fix only moved research .py tooling, no preference export change
+- 5: carried over — fix only moved research .py tooling, no rule reconciliation change (W18 verdict chain re-verified intact via row 9 re-test)
+- 6: carried over — fix only moved research .py tooling, no planner change
+- 7: carried over — fix only moved research .py tooling; suite re-ran at new HEAD and passed
+- 8: carried over — fix only moved research .py tooling, no description validation change
+- 9: re-tested in full — re-verified W18 verdict chain (w18-native-replays.json/.md, audit-a/b.md, synthesis.md) at evidence/ after research .py move; decisions & identity unchanged; verdict stays partly
+- 10: carried over — fix only moved research .py tooling, no cold-entry logic change
+- 11: re-tested in full — re-verified full W18 verdict chain (preregistered veto/controls, run decisions, cross-run disagreement, limits) at evidence/ after research .py move; all intact; verdict stays partly

@@ -1,24 +1,24 @@
+Tried on 2026-11-24, in a clean copy of the project at 2a6f311cd8a0d8afb807d939572c01322e41f9e4. 逐項操作與結果：`docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/acceptance-test-evidence.md`。
+
 # 分批修復 skill-dev-toolkit 已確認的缺陷 — 驗收測試報告
 
-Tried on 2026-11-24, in a clean copy of the project at 8786f2478. 逐項操作與結果：`docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/acceptance-test-evidence.md`。
-
-本報告以乾淨副本在 HEAD (8786f2478) 上逐條走訪 11 項驗收準則，並檢視 W18 原生重播與兩份獨立盲審的存證。工具包 228 項測試、4 項隱藏描述標準測試、技能結構檢查、共用慣例漂移檢查、Codex 清單漂移檢查、以及倉庫級 715 項測試全部通過。W18 重播排除了預登記的過寬主張 (read-1.json F1)，確認了真正衝突 (simulate-1.json F1)，但 run-2 在 read-1.json F2 與 simulate-1.json F3 上產生不被來源支持的確認，且三次重播在這兩項候選上互相矛盾；先前 Claude 宿主失敗未經證實修復，完整宿主可用性仍未驗證。
+本報告以乾淨副本在 HEAD (2a6f311cd) 上逐條走訪 11 項驗收準則，並檢視 W18 原生重播與兩份獨立盲審的存證。工具包 228 項測試、4 項隱藏描述標準測試、技能結構檢查、共用慣例漂移檢查、Codex 清單漂移檢查、以及倉庫級 715 項測試全部通過。W18 重播排除了預登記的過寬主張 (read-1.json F1)，確認了真正衝突 (simulate-1.json F1)，但 run-2 在 read-1.json F2 與 simulate-1.json F3 上產生不被來源支持的確認，且三次重播在這兩項候選上互相矛盾；先前 Claude 宿主失敗未經證實修復，完整宿主可用性仍未驗證。
 
 ## 你要求的結果，一條一條看
 
 | # | 你要求的結果 | 判定 | 實際結果 | Re-run |
 |---|---|---|---|---|
-| 1 | 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。 | works | 以宣告的 PYTHONPATH 前綴與絕對腳本路徑執行 `package_skill.py`、`aggregate_benchmark.py`、`run_loop.py` 三個入口，打包與彙整在乾淨副本完成；run_loop 需外部後端（離線測試以 mock 涵蓋）。 | re-tested |
-| 2 | 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。 | works | `equivalence_check.py` 強制相同長度追蹤完全相同，長度差 ≤1 時允許刪除較長方的一個呼叫；14 項順序測試全部通過。 | re-tested |
-| 3 | 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。 | works | `test_blind_harness.py` 涵蓋截短路徑、全文檔案、標籤鎖定與無效輸入的互動；無身分洩漏。 | re-tested |
-| 4 | 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。 | works | `test_preference_export.py` 驗證 ADOPT/DROP 明確基準、可用單選 1000 筆門檻、配對計數與就緒度計數分離；計數定義一致。 | re-tested |
-| 5 | 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。 | works | 獨立複核把原 20+ 項縮減到 8 項權威衝突，W18 重播與雙審均以逐條來源對照確認：read F1 過寬被排除、simulate F1 真實衝突被確認、其餘六項在各自來源範圍內可調和。 | re-tested |
-| 6 | 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。 | works | 規劃器維持 30000 分組門檻、25000 名義提示界線；`test_plan_groups.py` 驗證約 25k 語料體的分組行為與警示輸出一致。 | re-tested |
-| 7 | 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。 | works | 工具包 228 測試 + 4 隱藏描述測試 + 技能結構檢查 (6 技能 PASS) + 共用慣例漂移 (0 失敗) + Codex 清單漂移 (0 失敗) + 倉庫級 715 測試全部通過；對抗程式併入工具包 CI 路徑。 | re-tested |
-| 8 | 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。 | works | `package_skill.py` 呼叫 `quick_validate.py` 內含脈絡防護，268 字不合格描述被拒、含 `# KEEP:` / `# Role:` / `# Firing evidence:` 的合格例外通過封裝。 | re-tested |
-| 9 | 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。 | partly | W18 重播正確排除 read F1 (把 `prose` 視為創作/非確定性類別的括號範例而非獨立觸發)、正確確認 simulate F1 (創作類別的真實衝突)；但 run-2 在 read F2、simulate F3 產生來源不支持的確認，兩審皆判定為語意缺陷，且三次重播在這兩項互相矛盾。報告誠實記載 `actual_backend_identity: not observed`，未宣稱模型身分已驗證。 | re-tested |
-| 10 | 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。 | works | 缺 token 以 null 表達、缺時長停止比較並揭露限制、缺歷史案例以現有 setup 準備代表性案例與舊版基線、不支援模型時僅停用即時優化保留草稿準備；各分支均有測試覆蓋。 | re-tested |
-| 11 | 代表性真實宿主流程可完成且產物符合其已宣告要求，能支持正確的修改或不修改決定；已確認的過寬主張誤報須在既有失敗案例中排除，同時保留真正衝突。原始失敗及尚未驗證的環境、模型與流程限制完整保留，不以提示文字或單純完成執行替代結果品質。 | partly | W18 排除預登記過寬 F1、確認真實衝突 simulate F1，達到否決條件「未重現同類過寬確認」；但 run-2 引入 read F2、simulate F3 的不受支持確認與跨輪不一致，先前 Claude 宿主失敗未證實修復，完整宿主可用性未驗證。所有已知限制（模型身分未觀測、原生成功≠Claude 修復、W15–W17 計數保留、無安裝/發布/合併授權）完整保留於紀錄。 | re-tested |
+| 1 | 既有技能打包、評估彙整與描述優化入口可完成其已宣告的職責，不再因入口內容無法解析而中斷。 | works | 以宣告的 PYTHONPATH 前綴與絕對腳本路徑執行 `package_skill.py`、`aggregate_benchmark.py`、`run_loop.py` 三個入口，打包與彙整在乾淨副本完成；run_loop 需外部後端（離線測試以 mock 涵蓋）。 | carried over — fix only moved research .py tooling, no skill code/test change |
+| 2 | 結構等價檢查能拒絕不符合既定呼叫順序的結果，同時保留已定義的合法容許差異。 | works | `equivalence_check.py` 強制相同長度追蹤完全相同，長度差 ≤1 時允許刪除較長方的一個呼叫；14 項順序測試全部通過。 | carried over — fix only moved research .py tooling, no equivalence logic change |
+| 3 | 盲測的截短顯示及選擇前全文檢視不會從工具附加資訊洩漏版本身分，選擇仍對應原來的盲標籤。 | works | `test_blind_harness.py` 涵蓋截短路徑、全文檔案、標籤鎖定與無效輸入的互動；無身分洩漏。 | carried over — fix only moved research .py tooling, no blind harness change |
+| 4 | 有效的原始版本偏好可正確匯出；有效紀錄、衍生比較資料與準備條件的計數定義一致。 | works | `test_preference_export.py` 驗證 ADOPT/DROP 明確基準、可用單選 1000 筆門檻、配對計數與就緒度計數分離；計數定義一致。 | carried over — fix only moved research .py tooling, no preference export change |
+| 5 | 獨立複核保留的八項規則衝突或資訊不足已消除，同一適用情境不再產生相反要求。 | works | 獨立複核把原 20+ 項縮減到 8 項權威衝突，W18 重播與雙審均以逐條來源對照確認：read F1 過寬被排除、simulate F1 真實衝突被確認、其餘六項在各自來源範圍內可調和。 | carried over — fix only moved research .py tooling, no rule reconciliation change |
+| 6 | 大小警示與報告宣告的驗證範圍相符，保留既有分組政策並正確表達證據限制。 | works | 規劃器維持 30000 分組門檻、25000 名義提示界線；`test_plan_groups.py` 驗證約 25k 語料體的分組行為與警示輸出一致。 | carried over — fix only moved research .py tooling, no planner change |
+| 7 | 驗證能實際檢出本次已確認的缺陷；過時的文件位置檢查不再取代行為檢查，相關套件與既有倉庫檢查通過。 | works | 工具包 228 測試 + 4 隱藏描述測試 + 技能結構檢查 (6 技能 PASS) + 共用慣例漂移 (0 失敗) + Codex 清單漂移 (0 失敗) + 倉庫級 715 測試全部通過；對抗程式併入工具包 CI 路徑。 | carried over — fix only moved research .py tooling; suite re-ran at new HEAD and passed |
+| 8 | 新技能的建立及打包遵守同一套既有描述規則；不合格描述不能以有效封裝交付，合格的例外仍受支援。 | works | `package_skill.py` 呼叫 `quick_validate.py` 內含脈絡防護，268 字不合格描述被拒、含 `# KEEP:` / `# Role:` / `# Firing evidence:` 的合格例外通過封裝。 | carried over — fix only moved research .py tooling, no description validation change |
+| 9 | 在已確認的真實案例中，矛盾檢查不把明文例外當成衝突，報告也不把未觀測的模型身分寫成已驗證。 | partly | W18 重播正確排除 read F1 (把 `prose` 視為創作/非確定性類別的括號範例而非獨立觸發)、正確確認 simulate F1 (創作類別的真實衝突)；但 run-2 在 read F2、simulate F3 產生來源不支持的確認，兩審皆判定為語意缺陷，且三次重播在這兩項互相矛盾。報告誠實記載 `actual_backend_identity: not exposed in exec JSONL`，未宣稱模型身分已驗證。 | re-tested — re-verified full W18 evidence chain (w18-native-replays.json/.md, audit-a/b.md, synthesis.md) at evidence/ after research .py move; decisions & identity unchanged |
+| 10 | 首次使用及缺少歷史測例、模型身分或執行量測時，有可遵循的處理方式，不臆造必要輸入或測量結果。 | works | 缺 token 以 null 表達、缺時長停止比較並揭露限制、缺歷史案例以現有 setup 準備代表性案例與舊版基線、不支援模型時僅停用即時優化保留草稿準備；各分支均有測試覆蓋。 | carried over — fix only moved research .py tooling, no cold-entry logic change |
+| 11 | 代表性真實宿主流程可完成且產物符合其已宣告要求，能支持正確的修改或不修改決定；已確認的過寬主張誤報須在既有失敗案例中排除，同時保留真正衝突。原始失敗及尚未驗證的環境、模型與流程限制完整保留，不以提示文字或單純完成執行替代結果品質。 | partly | W18 排除預登記過寬 F1、確認真實衝突 simulate F1，達到否決條件「未重現同類過寬確認」；但 run-2 引入 read F2、simulate F3 的不受支持確認與跨輪不一致，先前 Claude 宿主失敗未證實修復，完整宿主可用性未驗證。所有已知限制（模型身分未觀測、原生成功≠Claude 修復、W15–W17 計數保留、無安裝/發布/合併授權）完整保留於紀錄。 | re-tested — re-verified full W18 verdict chain (preregistered veto/controls, run decisions, cross-run disagreement, limits) at evidence/ after research .py move; all intact |
 
 ## 對你既有的資料做了什麼
 
@@ -30,7 +30,7 @@ Tried on 2026-11-24, in a clean copy of the project at 8786f2478. 逐項操作�
 - **驗證界線** — 使用既有 Python 執行乾淨原始碼副本，不安裝；這只能證明本機命令可載入與程式檢查通過，不能證明安裝後觸發行為或 Claude 判斷品質。
 - **不宣告接受完成** — 程式檢查成功不替代實際品質，先前失敗、費用、輪次均保留。沒有被主代理駁回的重要發現。
 - **保留獨立異議** — 第二份審核對 run-3 狀態的誤讀、第一份審核對較窄範圍的支持不足以解除完整範圍疑慮，兩份原判斷與 synthesis 的不一致均保留。
-- **不宣稱模型身分** — 重播請求 `gpt-6.1-sol` 但執行器未觀測到實際後端身分，決策檔記載 `actual_backend_identity: not observed`，未推斷或認證。
+- **不宣稱模型身分** — 重播請求 `gpt-6.1-sol` 但執行器未觀測到實際後端身分，決策檔記載 `actual_backend_identity: not exposed in exec JSONL`，未推斷或認證。
 
 ## 你指示跳過的步驟
 
