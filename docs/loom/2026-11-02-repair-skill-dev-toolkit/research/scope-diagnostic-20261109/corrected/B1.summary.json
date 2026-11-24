@@ -1,0 +1,23 @@
+{
+  "run": "B1",
+  "exit_code": 0,
+  "complete": true,
+  "usage": {
+    "input_tokens": 184067,
+    "cached_input_tokens": 9856,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 3578,
+    "reasoning_output_tokens": 1552
+  },
+  "api_equivalent_estimate_usd": 0.38518759999999996,
+  "cumulative_estimate_usd": 0.7767131999999999,
+  "elapsed_seconds": 100.06,
+  "coverage_valid": true,
+  "unexpected_tools": 0,
+  "parse_error": null,
+  "process_ok": true,
+  "requested_model": "gpt-6.1-sol",
+  "requested_provider": "openai",
+  "requested_effort": "high",
+  "actual_backend_identity": "not exposed in exec JSONL"
+}

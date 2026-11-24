@@ -73,24 +73,32 @@ This step matters — bad eval queries lead to bad descriptions.
 
 ## Phase 3: Run the optimization loop
 
-Tell the user: "This will take some time — I'll run the optimization loop in the background and check on it periodically."
+First confirm an observable exact session model ID supported by the loop's Claude backend. If unknown or unsupported, stop only live optimization; drafting and query preparation may continue. Never send literal `unknown` as a provider ID or guess an OpenAI ID for Claude. A different supported target must be explicitly selected by the user; disclose that its results test that target rather than the current session model.
 
-Save the eval set to the workspace, then run in the background:
+Once a supported target is confirmed, tell the user: "This will take some time — I'll run the optimization loop in the background and check on it periodically."
+
+Save the eval set to the workspace, then follow the
+[script execution context](../SKILL.md#running-bundled-scripts) and run in the background:
 
 ```bash
-python -m scripts.run_loop \
-  --eval-set <path-to-trigger-eval.json> \
-  --skill-path <path-to-skill> \
-  --model <model-id-powering-this-session> \
+PYTHONPATH="<absolute-creator-root>${PYTHONPATH:+:$PYTHONPATH}" \
+  python "<absolute-creator-root>/scripts/run_loop.py" \
+  --eval-set "<absolute-workspace>/trigger-eval.json" \
+  --skill-path "<absolute-skill-folder>" \
+  --model <supported-target-model-id> \
   --max-iterations 5 \
+  --report "<absolute-workspace>/optimization-report.html" \
+  --results-dir "<absolute-workspace>/optimization-results" \
   --verbose
 ```
 
-Use the model ID from your system prompt (the one powering the current session) so the triggering test matches what the user actually experiences.
+Use the observed supported session ID, or the explicitly selected supported target above, as `--model`; a system-prompt ID is usable only if it meets those conditions.
 
 While it runs, periodically tail the output to update the user on which iteration it's on and the scores.
 
-The script handles the full optimization loop automatically (train/held-out-test methodology and its rationale: `references/eval-methodology.md`). When done, it opens an HTML report in the browser and returns JSON with `best_description` — selected by test score rather than train score to avoid overfitting.
+The script handles the optimization loop (train/held-out-test methodology and its rationale: `references/eval-methodology.md`). Generation reads the current bundled `description-design.md` authority. Mechanical eligibility filters candidates before score selection: nonempty text without angle brackets, the platform's 1024-character ceiling, and the authority's length/metadata constraints. An invalid original description can be optimized but cannot win. No eligible evaluated candidate means an error, not a successful best description.
+
+When done, it opens an HTML report and returns JSON with `best_description`, selected among eligible candidates by held-out test score (or train score when holdout is disabled). Mechanical eligibility does not establish semantic compliance.
 
 ### How skill triggering works
 
@@ -100,6 +108,13 @@ Understanding the triggering mechanism helps design better eval queries — read
 
 ## Phase 4: Apply the result
 
-Take `best_description` from the JSON output and update the skill's SKILL.md frontmatter. Show the user before/after and report the scores.
+Before applying `best_description`, the applying agent must validate it against the current `description-design.md` authority in the actual skill context:
+
+- Confirm neutral third-person voice, positive intent triggers and coverage of the skill's real trigger surfaces; check any adjacent-skill exclusions and multilingual belt against their conditions.
+- Preserve the normal 150-character target and 250-character soft lint line. For a longer normal description, confirm that the colocated YAML justification names retained trigger surfaces and explains why they cannot fit within 250 characters. A comment's presence alone does not prove justification.
+- For router/CONDITIONAL exceptions, confirm the skill actually has that role, verify the specific firing metric and its corpus/live A/B evidence, and enforce the 500-character bound. New exceptions without evidence stay in the normal band. Never invent an admission note to make a candidate fit.
+- Check the rendered YAML string, excluding comments, against these bands and the separate absolute platform ceiling of 1024 characters. If any check fails, reject the candidate and correct the cause before rerunning; do not apply it merely because its score won.
+
+Only after these checks pass, update SKILL.md frontmatter. Show the user before/after, scores and any retained exception justification.
 
 ---

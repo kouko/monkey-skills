@@ -6,9 +6,12 @@ orchestrator and detector texts may not name host-only tools or model ids.
 
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = SKILL_DIR.parents[2]
@@ -27,6 +30,32 @@ def _env():
     env = dict(os.environ)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     return env
+
+
+def test_toolkit_verification_routed():
+    workflow_path = ".github/workflows/skill-dev-toolkit-ci.yml"
+    workflow = yaml.load((REPO_ROOT / workflow_path).read_text(), Loader=yaml.BaseLoader)
+    shared_checks = {
+        "scripts/check-skill-structure.py": ["skill-dev-toolkit"],
+        "scripts/check-shared-conventions-drift.py": [],
+        "scripts/sync_codex_manifests.py": ["--check", "skill-dev-toolkit"],
+    }
+    for event in ("pull_request", "push"):
+        paths = workflow["on"][event]["paths"]
+        assert {"skill-dev-toolkit/**", "scripts/**", workflow_path} <= set(paths)
+    assert "main" in workflow["on"]["push"]["branches"]
+    job = workflow["jobs"]["test"]
+    assert workflow["permissions"] == {"contents": "read"}
+    assert job["env"]["PYTHONDONTWRITEBYTECODE"] == "1"
+    commands = [shlex.split(step["run"]) for step in job["steps"] if "run" in step]
+    assert ["python3", "-m", "pytest", "scripts/", "-q", "-p", "no:cacheprovider"] in commands
+    for target in ("skill-dev-toolkit/", "skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py"):
+        assert any(command[:3] == ["python3", "-m", "pytest"]
+                   and target in command and "-p" in command
+                   and command[command.index("-p") + 1] == "no:cacheprovider"
+                   for command in commands), target
+    for script, args in shared_checks.items():
+        assert ["python3", script, *args] in commands, script
 
 
 def test_structure_and_description_checks_pass():

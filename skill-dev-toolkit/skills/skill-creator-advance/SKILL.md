@@ -20,6 +20,17 @@ The core loop: **draft → test → review → improve → repeat**.
 
 Your job is to figure out where the user is in this process and help them progress — from scratch or from an existing draft. Be flexible: if they say "just vibe with me", skip the formal eval machinery.
 
+## Running bundled scripts
+
+Keep the user's project as the working directory: evaluation uses it to locate
+the project and its temporary `.claude/commands/` files. `<absolute-creator-root>`
+is the directory containing this loaded SKILL.md. Invoke each bundled script by
+absolute path with a command-local `PYTHONPATH` prefix for that root, preserving
+existing entries as shown below; do not change directory to the creator root.
+Resolve all skill, eval, workspace and output path arguments to absolute paths
+against the user's project. Keep outputs in a writable project workspace outside
+the creator root.
+
 ## NEVER (anti-patterns to avoid)
 
 These anti-patterns recur across skill creation sessions. Each has a WHY clause explaining the failure mode — violating it will waste tokens or produce a broken skill.
@@ -28,7 +39,7 @@ These anti-patterns recur across skill creation sessions. Each has a WHY clause 
 
 2. **Never use first/second person in the description.** The description is injected into the system prompt; pronoun inconsistency causes selection problems. [WHY: Anthropic best-practices doc has an explicit Warning block; "I can help you" confuses the matcher.]
 
-3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check) — except on the quick eval path, where only Gate 2 (smallest-end-state) is answered inline and the full reference protocol is skipped. [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
+3. **Never create a skill without validating the need.** Every skill must pass Pre-Creation Gates (Gate 1 worth-it check, Gate 2 smallest-end-state check) — except on the quick eval path: read only the Gate 2 subsection of the reference below, answer it inline, and skip the other gates. [WHY: building the wrong skill has permanent cost — maintenance burden without solving anything.]
 
 4. **Never spawn baselines after with-skill runs.** Always launch baseline runs BEFORE or WITH with-skill runs in the same workflow turn. Spawning baselines after with-skill causes straggler waits and uneven timing data. [WHY: parallel execution ensures comparable conditions; baseline must match with-skill runtime environment. Evaluation-first workflows should run baselines first to establish ground truth before testing skill effectiveness. Exception: new skills on the quick eval path need no baseline.]
 
@@ -52,7 +63,7 @@ Users range from non-technical to expert. Gauge familiarity from context cues: "
 
 ### Pre-Creation Gates (recommended; skip only with stated reason)
 
-**Do NOT Load:** Skip this reference if the skill qualifies for the quick eval path (see the eval-path note above) — in that case, still answer the Gate 2 questions inline (they are short); the full reference protocol is only for the full creation workflow. Load only when starting a full skill creation workflow.
+**Do NOT Load:** On the quick eval path, read only §Gate 2 — Smallest-end-state check of the reference below and answer its questions inline. Skip the remaining gates and full interview. Load the complete protocol only for the full creation workflow.
 
 The full Pre-Creation Gates protocol (Gate 1 Worth-it check, Gate 2 Smallest-end-state check, Gate 3 User-input check) is in [references/pre-creation-gates.md](references/pre-creation-gates.md).
 
@@ -130,7 +141,7 @@ Layout follows the flat-structure and progressive-disclosure conventions in [ref
 Based on the user interview and the planned structure above, fill in these components:
 
 - **name**: Skill identifier (lowercase, hyphens only, 1-64 chars)
-- **description**: What it does + when to use it (use positive specificity; see Description Best Practices below and the §House description standard — avoid "Do NOT use for X" negation)
+- **description**: What it does + when to use it (positive triggers first; limited adjacent-skill exclusions follow Description Best Practices and the §House description standard)
 - **compatibility**: Required tools, dependencies (optional)
 - **license**: SPDX identifier or path to LICENSE file (optional)
 - **allowed-tools**: Space-separated pre-approved tools (e.g., "Bash(git *) Read"; optional)
@@ -145,7 +156,7 @@ it owns the design patterns: WHAT+WHEN (not WHAT+WORKFLOW),
 third-person voice, length guidance, a validation checklist, and
 examples. The house standard for descriptions is defined in
 description-design.md §Principles (Principles 1–4). Principle 4
-specifically covers length requirements.
+is the length number authority.
 
 ### Skill Writing Guide
 
@@ -171,7 +182,7 @@ Ask the user to clarify (or infer from their phrasing):
 |---|---|---|
 | **(a) Token / structure refactor** with output behavior unchanged | "shorten", "reduce tokens", "tidy up", "縮減 SKILL.md", "整理結構" — and **no behavior change desired** | Hand off to `skill-dev-toolkit:skill-refactor`. Do not handle here. |
 | **(b) Output quality / variant exploration** with human judgment | "test different phrasings", "improve outputs", "A/B variants", "輸出風格", "我來選哪個比較好" — taste-sensitive output dimensions | Hand off to `skill-dev-toolkit:skill-tuning`. Do not handle here. |
-| **(c) Structural change** — add / split / merge phases, change agent decomposition, change input/output contract | "rewrite", "redesign", "add a phase", "split this skill", "重新設計", "拆 skill" | Use the Structural Rewrite Flow below (steps 1–4), then evaluate using the iteration loop (quick or full eval path, depending on complexity). Skip Step 0 (Evaluation-First) — reuse existing eval cases from the original skill. |
+| **(c) Structural change** — add / split / merge phases, change agent decomposition, change input/output contract | "rewrite", "redesign", "add a phase", "split this skill", "重新設計", "拆 skill" | Use the Structural Rewrite Flow below (steps 1–4), then evaluate using the selected quick or full path. Reuse existing eval cases; if absent, prepare cases and the old-version baseline before editing as described below. |
 | **(d) Description optimization** | "improve description", "optimize triggering", "better trigger accuracy", "改善說明", "最佳化觸發" | Handle internally using the Description Optimization section below |
 
 If the user's intent is unclear, ask them to clarify which of (a), (b), (c), or (d) applies. Do **not** default into the creation flow without confirming — picking the wrong tool wastes time on the wrong type of work.
@@ -180,7 +191,7 @@ If the user's intent is unclear, ask them to clarify which of (a), (b), (c), or 
 
 **Do NOT Load:** Read [references/improvement-workflows.md](references/improvement-workflows.md) §Case (c): Structural Rewrite Flow only when the router above identified case (c) — a structural change (add/split/merge phases, change agent decomposition, change input/output contract).
 
-For case (c), use that flow (steps 1–4). **Skip Step 0 (Evaluation-First)** — the skill already has eval cases from its original creation or previous improvements; reuse those. Cases (a) and (b) hand off to the dedicated sibling skills above and do **not** use these steps. Case (d) is handled internally using the Description Optimization section below.
+For case (c), use that flow (steps 1–4). Reuse existing eval cases and skip Step 0 when they exist; otherwise use the selected quick/full setup to create representative cases and run an old-version baseline before editing. Preserve the old-version snapshot for comparison; newly created cases are not historical test evidence. Cases (a) and (b) hand off to the dedicated sibling skills above and do **not** use these steps. Case (d) is handled internally using the Description Optimization section below.
 
 ---
 
@@ -225,7 +236,7 @@ For the full description optimization workflow, see [references/description-opti
 
 ### House description standard (the optimization target)
 
-Any description you write or optimize MUST follow the house standard in [references/description-design.md](references/description-design.md): §Principles 1–4 (Principle 4 owns the length numbers: normal ≤150 target / 250 soft lint line; router/CONDITIONAL ≤500 with firing evidence), plus §Multilingual keyword belt and the context-listing-budget note. The optimization loop must keep `best_description` within these rules.
+Any description you write or optimize MUST follow the house standard in [references/description-design.md](references/description-design.md): §Principles 1–4 (Principle 4 is the length number authority), plus §Multilingual keyword belt and the context-listing-budget note. The optimization loop must keep `best_description` within these rules.
 
 For the full step-by-step workflow, see [references/description-optimization.md](references/description-optimization.md) — it owns the complete sequence including eval query generation, user review, the optimization loop, and result application.
 
@@ -236,7 +247,8 @@ For the full step-by-step workflow, see [references/description-optimization.md]
 After the skill is complete, package it for distribution:
 
 ```bash
-python -m scripts.package_skill <path/to/skill-folder>
+PYTHONPATH="<absolute-creator-root>${PYTHONPATH:+:$PYTHONPATH}" \
+  python "<absolute-creator-root>/scripts/package_skill.py" "<absolute-skill-folder>" "<absolute-workspace>/dist"
 ```
 
 This creates a `.skill` file that can be shared and installed.

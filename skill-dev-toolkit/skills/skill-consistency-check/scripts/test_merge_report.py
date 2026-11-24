@@ -1,9 +1,12 @@
 """Tests for merge_report.py (stdlib + pytest; fixtures built in tmp_path)."""
+import hashlib
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 SCRIPT = Path(__file__).with_name("merge_report.py")
 
@@ -45,10 +48,29 @@ def _setup(tmp_path, findings_by_file, plan_kwargs=None, fill=True):
     return target, plan, paths
 
 
-def _run(target, plan, findings, out, model="Claude Sonnet 4"):
+def _decisions(findings):
+    return {"sources": {Path(p).name: hashlib.sha256(Path(p).read_bytes()).hexdigest()
+                        for p in findings},
+            "decisions": [{"source": Path(p).name, "id": f.get("id"),
+                           "status": "confirmed", "reason": "Both rules govern the same action."}
+                          for p in findings
+                          for f in json.loads(Path(p).read_text())["findings"]]}
+
+
+def _run(target, plan, findings, out, model="Claude Sonnet 4", decisions="auto"):
     cmd = [sys.executable, "-B", str(SCRIPT), "--target", str(target),
            "--plan", str(plan), "--findings", *findings,
            "--model", model, "--out", str(out)]
+    if decisions == "auto":
+        # Invalid detector JSON must reach the CLI's input validation unchanged.
+        try:
+            decisions = _decisions(findings)
+        except ValueError:
+            decisions = {"sources": {}, "decisions": []}
+    if decisions is not None:
+        path = plan.parent / "decisions.json"
+        path.write_text(json.dumps(decisions))
+        cmd += ["--decisions", str(path)]
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
@@ -59,6 +81,133 @@ def _report(out):
 
 def _tree(path):
     return sorted(str(p.relative_to(path)) for p in path.rglob("*"))
+
+
+def test_reviewed_candidates_selected_and_raw_bytes_preserved(tmp_path):
+    candidates = [_finding("action", "medium", _side("SKILL.md", [3]),
+                           _side("a.md", [9])),
+                  _finding("field", "low", _side("SKILL.md", [30]),
+                           _side("b.md", [1])),
+                  _finding("exception", "high", _side("SKILL.md", [50]),
+                           _side("c.md", [5]))]
+    candidates[0]["detector_detail"] = {"original": [1, "unchanged"]}
+    target, plan, f = _setup(tmp_path, {"read-1.json": candidates})
+    raw = {p: Path(p).read_bytes() for p in f}
+    review = _decisions(f)
+    review["decisions"][2].update(status="excluded", reason="c.md:5 explicitly exempts this scope.")
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == 1, result.stderr
+    data, md = _report(out)
+    assert data["review"] == review
+    assert data["counts"] == {"high": 0, "medium": 1, "low": 1}
+    assert data["indeterminate"] == []
+    for original, merged in zip(candidates[:2], data["findings"]):
+        assert {k: merged[k] for k in original} == original
+        assert merged["sources"] == [{"file": "read-1.json", "id": original["id"]}]
+    assert "Confirmed: 2; excluded: 1; indeterminate: 0" in md
+    assert "Advisory preview" in md
+    assert {p: Path(p).read_bytes() for p in f} == raw
+
+
+def test_compatible_exceptions_excluded(tmp_path):
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
+        _finding("E1", "high", _side("SKILL.md", [3]), _side("a.md", [9]))]})
+    review = _decisions(f)
+    review["decisions"][0].update(status="excluded", reason="SKILL.md:3 delegates; a.md:9 supplies its exception.")
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == 0, result.stderr
+    data, md = _report(out)
+    assert data["verdict"] == "pass" and data["findings"] == []
+    assert data["review"] == review
+    assert data["counts"] == {"high": 0, "medium": 0, "low": 0}
+    assert "no confirmed or unresolved candidates" in md
+
+
+@pytest.mark.parametrize("confirmed", [False, True])
+def test_reviewed_ambiguity_indeterminate(tmp_path, confirmed):
+    a, b = _side("SKILL.md", [3]), _side("a.md", [9])
+    target, plan, f = _setup(tmp_path, {
+        "read-1.json": [_finding("R", "low", a, b)],
+        "simulate-1.json": [_finding("S", "high", b, a)]})
+    review = _decisions(f)
+    for decision in review["decisions"]:
+        decision.update(status="indeterminate", reason="Full reading leaves competing scope interpretations.")
+    if confirmed:
+        review["decisions"][0]["status"] = "confirmed"
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == (1 if confirmed else 3), result.stderr
+    data, md = _report(out)
+    assert data["verdict"] == ("needs-revision" if confirmed else "indeterminate")
+    assert len(data["findings"]) == int(confirmed)
+    assert len(data["indeterminate"]) == 1
+    assert len(data["indeterminate"][0]["sources"]) == (1 if confirmed else 2)
+    assert data["counts"] == {"high": 0, "medium": 0, "low": int(confirmed)}
+    assert "## Indeterminate candidates" in md and "a.md:9" in md
+    assert data["review"] == review
+
+
+@pytest.mark.parametrize("case", [
+    "missing", "object", "sources", "decisions", "missing-source", "extra-source",
+    "stale", "empty-group-stale", "omitted", "duplicate", "unknown-source", "unknown-id",
+    "status", "reason", "blank-reason", "entry", "blank-id", "numeric-id",
+    "duplicate-id", "duplicate-basename", "list-id", "list-confidence",
+    "list-status", "list-source", "extra-decision",
+])
+def test_missing_or_stale_decision_rejected(tmp_path, case):
+    candidate = _finding("F1", "high", _side("SKILL.md", [3]), _side("a.md", [9]))
+    if case == "blank-id":
+        candidate["id"] = " "
+    elif case == "numeric-id":
+        candidate["id"] = 1
+    elif case == "list-id":
+        candidate["id"] = []
+    elif case == "list-confidence":
+        candidate["confidence"] = []
+    target, plan, f = _setup(tmp_path, {"read-1.json": [candidate]})
+    if case == "duplicate-id":
+        Path(f[0]).write_text(json.dumps({"findings": [candidate, candidate]}))
+    if case == "duplicate-basename":
+        copy = tmp_path / "another" / "read-1.json"
+        copy.parent.mkdir()
+        copy.write_bytes(Path(f[0]).read_bytes())
+        f.append(str(copy))
+    review = _decisions(f)
+    if case == "missing":
+        review = None
+    elif case == "object":
+        review = []
+    elif case in ("sources", "decisions"):
+        review[case] = None
+    elif case == "missing-source":
+        del review["sources"]["simulate-1.json"]
+    elif case == "extra-source":
+        review["sources"]["read-9.json"] = "0" * 64
+    elif case in ("stale", "empty-group-stale"):
+        Path(f[1] if case == "empty-group-stale" else f[0]).write_bytes(b'{"findings": []}\n')
+    elif case == "omitted":
+        review["decisions"] = []
+    elif case == "duplicate":
+        review["decisions"] *= 2
+    elif case == "extra-decision":
+        review["decisions"].append(dict(review["decisions"][0], id="extra"))
+    elif case in ("unknown-source", "unknown-id", "status", "reason", "blank-reason",
+                  "list-status", "list-source"):
+        key, value = {"unknown-source": ("source", "read-9.json"),
+                      "unknown-id": ("id", "absent"), "status": ("status", "unchecked"),
+                      "reason": ("reason", None), "blank-reason": ("reason", " "),
+                      "list-status": ("status", []), "list-source": ("source", [])}[case]
+        review["decisions"][0][key] = value
+    elif case == "entry":
+        review["decisions"][0] = None
+    out = tmp_path / "out"
+    result = _run(target, plan, f, out, decisions=review)
+    assert result.returncode == 2, (case, result.stderr)
+    assert "unrecognized arguments" not in result.stderr
+    assert "Traceback" not in result.stderr
+    assert not out.exists()
 
 
 # --- Acceptance 1 -----------------------------------------------------------
@@ -77,15 +226,15 @@ def test_high_gives_needs_revision(tmp_path):
     assert str(out / "consistency-report.md") in r.stdout
 
 
-def test_medium_low_only_pass(tmp_path):
+def test_confirmed_medium_low_require_revision(tmp_path):
     target, plan, f = _setup(tmp_path, {"read-1.json": [
         _finding("F1", "medium", _side("SKILL.md", [3]), _side("a.md", [9])),
         _finding("F2", "low", _side("SKILL.md", [30]), _side("b.md", [1]))]})
     out = tmp_path / "out"
     r = _run(target, plan, f, out)
-    assert r.returncode == 0, r.stderr
+    assert r.returncode == 1, r.stderr
     data, _ = _report(out)
-    assert data["verdict"] == "pass"
+    assert data["verdict"] == "needs-revision"
     assert [x["confidence"] for x in data["findings"]] == ["medium", "low"]
 
 
@@ -146,36 +295,65 @@ def test_different_file_pair_not_merged(tmp_path):
 
 # --- Acceptance 4 -----------------------------------------------------------
 
-def test_limits_and_models_listed(tmp_path):
-    target, plan, f = _setup(tmp_path, {"read-1.json": []})
+@pytest.mark.parametrize("status,code,verdict", [
+    ("excluded", 0, "pass"),
+    ("confirmed", 1, "needs-revision"),
+    ("indeterminate", 3, "indeterminate"),
+])
+@pytest.mark.parametrize("model", ["claude-sonnet-4-5", "unknown"])
+def test_limits_and_models_listed(tmp_path, status, code, verdict, model):
+    target, plan, f = _setup(tmp_path, {"read-1.json": [
+        _finding("F1", "medium", _side("SKILL.md", [3]), _side("a.md", [9]))]})
+    raw = {p: Path(p).read_bytes() for p in f}
+    review = _decisions(f)
+    review["decisions"][0].update(status=status, reason="Source review records this disposition.")
     out = tmp_path / "out"
-    r = _run(target, plan, f, out, model="claude-sonnet-4-5")
-    assert r.returncode == 0, r.stderr
+    r = _run(target, plan, f, out, model=model, decisions=review)
+    assert r.returncode == code, r.stderr
     data, md = _report(out)
-    assert data["model"] == "claude-sonnet-4-5"
+    assert data["verdict"] == verdict and data["review"] == review
+    assert {p: Path(p).read_bytes() for p in f} == raw
+    assert data["model"] == model
     assert data["reference"] == {"model": "Claude Sonnet (200k context)",
-                                 "max_validated_tokens": 25000}
-    assert len(data["blind_spots"]) == 2
+                                 "max_validated_tokens": 25000,
+                                 "nominal_reporting_bound_tokens": 25000}
+    assert len(data["blind_spots"]) == 3
     assert any("conditional" in b for b in data["blind_spots"])
     assert any("multi-step" in b for b in data["blind_spots"])
     assert "Known limits" in md
     for b in data["blind_spots"]:
         assert b in md
-    assert ("Model used: claude-sonnet-4-5 — validated on: Claude Sonnet "
-            "(200k context), packages up to 25,000 tokens") in md
+    notice = next(b for b in data["blind_spots"] if b.startswith("Advisory preview:"))
+    assert "confirming an overbroad claim from narrower evidence" in notice
+    assert "Human review of the original sources and decision reasons is required" in notice
+    assert "before edits or release decisions" in notice
+    assert "Do not use this report as an automatic release gate" in notice
+    assert md.index("> " + notice) < md.index("Verdict:")
+    assert data["model_matches_reference"] is (model != "unknown")
+    assert f"Model used: {model}" in md
+    assert "packages of approximately 25k tokens" in md
+    limits = md[md.index("Known limits"):md.index("Model used:")]
+    assert "25,000" in limits and "nominal reporting bound" in limits
+    assert "accuracy cliff" in limits
+    assert "25,135" in limits
 
 
 def test_model_mismatch_warning(tmp_path):
     target, plan, f = _setup(tmp_path, {"read-1.json": []})
-    out1, out2 = tmp_path / "o1", tmp_path / "o2"
-    _run(target, plan, f, out1, model="gpt-5-codex")
-    data, md = _report(out1)
-    assert data["model_matches_reference"] is False
-    assert "Accuracy with this model is not validated" in md
-    _run(target, plan, f, out2, model="Claude SONNET 4.5")
-    data, md = _report(out2)
-    assert data["model_matches_reference"] is True
-    assert "Accuracy with this model is not validated" not in md
+    for i, (model, matches) in enumerate([
+            ("gpt-5-codex", False), ("Claude SONNET 4.5", True),
+            ("unknown", False)]):
+        out = tmp_path / f"o{i}"
+        result = _run(target, plan, f, out, model=model)
+        assert result.returncode == 0, result.stderr
+        data, md = _report(out)
+        assert data["model"] == model
+        assert data["model_matches_reference"] is matches
+        assert f"Model used: {model}" in md
+        assert ("Accuracy with this model is not validated" in md) is not matches
+        assert ("Model name is caller-supplied; family matching is metadata "
+                "comparison, not runtime identity verification or new "
+                "regression-corpus validation.") in md
 
 
 def test_uncovered_pairs_and_over_limit_reported(tmp_path):
@@ -190,15 +368,17 @@ def test_uncovered_pairs_and_over_limit_reported(tmp_path):
     assert data["uncovered_pairs"] == [["references/a.md", "references/b.md"]]
     assert "Not checked together" in md
     assert "references/a.md" in md and "references/b.md" in md
-    assert "exceeds the validated size" in md
+    assert "exceeds the conservative nominal reporting bound" in md
 
 
 def test_not_grouped_has_no_uncovered_section(tmp_path):
     target, plan, f = _setup(tmp_path, {"read-1.json": []})
     out = tmp_path / "out"
     _run(target, plan, f, out)
-    _, md = _report(out)
+    data, md = _report(out)
     assert "Not checked together" not in md
+    assert data["over_limit"] is False
+    assert "> Caution:" not in md
 
 
 # --- Acceptance 5 -----------------------------------------------------------
@@ -306,15 +486,18 @@ def test_thorough_mode_second_run_accepted(tmp_path):
     assert r.returncode == 0, r.stderr
 
 
-def test_over_limit_warning_is_cause_neutral(tmp_path):
-    target, plan, f = _setup(tmp_path, {}, {"grouped": True, "over_limit": True})
+@pytest.mark.parametrize("grouped", [False, True])
+def test_over_limit_warning_is_cause_neutral(tmp_path, grouped):
+    target, plan, f = _setup(tmp_path, {}, {"grouped": grouped, "over_limit": True})
     out = tmp_path / "out"
     _run(target, plan, f, out)
-    _, md = _report(out)
-    assert "core files alone" not in md
-    assert ("At least one group exceeds the validated size (25,000 estimated "
-            "tokens) because the core files or a single large file are too "
-            "big; results for this run are less reliable.") in md
+    data, md = _report(out)
+    assert data["over_limit"] is True and data["grouped"] is grouped
+    caution = next(line for line in md.splitlines() if line.startswith("> Caution:"))
+    assert "25,000 estimated tokens" in caution
+    assert "conservative nominal reporting bound" in caution
+    assert "core" not in caution and "single large file" not in caution
+    assert "less reliable" not in caution and "validated size" not in caution
 
 
 def test_markdown_only_coverage_note(tmp_path):
@@ -325,7 +508,7 @@ def test_markdown_only_coverage_note(tmp_path):
     note = ("Only Markdown files other than README*.md are checked; "
             "rules in other file types are not.")
     assert data["coverage_note"] == note
-    assert len(data["blind_spots"]) == 2 and note not in data["blind_spots"]
+    assert len(data["blind_spots"]) == 3 and note not in data["blind_spots"]
     assert note in md[md.index("Known limits"):]
 
 

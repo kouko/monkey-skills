@@ -55,7 +55,7 @@ flowchart TD
     Q1 -->|FLAG| H[Tier 2 升給人類]
     Q1 -->|PASS| Q2{Q2: Token 縮減 ≥10%?}
     Q2 -->|≥10%| Q3{Q3: Invariants 完好?}
-    Q2 -->|5-10%| WC[RESHAPE: 微弱 win, user 決定]
+    Q2 -->|5%以上、未滿10%| WC[RESHAPE: 微弱 win, user 決定]
     Q2 -->|<5% 或增加| R
     Q3 -->|PASS| K[PROCEED — 留下, ratchet 推進]
     Q3 -->|FAIL| R
@@ -70,7 +70,7 @@ flowchart TD
 | 檢查 | 機制 | 失敗 → |
 |---|---|---|
 | **Q1 等價性** | Layer 1 結構（決定性）+ Layer 2 LLM-judge ensemble（3 call, 不同框架）| REJECT 或 FLAG (Tier 2) |
-| **Q2 Token 縮減** | `wc -w` 前後比；≥10% 門檻 | REJECT（5-10% 為 RESHAPE）|
+| **Q2 Token 縮減** | `wc -w` 前後比；≥10% 門檻 | REJECT（5%以上、未滿10% 為 RESHAPE）|
 | **Q3 Invariants** | name / dependencies / contract / 結構不變 | REJECT |
 
 ### Verdict 詞彙
@@ -80,9 +80,9 @@ flowchart TD
 | Verdict | 條件 | 動作 |
 |---|---|---|
 | **PROCEED** | 三項全部嚴格 pass | Ratchet 推進、commit 留下 |
-| **RESHAPE** | Q2 微弱（5-10%）但 Q1+Q3 過 | 給 user 看、user 決定留或繼續 refactor |
+| **RESHAPE** | Q2 微弱（5%以上、未滿10%）但 Q1+Q3 過 | 給 user 看、user 決定留或繼續 refactor |
 | **REJECT** | Q1/Q2/Q3 任一失敗 | `git revert`、記 results.tsv、繼續 |
-| (Tier 2) | Q1 ensemble 分歧但無明確 fail | 升給人類 review |
+| (Tier 2) | Q1 = `FLAG_TIER_2` | 升給人類 review |
 
 ### Multi-judge ensemble（核心 innovation）
 
@@ -146,26 +146,23 @@ soft cap，refactor 一下」。
 - 建立 `test-prompts.json`（3 個 prompt：創建 / 改進 / description
   optimization）
 - 對當前 skill 跑 baseline → outputs 落 `<workspace>/baseline/`
-- Token count: 5627 字
+- 入口字數：5627 字；以 package mode 記錄整個套件的 baseline
 - Invariant snapshot：`name` / 依賴 / 結構紀錄下來
 
 **Phase 1, Round 1**：
 - Move：把 Description Optimization section（~700 字）抽到
   `references/description-optimization.md`
-- Git commit
-- Q1 ensemble：3/3 say 輸出等價（description-opt 使用情境仍
+- Q1 ensemble（假設結果）：3/3 say 輸出等價（description-opt 使用情境仍
   work，因為 reference 按需載入）
-- Q2：5627 → 4927 = 12.4% 縮減 ✓
-- Q3：name 不變、依賴不變、結構加一個 reference 檔（被允許）✓
-- **Verdict: PROCEED**
+- Q2：入口 5627 → 4927 = 12.4% 縮小，但 ~700 字仍留在 reference。
+  整個套件字數不變，或因參照連結而增加；單純搬移文字不算縮減。
+- Q3：保留 name 與既有依賴；等價抽取所需的新 bundled reference
+  在 package mode 中允許加入 ✓
+- **Verdict: REJECT** — 即使 Q1、Q3 通過，whole-package Q2 仍不通過，
+  因此捨棄這個候選版本。
 
-**Phase 1, Round 2**：
-- Move：把兩個 phase-2 section 之間的重複文字 dedupe
-- ...（類似）
-- **Verdict: PROCEED**
-
-3 round 後：5627 → 4927 → 4400 → 4100。Skill 回到 soft cap 之
-下。輸出行為不變。每輪獨立驗證。
+下一個候選版本須刪除實際重複，並以整個套件獨立通過 Q1/Q2/Q3；
+此例未提供後續輪次的驗證結果。
 
 ### Worked Example — 應該 REJECT 的 refactor
 

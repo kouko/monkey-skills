@@ -47,9 +47,11 @@ labeled = dict(zip(labels, shuffled))
 # Now: which letter = baseline is random per prompt
 ```
 
-Save the assignment to a side log (not shown to user) so the
-preference log can correctly identify which letter the user picked
-in terms of "baseline" vs "variant_N":
+Keep the assignment in memory until the pick is locked. Only after
+lock-in, save the assignment to the session or preference log so it can
+identify the picked letter in terms of "baseline" vs "variant_N".
+Never persist a pre-lock identity map in a side log or resume file.
+A post-lock log entry is:
 
 ```jsonl
 {"round": N, "prompt": M, "label_assignment": {"A": "variant_1", "B": "baseline", "C": "variant_2"}}
@@ -68,8 +70,8 @@ TEST PROMPT (#M of #N)
 ─────────────────────────────────────────────────────────────────
 OUTPUT A
 ─────────────────────────────────────────────────────────────────
-<output content; truncate if >500 lines, append "[truncated; full
-output saved to <path>]">
+<output content; truncate at the configured line limit, append
+"[... truncated; full output: <neutral directory>/A.md]">
 
 ─────────────────────────────────────────────────────────────────
 OUTPUT B
@@ -104,11 +106,16 @@ If 2+ humans review the same A/B independently:
 2. Each evaluator picks independently; do not show them others'
    picks until all have picked
 3. Aggregate:
+   - Use at least 70% agreement on the same single label for a verdict.
    - Unanimous (all pick same letter) → that's the verdict
-   - Majority (≥⅔ pick same letter) → that's the verdict, log as
+   - Majority (≥70% pick same letter) → that's the verdict, log as
      "majority"
-   - Tie or wide spread (<⅔ agreement) → ESCALATE — this is a
+   - Escalate a 2/3 split because it falls below 70%.
+   - Allow a 3/4 split to form a majority.
+   - Tie or wide spread (<70% agreement) → ESCALATE — this is a
      human-to-human resolution, not a tuning decision
+   - Multi-pick always produces DEFER, even when evaluators agree on
+     the same set of labels.
 
 For 1-evaluator workflow (the common case), skip aggregation;
 their pick is the verdict.
@@ -130,11 +137,20 @@ all off-axis, force-picking would corrupt the preference log.
 
 ## Truncation rules
 
-Long outputs (>500 lines, >5000 chars) are truncated for display:
+The CLI truncates outputs beyond `--max-display-lines` (default 200):
 
-- Show first ~200 lines
-- Append "[... truncated; full output: <path>]"
-- User can request to view full output before picking
+- Show the first configured number of lines.
+- When any output is truncated, copy all complete outputs as ordinary
+  `A.md`, `B.md`, etc. files in a fresh neutral temporary directory.
+  Preserve source bytes; never modify the originals or use symlinks.
+- Append "[... truncated; full output: <neutral directory>/<label>.md]".
+  Display only these blind paths, never original filenames or paths.
+- The user can open the printed files before picking. Keep them available
+  for the current workflow; untruncated rounds create no viewing files.
+- Use the same label assignment for display, full-output files, choice,
+  and the session's post-lock decoding. Never re-randomize to retrieve
+  full text. Blindness covers harness-added metadata; user-authored
+  output content is preserved without sanitization.
 
 Truncation must be **uniform across variants** — same truncation
 length, same boundary (don't truncate A at 200 lines but B at 300).
@@ -142,13 +158,33 @@ Asymmetric truncation introduces bias.
 
 ## Atomicity / lock-in
 
-Once the user submits a pick:
+Invalid input and a bare `m` (which still needs specific labels) do not
+lock a selection. Interactive input is requested again within the same
+invocation until a valid pick or EOF. Retain the same display, full-output
+files and label assignment; do not render or randomize again for clarification.
+Pending records contain only the prompt and failed/incomplete pick with its
+reason, without a label-to-identity assignment. Decode and log identities
+only after a valid pick locks the selection.
 
-1. Save pick to preference log immediately (`preference_log.py`
-   append operation)
+The testing option `--pick` is one-shot: invalid or incomplete input returns
+non-success without revealing identities. EOF aborts the interactive round
+with non-success and no selection success. Any pending record remains
+identity-free. Another invocation starts a newly displayed round with a
+fresh assignment; it does not resume a pending record.
+
+Once the user locks a pick (or the independent evaluators finish):
+
+1. Save the pick and resolved verdict to the preference log immediately
+   (`preference_log.py` append operation). REFINE records a request for
+   another round rather than a preference decision.
 2. Reveal which letter was the baseline / which were variants
-3. Apply the picked variant's SKILL.md edit (if pick ≠ baseline)
-4. `git commit` the change
+3. Apply the picked variant's SKILL.md edit only for a locked single
+   non-baseline ADOPT.
+4. Within that ADOPT branch, `git commit` the change.
+
+For DROP, DEFER, REFINE, or ESCALATE, preserve the current skill.
+None produces DROP; Refine produces REFINE; multiple picks produce
+DEFER. Resolve disagreement or run a new comparison before adopting.
 
 If the user changes their mind after seeing the reveal, that's a
 new round, not a retroactive edit. This is to keep the preference
@@ -173,7 +209,7 @@ evaluating whether tuning investments are worth it.
 | Failure | Cause | Mitigation |
 |---|---|---|
 | User can identify baseline by style alone | Variants too cosmetic | Re-generate with stronger dimension; widen |
-| All variants picked equally over baseline | Baseline is genuinely worse on all axes user cares about | ADOPT the first picked; future rounds against new baseline |
+| All variants picked equally over baseline | More than one candidate is preferred; no single winner | DEFER; record candidates for a future round |
 | All variants worse on every prompt | Variant generation prompt is wrong | Refine generation prompt; or hand off to skill-creator-advance |
 | User fatigue (round N+1 user "doesn't care") | Too many rounds in one session | Cap at 3-5 rounds per session; encourage breaks |
 | Inter-evaluator disagreement >30% | Genuine taste split among evaluators | ESCALATE; resolve human-to-human; if irreconcilable, fork the skill (different versions for different evaluator preferences) |

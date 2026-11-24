@@ -8,11 +8,19 @@ description: |
 Finds places where a skill package contradicts itself — one file requires
 what another forbids, two limits disagree, or following one rule forces a
 step another rule bans — so an agent obeying every line literally cannot
-succeed. Detection is done by independent LLM detectors reading the text
-directly; two stdlib-only Python scripts do the deterministic parts
-(grouping, merging, verdict, report).
+succeed. Independent LLM detectors discover candidates by reading the text;
+the reporting caller verifies them before merge. Two stdlib-only Python scripts
+do the deterministic parts (grouping, merging, verdict, report).
 
-Two detectors, each validated in blind experiments:
+**Advisory preview.** A known false positive confirms an overbroad original
+claim using narrower evidence; that model failure remains unresolved. Present
+this limitation with the verdict. The maintainer must review the original
+sources and decision reasons before edits or release decisions. `confirmed`
+records the reporting caller's judgment, not completed human review. Do not use
+the report or exit code as an automatic release gate; cross-model reliability
+is not established.
+
+Two detectors, each calibrated in earlier blind experiments:
 
 | Detector | Spec | What it does |
 |---|---|---|
@@ -61,10 +69,11 @@ Read `<run>/plan.json`:
   30,000 estimated tokens); `true` means the package was split into
   groups aimed at 25,000 tokens each, each carrying SKILL.md, agents/
   files and the files SKILL.md cites, with the two groupings offset.
-- `over_limit` — `true` when some group still exceeds 25,000 tokens
-  (the core alone is too large, or a single large file needs a group of
-  its own); the report then warns that the run is over the validated
-  size.
+- `over_limit` — `true` when any actual group exceeds 25,000 estimated
+  tokens, including a whole-package group when `grouped` is `false`.
+  This conservative nominal reporting bound qualifies the report; it
+  does not change the 30,000-token split threshold or prove an accuracy
+  cliff at 25,000 tokens.
 
 Only Markdown files other than README*.md are checked: the package is
 every `*.md` file under the target except README files, which are for
@@ -106,10 +115,16 @@ Each detector gets, as paths (not file contents):
 4. Its output JSON path in the run directory.
 
 Detectors write only their output file. After all return, confirm each
-output file exists and parses as JSON with a `findings` list. Re-dispatch
-a detector whose file is missing or malformed once; if it fails again,
-tell the user which group went unchecked and stop — a run with an
-unchecked group has no verdict.
+output exists and parses as JSON with a `findings` list; also inspect its
+completion message and available tool results. Re-dispatch once with the
+same assigned file list if the output is missing or malformed, the detector
+explicitly reports unfinished work, or visible reading demonstrably omits
+required files or sections. Preserve incomplete output and hand-back outside
+the merge globs (e.g. `partial-read-1.json` and `partial-read-1.md`) before
+retrying. If the retry fails or remains incomplete, stop before merge and
+name the unchecked method/group — no whole-package verdict. Missing tool
+detail alone does not prove incompleteness; completed checks with empty
+findings remain valid.
 <!-- /gate -->
 
 ### 4. Model
@@ -119,14 +134,14 @@ Use the host's mid-tier or stronger model for the detectors, never the
 smallest tier: in the experiments the smallest tier stopped after 1–3
 findings and missed most planted contradictions.
 
-Record the exact model identifier the detectors ran on, as the host
-exposes it to the running agent — the model id in your own system or
-environment information when the detectors run on your model, or the
-host's model setting you chose for the subagents. Copy it character for character; never paraphrase or shorten it
-(a shortened family name reads as a different model). If the exact id
-is not observable, record `unknown` — step 6 then prints the
-not-validated warning — and tell the user the model could not be
-observed. Step 6 needs this value.
+Record the exact model identifier only when the host exposes it for each
+detector's runtime. A selected alias, parent `modelUsage`, or copied parent
+identifier does not prove a child's identity. If every detector's observed
+identifier is identical, copy it character for character for step 6;
+never paraphrase or shorten it. Otherwise pass `unknown` and tell the user
+the shared detector identity could not be observed. Step 6 retains the
+not-validated warning.
+`unknown` is report metadata, never a provider model identifier.
 <!-- /gate -->
 
 ### 5. Thorough mode (opt-in only)
@@ -141,40 +156,87 @@ one run per method.
 ### 6. Merge and report
 
 <!-- gate: skill-consistency-check.merge-report -->
+Before merging, the reporting caller must review every candidate from every
+completed detector output, including thorough-mode runs:
+
+1. Keep every original detector JSON file byte-for-byte at its planned name.
+   Do not replace it with a filtered list or rewrite candidate fields or confidence.
+2. Read cited files in full and relevant entry/delegated authorities. Review one
+   candidate at a time and finish its reason before starting the next. First write
+   the original `why` claim's scope: quantifier, categories, qualifiers. Then quote
+   verbatim the governing source's scope/delegation, precedence or exception text
+   with file:line, parenthetical examples included, or file:line ranges searched
+   if none applies.
+3. Only then test reconciliation. Keep selected branches fixed. Counterexamples
+   refute asserted coverage; a compatible case cannot refute an existential
+   conflict. Action claims need a concrete witness of incompatible actions under
+   those conditions after qualifications; exclude speculative ones. Judge facts,
+   permissions, classifications, field definitions and values on their own terms
+   without substituting another concern. Extra keys or workarounds reconcile no
+   same-scope contradiction. Exclude unsupported or overstated originals despite
+   narrower supported concerns. An example or parenthetical keeps only the category
+   and scope its source assigns. Record source-grounded reasons; never invent findings.
+4. Write `decisions.json` as an object with `sources` mapping every exact input
+   basename to the SHA256 of its original bytes, and a `decisions` list containing
+   exactly one object per original candidate: `source` (basename), `id` (original
+   nonempty string), `status` and `reason` (nonempty source-grounded explanation).
+   Status is exactly `confirmed`, `excluded` or `indeterminate`. Confirm supported
+   incompatibilities; exclude reconciled or unsupported claims. Use `indeterminate`
+   only after required reading finishes but competing readings remain unresolved.
+   Every candidate needs its own entry, even duplicates; empty groups still need
+   their source hash. The script validates structure and coverage, not reason truth.
+
+If required review cannot finish, including when relevant source is unread
+or unavailable, stop before merge, name the unchecked candidates/groups and
+give no whole-package verdict. JSON validity alone does not finish review.
+
 ```bash
 python3 scripts/merge_report.py --target "<target>" --plan "<run>/plan.json" \
   --findings <run>/read-*.json <run>/simulate-*.json \
+  --decisions "<run>/decisions.json" \
   --model "<model id from step 4, or unknown>" --out "<run>"
 ```
 
-Pass every detector output file to `--findings`. The script merges
-duplicate findings, sets the verdict and writes
+Pass every planned group's original output file to `--findings`, including
+empty lists and every thorough-mode run. The script requires matching hashes
+and complete unique decisions, selects candidates, separately merges confirmed
+and indeterminate duplicates, sets the verdict and writes
 `<run>/consistency-report.md` and `<run>/consistency-report.json`.
-Exit 0 = pass, exit 1 = needs revision (a result, not an error),
-exit 2 = error: no report was written and there is no verdict. Relay the
-stderr message to the user; when it names missing groups or bad file
-names, re-dispatch those detectors with the correct output path and run
-this step again. On exit 2, never present a verdict.
+Exit 0 = pass (no confirmed or unresolved candidates in the checked scope),
+exit 1 = needs revision (any confirmed finding, regardless of confidence),
+exit 3 = indeterminate (unresolved candidates with no confirmed finding).
+Mixed results retain unresolved candidates even when exit 1 applies.
+Exit 2 = input error: no new report is written and there is no verdict. Relay
+stderr; correct missing or malformed decisions without rewriting raw findings.
+Missing/malformed detector output follows step 3's retry/stop rule. On exit 2,
+never present a verdict. Report JSON keeps `review` with all hashes and decisions,
+`findings`/confidence `counts` for confirmed items only, and `indeterminate` separately.
 <!-- /gate -->
 
 ### 7. Present the result
 
 <!-- gate: skill-consistency-check.present-verdict -->
-Read `<run>/consistency-report.md` and present it in the user's language:
+Read `<run>/consistency-report.md` and the JSON `review`, then present in the user's language:
 
-- The verdict. Only high-confidence findings block ("needs revision");
-  medium and low findings are advisory.
+- The verdict and disposition totals. Any confirmed finding requires revision;
+  otherwise unresolved candidates mean indeterminate. Pass applies only to the
+  checked scope and does not prove universal consistency.
 - Each finding with both sides as file:line, the quoted text, and the
-  one-sentence reason — high first, then medium and low marked advisory.
+  one-sentence reason — high first, then medium and low. Confidence remains the
+  detector's confidence, separate from the caller's disposition. Present unresolved
+  candidates separately, including when confirmed findings determine the verdict.
 - The "Not checked together" list when the package was grouped: those
   file pairs were never read in the same group, so contradictions
   between them could be missed.
-- The over-limit warning when present: at least one group exceeded the
-  validated size.
+- The size caution when present: at least one group exceeded the
+  conservative nominal reporting bound, even if the package was not split.
 - The known limits: conditional and multi-step contradictions may be
-  missed.
+  missed; 25,000 estimated tokens is a conservative nominal reporting
+  bound, not a proven accuracy cliff.
 - The model line, and the warning when the model differs from the
   validation reference.
+- Raw-output paths and source-grounded exclusion reasons; explain that earlier
+  detector/corpus calibration does not validate this caller-review variant.
 
 Give the report's path in the run directory. Do not edit the target.
 <!-- /gate -->
@@ -182,6 +244,19 @@ Give the report's path in the run directory. Do not edit the target.
 ## Validated on
 
 Validated on: Claude Sonnet (200k context) on skill packages of about 25,000 tokens; other models are unvalidated until they pass the regression corpus.
+
+This historical detector/corpus calibration does not validate the step 6 caller
+review, even with matching model metadata. The model metadata fields remain unchanged.
+
+The existing validated corpus fixture estimates to 25,135 tokens
+(approximately 25k) and is still read whole. The report JSON's
+`reference.nominal_reporting_bound_tokens` records the conservative
+25,000-token notice bound. The legacy `reference.max_validated_tokens`
+key retains 25,000 as a compatibility alias for that nominal bound,
+not an empirical maximum or an accuracy ceiling. The plan's `group_max` stays
+25,000 as the grouping target and notice bound; `limit` stays 30,000 as
+the split threshold. Exceeding the notice bound alone does not establish
+that accuracy is worse.
 
 The regression corpus (planted contradictions with answer keys and a
 scoring helper) lives in this plugin's `tests/consistency-check-corpus/`

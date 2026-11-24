@@ -11,6 +11,13 @@ returns a list of contradictions, each with both sides as file:line, the
 quoted text, a confidence level and a one-sentence reason, plus an
 overall verdict.
 
+**Advisory preview — human review required.** A known false positive confirms
+an overbroad original claim using narrower evidence; that model failure remains
+unresolved. Review the original sources and decision reasons before edits or
+release decisions. `confirmed` is the reporting agent's judgment, not proof of
+human review. Do not use the report or exit code as an automatic release gate;
+cross-model reliability is not established.
+
 This README is for humans reading the skill on GitHub. The operational
 file the agent actually loads is [`SKILL.md`](SKILL.md).
 
@@ -48,14 +55,24 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - **Two detectors**, each an independent subagent: a read-through and an
   execution walk-through. Their specs are in [`references/`](references/).
+- **Caller review before merge**: the reporting agent checks candidates against
+  full context and exceptions, preserves original outputs, and records one
+  decision and reason per candidate. The merger requires `--decisions` with
+  hashes for every original file, including empty groups; it selects confirmed
+  candidates and reports unresolved candidates separately, retaining the full review.
+  Unavailable required source stops review without a whole-package verdict.
 - **Grouping**: packages up to 30,000 estimated tokens are read whole.
   Larger ones are split into groups aimed at 25,000 tokens each; every
   group carries SKILL.md, agents/ files and the files SKILL.md cites, and
   the two methods group the rest differently. The report lists file pairs
-  that were never read together, and warns when a group still exceeds
-  25,000 tokens (a large core, or one large file).
-- **Verdict**: "needs revision" only when a high-confidence finding
-  exists; medium and low findings are advisory.
+  that were never read together. Any actual group over 25,000 estimated
+  tokens receives a size caution, including a whole-package group that
+  was not split. This is a conservative nominal reporting bound; it
+  does not change splitting or establish an accuracy cliff.
+- **Verdict**: any confirmed finding means "needs revision" (exit 1), regardless
+  of detector confidence. Otherwise unresolved candidates mean "indeterminate"
+  (exit 3); no confirmed or unresolved candidates means "pass" (exit 0) in the
+  checked scope. Missing or malformed review is an input error (exit 2).
 - **Side effects**: none. Nothing is installed and nothing is written
   inside the checked folder; reports go to a run directory elsewhere.
   Findings are never auto-fixed.
@@ -71,6 +88,15 @@ skill folder ──► plan_groups.py ──► one group, or several groups
 
 - Validated on Claude Sonnet (200k context) with packages of about
   25,000 tokens. Other models are not validated; the report says so.
+  This historical detector/corpus calibration does not validate the added
+  caller review, even when the report's model metadata matches.
+  The existing validated corpus fixture estimates to 25,135 tokens and
+  is read whole. In the report JSON,
+  `reference.nominal_reporting_bound_tokens` records the conservative
+  25,000-token notice bound. The legacy `reference.max_validated_tokens`
+  key retains 25,000 as a compatibility alias for that nominal bound,
+  not an empirical maximum or an accuracy ceiling. Exceeding it alone
+  does not establish that accuracy is worse.
 - Conditional contradictions (conflict only under a shared condition)
   and multi-step contradictions (several inference hops) may be missed.
 - The regression corpus with answer keys lives in the plugin's

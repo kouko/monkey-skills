@@ -1,0 +1,10 @@
+{
+  "status": "invalid-aborted",
+  "cause": "Investigator mixed current repaired creator runtime with historical controls. Not a model error.",
+  "A1": "local initialization failure, empty JSONL",
+  "A1s": "terminated; thread.started and turn.started only; no response or usage event. Charge unknown.",
+  "B_or_C_started": false,
+  "termination": "SIGTERM sent to verified runner PID 95189 and CLI PID 95190. Parent exit 143.",
+  "outputs_changed": false,
+  "recovery": "corrected/ contains separate version-correct source trees and before-response preregistration"
+}

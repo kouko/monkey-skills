@@ -1,14 +1,8 @@
-"""Structural grep-test: the house skill-description standard must be encoded in
-the two skill-dev-toolkit skills that author / judge descriptions.
+"""Guard the resolved description authority and its creator/judge consumers.
 
-The standard (SSOT rationale: docs/skill-mining/2026-06-19-skill-description-standard.md)
-is inlined into each consuming skill per this repo's self-contained-skill convention —
-EXCEPT the length numbers, whose authority is description-design.md §Principle 5: the
-creator copy DEFERS to it (no standalone cap figures), while the judge's D4 block
-INLINES ≤150/≤500 with a cite back to that authority — both postures guarded here.
-This test also guards that the other craft rules stay inlined in both copies.
-
-Stdlib only (pathlib + re).
+Craft rules and length numbers live in description-design.md, Principle 4
+owns the numbers, and judge D4 inlines the scoring counterpart. Check these
+scoped policies rather than requiring extracted prose back in the creator.
 """
 
 import re
@@ -17,119 +11,83 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CREATOR = ROOT / "skill-dev-toolkit" / "skills" / "skill-creator-advance" / "SKILL.md"
 JUDGE = ROOT / "skill-dev-toolkit" / "skills" / "skill-judge" / "SKILL.md"
-DESIGN = (ROOT / "skill-dev-toolkit" / "skills" / "skill-creator-advance"
-          / "references" / "description-design.md")
+DESIGN = CREATOR.parent / "references" / "description-design.md"
 
 
-def _low(p: Path) -> str:
-    """Lowercased text with whitespace collapsed to single spaces, so phrase
-    assertions match regardless of markdown line-wrapping in the source."""
-    assert p.is_file(), f"missing {p}"
-    return re.sub(r"\s+", " ", p.read_text(encoding="utf-8").lower())
+def _low(text: str) -> str:
+    return re.sub(r"\s+", " ", text.lower())
 
 
-# --- skill-creator-advance: authoring must target the standard -------------
-
-def test_creator_defers_length_numbers_to_ssot():
-    """Length numbers live ONLY in description-design.md Principle 5 (the
-    number authority); the SCA body may name the two-tier shape but must not
-    carry standalone cap figures that can drift from the SSOT."""
-    t = _low(CREATOR)
-    assert "references/description-design.md" in t and "number authority" in t, \
-        "creator body must defer to description-design.md as the length number authority"
-    # Phrasing-independent drift guard: slice the section that owns the house
-    # description standard and ban ANY standalone cap figure inside it. Section
-    # scoping is deliberate — the unrelated '4,500 words' body-size figure
-    # elsewhere in SKILL.md must stay legal (no full-file ban).
-    raw = CREATOR.read_text(encoding="utf-8")
-    sec_m = re.search(r"^## Description Optimization\b.*?(?=^## |\Z)", raw,
-                      re.M | re.S)
-    assert sec_m, "creator must keep a '## Description Optimization' section"
-    for tok in ("150", "250", "500"):
-        assert not re.search(rf"(?<!\d){tok}(?!\d)", sec_m.group(0)), \
-            (f"standalone {tok!r} in SCA §Description Optimization: length caps "
-             f"belong ONLY in description-design.md §Principle 5 (drift risk)")
+def _section(path: Path, start: str, end: str) -> str:
+    text = path.read_text(encoding="utf-8")
+    match = re.search(start + r".*?(?=" + end + r"|\Z)", text, re.M | re.S)
+    assert match, f"missing section {start!r} in {path}"
+    return _low(match.group(0))
 
 
-def test_ssot_principle5_pins_two_tier_semantics():
-    """description-design.md §Principle 5 is the number authority; the guard
-    must FAIL if the two-tier statement is broken, not merely if substrings
-    vanish elsewhere in the file (assertion-must-encode-the-property)."""
-    text = DESIGN.read_text(encoding="utf-8")
-    m = re.search(r"^### 5\..*?(?=### 6\.|\Z)", text, re.M | re.S)
-    assert m, "description-design.md must contain a '### 5.' length principle section"
-    p5 = re.sub(r"\s+", " ", m.group(0).lower())
-    for needle in ("soft lint line", "not a hard cap", "≤150", "≤500",
-                   "firing-evidence", "justification comment"):
-        assert needle in p5, \
-            f"Principle 5 two-tier statement broken: missing {needle!r}"
+def test_description_authorities_agree():
+    triggers = _section(DESIGN, r"^### Principle 2:", r"^### ")
+    belt = _section(DESIGN, r"^### Multilingual keyword belt", r"^### ")
+    judge = _section(JUDGE, r"^\*\*House description standard", r"^### D5:")
+    assert "lead with positive specific triggers; add exclusions only to disambiguate adjacent skills" in triggers
+    assert "limit exclusions to **2-3 negative triggers**" in triggers
+    assert "**positive specific triggers first**; allow only 2-3 exclusions for adjacent-skill disambiguation" in judge
+    assert "an optional short keyword belt (≤50 chars) may appear at the end" in belt
+    assert "include it if the repo's prompts are routinely non-english, skip it otherwise" in belt
+    assert "for repos with mixed-language prompts" in belt
+    assert "**optional multilingual belt**: allow ≤50 chars only for mixed-language prompts routinely non-english; skip it otherwise" in judge
+    # Resolved craft rules retain what+when, procedure placement, neutral
+    # voice, and the over-triggering warning after reference extraction.
+    purpose = _section(DESIGN, r"^## Purpose", r"^## ")
+    assert "what it does + when to use it" in purpose
+    assert "procedure / workflow / grounding belongs in the body" in purpose
+    assert "third person" in triggers and "no xml tags" in triggers
+    assert 'avoid "always invoke"' in triggers and "over-trigger" in triggers
+    assert 'penalize reliance on "always invoke" directives (over-trigger at scale)' in judge
+    assert "procedure / workflow / grounding** belongs in the body" in judge
 
 
-def test_creator_what_plus_when():
-    t = _low(CREATOR)
-    assert "what it does + when to use it" in t, \
-        "creator must keep the distinctive what+when rule phrasing (not just the words)"
+def test_forbidden_description_policy_detected():
+    creator = _section(CREATOR, r"^### Step 1:", r"^### Skill Writing Guide")
+    judge = _section(JUDGE, r"^\*\*House description standard", r"^### D5:")
+    assert 'avoid "do not use for x"' not in creator
+    assert "no cjk / multilingual keyword redundancy" not in judge
+    assert "a/b-verified redundant" not in judge
+    assert "penalize >250" not in judge
+    # Router status alone cannot admit an exception without evidence.
+    assert "a new router/conditional skill with no evidence yet stays in the normal band" in judge
+    assert "unjustified >250 = penalize" in judge
 
 
-def test_creator_no_cjk_redundancy():
-    assert "cjk" in _low(CREATOR), "creator must state: no CJK/multilingual redundancy"
+def test_resolved_reference_checks():
+    best = _section(CREATOR, r"^### Description Best Practices", r"^### ")
+    optimization = _section(CREATOR, r"^## Description Optimization", r"^### Packaging")
+    judge = _section(JUDGE, r"^\*\*House description standard", r"^### D5:")
+    for consumer in (best, optimization):
+        assert "references/description-design.md" in consumer
+        assert "principle 4" in consumer and "number authority" in consumer
+    for token in ("150", "250", "500"):
+        assert not re.search(rf"(?<!\d){token}(?!\d)", optimization)
+    assert DESIGN.is_file()
+    assert str(DESIGN.relative_to(ROOT)).lower() in judge
+    assert "principle 4" in judge and "principle 5" not in judge
+    assert "2026-06-19-skill-description-standard" in judge
+    # Bounded authority paragraphs own the two-tier admission rules.
+    length = _section(DESIGN, r"^### Principle 4:", r"^### ")
+    for policy in (length, judge):
+        for needle in ("≤150", "250", "soft lint line", "≤500",
+                       "justification comment", "retained trigger surfaces",
+                       "firing-evidence", "normal band", "yaml parse"):
+            assert needle in policy, f"missing length admission rule: {needle}"
+    assert "not failure" in length and "not a hard penalty" in judge
+    assert "unjustified >250 remains a violation" in length
+    assert "admission requires**: a firing-evidence note in the yaml justification" in length
+    assert "exception band ≤500 requiring a firing-evidence note" in judge
 
 
-def test_creator_procedure_in_body_not_description():
-    t = _low(CREATOR)
-    assert "out of the description" in t and "body" in t, \
-        "creator must say procedure/workflow stays OUT of the description (in the body)"
-
-
-def test_creator_avoids_always_and_negation():
-    t = _low(CREATOR)
-    assert "always invoke" in t and ("do not use for" in t or "negation" in t), \
-        "creator must flag 'ALWAYS invoke' + behavioral negation as anti-patterns"
-
-
-def test_creator_links_standard_doc():
-    assert "2026-06-19-skill-description-standard" in CREATOR.read_text(encoding="utf-8"), \
-        "creator must point to the standard doc for rationale"
-
-
-# --- skill-judge: D4 must score against the standard -----------------------
-
-def test_judge_scores_length_against_two_tier_ssot():
-    """Judge D4 must score length against the two-tier standard (normal ≤150
-    target / 250 soft lint; router-CONDITIONAL band ≤500 gated on a
-    firing-evidence note) and cite description-design.md §Principle 5 as the
-    number authority — the retired flat 'Penalize >250' rule must be gone
-    (assertion-must-encode-the-property, mirrors the SCA/SSOT guards above)."""
-    raw = JUDGE.read_text(encoding="utf-8")
-    sec_m = re.search(r"^\*\*House description standard\b.*?(?=^### )", raw,
-                      re.M | re.S)
-    assert sec_m, "judge must keep the '**House description standard' D4 block"
-    sec = re.sub(r"\s+", " ", sec_m.group(0).lower())
-    assert "penalize >250" not in sec, \
-        ("flat 'Penalize >250' claim retired: 250 is a SOFT lint line, not a "
-         "hard penalty (two-tier standard)")
-    for needle in ("description-design.md", "principle 5", "soft lint",
-                   "≤150", "≤500", "firing-evidence", "justification comment"):
-        assert needle in sec, \
-            f"judge two-tier length scoring broken: missing {needle!r}"
-
-
-def test_judge_no_cjk_redundancy():
-    assert "cjk" in _low(JUDGE), "judge must penalize CJK/multilingual redundancy"
-
-
-def test_judge_avoids_always_and_negation():
-    t = _low(JUDGE)
-    assert "always invoke" in t and ("do not use for" in t or "negation" in t), \
-        "judge must penalize 'ALWAYS invoke' / behavioral-negation reliance"
-
-
-def test_judge_procedure_in_body():
-    t = _low(JUDGE)
-    assert "belongs in the body, not the description" in t, \
-        "judge must penalize procedure/workflow placed in the description (distinctive clause)"
-
-
-def test_judge_links_standard_doc():
-    assert "2026-06-19-skill-description-standard" in JUDGE.read_text(encoding="utf-8"), \
-        "judge must point to the standard doc"
+def test_judge_word_budget():
+    text = JUDGE.read_text(encoding="utf-8")
+    assert len(text.split()) <= 4500
+    dimensions = re.findall(r"^### D([1-8]):.*?\((\d+) points\)", text, re.M)
+    assert dimensions == list(zip("12345678", ("20", "15", "15", "15", "15", "15", "10", "15")))
+    assert sum(int(points) for _, points in dimensions) == 120

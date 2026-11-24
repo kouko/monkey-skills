@@ -1,0 +1,40 @@
+{
+  "status": "preregistered",
+  "authorization": "User: 開始實測吧",
+  "head": "c66424d387584c8ddb8c9dd109d15bfbd08b6802",
+  "design": "caller-only inline-source diagnostic, not a complete host/merger replay",
+  "source_file_count": 54,
+  "cases": {
+    "original": 9,
+    "case-k": 1,
+    "case-m": 1
+  },
+  "order": [
+    "A1",
+    "B1",
+    "C1",
+    "C2",
+    "B2",
+    "A2"
+  ],
+  "model": "gpt-6.1-sol",
+  "provider": "openai",
+  "effort": "high",
+  "max_calls": 6,
+  "timeout_seconds_per_call": 180,
+  "no_retries": true,
+  "cost_guard": "Stop before next call if API-equivalent cumulative estimate >= USD 2; reserve USD 1 for a single in-flight call. This is not an invoice cap; CLI exposes no hard monetary cap.",
+  "rates_per_million": {
+    "input": 2,
+    "cached": 0.1,
+    "output": 10
+  },
+  "pricing_source": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+  "stop": "Any incomplete process, invalid coverage, unexpected tool use, source mutation, disputed supplied premise or missing usage stops batch. No conclusions before output inspection. If A never reproduces, localization inconclusive.",
+  "grading": "Original read/F1 label and full reason fidelity; K excluded and M confirmed controls. Other original findings have no complete gold labels. No aggregate accuracy or held-out generalization.",
+  "prompts": {
+    "A": "6c7eafd91b54ef7c2fcc4955e3d890579dee63f820b6b982c5bba78453118248",
+    "B": "030b45fcac74bb18a9f296bfc58a23f71d53e158f96844644aa42c57eaaea57d",
+    "C": "c327b91411b8ddf28261eb2165970a5b52e98ba61d032acfb6b61adf5b2483b6"
+  }
+}

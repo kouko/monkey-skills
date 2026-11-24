@@ -45,7 +45,7 @@ See `references/schemas.md` for the full schema (including the `expectations` fi
 
 ## Case (c): Structural Rewrite Flow
 
-For case (c) — structural change (add / split / merge phases, change agent decomposition, change input/output contract) — use this flow (steps 1–4). **Skip Step 0 (Evaluation-First)** — the skill already has eval cases from its original creation or previous improvements; reuse those. Cases (a) and (b) hand off to the dedicated sibling skills (`skill-refactor`, `skill-tuning`) and do **not** use these steps. Case (d) is handled by the Description Optimization workflow.
+For case (c) — structural change (add / split / merge phases, change agent decomposition, change input/output contract) — use this flow (steps 1–4). Reuse existing eval cases and skip Step 0 when they exist. If absent, use the selected quick/full setup to create representative cases and run the old-version baseline before editing; snapshot the original first and retain it for comparison. These are new cases, not evidence of past tests. Cases (a) and (b) hand off to the dedicated sibling skills (`skill-refactor`, `skill-tuning`) and do **not** use these steps. Case (d) is handled by the Description Optimization workflow.
 
 ### 1. Assess the Current State
 

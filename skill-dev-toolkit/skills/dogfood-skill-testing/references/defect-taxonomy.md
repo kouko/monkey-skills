@@ -63,7 +63,8 @@ through the fallback path.
 The body prescribes a procedure, but an agent actually running the skill
 diverges — skips a step, reorders, or improvises — because a step is
 under-specified ("verify" with no how) or ambiguous. Detected by the
-informed executor pass: compare the trajectory against the written steps.
+informed executor/orchestrator pass: compare the transcript trajectory against
+the written steps and record workflow evidence separately from blind judgments.
 
 ### Gate-bypass — *a gate the skill claims to enforce gets skipped*
 The skill says it blocks on a check (a quality gate, a SHOULD/MUST clause,
@@ -84,7 +85,8 @@ Structural non-conformance: **missing `version` field (62%** of audited
 skills), nested-subfolder breach of the flat-folder rule, non-kebab-case
 naming, broken bundled-file paths. Often Low severity individually but
 hard-gates (CI / structure hooks) can make it blocking. Detected by the
-informed auditor against the declared conventions.
+informed executor/orchestrator pass against the declared conventions; the blind
+auditor checks artifact-visible conventions against its explicit output rubric.
 
 ### Progressive-disclosure — *bundled references loaded wrong*
 A bundled reference / template the workflow needs is **not loaded when
@@ -97,8 +99,10 @@ opened versus which the workflow required.
 The skill produces output that passes its own format / self-grade check
 but is **domain-wrong**: a fabricated citation, leaked private data, the
 wrong number. The skill *"met its own bar but is domain-wrong."* This is
-why the auditor is firewalled from how the output was produced and judges
-against a domain standard, not the skill's self-grade — self-grading is
+why the auditor receives an explicit output rubric extracted independently from
+the probe matrix plus the artifact, firewalled from author rationale, the full
+skill and execution trajectory. It judges the declared output contract plus a
+domain standard, not the skill's self-grade — self-grading is
 structurally blind to its own blind spots. Detected by the blind auditor
 pass on a real / realistic executor artifact.
 

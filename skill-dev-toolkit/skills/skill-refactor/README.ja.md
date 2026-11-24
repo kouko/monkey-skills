@@ -60,7 +60,7 @@ flowchart TD
     Q1 -->|FLAG| H[Tier 2 人間にエスカレーション]
     Q1 -->|PASS| Q2{Q2: トークン削減 ≥10%?}
     Q2 -->|≥10%| Q3{Q3: Invariants 完全?}
-    Q2 -->|5-10%| WC[RESHAPE: 弱い win, user 判断]
+    Q2 -->|5%以上10%未満| WC[RESHAPE: 弱い win, user 判断]
     Q2 -->|<5% or 増加| R
     Q3 -->|PASS| K[PROCEED — 保持, ratchet 前進]
     Q3 -->|FAIL| R
@@ -75,7 +75,7 @@ flowchart TD
 | チェック | メカニズム | 失敗 → |
 |---|---|---|
 | **Q1 等価性** | Layer 1 構造（決定論的）+ Layer 2 LLM-judge ensemble（3 コール、フレーム異なり）| REJECT または FLAG (Tier 2) |
-| **Q2 トークン削減** | `wc -w` 前後；≥10% しきい値 | REJECT（5-10% は RESHAPE）|
+| **Q2 トークン削減** | `wc -w` 前後；≥10% しきい値 | REJECT（5%以上10%未満 は RESHAPE）|
 | **Q3 Invariants** | name / dependencies / contract / 構造が不変 | REJECT |
 
 ### Verdict 語彙
@@ -85,9 +85,9 @@ loom-workflow の critique skill と並行：
 | Verdict | 条件 | アクション |
 |---|---|---|
 | **PROCEED** | 3 つ全部厳密に pass | Ratchet 前進、commit 保持 |
-| **RESHAPE** | Q2 弱い（5-10%）が Q1+Q3 通過 | user に提示、保持 / 続行を判断 |
+| **RESHAPE** | Q2 弱い（5%以上10%未満）が Q1+Q3 通過 | user に提示、保持 / 続行を判断 |
 | **REJECT** | Q1/Q2/Q3 のいずれか失敗 | `git revert`、results.tsv に記録、次へ |
-| (Tier 2) | Q1 ensemble が分裂、明確な fail なし | 人間 review にエスカレーション |
+| (Tier 2) | Q1 = `FLAG_TIER_2` | 人間 review にエスカレーション |
 
 ### Multi-judge ensemble（核となる innovation）
 
@@ -157,27 +157,24 @@ prompt フレーミングで spawn する：
   optimization）
 - 現 skill に対して baseline 実行 → outputs を `<workspace>/baseline/`
   に保存
-- トークン数：5627 語
+- エントリ語数：5627 語；package mode でパッケージ全体の baseline を記録
 - Invariant snapshot：`name` / 依存 / 構造を記録
 
 **Phase 1, Round 1**：
 - Move：Description Optimization セクション（~700 語）を
   `references/description-optimization.md` に抽出
-- Git commit
-- Q1 ensemble：3/3 say 出力等価（description-opt の使用ケースは
+- Q1 ensemble（仮の結果）：3/3 say 出力等価（description-opt の使用ケースは
   reference が on-demand で読まれるので動作する）
-- Q2：5627 → 4927 = 12.4% 削減 ✓
-- Q3：name 不変、依存不変、構造に reference ファイル 1 つ追加
-  （許容）✓
-- **Verdict: PROCEED**
+- Q2：エントリは 5627 → 4927 = 12.4% 縮小。ただし ~700 語は
+  reference に残る。パッケージ全体の語数は同じか参照リンク分だけ増える。
+  文章の移動だけでは削減にならない。
+- Q3：name と既存の依存を保持；等価な抽出に必要な bundled reference の
+  追加は package mode で許容 ✓
+- **Verdict: REJECT** — Q1 と Q3 が通っても whole-package Q2 は
+  不合格のため、この候補を破棄する。
 
-**Phase 1, Round 2**：
-- Move：phase-2 セクション間の散文重複を dedupe
-- ...（類似）
-- **Verdict: PROCEED**
-
-3 ラウンド後：5627 → 4927 → 4400 → 4100。skill が soft cap 以下
-に。出力動作不変。各ラウンド独立に検証済み。
+次の候補では実際の重複を削り、パッケージ全体で Q1/Q2/Q3 を独立に
+検証する必要がある。後続ラウンドの検証結果はこの例にはない。
 
 ### Worked Example — REJECT すべき refactor
 

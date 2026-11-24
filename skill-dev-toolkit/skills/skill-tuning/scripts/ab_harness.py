@@ -35,7 +35,9 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -81,6 +83,7 @@ def truncate(text: str, max_lines: int) -> tuple[str, bool]:
 
 
 def render(label_map: dict[str, dict], prompt: str, max_lines: int = 200) -> str:
+    full_output_dir = None
     sep = "─" * 65
     out = [sep]
     out.append("TEST PROMPT")
@@ -96,7 +99,11 @@ def render(label_map: dict[str, dict], prompt: str, max_lines: int = 200) -> str
         out.append(sep)
         out.append(body)
         if was_truncated:
-            out.append(f"[... truncated; full output: {variant['output_path']}]")
+            if full_output_dir is None:
+                full_output_dir = Path(tempfile.mkdtemp(prefix="ab-view-"))
+                for blind_label, source in label_map.items():
+                    shutil.copyfile(source["output_path"], full_output_dir / f"{blind_label}.md")
+            out.append(f"[... truncated; full output: {full_output_dir / f'{label}.md'}]")
         out.append("")
 
     out.append(sep)
@@ -158,9 +165,10 @@ def write_session(session_out: Path, prompt: str, label_map: dict[str, dict], pi
     """Persist the session decision atomically to a JSON file."""
     record = {
         "prompt": prompt,
-        "label_assignment": {label: v["identity"] for label, v in label_map.items()},
         "pick": pick,
     }
+    if pick["type"] in {"single", "multiple", "none", "refine"}:
+        record["label_assignment"] = {label: v["identity"] for label, v in label_map.items()}
     session_out.parent.mkdir(parents=True, exist_ok=True)
     session_out.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -187,22 +195,26 @@ def main() -> int:
     rendered = render(label_map, args.prompt, args.max_display_lines)
     print(rendered)
 
-    if args.pick is not None:
-        raw = args.pick
-    else:
-        try:
-            raw = input("\nYour pick: ")
-        except EOFError:
-            print("error: no input received", file=sys.stderr)
+    while True:
+        if args.pick is not None:
+            raw = args.pick
+        else:
+            try:
+                raw = input("\nYour pick: ")
+            except EOFError:
+                print("error: no input received; round aborted", file=sys.stderr)
+                return 2
+
+        pick = parse_pick(raw, label_map)
+        write_session(args.session_out, args.prompt, label_map, pick)
+        if pick["type"] not in {"invalid", "needs_clarification"}:
+            break
+
+        print(f"\nPick not locked: {pick['reason']}", file=sys.stderr)
+        if args.pick is not None:
+            print(f"Incomplete pick recorded at {args.session_out}; a new invocation starts a new round.",
+                  file=sys.stderr)
             return 2
-
-    pick = parse_pick(raw, label_map)
-    write_session(args.session_out, args.prompt, label_map, pick)
-
-    if pick["type"] == "invalid":
-        print(f"\nInvalid pick: {pick['reason']}", file=sys.stderr)
-        print(f"Session record saved to {args.session_out} for retry.", file=sys.stderr)
-        return 2
 
     print(f"\nSession written to {args.session_out}")
     return 0

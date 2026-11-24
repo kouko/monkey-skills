@@ -1,0 +1,145 @@
+{
+  "grading_method": "Root source inspection with arm labels visible, no independent/blind-review claim",
+  "graded": [
+    {
+      "run": "A1",
+      "case": "original",
+      "source": "read-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "expected_status": "excluded",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Explicitly preserves independent prose and states ordinary/deterministic prose does not establish the abort condition, separately from creative target exclusion.",
+      "reason": "The claimed shared category combines creative, prose and non-deterministic output. Governing admission rules say “do NOT invoke” for creative/non-deterministic targets (original/SKILL.md:346-360), reinforced by self-abort at original/references/equivalence-check-protocol.md:119-123. The ensemble reference is delegated specifically for Q1 semantic comparison (original/SKILL.md:97-104; original/references/multi-judge-ensemble.md:3-4). Its full-ensemble instruction at :165-166 governs eligible comparisons; it does not admit excluded targets. Ordinary prose also does not establish the creative-output blocker. No incompatible action survives these scope qualifications."
+    },
+    {
+      "run": "A1",
+      "case": "case-k",
+      "source": "read-1.json",
+      "id": "HOLDOUT-K1",
+      "status": "excluded",
+      "expected_status": "excluded",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Cites the explicit new-skill quick-path baseline exception, preserving the selected branch.",
+      "reason": "For the selected brand-new simple skill on the quick path, the claimed every-evaluation baseline requirement is unsupported. NEVER #4 itself states “Exception: new skills on the quick eval path need no baseline” (case-k/SKILL.md:44), matching the quick-path table (:203-206). The entry delegates quick testing at :167-169 and full evaluation at :198-211; those authorities preserve the same exception (case-k/references/improvement-workflows.md:20; case-k/references/eval-protocol.md:26-29). Baseline omission is therefore expressly permitted under the original conditions."
+    },
+    {
+      "run": "A1",
+      "case": "case-m",
+      "source": "read-1.json",
+      "id": "HOLDOUT-M1",
+      "status": "confirmed",
+      "expected_status": "confirmed",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Cites case-level versus run-level metadata under the correct historical source and preserved grader instructions.",
+      "reason": "For full evaluation with configuration-specific repeated runs, the entry delegates the “complete sequence including directory structure” (case-m/SKILL.md:187-200). That sequence distinguishes case metadata from per-run outputs and grading (case-m/references/eval-protocol.md:39-57, :74, :105). The schema locates eval_metadata.json in the case directory (case-m/references/schemas.md:43), but identifies the grader's assertion source as <run-dir>/eval_metadata.json (:68-70); grader instructions instead specify the test-case directory (case-m/agents/grader.md:19-22). The cited authorities define no copy, alias or precedence exception. These remain incompatible location claims for the same metadata."
+    },
+    {
+      "run": "B1",
+      "case": "original",
+      "source": "read-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "expected_status": "excluded",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Explicitly preserves independent prose and states ordinary/deterministic prose does not establish the abort condition, separately from creative target exclusion.",
+      "reason": "The claimed abort-versus-ensemble conflict concerns creative, prose or non-deterministic target output. Governing admission rules say 'do NOT invoke' for creative/non-deterministic targets (original/SKILL.md:346-360), reinforced by self-abort in original/references/equivalence-check-protocol.md:119-123. The delegated ensemble reference concerns 'Q1’s Layer 2 semantic check' (original/references/multi-judge-ensemble.md:3-4); its full-ensemble instruction at :165-166 does not authorize bypassing admission. Deterministic prose alone also does not establish the abort condition. No incompatible actions remain under the governing scope."
+    },
+    {
+      "run": "B1",
+      "case": "case-k",
+      "source": "read-1.json",
+      "id": "HOLDOUT-K1",
+      "status": "excluded",
+      "expected_status": "excluded",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Cites the explicit new-skill quick-path baseline exception, preserving the selected branch.",
+      "reason": "The original asserts baseline necessity for every evaluation, specifically a brand-new simple skill on the quick path. NEVER #4 itself states 'Exception: new skills on the quick eval path need no baseline' (case-k/SKILL.md:44). Quick-path eligibility is governed at :62, and its method repeats 'for new skills on the quick path, no baseline needed' at :206. The delegated quick-path procedure agrees (case-k/SKILL.md:169; case-k/references/improvement-workflows.md:18-20). The explicit exception removes the alleged baseline requirement under the unchanged antecedent."
+    },
+    {
+      "run": "B1",
+      "case": "case-m",
+      "source": "read-1.json",
+      "id": "HOLDOUT-M1",
+      "status": "confirmed",
+      "expected_status": "confirmed",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Cites case-level versus run-level metadata under the correct historical source and preserved grader instructions.",
+      "reason": "For the full path with repeated runs, case-m/SKILL.md:200 delegates the complete evaluation sequence. That sequence distinguishes per-configuration run directories from case metadata (case-m/references/eval-protocol.md:39-65) and requires graders to read that metadata at :74,105. The schema locates eval_metadata.json in the case directory (case-m/references/schemas.md:43), but names '<run-dir>/eval_metadata.json' as the same assertion source at :70. The grader independently says 'test case directory' (case-m/agents/grader.md:19-21). No run-local copy, alias or overriding location rule appears in case-m/references/schemas.md:41-70 or case-m/references/eval-protocol.md:39-105; the location claims conflict."
+    },
+    {
+      "run": "C1",
+      "case": "original",
+      "source": "read-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "expected_status": "excluded",
+      "label_pass": true,
+      "reason_grade": "QUALIFIED",
+      "grader_note": "Retains original union and qualified entry predicate, but does not explicitly finish the ordinary-prose branch. No blanket assertion that all prose is excluded; weaker than A/B. Do not repair the recorded reason with a grader-written argument.",
+      "reason": "The original claims conflicting actions for creative, prose, or non-deterministic output. However, original/SKILL.md:358-360 excludes creative/non-deterministic targets, with prose only a parenthetical example. Its delegation at original/SKILL.md:95-104,366-369 concerns Q1; original/references/multi-judge-ensemble.md:3-4 explicitly scopes itself to \"Q1's Layer 2 semantic check.\" Its full-ensemble instruction at :165-166 governs that downstream check, not admission of excluded targets. No incompatible actions survive that scope."
+    },
+    {
+      "run": "C1",
+      "case": "case-k",
+      "source": "read-1.json",
+      "id": "HOLDOUT-K1",
+      "status": "excluded",
+      "expected_status": "excluded",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Cites the explicit new-skill quick-path baseline exception, preserving the selected branch.",
+      "reason": "The original asserts that NEVER #4 requires baselines for every evaluation, including a brand-new simple skill on the quick path. Case-k/SKILL.md:44 expressly states \"Exception: new skills on the quick eval path need no baseline.\" This matches the quick-path permission at case-k/SKILL.md:206 and the delegated testing instructions at case-k/SKILL.md:169 and case-k/references/improvement-workflows.md:20. The original's universal baseline antecedent omits the explicit exception."
+    },
+    {
+      "run": "C1",
+      "case": "case-m",
+      "source": "read-1.json",
+      "id": "HOLDOUT-M1",
+      "status": "confirmed",
+      "expected_status": "confirmed",
+      "label_pass": true,
+      "reason_grade": "PASS",
+      "grader_note": "Cites case-level versus run-level metadata under the correct historical source and preserved grader instructions.",
+      "reason": "For full evaluation with repeated configuration runs, case-m/SKILL.md:200 delegates the complete sequence to eval-protocol.md and :263 identifies schemas.md as the JSON authority. Case-m/references/eval-protocol.md:49-57 places outputs under configuration/run directories but writes metadata per test case. Case-m/references/schemas.md:43 locates metadata at the case directory, while :68-70 locates grading.json per run and names \"<run-dir>/eval_metadata.json\" as its assertion source. Case-m/agents/grader.md:19-21 instead loads case-directory metadata. No copy or alias exception appears in these provisions."
+    }
+  ],
+  "not_adjudicated": "Other eight original findings per run retain disputed/no-complete-gold status. All 33 outputs preserved. No accuracy rate.",
+  "conclusion": "Baseline A did not reproduce historical reason-overbreadth. Localization inconclusive; B/C do not demonstrate causal improvement. C has an explanation-completeness qualification.",
+  "usage": {
+    "A1": {
+      "input_tokens": 181136,
+      "cached_input_tokens": 9856,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 4798,
+      "reasoning_output_tokens": 2873
+    },
+    "B1": {
+      "input_tokens": 184067,
+      "cached_input_tokens": 9856,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 3578,
+      "reasoning_output_tokens": 1552
+    },
+    "C1": {
+      "input_tokens": 182148,
+      "cached_input_tokens": 9856,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 3145,
+      "reasoning_output_tokens": 1399
+    }
+  },
+  "completed_calls": 3,
+  "api_equivalent_estimate_usd": 1.1537328,
+  "aborted_call_usage": "unknown; excluded from numeric estimate, not zero",
+  "source_files_verified": 87,
+  "prompts_unchanged": true,
+  "product_diff": "",
+  "historical_w17_sha256": "dac5102f2727dfe685aa548c251bad5023b4662d69d1b196c99972bc07305392"
+}

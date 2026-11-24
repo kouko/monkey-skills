@@ -123,11 +123,14 @@
 {executor step-by-step transcript — verbatim}
 ```
 
-### E. Auditor judgment (informed pass)
+### E. Auditor judgment (blind pass)
 
-> The blind auditor's verdict against the skill's own declared contract +
-> the domain-expert bar. Recorded as a DRAFT, not gospel — the user
-> closes the LLM-judge blind-spot gap by reading C/D above.
+> The blind auditor's verdict against the explicit output rubric extracted
+> independently from the probe matrix (declared output contract + domain bar),
+> supplied with the artifact in C. Keep author rationale, full skill context
+> and the execution trajectory in D outside the blind auditor's context.
+> Recorded as a DRAFT, not gospel — the user closes the LLM-judge blind-spot
+> gap by reading C/D above; the informed executor/orchestrator checks D.
 
 ```
 {auditor subagent transcript — verbatim, incl. the rubric it applied}

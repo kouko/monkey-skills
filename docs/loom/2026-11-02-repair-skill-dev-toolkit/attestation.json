@@ -1,0 +1,127 @@
+{
+  "schema": "loom-attestation/v2",
+  "change_id": "2026-11-02-repair-skill-dev-toolkit",
+  "content_digest": "afb7847371749572a320934ce30f01944c5f62dc",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "0234896b80bd150e0554482a143ea4816b791f351f86356be14782c38bf6b02a"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest scripts/test_preferences_single_choice.py -q -p no:cacheprovider",
+      "artifact": "scripts/test_preferences_single_choice.py",
+      "result": "pass",
+      "command_digest": "189292c39f87519e8f85a5c49e3cf96e9bb8f1d7e84f7068204e47f95b6b9b44"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "code-reviewer",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "code",
+      "verdict": "PASS",
+      "reviewed_sha": "74db8c70709ec4e52f345045ea6e5ea47e5aeaa0",
+      "review_target_sha": "84c024afbda1389c52aeae4b808dcb8f6df2bbd9",
+      "dimension_scores": {
+        "security": "PASS — No new runtime surface; the intent pin recomputation is a frontmatter-only change, no executable or IO alteration.",
+        "architecture": "PASS — No dependency boundary, module, or file-placement shift; the delta is a single frontmatter line.",
+        "correctness": "PASS — Intent pin now self-consistent per documented pipeline (strip status and pin lines, then git hash-object --stdin); Acceptance wording, requirements, code, skills, tests, and evidence all unchanged.",
+        "naming": "PASS — No function/symbol/identifier renamed; the change is a hash-value update in frontmatter metadata.",
+        "tests": "PASS — No test files functionally altered; full toolkit (228) and repo suite (715) re-ran green at new HEAD; prior test pass counts preserved.",
+        "refactoring": "PASS — No code extraction, duplication elimination, or module reorganization; pure metadata fix.",
+        "cross-task-coherence": "PASS — Intent's acceptance scope unchanged; W1-W16 DAG wiring intact.",
+        "external-surface-grounding": "PASS — No external HTTP/SDK/MCP/CLI flag touched; internal frontmatter pin recomputation per documented pipeline.",
+        "principles-conformance": "PASS — PRINCIPLES.md non-negotiables unaffected; the user's existing data is not rewritten or sent off-machine.",
+        "architecture-conformance": "N/A — no ratified ARCHITECTURE.md exists; nothing to conform to",
+        "deliberate-simplification": "PASS — No later/someday introduced; the fix is a minimal frontmatter identity correction, no speculative abstraction.",
+        "deletion-first": "PASS — No new module/function added that only forwards elsewhere; the pin identity correction uses the documented existing pipeline."
+      },
+      "findings": [],
+      "notes": [
+        "The only functional-content change across all three rounds is the intent frontmatter's intent_confirmed_sha recomputation from e8d997a242c58bf638b94a128a076c815b9864ce to a8926f6b0a04d91274fccbb029ca9d36250d0cfd, made self-consistent per the documented pipeline. This repairs the stale self-referential hash that caused intake.intent-version to refuse finalization.",
+        "Rounds 2 and 3 commits (4a9e9f640, 84c024afb) are publication-only: they adjust the acceptance report's canonical Tried-on line and correct a mistyped hash in the report/evidence — no functional digest change, no re-run required.",
+        "Round 1, Round 2 and Round 3 each carried zero findings. The episode carries zero findings across all three digests."
+      ]
+    },
+    {
+      "reviewer": "skill-reviewer",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "skill",
+      "verdict": "PASS",
+      "reviewed_sha": "74db8c70709ec4e52f345045ea6e5ea47e5aeaa0",
+      "review_target_sha": "84c024afbda1389c52aeae4b808dcb8f6df2bbd9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Three-commit delta from Round 2 HEAD (3a39722f3) verified: c8d6de0ad repairs the self-referential intent_confirmed_sha pin (recomputed content identity a8926f6b0a04d91274fccbb029ca9d36250d0cfd matches declared value); 4a9e9f640 and 84c024afb are publication-only — re-anchor the acceptance report's Tried-on line and correct a mistyped hash. Only the intent frontmatter line changed functionally.",
+        "Full toolkit suite (228 tests) and repo suite (715 tests) re-run at final HEAD 84c024afb, all pass. W18 evidence chain intact with identical decisions and actual_backend_identity. Round 2 PASS stands; third distinct functional digest judged.",
+        "No new findings. The episode's three-round limit is reached with the intent pin now self-consistent, acceptance report hashes correct, and all 7 skill-lens dimensions PASS."
+      ]
+    }
+  ],
+  "findings": [],
+  "selection": null,
+  "intent_confirmed_sha": "a8926f6b0a04d91274fccbb029ca9d36250d0cfd",
+  "tested_commit": "c8d6de0aded7357a50da276d7b92b7fc3a7deb7a",
+  "reviewed_commit": "84c024afbda1389c52aeae4b808dcb8f6df2bbd9",
+  "acceptance_status": [
+    {
+      "acceptance": 1,
+      "status": "works"
+    },
+    {
+      "acceptance": 2,
+      "status": "works"
+    },
+    {
+      "acceptance": 3,
+      "status": "works"
+    },
+    {
+      "acceptance": 4,
+      "status": "works"
+    },
+    {
+      "acceptance": 5,
+      "status": "works"
+    },
+    {
+      "acceptance": 6,
+      "status": "works"
+    },
+    {
+      "acceptance": 7,
+      "status": "works"
+    },
+    {
+      "acceptance": 8,
+      "status": "works"
+    },
+    {
+      "acceptance": 9,
+      "status": "partly"
+    },
+    {
+      "acceptance": 10,
+      "status": "works"
+    },
+    {
+      "acceptance": 11,
+      "status": "partly"
+    }
+  ]
+}

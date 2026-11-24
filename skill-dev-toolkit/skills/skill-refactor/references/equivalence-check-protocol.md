@@ -17,11 +17,18 @@ For each test prompt's `(baseline_output, candidate_output)` pair:
 | Output type match | Same artifact types produced (file, JSON, prose, code) | Baseline produced `report.md`, candidate produced JSON |
 | Section structure | Same set of `## ` heading texts (order may vary) | Candidate dropped a "Summary" section |
 | File paths | Same set of file paths created / referenced | Candidate wrote to a different path |
-| Tool calls | Same sequence of tool names invoked (count may differ ±1) | Candidate skipped a `Read` call |
+| Tool calls | Identical tool-name sequences, or one insertion/deletion preserving remaining order and identical tool vocabulary | Candidate reversed `Read`, `Write` |
 | Token count | Within ±20% of baseline | Output dropped 60% — likely missing content |
 
 **Pass rule**: all 5 checks pass. Layer 1 failure → REJECT
 immediately, do not proceed to Layer 2.
+
+Tool traces of the same length must match exactly, including repeated calls.
+When counts differ by one, deleting one call from the longer trace must
+produce the shorter trace. Both traces must still use the same set of tool
+names; adding or removing the only occurrence of a tool fails. Counts that
+differ by more than one fail. When neither output provides a tool trace,
+the tool-call check is skipped as before.
 
 ### Layer 2: LLM-judge ensemble (semantic)
 

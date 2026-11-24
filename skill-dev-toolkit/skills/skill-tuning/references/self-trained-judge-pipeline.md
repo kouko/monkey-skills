@@ -13,12 +13,20 @@ the log accumulates enough data.
 
 | Stage | Threshold | Action |
 |---|---|---|
-| Phase 0 (now, v1.7.0) | <1000 entries in any single skill's log | Pipeline scaffolded; not deployed; manual scripts in this PR are documentation, not runtime |
-| Phase 1 (future) | ≥1000 entries for a single skill | Pipeline activates for *that skill*; trains judge, deploys as Tier 1 pre-filter |
-| Phase 2 (further future) | ≥1000 entries × multiple skills | Cross-skill training experiment; per-skill judges initially preferred |
+| Phase 0 (now, v1.7.0) | <1000 usable single-pick records in a skill's log | Pipeline scaffolded; exporter and stub report counts; training inactive |
+| Phase 1 (future) | ≥1000 usable single-pick records for a skill | Data ready for future implementation; current stub still does not train or deploy |
+| Phase 2 (further future) | ≥1000 usable single-pick records × multiple skills | Cross-skill training experiment; per-skill judges initially preferred |
 | Phase 3 (long-term) | Ongoing | Continuous re-training as log grows |
 
-The 1000-entry threshold is conservative; literature on
+Readiness uses the same rule as `preference-log-schema.md`: an explicit
+single non-baseline ADOPT or baseline DROP, with a present chosen identity
+and distinct usable hashes, yielding at least one pair. None, multiple,
+refine, and unusable records are skipped. Both scripts report usable/skipped
+records and pair counts separately. One record producing many pairs counts
+once toward the 1000-record threshold; `--min-entries` overrides this for
+local checks. Reaching it never activates training in the current stub.
+
+The 1000-usable-record threshold is conservative; literature on
 preference-modeling suggests reasonable signals from ~500 paired
 preferences but reliable models from ~5000+. We start at 1000 as
 a "is this even worth trying" threshold, with re-evaluation at
@@ -32,8 +40,8 @@ inventory-snapshot skill's (terse, exact, list-first). Training
 a single global judge across all skills would average these out;
 training per-skill captures the actual taste.
 
-The cost: per-skill judges require per-skill data (≥1000 entries
-each). For 10 skills × 1000 entries = 10000 manually-judged A/Bs.
+The cost: per-skill judges require per-skill data (≥1000 usable records
+each). For 10 skills × 1000 usable records = 10000 manually-judged A/Bs.
 That's substantial human investment — only worth it for skills
 that get tasted regularly.
 
@@ -99,12 +107,14 @@ fast at v1.7.0:
 ```python
 def train_judge(skill_name, log_path, output_model_path):
     log = load_log(log_path)
-    pairs = extract_preference_pairs(log)
+    usable, skipped = usable_preferences(log, skill_name)
+    pairs = extract_preference_pairs(log, skill_name)
 
-    if len(pairs) < 1000:
+    if len(usable) < 1000:
         raise ValueError(
             f"Insufficient training data for {skill_name}: "
-            f"got {len(pairs)} pairs, need ≥1000. "
+            f"got {len(usable)} usable records, {skipped} skipped records, "
+            f"{len(pairs)} pairs; need ≥1000 usable records. "
             "Continue using LLM-as-judge for now; revisit when log denser."
         )
 
@@ -116,7 +126,7 @@ def train_judge(skill_name, log_path, output_model_path):
 
     raise NotImplementedError(
         "Training pipeline scaffolded but not active in v1.7.0. "
-        "Activate when ≥1000 pairs available."
+        "Data ready at ≥1000 usable records; implementation remains inactive."
     )
 ```
 

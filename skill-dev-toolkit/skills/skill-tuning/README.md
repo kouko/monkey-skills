@@ -106,14 +106,24 @@ rejected variants, constitutional rejection record, decision
 time, user notes). Over time, the log accumulates into a
 preference-pair dataset.
 
-At ≥1000 ADOPT entries for a single skill, the dataset becomes
+At ≥1000 usable explicit single-pick records for a single skill,
+the dataset becomes eligible as future
 training input for a **domain-specific preference model** — a
 self-trained judge that approximates the user's taste better
 than any general LLM judge can.
 
+Usable records include a single non-baseline ADOPT or an explicit
+baseline DROP with valid, distinct hashes and a consistent picked
+label when labels are present. None, multiple, refine and unusable
+records do not count. Each usable record counts once, even if it
+yields several comparison pairs; pair counts are reported separately.
+See the [preference log schema](references/preference-log-schema.md)
+for the complete validation rule.
+
 The pipeline is **scaffolded but not active in v1.7.0**. See
 [`references/self-trained-judge-pipeline.md`](references/self-trained-judge-pipeline.md)
-for the full plan.
+for the full plan. Reaching the threshold does not activate training:
+the current stub still raises `NotImplementedError`.
 
 ---
 
@@ -273,7 +283,7 @@ This skill's design is independent. Notable distinctions
 | Limitation | What it means | Mitigation |
 |---|---|---|
 | **Requires human time per iteration** | Each round needs human pick; not background-runnable | Cap at 3-5 rounds per session; encourage breaks; high-value skills only |
-| **Self-trained judge not yet active** | Pipeline scaffolded but needs ≥1000 entries to activate | Continue using LLM-judge advisory as pre-filter; revisit when log accumulates |
+| **Self-trained judge not yet active** | Data readiness requires ≥1000 usable explicit single-pick records per skill; training remains unimplemented | Continue using LLM-judge advisory as pre-filter; reaching the threshold does not activate training |
 | **Constitutional check is binary** | Ambiguous MUST clauses force subjective judgment | Recommend rewriting vague MUSTs as testable rules (anti-pattern documented) |
 | **User taste drifts over time** | Preferences from years ago may not be valid | Time-decay weighting (planned); per-skill scope limits cross-context drift |
 | **Single-evaluator runs** | One person's taste isn't always the team's | Multi-evaluator extension supported; rare in practice but available |
@@ -307,7 +317,7 @@ skill-tuning/
 └── scripts/
     ├── ab_harness.py        ← Phase 3 blind A/B orchestration
     ├── preference_log.py    ← JSONL append/query/aggregate
-    └── judge_train_stub.py  ← H4 stub (fails fast until ≥1000 entries)
+    └── judge_train_stub.py  ← H4 stub (≥1000 usable single-pick records = data ready; training unimplemented)
 ```
 
 ## Bottom Line

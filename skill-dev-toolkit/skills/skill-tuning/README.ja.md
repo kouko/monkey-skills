@@ -102,12 +102,21 @@ Skill の `constitution.md` は MUST / MUST NOT 条項を列挙。MUST に
 記録、決定時間、ユーザーノート）と共にログされる。時間とともに
 preference-pair データセットに蓄積。
 
-単一 skill で ≥1000 ADOPT エントリに達すると、データセットは
-**domain-specific preference model** の訓練入力になる — どんな
+単一 skill で利用可能な明示的単一選択レコードが ≥1000 件に達すると、
+データセットは将来の **domain-specific preference model** の訓練入力
+として準備が整う — どんな
 汎用 LLM judge よりもユーザー taste に近い self-trained judge。
+
+利用可能なレコードは non-baseline を単一選択した ADOPT、または明示的に
+baseline を選択した DROP。有効で異なるハッシュが必要で、label がある
+場合は選択 label と identity が一致すること。None / multiple / refine
+や利用不能なレコードは数えない。複数の比較ペアが生成されても、レコード
+は 1 件として数え、ペア数は別に報告する。完全な検証規則は
+[preference log schema](references/preference-log-schema.md) を参照。
 
 パイプラインは **v1.7.0 では scaffolded だが未稼働**。完全計画は
 [`references/self-trained-judge-pipeline.md`](references/self-trained-judge-pipeline.md)。
+閾値に達しても訓練は起動せず、現行 stub は `NotImplementedError` を返す。
 
 ---
 
@@ -262,7 +271,7 @@ tuning は動作変更。これらを 1 つの skill に混ぜる（`darwin-skil
 | 限界 | 意味 | 緩和 |
 |---|---|---|
 | **イテレーションごとに人間時間が必要** | 各ラウンドに人間選択；バックグラウンド実行不可 | session ごとに 3-5 round 上限；休憩推奨；高価値 skill のみ |
-| **Self-trained judge 未稼働** | パイプライン scaffolded だが ≥1000 エントリで活性 | LLM-judge advisory を pre-filter として継続；ログ蓄積後に再訪 |
+| **Self-trained judge 未稼働** | データ準備には skill ごとに利用可能な明示的単一選択レコード ≥1000 件が必要；訓練は未実装 | LLM-judge advisory を pre-filter として継続；閾値に達しても訓練は起動しない |
 | **憲法チェックはバイナリ** | あいまいな MUST 条項は主観判断を強いる | あいまい MUST をテスト可能ルールに書き直すよう推奨（anti-pattern 文書化）|
 | **User taste は時間とともにドリフト** | 何年も前の好みは valid でないかも | Time-decay weighting（計画中）；per-skill スコープが cross-context drift を制限 |
 | **シングル evaluator 実行** | 1 人の taste は team の taste でないかも | Multi-evaluator extension 対応；実務では稀だが利用可能 |
@@ -296,7 +305,7 @@ skill-tuning/
 └── scripts/
     ├── ab_harness.py        ← Phase 3 ブラインド A/B オーケストレーション
     ├── preference_log.py    ← JSONL append/query/aggregate
-    └── judge_train_stub.py  ← H4 stub（≥1000 エントリ前 fail fast）
+    └── judge_train_stub.py  ← H4 stub（利用可能な単一選択 ≥1000 件でデータ準備完了；訓練は未実装）
 ```
 
 ## Bottom Line

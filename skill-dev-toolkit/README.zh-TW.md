@@ -1,5 +1,10 @@
 # skill-dev-toolkit
 
+**需人工複核的預覽版。** 矛盾檢查器有已知誤判：可能只用較窄範圍的證據，
+就把過寬的原始主張標為確認。據此修改或決定發布前，請由人核對原文與判斷理由；
+不要把報告或退出碼當成自動發布依據。先前模型的誤判仍未解決，
+也不宣稱跨模型可靠性已獲驗證。
+
 從頭到尾撰寫 Claude Agent Skill 的**自足**工具組。零跨 plugin 依賴 —— 單獨安裝即可運作。
 
 於 2026-06-20 自 `dev-workflow` 抽出,讓 skill 撰寫的生命週期能獨立於 dev-workflow
@@ -11,7 +16,7 @@
 |---|---|
 | `skill-creator-advance` | 建立新 skill、大幅重設計、評估驅動開發、優化 description 觸發。 |
 | `skill-judge` | 以 8 維 rubric 評 skill 設計品質(0–120 + 等第)。 |
-| `skill-consistency-check` | 找出 skill 資料夾內互相矛盾的規則 —— 獨立的 LLM 偵測者通讀檔案並模擬執行,只有高信心的發現會擋下。 |
+| `skill-consistency-check` | 由獨立 LLM 偵測器與逐項核對找出矛盾規則；任何確認衝突都需要修改，未解決候選另列為無法判定。 |
 | `dogfood-skill-testing` | 對草稿 SKILL.md 做盲測行為驗證 —— 該觸發時會不會觸發、workflow 是否符合自己的 contract。 |
 | `skill-refactor` | 保留輸出行為的 token / 結構重構。 |
 | `skill-tuning` | skill 輸出品質 A/B —— 人類判定挑選變體。 |

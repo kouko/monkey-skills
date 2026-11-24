@@ -40,7 +40,7 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 
 ## eval_metadata.json
 
-Metadata for a single evaluation case during a run. Located at `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json`.
+Metadata for a single evaluation case within an iteration. Located at `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json`. This file is shared across configurations and repeat runs of that case; pass its path explicitly to each grader rather than copying it into run directories.
 
 ```json
 {
@@ -67,7 +67,7 @@ Metadata for a single evaluation case during a run. Located at `<workspace>/iter
 
 Output from the grader agent. Located at `<run-dir>/grading.json`.
 
-**Source of assertions:** The grader reads `assertions` from `<run-dir>/eval_metadata.json`. The assertion text strings become the `text` field in the grading.json `expectations` array. After grading, each expectation object has `text` (the original assertion), `passed` (boolean), and `evidence` (supporting detail).
+**Source of assertions:** The grader reads `assertions` from the explicitly supplied path to the case's `eval_metadata.json` (see the eval_metadata.json section above). The assertion text strings become the `text` field in the grading.json `expectations` array. After grading, each expectation object has `text` (the original assertion), `passed` (boolean), and `evidence` (supporting detail).
 
 ```json
 {
@@ -180,7 +180,9 @@ Output from the executor agent. Located at `<run-dir>/outputs/metrics.json`.
 
 Wall clock timing for a run. Located at `<run-dir>/timing.json`.
 
-**How to capture:** When a subagent task completes, the task notification includes `total_tokens` and `duration_ms`. Save these immediately — they are not persisted anywhere else and cannot be recovered after the fact.
+**How to capture:** Save observed task-notification fields immediately when available; hosts may omit `total_tokens` or `duration_ms`, and ephemeral telemetry may not be recoverable. Compute seconds only from measured duration. If notification duration is absent, use a finite, nonnegative numeric measurement from an identified source and disclose it; if none is available, disclose unavailable timing and stop the full timing comparison (quality may be presented separately). The legacy duration path defaults missing values to zero and does not support null; never write invented zero or null duration into it.
+
+`total_tokens` must be a finite, nonnegative JSON number; a captured `0` is valid. Missing files, malformed JSON or non-object timing data, and absent or invalid `total_tokens` mean token capture is unavailable. Do not substitute output character counts or zero for unavailable measurements. Duration precedence is unchanged: use grading timing first, then sibling timing when grading duration is zero.
 
 ```json
 {
@@ -244,12 +246,12 @@ Output from Benchmark mode. Located at `benchmarks/<timestamp>/benchmark.json`.
     "with_skill": {
       "pass_rate": {"mean": 0.85, "stddev": 0.05, "min": 0.80, "max": 0.90},
       "time_seconds": {"mean": 45.0, "stddev": 12.0, "min": 32.0, "max": 58.0},
-      "tokens": {"mean": 3800, "stddev": 400, "min": 3200, "max": 4100}
+      "tokens": {"mean": 3800, "stddev": 400, "min": 3200, "max": 4100, "sample_count": 3, "total_count": 3}
     },
     "without_skill": {
       "pass_rate": {"mean": 0.35, "stddev": 0.08, "min": 0.28, "max": 0.45},
       "time_seconds": {"mean": 32.0, "stddev": 8.0, "min": 24.0, "max": 42.0},
-      "tokens": {"mean": 2100, "stddev": 300, "min": 1800, "max": 2500}
+      "tokens": {"mean": 2100, "stddev": 300, "min": 1800, "max": 2500, "sample_count": 3, "total_count": 3}
     },
     "delta": {
       "pass_rate": "+0.50",
@@ -272,17 +274,21 @@ Output from Benchmark mode. Located at `benchmarks/<timestamp>/benchmark.json`.
   - `skill_name`: Name of the skill
   - `timestamp`: When the benchmark was run
   - `evals_run`: List of eval names or IDs
-  - `runs_per_configuration`: Number of runs per config (e.g. 3)
+  - `runs_per_configuration`: Observed runs per eval/configuration when all counts are equal (e.g. 3, not a default); `0` when no runs were loaded, or `null` when counts differ. Counts include zero for an observed eval missing a discovered configuration; see `runs` for individual observations.
 - `runs[]`: Individual run results
   - `eval_id`: Numeric eval identifier
   - `eval_name`: Human-readable eval name (used as section header in the viewer)
   - `configuration`: Must be `"with_skill"`, `"without_skill"`, or `"old_skill"` (the viewer uses this exact string for grouping and color coding: with_skill, without_skill, and old_skill)
   - `run_number`: Integer run number (1, 2, 3...)
   - `result`: Nested object with `pass_rate`, `passed`, `total`, `time_seconds`, `tokens`, `errors`
+    - `tokens`: Captured numeric total (including `0`), or `null` when capture is unavailable.
 - `run_summary`: Statistical aggregates per configuration
   - `with_skill` / `without_skill`: Each contains `pass_rate`, `time_seconds`, `tokens` objects with `mean` and `stddev` fields
-  - `delta`: Difference strings like `"+0.50"`, `"+13.0"`, `"+1700"`
+    - `tokens`: `mean`, `stddev`, `min`, and `max` use captured observations only, and are all `null` when none are captured, including an empty configuration. `sample_count` counts captured totals; `total_count` counts loaded runs. Their ratio describes coverage, so partial statistics are not whole-population measurements.
+  - `delta`: Difference strings like `"+0.50"`, `"+13.0"`, `"+1700"`. The `tokens` delta is `null` unless both compared configurations have at least one run and complete token capture; partial capture never supports a numeric saving.
 - `notes`: Freeform observations from the analyzer
+
+In benchmark Markdown, unavailable token statistics display `not captured (0/N)` and partial statistics include `partial: M/N captured`. An unavailable token delta displays `not captured`. Fully captured numeric formatting, pass-rate statistics, and duration statistics are unchanged.
 
 **Important:** The viewer reads these field names exactly. Using `config` instead of `configuration`, or putting `pass_rate` at the top level of a run instead of nested under `result`, will cause the viewer to show empty/zero values. Always reference this schema when generating benchmark.json manually.
 

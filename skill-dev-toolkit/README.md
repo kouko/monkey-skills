@@ -1,5 +1,11 @@
 # skill-dev-toolkit
 
+**Advisory preview — human review required.** The consistency checker has a
+known false positive: it can confirm an overbroad claim using narrower evidence.
+Review the original sources and decision reasons before edits or release
+decisions; do not use its report or exit code as an automatic release gate.
+The prior model failure remains unresolved; cross-model reliability is not claimed.
+
 A **self-contained** toolkit for authoring Claude Agent Skills end-to-end. Zero
 cross-plugin dependencies — install it alone and it works.
 
@@ -12,7 +18,7 @@ distributed independently of loom-workflow's session/git/critique tools.
 |---|---|
 | `skill-creator-advance` | Create new skills, do major redesigns, run eval-driven development, optimize a description's triggering. |
 | `skill-judge` | Score a skill's design quality on an 8-dimension rubric (0–120 + grade). |
-| `skill-consistency-check` | Find rules inside a skill folder that contradict each other — independent LLM detectors read the files and walk through them; only high-confidence findings block. |
+| `skill-consistency-check` | Find contradictory rules with independent LLM detectors and per-candidate review; any confirmed conflict requires revision, and unresolved candidates remain indeterminate. |
 | `dogfood-skill-testing` | Blind behavioral test of a drafted SKILL.md — does it fire when expected, does its workflow meet its contract. |
 | `skill-refactor` | Token / structure refactor of a skill, preserving output behavior. |
 | `skill-tuning` | Output-quality A/B for a skill — human-judged variant selection. |

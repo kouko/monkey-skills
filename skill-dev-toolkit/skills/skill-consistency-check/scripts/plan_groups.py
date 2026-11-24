@@ -3,7 +3,8 @@
 
 Usage: python3 plan_groups.py <skill_dir>
 
-Thresholds are fixed: LIMIT (30,000 tokens) and GROUP_MAX (25,000 tokens).
+Thresholds are fixed: LIMIT (30,000 tokens) controls splitting; GROUP_MAX
+(25,000 tokens) is the grouping target and conservative nominal notice bound.
 Prints one JSON object to stdout and writes no files. Exit 0 on success,
 2 on error (bad path or no SKILL.md). Python 3 stdlib only.
 """
@@ -122,8 +123,7 @@ def build_plan(root):
         "total_tokens": total,
         "core_tokens": core_tokens,
         "grouped": grouped,
-        "over_limit": grouped
-        and any(sum(tokens[p] for p in g) > GROUP_MAX for g in read + simulate),
+        "over_limit": any(sum(tokens[p] for p in g) > GROUP_MAX for g in read + simulate),
         "groups": {"read": read, "simulate": simulate},
         "uncovered_pairs": uncovered,
     }

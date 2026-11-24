@@ -75,7 +75,7 @@ Good assertions are objectively verifiable, with descriptive names that read cle
 
 ### Step 3: As runs complete, capture timing data
 
-When each subagent task completes, you receive a notification containing `total_tokens` and `duration_ms`. Save this data immediately to `timing.json` in the run directory:
+When each subagent task completes, capture only observed fields from its host notification. If it supplies `total_tokens` and `duration_ms`, save them immediately to `timing.json` in the run directory, for example:
 
 ```json
 {
@@ -85,9 +85,9 @@ When each subagent task completes, you receive a notification containing `total_
 }
 ```
 
-**Note:** The task notification provides `total_tokens` and `duration_ms` as base fields. `total_duration_seconds` is computed as `duration_ms / 1000`. For the complete timing.json schema including executor/grader timestamps (captured from other sources during execution), see [references/schemas.md](references/schemas.md).
+Compute `total_duration_seconds` as `duration_ms / 1000` only when duration was measured. Missing tokens remain unavailable under [references/schemas.md](references/schemas.md), never an invented zero. If notification duration is absent, use a finite, nonnegative numeric measurement from an identified timing source and disclose that source. If none is available, disclose unavailable timing and stop the full timing comparison; quality may be presented separately. The legacy duration aggregator defaults missing values to zero and does not support null: do not feed it invented zero or null duration.
 
-This is the only opportunity to capture this data — it comes through the task notification and isn't persisted elsewhere. Process each notification as it arrives rather than trying to batch them.
+Process notifications as they arrive; ephemeral host telemetry may not be recoverable later. See the timing schema for executor/grader timestamps captured from other observed sources.
 
 ### Step 3.5: Self-assessment pass
 
@@ -102,13 +102,14 @@ Before grading and presenting results to the human, perform a quick automated ch
 
 Once all runs are done:
 
-1. **Grade each run** — spawn a grader subagent (or grade inline) that reads `agents/grader.md` and evaluates each assertion against the outputs. Save results to `grading.json` in each run directory. The grading.json expectations array must use the fields `text`, `passed`, and `evidence` (not `name`/`met`/`details` or other variants). Check programmatically-checkable assertions with a script rather than eyeballing — faster, more reliable, reusable across iterations.
+1. **Grade each run** — spawn a grader subagent (or grade inline) that reads `agents/grader.md` and evaluates each assertion against the outputs. Pass the case's `<workspace>/iteration-<N>/eval-<ID>/eval_metadata.json` path explicitly to each grader. Save results to `grading.json` in each run directory. The grading.json expectations array must use the fields `text`, `passed`, and `evidence` (not `name`/`met`/`details` or other variants). Check programmatically-checkable assertions with a script rather than eyeballing — faster, more reliable, reusable across iterations.
 
 2. **Check for regressions** (iteration 2+) — compare results against the previous iteration (`references/iteration-automation.md` has the full protocol); lead with any regressions when reporting to the user.
 
-3. **Aggregate into benchmark** — run the aggregation script from the skill-creator-advance directory:
+3. **Aggregate into benchmark** — follow the [script execution context](../SKILL.md#running-bundled-scripts):
    ```bash
-   python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <name>
+   PYTHONPATH="<absolute-creator-root>${PYTHONPATH:+:$PYTHONPATH}" \
+     python "<absolute-creator-root>/scripts/aggregate_benchmark.py" "<absolute-workspace>/iteration-N" --skill-name <name>
    ```
    This produces `benchmark.json` and `benchmark.md` with pass_rate, time, and tokens for each configuration, with mean +/- stddev and the delta. If generating benchmark.json manually, see `references/schemas.md` for the exact schema.
    Put each with_skill version before its baseline counterpart.

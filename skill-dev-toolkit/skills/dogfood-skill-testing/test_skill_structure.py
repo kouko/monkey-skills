@@ -137,3 +137,38 @@ def test_skill_md_workflow():
     for needle in ("activation", "cold-reader", "executor", "auditor", "claude -p", "docs/skill-dogfood"):
         assert needle in text, f"SKILL.md workflow missing {needle!r}"
     assert "fallback" in text or "fidelity" in text, "SKILL.md must mention 'fallback' or 'fidelity'"
+
+
+def _affirmative(text, literal, verb):
+    sentences = [re.sub(r"\s+", " ", sentence) for sentence in
+                 re.split(r"[.!?][*\"'`]*(?:\s|$)|\n\s*\n", text)]
+    return any(
+        re.search(r"\b(?:" + verb + r")\b.*" + re.escape(literal), sentence, re.I)
+        and not re.search(r"\b(no|not|never|without|cannot|don't|mustn't|shouldn't)\b|n't\b", sentence, re.I)
+        for sentence in sentences
+    )
+
+
+def test_explicit_blind_rubric():
+    text = _read(SKILL_MD)
+    probe_b = text.split("### Probe B", 1)[1].split("### Probe C", 1)[0]
+    for literal, verb in (("explicit output rubric", "receive"), ("probe matrix", "extract"),
+                          ("declared procedure", "compare"), ("workflow evidence", "record")):
+        assert _affirmative(probe_b, literal, verb), f"missing affirmative audit obligation: {literal}"
+    assert "≥2×" in probe_b and "pin the model version" in probe_b
+    template = _read(REPORT_TEMPLATE)
+    assert "### D. Executor trajectory (informed pass)" in template
+    assert "### E. Auditor judgment (blind pass)" in template
+    taxonomy = _read(DEFECT_TAXONOMY)
+    assert "informed executor/orchestrator pass" in taxonomy
+
+
+def test_trajectory_not_in_blind_context():
+    assert _affirmative("Receive the explicit output rubric.", "explicit output rubric", "receive")
+    assert not _affirmative("Do not receive the explicit output rubric.", "explicit output rubric", "receive")
+    text = _read(SKILL_MD)
+    probe_b = text.split("### Probe B", 1)[1].split("### Probe C", 1)[0]
+    for literal in ("author rationale", "execution trajectory", "full SKILL.md"):
+        assert _affirmative(probe_b, literal, "exclude"), f"blind firewall missing: {literal}"
+    assert "only the executor's produced output" not in probe_b
+    assert "informed auditor" not in _read(DEFECT_TAXONOMY)

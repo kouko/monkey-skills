@@ -4,6 +4,81 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Review each consistency-check candidate in isolation: finish one candidate's
+  reason before starting the next, quoting the governing source verbatim and
+  keeping any quoted example or parenthetical within the scope its source assigns.
+- Replace the consistency-check caller's reason construction: establish original
+  conditions, coverage and governing scope before reconciliation, keep selected
+  branches fixed, and judge non-action claims without requiring incompatible actions.
+  This instruction change still requires fresh behavioral validation.
+- Prepare an advisory preview requiring human source/reason review before edits
+  or release decisions. Disclose the unresolved overbroad-claim false positive
+  in existing report limits and live guides; reports and exit codes are not
+  automatic release gates. This does not claim repaired model judgment.
+- Require hash-bound decisions for every original consistency-check candidate;
+  preserve raw detector files and retain all review reasons in report JSON.
+  Any confirmed conflict now requires revision, regardless of confidence.
+  Separately report reviewed but unresolved candidates as indeterminate (exit 3).
+  Missing, stale or malformed review is an input error (exit 2), with no new report.
+  This changes the CLI contract: `--decisions` is required with no legacy bypass.
+
+### Fixed
+
+- Clarify the refactor marginal reduction band as at least 5% and below 10%,
+  keeping exactly 10% in the existing strong-win band across live guides.
+- Complete optimizer HTML reports with `--holdout 0`; show unavailable cohort
+  scores as neutral N/A.
+- Keep creator commands in the user's project execution context while resolving
+  bundled imports through command-local paths.
+
+## [0.5.2] — 2026-11-03
+
+### Fixed
+
+- Apply the shared contextual description policy during packaging, retaining
+  qualified exceptions and rejecting ineligible descriptions before delivery.
+- Require the existing reporting caller to verify independent candidates
+  against full cited files and governing authorities before merge, recording
+  entry-file delegation, scope/exception quotes (or ranges searched) and reasons
+  before subset selection. Judge original claims without substituting narrower
+  concerns. Require supported incompatible actions after qualifications, while
+  preserving conflicting facts, field definitions and values. Preserve raw
+  outputs, exclusion reasons and reviewed empty groups; give no verdict when
+  required review is incomplete. Consolidate duplicate review instructions;
+  historical calibration does not validate caller review.
+- Qualify model-family metadata when exact child runtime identity is unobserved.
+- Define quick Gate 2 access, redesign setup without historical cases, and
+  bounded optimization/timing stops when model identity or telemetry is absent.
+- Restore skill packaging, benchmark aggregation, and bounded description
+  optimization commands.
+- Fail trigger evaluation on backend errors, explicit aborts, incomplete
+  output, and timeouts before a conclusive decision; read completed output
+  buffers and verify the real command entries.
+- Keep missing token capture distinct from zero, expose observation counts,
+  and suppress token deltas when either comparison population is incomplete.
+- Generate optimizer descriptions from the current authority, exclude
+  mechanically ineligible candidates, and require contextual review before
+  applying the result.
+- Reject reordered tool-call traces while preserving the documented one-call
+  count tolerance and tool vocabulary.
+- Keep truncated full-output viewing paths blind and mask version identities
+  in session records until a choice is locked.
+- Continue interactive clarification within the same displayed blind round;
+  another invocation starts a new round without a pre-lock identity file.
+- Export valid explicit baseline preferences and align usable-record readiness
+  counts with preference-pair generation; training remains inactive.
+- Reconcile description, evaluation metadata, refactor, human-choice, and blind
+  auditor instructions with their operative policies.
+- Synchronize translated readiness documentation and qualify golden-anchor
+  comparisons so they cannot replace required human review.
+- Qualify consistency reports above the nominal 25k-token bound without
+  changing the 30k grouping threshold; add regression coverage and a dedicated
+  toolkit CI workflow.
+
 ## [0.5.0] — 2026-09-24
 
 ### Added — `skill-consistency-check`

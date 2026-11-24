@@ -1,0 +1,17 @@
+{
+  "run": "A1",
+  "exit_code": 1,
+  "complete": false,
+  "usage": {},
+  "api_equivalent_estimate_usd": 0.0,
+  "cumulative_estimate_usd": 0.0,
+  "elapsed_seconds": 0.1,
+  "coverage_valid": false,
+  "unexpected_tools": 0,
+  "parse_error": "[Errno 2] No such file or directory: '/Users/kouko/GitHub/monkey-skills/docs/loom/2026-11-02-repair-skill-dev-toolkit/research/scope-diagnostic-20261109/A1.final.txt'",
+  "process_ok": false,
+  "requested_model": "gpt-6.1-sol",
+  "requested_provider": "openai",
+  "requested_effort": "high",
+  "actual_backend_identity": "not exposed in exec JSONL"
+}

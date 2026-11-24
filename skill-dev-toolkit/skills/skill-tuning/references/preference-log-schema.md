@@ -5,7 +5,7 @@ made during `skill-tuning` sessions. It serves two purposes:
 
 1. **Decision basis for current iteration** — what variant did the
    user prefer for this prompt?
-2. **Future training data** — at ≥1000 entries, becomes RLHF-lite
+2. **Future training data** — at ≥1000 usable single-pick records, becomes RLHF-lite
    dataset for self-trained judge (see `self-trained-judge-pipeline.md`)
 
 ## Location
@@ -209,25 +209,51 @@ under skill version X" cleanly.
 - `summarize(skill)` — per-skill aggregate (total picks,
   ADOPT rate, etc.)
 - `export_for_training(skill, min_entries=1000)` — exports the
-  subset suitable for training; fails if entries below threshold
+  subset suitable for training; fails below the usable-record threshold
+
+A usable record is an explicit single ADOPT of a non-baseline variant or
+DROP selecting `baseline`. Both `user_pick` and `user_pick_identity` must be
+nonempty single-choice strings; `none`, `multiple`, and `refine` never
+provide a winner, even with an ADOPT/DROP verdict. The chosen identity must
+match exactly one object in `variants_shown`, with a nonempty
+`skill_md_hash`; `test_prompt_hash` must also be nonempty. Old string-list
+variants and records missing the chosen identity or hashes are skipped.
+
+When any shown object supplies a `label` field, the picked label must match
+exactly one shown object after trimming whitespace and ignoring letter case,
+and that object's identity must equal `user_pick_identity`. Contradictory or
+duplicate picked-label mappings, and partial mappings without the picked
+label, are skipped. Identity-only compatibility applies only when every
+shown object omits `label`; incomplete mappings never fall back to it.
+
+Each usable record yields at least one selected-over-other comparison with
+distinct, nonempty skill hashes. Unusable alternatives are omitted, and
+duplicate alternative hashes produce one pair. Readiness counts **records**,
+not pairs: ≥1000 usable records for this skill, regardless of how many pairs
+each produces. `--min-entries` overrides that threshold for local checks.
+All other records for the target skill (including summaries) count as skipped;
+records from other skills are excluded. Both scripts report usable/skipped
+record counts and pair counts. Original JSONL bytes remain untouched.
 
 Format for `export_for_training`:
 
 ```json
 {
   "skill": "...",
-  "n_entries": 1234,
-  "constitution_version": "v2",
-  "test_prompts_version": "v1",
+  "n_entries_used": 1234,
+  "n_entries_skipped": 10,
+  "n_training_pairs": 2468,
   "training_pairs": [
-    {"prompt": "...", "preferred_output": "...", "rejected_output": "..."},
-    ...
+    {"test_prompt_hash": "...", "preferred_skill_md_hash": "...", "rejected_skill_md_hash": "...", "evaluator": "human-1", "constitution_version": "v2"}
   ]
 }
 ```
 
-This is the format `judge_train_stub.py` consumes (when
-ultimately implemented).
+The example omits remaining pairs. The current `judge_train_stub.py` reads
+the original JSONL and shares the exporter's eligibility rule; it preserves
+its identity-pair API (`preferred`, `rejected`, `test_prompt_hash`). Future
+training may consume the exported hash pairs after resolving artifacts;
+this change activates no training.
 
 ## Anti-patterns
 

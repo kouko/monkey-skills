@@ -99,20 +99,35 @@ def run_single_query(
 
         try:
             while time.time() - start_time < timeout:
-                if process.poll() is not None:
+                completed = process.poll() is not None
+                if completed:
                     remaining = process.stdout.read()
                     if remaining:
                         buffer += remaining.decode("utf-8", errors="replace")
-                    break
+                    if process.returncode != 0:
+                        raise RuntimeError(f"Query backend exited with status {process.returncode}")
+                    # A completed process can leave its final event buffered,
+                    # including a last line without a trailing newline.
+                    buffer += "\n"
+                else:
+                    ready, _, _ = select.select([process.stdout], [], [], 1.0)
+                    if not ready:
+                        continue
 
-                ready, _, _ = select.select([process.stdout], [], [], 1.0)
-                if not ready:
-                    continue
-
-                chunk = os.read(process.stdout.fileno(), 8192)
-                if not chunk:
-                    break
-                buffer += chunk.decode("utf-8", errors="replace")
+                    chunk = os.read(process.stdout.fileno(), 8192)
+                    if not chunk:
+                        # Stdout may close before poll observes process exit.
+                        # Confirm status before parsing the unterminated tail.
+                        try:
+                            process.wait(timeout=max(0, timeout - (time.time() - start_time)))
+                        except subprocess.TimeoutExpired as exc:
+                            raise RuntimeError("Query backend timed out before a conclusive result") from exc
+                        if process.returncode != 0:
+                            raise RuntimeError(f"Query backend exited with status {process.returncode}")
+                        completed = True
+                        buffer += "\n"
+                    else:
+                        buffer += chunk.decode("utf-8", errors="replace")
 
                 while "\n" in buffer:
                     line, buffer = buffer.split("\n", 1)
@@ -168,14 +183,24 @@ def run_single_query(
                             return triggered
 
                     elif event.get("type") == "result":
+                        # ResultMessage can report success for an interrupted,
+                        # incomplete turn. Older CLI versions omit this field.
+                        # https://code.claude.com/docs/en/agent-sdk/python#resultmessage
+                        if event.get("terminal_reason") in ("aborted_streaming", "aborted_tools"):
+                            raise RuntimeError("Query backend aborted before completing")
+                        if event.get("is_error") or event.get("subtype") != "success":
+                            raise RuntimeError("Query backend returned an unsuccessful result")
                         return triggered
+
+                if completed:
+                    raise RuntimeError("Query backend ended without a conclusive result")
         finally:
             # Clean up process on any exit path (return, exception, timeout)
             if process.poll() is None:
                 process.kill()
                 process.wait()
 
-        return triggered
+        raise RuntimeError("Query backend timed out before a conclusive result")
     finally:
         if command_file.exists():
             command_file.unlink()
@@ -218,11 +243,9 @@ def run_eval(
             query_items[query] = item
             if query not in query_triggers:
                 query_triggers[query] = []
-            try:
-                query_triggers[query].append(future.result())
-            except Exception as e:
-                print(f"Warning: query failed: {e}", file=sys.stderr)
-                query_triggers[query].append(False)
+            # A failed run is not a successful negative observation. Propagate
+            # it before producing scores or allowing the optimizer to proceed.
+            query_triggers[query].append(future.result())
 
     for query, triggers in query_triggers.items():
         item = query_items[query]

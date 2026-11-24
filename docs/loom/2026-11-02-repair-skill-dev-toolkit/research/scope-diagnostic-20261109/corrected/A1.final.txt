@@ -1,0 +1,81 @@
+{
+  "decisions": [
+    {
+      "case": "original",
+      "source": "read-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "reason": "The claimed shared category combines creative, prose and non-deterministic output. Governing admission rules say “do NOT invoke” for creative/non-deterministic targets (original/SKILL.md:346-360), reinforced by self-abort at original/references/equivalence-check-protocol.md:119-123. The ensemble reference is delegated specifically for Q1 semantic comparison (original/SKILL.md:97-104; original/references/multi-judge-ensemble.md:3-4). Its full-ensemble instruction at :165-166 governs eligible comparisons; it does not admit excluded targets. Ordinary prose also does not establish the creative-output blocker. No incompatible action survives these scope qualifications."
+    },
+    {
+      "case": "original",
+      "source": "read-1.json",
+      "id": "F2",
+      "status": "excluded",
+      "reason": "Keep the asserted conditions: exhaustive Layer 1, deterministic prompts, a Low-risk move, Layer 1 passing, and marginal/failing Q2 or violated Q3. The reference governs “Q1's Layer 2 semantic check” (original/references/multi-judge-ensemble.md:3-4), delegated by original/SKILL.md:102-104. Its exception explicitly permits skipping “the LLM ensemble” (:152-163); “Layer 1 pass = PROCEED” does not waive independent gates. The governing whole-round rules still require all three checks and prescribe RESHAPE/REJECT (original/SKILL.md:155-165). Thus the proposed conditions do not support automatic adoption."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "reason": "For the asserted creative/non-deterministic target, original/SKILL.md:346-360 says “do NOT invoke,” and original/references/equivalence-check-protocol.md:119-123 requires self-abort. The ensemble instruction is scoped to Q1 Layer 2 (original/references/multi-judge-ensemble.md:3-4), delegated for semantic comparison by original/SKILL.md:97-104. Its “run the full ensemble” wording at :165-166 distinguishes ensemble use from structural-only evaluation within eligible checks; it does not override target admission. An excluded target therefore supplies no supported abort-versus-run witness."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F2",
+      "status": "excluded",
+      "reason": "For the same candidate output reduced by more than 30%, the mandatory Layer 1 limit is ±20%, with immediate rejection on failure (original/references/equivalence-check-protocol.md:21-24), implemented at original/scripts/equivalence_check.py:212-220. The later warning is expressly conditional: “Even if both layers pass” (:85-91). It neither grants a pass beyond 20% nor asserts that such a pass is attainable. The unreachable warning condition does not establish the claimed incompatible numeric pass limits. Q1 delegation appears at original/SKILL.md:366-367."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F3",
+      "status": "excluded",
+      "reason": "With structural-only evaluation selected, retain every skip condition and the asserted failing Q2/Q3. The exception concerns skipping the LLM ensemble (original/references/multi-judge-ensemble.md:150-163), whose governing scope is Q1 Layer 2 (:3-4; original/SKILL.md:102-104). It supplies no exception to the three independent checks (original/SKILL.md:90-93) or overall PROCEED requirements (:155-165). Reading its local PROCEED wording as permission to bypass Q2/Q3 overstates that delegation; the proposed failing round remains rejected."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F4",
+      "status": "excluded",
+      "reason": "The original equates every user-proposed “clearer” rewording with a taste-dependent judgment call. The catalog's routing rule specifically qualifies clarity rewording “with judgment call” (original/references/refactor-moves-catalog.md:185-197), while permitting equivalent boilerplate tightening (:29-41). The worked example establishes a subsequently detected edge-case loss, not the required taste qualifier (original/SKILL.md:309-327). Entry scope excludes behavior changes and delegates safe moves (:22-27, :199-219). These sources do not support incompatible routing actions under the same qualified conditions."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F5",
+      "status": "excluded",
+      "reason": "For absent prompts and a user unwilling to provide them, all cited rules agree the gate cannot run (original/SKILL.md:49-52, :84-88, :246, :355-357). Suggestions at :84-88 are additionally qualified by quality versus cosmetic intent; the specific blocker also suggests redesign through skill-creator-advance. No cited passage makes these recommendations exclusive or promises skill-tuning can proceed without prompts. Its own minimum remains enforced (original/references/test-prompts-schema.md:135-137), delegated by original/SKILL.md:49-52. Different compatible suggestions do not establish incompatible required actions."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F6",
+      "status": "confirmed",
+      "reason": "For warranted goldens, retain human curation, a truly good current output, and the selected accept-as-is branch. The entry delegates golden policy (original/SKILL.md:395-399); the protocol limits applicability at original/references/golden-anchor-protocol.md:198-213. Its curation process runs the current version, permits “Accept the output as-is,” then saves it (:104-114). That branch creates the identical-current-output golden classified as an anti-pattern that “Adds no information; just baseline-locks” (:187-196). No exception there recognizes this expressly permitted branch; editing or rewriting alternatives do not reconcile it."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F7",
+      "status": "excluded",
+      "reason": "For the asserted package candidate—5–10% whole-package reduction, other gates passing, and explicit user acceptance—the governing entry expressly permits marginal wins after acceptance and says they do not “auto-advance” (original/SKILL.md:40-43). Package accounting is delegated at :133-134. The package protocol makes this RESHAPE, keeps it isolated pending acceptance, then records accepted adoption as PROCEED (original/references/package-resource-mode.md:12-16, :76-81). Advancement following explicit acceptance is compatible with prohibiting automatic advancement; the original's contrary interpretation drops the governing qualifier."
+    },
+    {
+      "case": "case-k",
+      "source": "read-1.json",
+      "id": "HOLDOUT-K1",
+      "status": "excluded",
+      "reason": "For the selected brand-new simple skill on the quick path, the claimed every-evaluation baseline requirement is unsupported. NEVER #4 itself states “Exception: new skills on the quick eval path need no baseline” (case-k/SKILL.md:44), matching the quick-path table (:203-206). The entry delegates quick testing at :167-169 and full evaluation at :198-211; those authorities preserve the same exception (case-k/references/improvement-workflows.md:20; case-k/references/eval-protocol.md:26-29). Baseline omission is therefore expressly permitted under the original conditions."
+    },
+    {
+      "case": "case-m",
+      "source": "read-1.json",
+      "id": "HOLDOUT-M1",
+      "status": "confirmed",
+      "reason": "For full evaluation with configuration-specific repeated runs, the entry delegates the “complete sequence including directory structure” (case-m/SKILL.md:187-200). That sequence distinguishes case metadata from per-run outputs and grading (case-m/references/eval-protocol.md:39-57, :74, :105). The schema locates eval_metadata.json in the case directory (case-m/references/schemas.md:43), but identifies the grader's assertion source as <run-dir>/eval_metadata.json (:68-70); grader instructions instead specify the test-case directory (case-m/agents/grader.md:19-22). The cited authorities define no copy, alias or precedence exception. These remain incompatible location claims for the same metadata."
+    }
+  ]
+}

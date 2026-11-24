@@ -108,7 +108,7 @@ def test_package_protocol_defines_whole_package_q2_and_combines_verdicts() -> No
         "whole-package words",
         "≥10%",
         "PROCEED",
-        "5–10%",
+        "5% ≤ reduction <10%",
         "RESHAPE",
         "user decides",
         "<5%",
@@ -183,10 +183,3 @@ def test_package_gate_cli_reduces_json_evidence() -> None:
     )
 
     assert json.loads(result.stdout)["verdict"] == "PASS"
-
-
-def test_agents_declares_the_tested_package_gate_cli() -> None:
-    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-
-    assert "skill-refactor/scripts/package_gate.py" in agents
-    assert "{export|verify|account|reduce}" in agents

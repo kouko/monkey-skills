@@ -28,7 +28,7 @@ Each skill should have a corresponding slash command entry point in the plugin's
 ```markdown
 ---
 name: json-to-yaml-converter
-description: Convert JSON files to YAML format
+description: Converts JSON files when YAML output is needed
 category: conversion
 ---
 
@@ -45,7 +45,7 @@ Convert JSON files to YAML format.
 ```markdown
 ---
 name: skill-creator-advance
-description: Create new skills with evaluation-first workflow
+description: Creates skills when a new capability needs an evaluation-first workflow
 category: development
 ---
 

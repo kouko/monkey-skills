@@ -156,7 +156,7 @@ def load_tool_calls(directory: Path) -> list[str]:
 
 
 def check_tool_calls(baseline_dir: Path, candidate_dir: Path) -> tuple[bool, dict]:
-    """Compare tool call sequences. Pass if same tool names invoked (count may differ ±1)."""
+    """Require identical sequences or one insertion/deletion with the same vocabulary."""
     baseline_calls = load_tool_calls(baseline_dir)
     candidate_calls = load_tool_calls(candidate_dir)
 
@@ -169,13 +169,24 @@ def check_tool_calls(baseline_dir: Path, candidate_dir: Path) -> tuple[bool, dic
     count_diff = abs(len(baseline_calls) - len(candidate_calls))
     count_within_tolerance = count_diff <= 1
 
-    match = set_match and count_within_tolerance
+    sequence_match = baseline_calls == candidate_calls
+    if count_diff == 1:
+        shorter, longer = sorted((baseline_calls, candidate_calls), key=len)
+        # The first mismatch must be the only extra call in the longer trace.
+        mismatch = next(
+            (index for index, tool in enumerate(shorter) if tool != longer[index]),
+            len(shorter),
+        )
+        sequence_match = shorter[mismatch:] == longer[mismatch + 1:]
+
+    match = set_match and count_within_tolerance and sequence_match
     return match, {
         "baseline_calls": baseline_calls,
         "candidate_calls": candidate_calls,
         "set_match": set_match,
         "count_diff": count_diff,
         "count_within_tolerance": count_within_tolerance,
+        "sequence_match": sequence_match,
     }
 
 

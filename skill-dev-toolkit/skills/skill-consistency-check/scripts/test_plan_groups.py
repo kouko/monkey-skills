@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).resolve().parent / "plan_groups.py"
 
 
@@ -166,9 +168,29 @@ VALIDATED_PKG = (
 def test_T_validated_package_reads_whole():
     data = plan(VALIDATED_PKG)
     assert len(data["files"]) == 13
-    assert 22000 <= data["total_tokens"] <= 28000
+    assert data["total_tokens"] == 25135
     assert data["grouped"] is False
-    assert data["over_limit"] is False
+    assert data["over_limit"] is True
+
+
+@pytest.mark.parametrize("tokens", [25000, 25001, 28000, 30000, 30001])
+def test_nominal_notice_and_split_boundaries(tmp_path, tokens):
+    # CJK gives exact estimates; use multiple small files so a split can fit.
+    write(tmp_path, "SKILL.md", "漢" * 1000)
+    write(tmp_path, "references/a.md", "漢" * 12000)
+    write(tmp_path, "references/b.md", "漢" * (tokens - 13000))
+    data = plan(tmp_path)
+    assert data["total_tokens"] == tokens
+    assert data["grouped"] is (tokens > 30000)
+    assert data["over_limit"] is (25000 < tokens <= 30000)
+    if tokens <= 30000:
+        for method in ("read", "simulate"):
+            assert data["groups"][method] == [[f["path"] for f in data["files"]]]
+        assert data["uncovered_pairs"] == []
+    else:
+        for method in ("read", "simulate"):
+            assert len(data["groups"][method]) == 2
+            assert all(group_tokens(data, g) <= 25000 for g in data["groups"][method])
 
 
 def test_cjk_splits_words(tmp_path):

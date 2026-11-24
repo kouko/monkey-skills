@@ -170,20 +170,33 @@ and integration crashes.
   concept, **force its cold-start / fallback branch** (no config present) —
   highest bug density, least exercised; skip this step for skills that have
   no config concept.
-- **auditor (blind):** given **only the executor's produced output** plus
-  a domain-expert persona. Told: *"you have NO context about how this was
-  produced."* Its rubric = **the skill's OWN declared contract** (the
-  success criteria / gates / output format the skill claims) **plus a
-  domain standard** (factual correctness, no fabrication, no leakage). So
-  it catches BOTH *"failed its own declared bar"* AND *"met its bar but is
-  domain-wrong."*
+- **auditor (blind):** must receive an explicit output rubric plus the
+  executor's produced artifact and a domain-expert persona. Before viewing
+  the artifact, the orchestrator must extract the rubric independently
+  from the probe matrix. Include the skill's **OWN declared contract** (success
+  criteria, artifact-verifiable gates, output format) plus a domain standard
+  (factual correctness, no fabrication, no leakage). Exclude author rationale,
+  execution trajectory, and the full SKILL.md + bundle from the blind
+  auditor's context. Tell it: *"Judge this artifact against the supplied
+  rubric; you have NO context about how it was produced."* It catches BOTH
+  *"failed its own declared bar"* AND *"met its bar but is domain-wrong."*
+
+**Informed workflow check (existing executor/orchestrator pass):** compare
+the executor transcript against the declared procedure, including step order,
+required gates, and bundle reads. Record workflow evidence in the report's
+Transcript evidence field and Raw outputs appendix D (Executor trajectory),
+with each observed step linked to its declared requirement; mark unavailable
+evidence as unverified. This check uses the existing informed context; it
+adds no third model role. Keep artifacts in appendix C and blind rubric +
+auditor judgments in appendix E; the trajectory in D remains informed-only.
 
 **LLM-as-judge guardrails (load-bearing):** judge against the rubric, NOT
 against intent re-inferred from the artifact (the *oracle problem* — a
 judge that reads the buggy output infers the buggy intent). Run the
 auditor **≥2×** and **pin the model version** — treat a single run as
-variance, not verdict. Judge the **trajectory** (the executor's steps),
-not only the final output — correct output can mask broken reasoning. Use
+variance, not verdict. Judge the **trajectory** (the executor's steps) in
+the informed workflow check above — correct output can mask broken reasoning.
+The blind auditor judges only the artifact against the explicit rubric. Use
 **coarse score buckets**, not fine scales.
 
 ### Probe C — Blind cold-reader (can a first-timer read it?)
@@ -204,7 +217,10 @@ finding.
 Load-bearing one-liners — codified from real dogfood practice, kept inline:
 
 - **Firewall.** The executor is informed; the auditor is blind to how the
-  output was produced. Self-grading is blind to its own blind spots — a
+  output was produced and receives the explicit output rubric + artifact,
+  while the existing informed executor/orchestrator checks the transcript.
+  Keep author rationale, full skill context and trajectory on the informed
+  side. Self-grading is blind to its own blind spots — a
   fabricated citation passes a format-only self-check; only a blind
   auditor catches it.
 - **Floor, not ceiling.** A structural / green-grader (an automated

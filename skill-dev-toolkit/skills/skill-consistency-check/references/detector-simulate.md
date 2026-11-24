@@ -29,8 +29,11 @@ package) — no other files — and write your output to the path you are given.
 - Vagueness, style issues, missing information, or things you would design
   differently. Report only conflicts that exist in the text.
 
-Precision matters as much as recall: every report is shown to a maintainer who
-must act on it. When unsure, report it with confidence `low` rather than drop it.
+Precision matters as much as recall. Independently discover candidates under
+the definitions and exclusions above; state the shared condition in `why` or
+`steps`. The reporting caller reviews report eligibility before merging.
+Use confidence `low` only for uncertainty about a remaining incompatibility,
+never as permission to report rules that can both be followed.
 
 ## Method: execution walk-through (follow this procedure)
 
