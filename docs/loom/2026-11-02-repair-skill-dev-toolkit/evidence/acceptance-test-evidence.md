@@ -1,4 +1,4 @@
-Tried on 2026-11-24, in a clean copy of the project at c8d6de0ad7357a50da276d7b92b7fc3a7deb7a.
+Tried on 2026-11-24, in a clean copy of the project at c8d6de0aded7357a50da276d7b92b7fc3a7deb7a.
 
 # 分批修復 skill-dev-toolkit — 驗收測試證據
 
@@ -317,9 +317,9 @@ This re-run follows fix commit 2a6f311cd8a0d8afb807d939572c01322e41f9e4 ("docs(l
 - 10: carried over — fix only moved research .py tooling, no cold-entry logic change
 - 11: carried over — full re-test completed at prior re-run (HEAD 2a6f311cd); this fix edits only the intent pin line, no Acceptance wording, W18 evidence, code, or test changed
 
-## Re-run on 2026-11-24, at c8d6de0ad7357a50da276d7b92b7fc3a7deb7a
+## Re-run on 2026-11-24, at c8d6de0aded7357a50da276d7b92b7fc3a7deb7a
 
-This second re-run follows fix commit c8d6de0ad7357a50da276d7b92b7fc3a7deb7a ("docs(loom): intent 2026-11-02-repair-skill-dev-toolkit confirmed"), fix range 2a6f311cd..c8d6de0ad.
+This second re-run follows fix commit c8d6de0aded7357a50da276d7b92b7fc3a7deb7a ("docs(loom): intent 2026-11-02-repair-skill-dev-toolkit confirmed"), fix range 2a6f311cd..c8d6de0ad.
 
 ### What the fix did
 

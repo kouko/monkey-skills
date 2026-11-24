@@ -1,4 +1,4 @@
-Tried on 2026-11-24, in a clean copy of the project at c8d6de0ad7357a50da276d7b92b7fc3a7deb7a. 逐項操作與結果：`docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/acceptance-test-evidence.md`。
+Tried on 2026-11-24, in a clean copy of the project at c8d6de0aded7357a50da276d7b92b7fc3a7deb7a. 逐項操作與結果：`docs/loom/2026-11-02-repair-skill-dev-toolkit/evidence/acceptance-test-evidence.md`。
 
 # 分批修復 skill-dev-toolkit 已確認的缺陷 — 驗收測試報告
 
