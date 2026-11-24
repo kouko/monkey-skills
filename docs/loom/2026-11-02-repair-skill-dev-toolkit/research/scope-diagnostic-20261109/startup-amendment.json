@@ -1,0 +1,6 @@
+{
+  "before_any_model_response": true,
+  "observed": "A1 CLI initialization failed with Operation not permitted before turn.started; empty JSONL, no usage exposed. No remote response observed.",
+  "change": "Allow one host-permission startup recovery; save as A1s. Then original B1 C1 C2 B2 A2 order. Retain A1 failure. No output-based model retry. All prompts and evaluation rules unchanged.",
+  "limit": "At most 7 process initiations and 6 completed model calls; any further startup failure stops."
+}

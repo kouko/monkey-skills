@@ -1,0 +1,81 @@
+{
+  "decisions": [
+    {
+      "case": "original",
+      "source": "read-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "reason": "The original claims conflicting actions for creative, prose, or non-deterministic output. However, original/SKILL.md:358-360 excludes creative/non-deterministic targets, with prose only a parenthetical example. Its delegation at original/SKILL.md:95-104,366-369 concerns Q1; original/references/multi-judge-ensemble.md:3-4 explicitly scopes itself to \"Q1's Layer 2 semantic check.\" Its full-ensemble instruction at :165-166 governs that downstream check, not admission of excluded targets. No incompatible actions survive that scope."
+    },
+    {
+      "case": "original",
+      "source": "read-1.json",
+      "id": "F2",
+      "status": "excluded",
+      "reason": "The claim fixes exhaustive Layer 1, deterministic prompts, a Low-risk move, and marginal/failing Q2 or violated Q3. Original/SKILL.md:95-104 delegates Q1 ensemble details; original/references/multi-judge-ensemble.md:3-4 scopes the reference to Q1 Layer 2. Its \"Layer 1 pass = PROCEED\" at :152-163 supplies a structural-only exception within that check. It does not waive the overall Q2/Q3 requirements at original/SKILL.md:120-151,155-165. The claimed overall PROCEED-versus-RESHAPE/REJECT conflict is unsupported."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F1",
+      "status": "excluded",
+      "reason": "For the claimed creative/non-deterministic target, original/SKILL.md:346,358-360 says \"do NOT invoke,\" and original/references/equivalence-check-protocol.md:119-123 requires self-abort. Original/SKILL.md:95-104,366-369 delegates ensemble guidance only for Q1; original/references/multi-judge-ensemble.md:3-4 identifies its scope as \"Q1's Layer 2 semantic check.\" Thus :165-166 requires the full ensemble when that downstream check applies; it does not override the entry exclusion or require running it on an excluded target."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F2",
+      "status": "excluded",
+      "reason": "The original alleges that a greater-than-30% output reduction is described as compatible with a Layer 1 pass despite the ±20% limit. Original/SKILL.md:100-104 delegates structural-check details; original/references/equivalence-check-protocol.md:21-24 makes that reduction fail and requires immediate rejection. The conditional suspicion checklist at :85-91 neither grants a pass nor changes the limit. Its unreachable post-pass check is redundant, not an affirmative incompatible pass criterion."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F3",
+      "status": "excluded",
+      "reason": "The original fixes a permitted structural-only round whose Layer 1 passes while Q2 or Q3 fails. Original/SKILL.md:95-104 delegates Q1 ensemble details, and original/references/multi-judge-ensemble.md:3-4 scopes its guidance to Q1 Layer 2. The three-condition exception and \"Layer 1 pass = PROCEED\" at :152-163 concern proceeding through that check. Overall adoption still requires the separate gates under original/SKILL.md:120-151,155-165; the exception supplies no contrary overall verdict."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F4",
+      "status": "excluded",
+      "reason": "The original covers any user-proposed \"clearer\" rewording, but the delegated catalog excludes \"Reword for 'clarity' with judgment call\" specifically (original/SKILL.md:199-202; original/references/refactor-moves-catalog.md:185-194). The catalog also permits wording tightening without information loss at :29-41. Original/SKILL.md:309-327 illustrates detecting and rejecting a lost edge-case instruction; it does not establish the catalog's taste/judgment-call condition. The asserted same-condition routing conflict is therefore overstated."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F5",
+      "status": "excluded",
+      "reason": "For absent prompts and user refusal, original/SKILL.md:84-88 requires reporting the blocker and offers intent-qualified suggestions: tuning for quality or manual editing for cosmetics. Original/SKILL.md:246,355-357 points to creator-advance for redesign with test infrastructure. These are compatible recommendations, not exclusive mandatory exits. Original/references/test-prompts-schema.md:135-137 confirms tuning also needs prompts, but no cited provision promises that recommendation can immediately complete the blocked task."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F6",
+      "status": "confirmed",
+      "reason": "The claim fixes the expressly permitted branch where current output is truly good and accepted unchanged. Original/SKILL.md:372-374 delegates golden curation policy; original/references/golden-anchor-protocol.md:104-113 permits running the current version, accepting its output \"as-is,\" and saving it. The resulting identical golden is expressly classified as an anti-pattern at :187-192. No good-output exception appears there; the alternative editing/rewriting branches at :110-111 do not reconcile this selected branch."
+    },
+    {
+      "case": "original",
+      "source": "simulate-1.json",
+      "id": "F7",
+      "status": "excluded",
+      "reason": "The original fixes a 5–10% package reduction, passing other gates, and explicit user acceptance. Original/SKILL.md:40-42 says it \"may ship only after explicit user acceptance\" and \"does not auto-advance.\" Package-mode delegation at :65-67,133 leads to original/references/package-resource-mode.md:14-16,76-81, which preserves RESHAPE until acceptance and then records PROCEED. Advancement after that explicit decision is compatible with prohibiting automatic advancement; the claim removes the governing \"auto\" qualification."
+    },
+    {
+      "case": "case-k",
+      "source": "read-1.json",
+      "id": "HOLDOUT-K1",
+      "status": "excluded",
+      "reason": "The original asserts that NEVER #4 requires baselines for every evaluation, including a brand-new simple skill on the quick path. Case-k/SKILL.md:44 expressly states \"Exception: new skills on the quick eval path need no baseline.\" This matches the quick-path permission at case-k/SKILL.md:206 and the delegated testing instructions at case-k/SKILL.md:169 and case-k/references/improvement-workflows.md:20. The original's universal baseline antecedent omits the explicit exception."
+    },
+    {
+      "case": "case-m",
+      "source": "read-1.json",
+      "id": "HOLDOUT-M1",
+      "status": "confirmed",
+      "reason": "For full evaluation with repeated configuration runs, case-m/SKILL.md:200 delegates the complete sequence to eval-protocol.md and :263 identifies schemas.md as the JSON authority. Case-m/references/eval-protocol.md:49-57 places outputs under configuration/run directories but writes metadata per test case. Case-m/references/schemas.md:43 locates metadata at the case directory, while :68-70 locates grading.json per run and names \"<run-dir>/eval_metadata.json\" as its assertion source. Case-m/agents/grader.md:19-21 instead loads case-directory metadata. No copy or alias exception appears in these provisions."
+    }
+  ]
+}

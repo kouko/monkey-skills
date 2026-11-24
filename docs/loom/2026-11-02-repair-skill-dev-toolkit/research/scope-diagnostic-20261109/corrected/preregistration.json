@@ -1,0 +1,31 @@
+{
+  "status": "preregistered-before-valid-response",
+  "reason": "Original batch aborted for incorrect control source versions before any model response. No prompt/result repair; old artifacts retained.",
+  "order": [
+    "A1",
+    "B1",
+    "C1"
+  ],
+  "max_calls": 3,
+  "max_total_process_attempts_including_aborted": 5,
+  "no_retries": true,
+  "timeout_seconds_per_call": 300,
+  "model": "gpt-6.1-sol",
+  "provider": "openai",
+  "effort": "high",
+  "cost_guard": "Stop before next call at cumulative observed API-equivalent USD 2. No invoice cap; aborted call usage unavailable and must remain unknown.",
+  "source_file_count": 87,
+  "source_refs": {
+    "original": "35a6be1446a3636450a6d94886195d37018da9b1",
+    "case-k": "35a6be1446a3636450a6d94886195d37018da9b1",
+    "case-m": "cd2c2c02851f114559097f689892384332c69975"
+  },
+  "source_check": "All files and raw JSON checked against W17 input hashes; every side quote found in its own full source. No expected labels in executor input.",
+  "grading": "read/F1 reason and label, K excluded, M confirmed; other originals not fully gold. Single root grader, arm labels visible. No held-out cases or generalization.",
+  "stop": "Any process/coverage/tool/usage/source failure stops; no output-selected retries. If A fails to reproduce historical reason defect, localization is inconclusive. One run per arm cannot establish repeatability.",
+  "prompts": {
+    "A": "1845830e3cc38b7df17fb8dcc1675adfba21c28ac00d3f2348f2f849be8cfbdd",
+    "B": "a829e651ea4333a6762c1d17fe0d426842dc2bcc4384729717a760f1cd432973",
+    "C": "2d0ba99ebad22d95201e9c60bc7837ef05217c5f98f4ad6c4b883276af19d4ec"
+  }
+}
