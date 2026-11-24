@@ -279,7 +279,7 @@ charter: 1.1
 **W18-01 Make the existing caller review each candidate in isolation** after: W17-01 acceptance: 7, 9, 11
 - Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (caller entry), `skill-dev-toolkit/CHANGELOG.md`; retained evidence and acceptance records.
 - Test: A7 positive: existing_caller_merger_suite; negative: marker_only_not_behavior. A9 positive: heldout_same_scope_conflict; negative: original_and_heldout_overstatement. A11 positive: three_fresh_local_replays; boundary: first_repeat_rejects_candidate. Existing tests/fixtures unchanged; frozen preimages verified; blind source audits.
-- Risk: REQ-7/9/11; same failed coverage-substitution task, no reset. Judgment-stage evidence: three runs quoted the qualification yet generalized it. Replace Step6 items2-3 within153 words, per-candidate isolation; no new mechanism. Native evidence cannot prove Claude repaired.
+- Risk: REQ-7/9/11; same failed coverage-substitution task, no reset. Judgment-stage evidence: three runs quoted the qualification yet generalized it. Replace Step6 items2-3 within153 whitespace-separated words, per-candidate isolation; no new mechanism. Native evidence cannot prove Claude repaired.
 
 ## Simplicity check
 - isolation-only smaller shape (add the isolation clause to existing item2, drop the verbatim-quote duty) — declined: arm B excerpts were harness-supplied; the production caller must self-extract, and the quote duty makes the W17 residual unknown (was the parenthetical qualification read) checkable in the artifact — isolation alone cannot distinguish judgment failure from unread source, wasting the single candidate on an ambiguous result
