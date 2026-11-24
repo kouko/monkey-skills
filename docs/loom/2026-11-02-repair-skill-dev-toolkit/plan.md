@@ -274,7 +274,15 @@ charter: 1.1
 - Test: A7 positive: existing_caller_merger_suite; negative: marker_only_not_behavior. A9 positive: heldout_same_scope_conflict; negative: original_and_heldout_overstatement. A11 positive: three_fresh_local_replays; boundary: first_failure_rejects_candidate. Existing tests/fixtures unchanged; frozen preimages verified, blind source audits required.
 - Risk: REQ-7/9/11; same failed coverage-substitution task, no reset. Sweep89 full changed/surface files; Step6 items2–3 sole owner. Replace within153 words; no new mechanism. Independent controls fixed first, implementer blind to them. One candidate, no paid tests; native evidence cannot prove Claude repaired.
 
+### Wave 18 — Per-candidate isolation in the existing caller
+
+**W18-01 Make the existing caller review each candidate in isolation** after: W17-01 acceptance: 7, 9, 11
+- Files: `skill-dev-toolkit/skills/skill-consistency-check/SKILL.md` (caller entry), `skill-dev-toolkit/CHANGELOG.md`; retained evidence and acceptance records.
+- Test: A7 positive: existing_caller_merger_suite; negative: marker_only_not_behavior. A9 positive: heldout_same_scope_conflict; negative: original_and_heldout_overstatement. A11 positive: three_fresh_local_replays; boundary: first_repeat_rejects_candidate. Existing tests/fixtures unchanged; frozen preimages verified; blind source audits.
+- Risk: REQ-7/9/11; same failed coverage-substitution task, no reset. Judgment-stage evidence: three runs quoted the qualification yet generalized it. Replace Step6 items2-3 within153 words, per-candidate isolation; no new mechanism.
+
 ## Simplicity check
+- W18 reuses the same caller block and fixtures; per-candidate isolation is the only added obligation, no smaller equivalent shape — taken
 - W17 fresh plan reviewer found no simpler equivalent shape; three local replays is a ceiling under first-failure stop, not a quota — taken
 - W16 replacement-only153-word caller block; fresh plan reviewer found no smaller equivalent shape — taken
 - W15 replaces the existing caller paragraph; fresh plan review found no smaller equivalent shape preserving asserted coverage and existential positives — taken
@@ -288,6 +296,8 @@ charter: 1.1
 - existing caller verification and raw-candidate replay — taken
 
 ## Questions asked
+① — what — W18 候選是這次要完成的範圍，且同意三次原生重播約 USD1.5–3 估算嗎？
+① — consequence — 任一次再犯同類過寬錯誤即否決候選，改以既有 W14 人工複核路徑收尾。同意嗎？
 ① — what — 以上就是這次要完成的範圍，對嗎？
 ① — consequence — 同意依此只再做一次本機修補與錄製資料重播嗎？ 此階段不增加外部呼叫。
 
@@ -338,3 +348,5 @@ charter: 1.1
 43. User2026-11-07 authorizes one calibrated replacement/native replay, same failed task; preserve all counters. No paid host test/install/publish/merge. Existing W15 supplies behavioral RED; judge reasons, not nine fixed labels. Claude/Acceptance11 remains unverified.
 
 44. W17 candidate1a7c51c2 rejected: three native executions retain full-scope reason gaps. Restore its two product files; preserve all evidence/counters. No second candidate, external retry or Closing Review/Ship. Details: native-ten-rounds.md and w17-scope-first-results.json.
+
+45. W18 continues the same failed caller task without resetting counters. Judgment-stage evidence: three runs quoted the qualification yet generalized it. Three native replays, stop at first repeat; native evidence cannot prove Claude repaired.
